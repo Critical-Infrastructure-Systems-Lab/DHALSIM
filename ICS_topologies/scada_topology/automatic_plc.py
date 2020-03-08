@@ -11,14 +11,15 @@ class NodeControl():
         self.delete_log()
         process_tcp_dump = self.start_tcpdump_capture()
 
-        plc = self.start_plc()
-        plc.wait()
+        #plc = self.start_plc()
+        #plc.wait()
         print "Stopping PLC1..."
         process_tcp_dump.kill()
 
     def process_arguments(self,arg_parser):
         if arg_parser.name:
             self.name = arg_parser.name
+            print self.name
         else:
             self.name = 'plc1'
 
@@ -27,7 +28,10 @@ class NodeControl():
 
     def configure_routing(self):
         self.interface_name = self.name + '-eth0'
-        routing = subprocess.call(['route','add','default', 'gw' ,'192.168.1.254', self.interface_name], shell=False)
+        if self.name == 'scada':
+            routing = subprocess.call(['route', 'add', 'default', 'gw', '192.168.2.254', self.interface_name],shell=False)
+        else:
+            routing = subprocess.call(['route','add','default', 'gw' ,'192.168.1.254', self.interface_name], shell=False)
         return routing
 
     def start_tcpdump_capture(self):
