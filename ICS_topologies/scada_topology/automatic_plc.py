@@ -11,9 +11,9 @@ class NodeControl():
         self.delete_log()
         process_tcp_dump = self.start_tcpdump_capture()
 
-        #plc = self.start_plc()
-        #plc.wait()
-        print "Stopping PLC1..."
+        plc = self.start_plc()
+        plc.wait()
+        print "Stopsping PLC1..."
         process_tcp_dump.kill()
 
     def process_arguments(self,arg_parser):
@@ -36,7 +36,7 @@ class NodeControl():
 
     def start_tcpdump_capture(self):
         pcap = self.interface_name+'.pcap'
-        tcp_dump = subprocess.Popen(['tcpdump', '-i', self.interface_name, '-w', pcap], shell=False)
+        tcp_dump = subprocess.Popen(['tcpdump', '-i', self.interface_name, '-w', 'output/'+pcap], shell=False)
         return tcp_dump
 
     def start_plc(self):

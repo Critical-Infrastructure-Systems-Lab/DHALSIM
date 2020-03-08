@@ -36,7 +36,7 @@ class Minitown(MiniCPS):
         plc2_process = plc2.popen(sys.executable, "automatic_plc.py", "-n", "plc2")
 
         plant = net.get('plant')
-        simulation = plant.popen("../../wntr-experiments/env/bin/python", 'minitown_process.py')
+        simulation = plant.popen("../../wntr-experiments/env/bin/python", 'physical_process.py')
 
         simulation.wait()
         plc1_process.kill()

@@ -6,9 +6,7 @@ import time
 import csv
 from datetime import datetime
 
-
 T_LVL = ('T_LVL', 1)
-
 
 class SCADAServer(SCADAServer):
 
