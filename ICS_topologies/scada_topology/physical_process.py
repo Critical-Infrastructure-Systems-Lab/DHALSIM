@@ -5,6 +5,7 @@ import csv
 import pandas as pd
 import plotly.express as px
 import time
+import sys
 
 import logging
 
@@ -17,14 +18,13 @@ conn = sqlite3.connect('minitown_db.sqlite')
 c = conn.cursor()
 
 # Create the network
-inp_file = 'minitown_map.inp'
+inp_file = sys.argv[2]+'_map.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
 
 # Set option for step-by-step simulation
 wn.options.time.duration = 900
 wn.options.time.hydraulic_timestep = 900
 wn.options.time.pattern_timestep = 3600
-# sim = wntr.sim.WNTRSimulator(wn)
 linkStatus = wntr.network.base.LinkStatus
 
 results_list = []
@@ -68,7 +68,13 @@ pump2_control = controls.Control(condition, act2, name='pump2control')
 wn.add_control('WnPump1Control', pump1_control)
 wn.add_control('WnPump2Control', pump2_control)
 
-sim = wntr.sim.WNTRSimulator(wn, mode='PDD')
+if sys.argv[1] == 'pdd':
+    sim = wntr.sim.WNTRSimulator(wn, mode='PDD')
+elif sys.argv[1] == 'dd':
+    sim = wntr.sim.WNTRSimulator(wn)
+else:
+    print('Invalid simulation mode, exiting...')
+    sys.exit(1)
 
 # START STEP BY STEP SIMULATION
 iteration = 0
@@ -125,6 +131,6 @@ while iteration <= 672:
     iteration += 1
     time.sleep(0.5)
 
-with open('automatic_attack_no_autorun.csv', 'w', newline='\n') as f:
+with open('output/'+sys.argv[3], 'w', newline='\n') as f:
     writer = csv.writer(f)
     writer.writerows(results_list)

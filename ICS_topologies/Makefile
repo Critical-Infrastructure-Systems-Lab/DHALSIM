@@ -26,6 +26,9 @@ auto-mitm:
 	if [ ! -d scada_topology/logs ]; then\
 	   mkdir scada_topology/logs;\
 	fi
+	if [ ! -d scada_topology/output ]; then\
+	   mkdir scada_topology/output;\
+	fi
 	cd scada_topology; rm -rf minitown_db.sqlite; $(PYTHON) $(PYTHON_OPTS) init.py; sudo chown mininet:mininet minitown_db.sqlite
 	sudo pkill  -f -u root "python -m cpppo.server.enip"
 	sudo mn -c

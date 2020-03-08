@@ -1,5 +1,6 @@
 import subprocess
 import shlex
+import argparse
 
 class MitmAttack():
     def start_forwarding(self):
@@ -15,11 +16,28 @@ class MitmAttack():
         return mitm
 
     def main(self):
-        self.start_forwarding()
-        #self.launch_ettercap()
-        mitm = self.launch_mitm()
-        mitm.wait()
+        args = self.get_arguments()
+        self.process_arguments(args)
 
+        if self.attack == "mitm":
+            self.start_forwarding()
+            mitm = self.launch_mitm()
+            mitm.wait()
+
+        if self.attack == "dos":
+            mitm = self.launch_mitm()
+            mitm.wait()
+
+    def process_arguments(self,arg_parser):
+        if arg_parser.attack:
+            self.attack = arg_parser.attack
+        else:
+            self.attack = 'mitm'
+
+    def get_arguments(self):
+        parser = argparse.ArgumentParser(description='Master Script that launches LAN communication attacks')
+        parser.add_argument("--attack", "-a",help="Attack to be launched, options can be mitm or dos")
+        return parser.parse_args()
 
 if __name__ == "__main__":
     mitm = MitmAttack()
