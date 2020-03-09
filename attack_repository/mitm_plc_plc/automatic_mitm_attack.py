@@ -1,6 +1,7 @@
 import subprocess
 import shlex
 import argparse
+import sys
 
 class MitmAttack():
     def start_forwarding(self):
@@ -12,6 +13,7 @@ class MitmAttack():
         subprocess.Popen(args)
 
     def launch_mitm(self):
+        print 'Running MiTM attack...'
         mitm = subprocess.Popen(["../../../attack-experiments/env/bin/python", 'mitm_test.py'])
         return mitm
 
@@ -24,9 +26,12 @@ class MitmAttack():
             mitm = self.launch_mitm()
             mitm.wait()
 
-        if self.attack == "dos":
+        elif self.attack == "dos":
             mitm = self.launch_mitm()
             mitm.wait()
+        else:
+            print 'No attack was specified, exiting...'
+            sys.exit(1)
 
     def process_arguments(self,arg_parser):
         if arg_parser.attack:
