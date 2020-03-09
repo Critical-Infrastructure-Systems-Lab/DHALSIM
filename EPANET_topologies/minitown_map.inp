@@ -136,6 +136,7 @@
 [STATUS]
 ;ID              	Status/Setting
  PUMP1           	Closed
+ PUMP2              Open
 
 [PATTERNS]
 ;ID              	Multipliers
