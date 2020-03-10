@@ -37,29 +37,28 @@ class PLC2(PLC):
             try:
                 tank_level = Decimal(self.receive(T_LVL, PLC1_ADDR))
                 saved_tank_levels.append([datetime.now(), tank_level])
-                msg = 'DEBUG PLC2 - receive from plc1 tank level: %f ' + str(tank_level) + '\n'
-                # This will create a huge performance problem. Riccardo got a better way to do this? Opening the file outside the while resulted in this script not writing on the file
-                with open(plc2_log_path, 'a') as plc2_log_file:
-                    plc2_log_file.write(msg)
+                if flag_attack_dos_plc2:
+                    print 'received'
+                    self.set(ATT_1, 0)
 
-            except Exception, msg:
-                print (msg)
+            except Exception:
                 if flag_attack_dos_plc2:
                     self.set(ATT_1, 1)
-                    continue
+                continue
+
             except KeyboardInterrupt:
-                with open('plc2_saved_tank_levels_received.csv', 'w') as f:
+                with open('output/plc2_saved_tank_levels_received.csv', 'w') as f:
                     writer = csv.writer(f)
                     writer.writerows(saved_tank_levels)
                 return
 
-            if flag_attack_plc2 and 300 <= i <= 350:
-                # only for intern plc2 attack, do not control in this interval
-                self.set(ATT_1, 1)
-                continue
-
-            if not flag_attack_communication_plc1_plc2:
-                self.set(ATT_1, 0)
+            if flag_attack_plc2:
+                if 300 <= i <= 450:
+                    # only for intern plc2 attack, do not control in this interval
+                    self.set(ATT_1, 1)
+                    continue
+                else:
+                    self.set(ATT_1, 0)
 
             # CONTROL PUMP1
             if tank_level < 4:

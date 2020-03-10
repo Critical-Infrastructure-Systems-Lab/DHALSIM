@@ -32,7 +32,7 @@ class SCADAServer(SCADAServer):
                 print (msg)
                 continue
             except KeyboardInterrupt:
-                with open('scada_saved_tank_levels_received.csv', 'w') as f:
+                with open('output/scada_saved_tank_levels_received.csv', 'w') as f:
                     writer = csv.writer(f)
                     writer.writerows(saved_tank_levels)
                 return
