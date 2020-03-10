@@ -21,7 +21,6 @@ sniffed_packet = []
 injection_phase = 0
 nfqueue = NetfilterQueue()
 
-
 def sniff(value):
     print ("In sniff------------")
     sniffed_packet.append(value)
@@ -43,6 +42,7 @@ def injection(raw):
 
 def capture(packet):
     global injection_phase
+
     pkt = IP(packet.get_payload())
     if len(pkt) == 102:
         raw = pkt[Raw].load  # This is a string with the "RAW" part of the packet (CIP payload)

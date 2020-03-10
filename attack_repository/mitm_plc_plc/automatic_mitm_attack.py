@@ -17,6 +17,11 @@ class MitmAttack():
         mitm = subprocess.Popen(["../../../attack-experiments/env/bin/python", 'mitm_test.py'])
         return mitm
 
+    def launch_dos(self):
+        print 'Running DoS attack...'
+        dos = subprocess.Popen(["../../../attack-experiments/env/bin/python", 'dos.py'])
+        return dos
+
     def main(self):
         args = self.get_arguments()
         self.process_arguments(args)
@@ -27,8 +32,9 @@ class MitmAttack():
             mitm.wait()
 
         elif self.attack == "dos":
-            mitm = self.launch_mitm()
-            mitm.wait()
+            self.start_forwarding()
+            dos  = self.launch_dos()
+            dos.wait()
         else:
             print 'No attack was specified, exiting...'
             sys.exit(1)

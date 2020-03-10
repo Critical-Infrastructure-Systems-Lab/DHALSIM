@@ -1,7 +1,7 @@
 from minicps.devices import PLC
 from utils import PLC1_DATA, STATE, PLC1_PROTOCOL
 from utils import PLC_PERIOD_SEC, PLC_SAMPLES, PP_PERIOD_SEC
-from utils import IP, T_LVL, ATT_1, PLC2_ADDR, PLC1_ADDR, flag_attack_plc1
+from utils import IP, T_LVL, ATT_1, PLC2_ADDR, PLC1_ADDR, flag_attack_plc1, flag_attack_plc2, flag_attack_communication_plc1_scada, flag_attack_communication_plc1_plc2, flag_attack_dos_plc2
 
 import csv
 from datetime import datetime
@@ -40,25 +40,25 @@ class PLC1(PLC):
                 #print 'DEBUG plc1 tank_level: %f' % tank_level
                 msg = 'PLC1: Tank ' + str(tank_level) + '\n'
                 # This will create a huge performance problem. Riccardo got a better way to do this? Opening the file outside the while resulted in this script not writing on the file
-                with open(plc1_log_path, 'a') as plc1_log_file:
-                    plc1_log_file.write(msg)
 
                 if flag_attack_plc1:
                     if iteration in range(100, 200):
                         print ("Attacker is appending --------------")
                         fake_values.append(tank_level)
+                        self.set(ATT_1, 1)
                     elif iteration in range(250, 350):
                         print ("Under Attack---------------------- ")
-                        self.set(ATT_1, 1)
+                        self.set(ATT_1, 2)
                         tank_level = fake_values[i]
                         i += 1
                     else:
-                        self.set(ATT_1, 0)
+                        if flag_attack_plc2 == 0 and flag_attack_communication_plc1_scada == 0 and flag_attack_communication_plc1_plc2 == 0 and flag_attack_dos_plc2 == 0:
+                            self.set(ATT_1, 0)
 
                 self.send(T_LVL, tank_level, PLC1_ADDR)
                 iteration += 1
             except KeyboardInterrupt:
-                with open('plc1_saved_tank_levels_received.csv', 'w') as f:
+                with open('output/plc1_saved_tank_levels_received.csv', 'w') as f:
                     writer = csv.writer(f)
                     writer.writerows(saved_tank_levels)
                 return
