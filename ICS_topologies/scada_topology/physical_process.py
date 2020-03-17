@@ -2,17 +2,9 @@ import wntr
 import wntr.network.controls as controls
 import sqlite3
 import csv
-import pandas as pd
-import plotly.express as px
 import time
 import sys
 
-import logging
-
-logging.basicConfig(filename='initial.log', level=logging.DEBUG)
-logging.debug("testing")
-
-# testing
 # connection to the database
 conn = sqlite3.connect('minitown_db.sqlite')
 c = conn.cursor()
@@ -51,7 +43,7 @@ pump2 = wn.get_link("PUMP2")  # WNTR PUMP OBJECT
 reservoir = wn.get_node("R1")
 
 # We define a dummy condition that should always be true
-condition = controls.ValueCondition(tank, 'level', '>=', 0)
+condition = controls.ValueCondition(tank, 'level', '>=', -1)
 
 rows = c.execute("SELECT value FROM minitown WHERE name = 'P1_STS'").fetchall()
 conn.commit()
@@ -69,16 +61,21 @@ wn.add_control('WnPump1Control', pump1_control)
 wn.add_control('WnPump2Control', pump2_control)
 
 if sys.argv[1] == 'pdd':
+    print('Running simulation using PDD')
     sim = wntr.sim.WNTRSimulator(wn, mode='PDD')
 elif sys.argv[1] == 'dd':
+    print('Running simulation using DD')
     sim = wntr.sim.WNTRSimulator(wn)
 else:
     print('Invalid simulation mode, exiting...')
     sys.exit(1)
 
-# START STEP BY STEP SIMULATION
+days_simulated = 7
 iteration = 0
-while iteration <= 672:
+iteration_limit = days_simulated*(24*3600) / wn.options.time.duration
+
+# START STEP BY STEP SIMULATION
+while iteration <= iteration_limit:
 
     # Get updated values from the database of : -VALVE VALUE -PUMPS VALUES
     #  UPDATE WNTR PUMP1 STATUS FROM DATABASE
@@ -102,6 +99,7 @@ while iteration <= 672:
 
     wn.add_control('WnPump1Control', pump1_control)
     wn.add_control('WnPump2Control', pump2_control)
+
     results = sim.run_sim(convergence_error=True)
 
     print ("ITERATION %d ------------------" % iteration)
@@ -129,7 +127,9 @@ while iteration <= 672:
     results_list.append(values_list)
 
     iteration += 1
-    time.sleep(0.5)
+
+    if results:
+        time.sleep(0.5)
 
 with open('output/'+sys.argv[3], 'w', newline='\n') as f:
     writer = csv.writer(f)
