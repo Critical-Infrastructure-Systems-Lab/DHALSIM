@@ -62,7 +62,7 @@ class PLC1(PLC):
                     writer = csv.writer(f)
                     writer.writerows(saved_tank_levels)
                 return
-            time.sleep(0.2)
+                time.sleep(0.2)
         print 'DEBUG plc1 shutdown'
 
 

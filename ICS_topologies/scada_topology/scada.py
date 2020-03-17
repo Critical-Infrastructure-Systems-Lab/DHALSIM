@@ -37,8 +37,7 @@ class SCADAServer(SCADAServer):
                     writer.writerows(saved_tank_levels)
                 return
 
-
-        time.sleep(0.3)
+                time.sleep(0.3)
 
 if __name__ == "__main__":
 
