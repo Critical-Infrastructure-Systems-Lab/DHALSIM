@@ -24,10 +24,6 @@ class PLC1(PLC):
             - drives actuators according to the control strategy
             - updates its enip server
         """
-        #print 'DEBUG: plc1 enters main_loop.'
-        with open(plc1_log_path, 'a') as plc1_log_file:
-            plc1_log_file.write('DEBUG: plc1 enters main_loop')
-
         iteration = 0
         fake_values = []
         i = 0
@@ -38,7 +34,6 @@ class PLC1(PLC):
                 tank_level = Decimal(self.get(T_LVL))
                 saved_tank_levels.append([datetime.now(), tank_level])
                 #print 'DEBUG plc1 tank_level: %f' % tank_level
-                msg = 'PLC1: Tank ' + str(tank_level) + '\n'
                 # This will create a huge performance problem. Riccardo got a better way to do this? Opening the file outside the while resulted in this script not writing on the file
 
                 if flag_attack_plc1:
@@ -62,7 +57,6 @@ class PLC1(PLC):
                     writer = csv.writer(f)
                     writer.writerows(saved_tank_levels)
                 return
-                time.sleep(0.2)
         print 'DEBUG plc1 shutdown'
 
 

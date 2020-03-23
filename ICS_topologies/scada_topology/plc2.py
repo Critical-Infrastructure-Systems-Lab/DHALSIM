@@ -19,8 +19,6 @@ class PLC2(PLC):
 
     def pre_loop(self):
         print 'DEBUG: plc2 enters pre_loop'
-        with open(plc2_log_path, 'a') as plc2_log_file:
-            plc2_log_file.write('DEBUG: plc2 enters main_loop')
 
     def main_loop(self):
         """plc2 main loop.

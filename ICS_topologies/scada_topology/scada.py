@@ -5,6 +5,7 @@ from utils import IP, ATT2_ADDR, PLC1_ADDR
 import time
 import csv
 from datetime import datetime
+from decimal import Decimal
 
 T_LVL = ('T_LVL', 1)
 
@@ -25,7 +26,7 @@ class SCADAServer(SCADAServer):
         while(True):
 
             try:
-                tank_level = float(self.receive(T_LVL, PLC1_ADDR))
+                tank_level = Decimal(self.receive(T_LVL, PLC1_ADDR))
                 saved_tank_levels.append([datetime.now(), tank_level])
                 print " DEBUG PLC2 - receive from plc1 tank level: %f " % tank_level
             except Exception, msg:
