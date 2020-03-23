@@ -2,6 +2,7 @@ from minicps.devices import PLC
 from utils import PLC1_DATA, STATE, PLC1_PROTOCOL
 from utils import PLC_PERIOD_SEC, PLC_SAMPLES, PP_PERIOD_SEC
 from utils import IP, T_LVL, ATT_1, PLC2_ADDR, PLC1_ADDR, flag_attack_plc1, flag_attack_plc2, flag_attack_communication_plc1_scada, flag_attack_communication_plc1_plc2, flag_attack_dos_plc2
+from utils import IP, T_LVL, P1_STS, P2_STS,ATT_1, ATT_2, PLC1_ADDR, PLC2_ADDR, ATT_ADDR
 
 import csv
 from datetime import datetime
@@ -35,22 +36,19 @@ class PLC1(PLC):
                 saved_tank_levels.append([datetime.now(), tank_level])
                 #print 'DEBUG plc1 tank_level: %f' % tank_level
                 # This will create a huge performance problem. Riccardo got a better way to do this? Opening the file outside the while resulted in this script not writing on the file
+                if tank_level < 4:
+                    self.set(P1_STS, 1)
 
-                if flag_attack_plc1:
-                    if iteration in range(100, 200):
-                        print ("Attacker is appending --------------")
-                        fake_values.append(tank_level)
-                        self.set(ATT_1, 1)
-                    elif iteration in range(250, 350):
-                        print ("Under Attack---------------------- ")
-                        self.set(ATT_1, 2)
-                        tank_level = fake_values[i]
-                        i += 1
-                    else:
-                        if flag_attack_plc2 == 0 and flag_attack_communication_plc1_scada == 0 and flag_attack_communication_plc1_plc2 == 0 and flag_attack_dos_plc2 == 0:
-                            self.set(ATT_1, 0)
+                if tank_level > 6.3:
+                    self.set(P1_STS, 0)
 
-                self.send(T_LVL, tank_level, PLC1_ADDR)
+                # CONTROL PUMP2
+                if tank_level < 1:
+                    self.set(P2_STS, 1)
+
+                if tank_level > 4.5:
+                    self.set(P2_STS, 0)
+                time.sleep(0.2)
                 iteration += 1
             except KeyboardInterrupt:
                 with open('output/plc1_saved_tank_levels_received.csv', 'w') as f:
