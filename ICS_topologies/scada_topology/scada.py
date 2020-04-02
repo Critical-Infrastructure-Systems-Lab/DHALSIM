@@ -15,8 +15,6 @@ class SCADAServer(SCADAServer):
         """scada pre loop.
             - sleep
         """
-        time.sleep(sleep)
-
 
     def main_loop(self):
         """scada main loop."""

@@ -9,6 +9,11 @@ import sys
 conn = sqlite3.connect('minitown_db.sqlite')
 c = conn.cursor()
 
+# Master time used to synchronize the PLCs
+rows = c.execute("SELECT value FROM minitown WHERE name = 'TIME'").fetchall()
+conn.commit()
+master_time = int(rows[0][0])  # PUMP1 STATUS FROM DATABASE
+
 # Create the network
 inp_file = sys.argv[2]+'_map.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
@@ -28,11 +33,10 @@ for node in node_list:
     if wn.get_node(node).node_type == 'Junction':
         junction_list.append(str(node))
 
-list_header = ["timestamps", "TANK_LEVEL", "RESERVOIR_LEVEL"]
+list_header = ["iteration", "timestamps", "TANK_LEVEL", "RESERVOIR_LEVEL"]
 list_header.extend(junction_list)
 another_list = ["FLOW_PUMP1", "FLOW_PUMP2", "STATUS_PUMP1", "STATUS_PUMP2", "Attack#01", "Attack#02"]
 list_header.extend(another_list)
-
 
 results_list.append(list_header)
 
@@ -71,11 +75,10 @@ else:
     sys.exit(1)
 
 days_simulated = 7
-iteration = 0
 iteration_limit = days_simulated*(24*3600) / wn.options.time.duration
 
 # START STEP BY STEP SIMULATION
-while iteration <= iteration_limit:
+while master_time <= iteration_limit:
 
     # Get updated values from the database of : -VALVE VALUE -PUMPS VALUES
     #  UPDATE WNTR PUMP1 STATUS FROM DATABASE
@@ -100,36 +103,50 @@ while iteration <= iteration_limit:
     wn.add_control('WnPump1Control', pump1_control)
     wn.add_control('WnPump2Control', pump2_control)
 
-    results = sim.run_sim(convergence_error=True)
-
-    print ("ITERATION %d ------------------" % iteration)
-
-    c.execute("UPDATE minitown SET value = %f WHERE name = 'T_LVL'" % tank.level)  # UPDATE TANK LEVEL IN THE DATABASE
+    rows = c.execute("SELECT value FROM minitown WHERE name = 'CONTROL'").fetchall()
     conn.commit()
+    control = int(rows[0][0])  # PUMP1 STATUS FROM DATABASE
 
-    # take the value of attacks labels from the database
-    rows = c.execute("SELECT value FROM minitown WHERE name = 'ATT_1'").fetchall()
-    conn.commit()
-    attack1 = rows[0][0]
+    if control == 1:
+        master_time += 1
+        results = sim.run_sim(convergence_error=True)
 
-    rows = c.execute("SELECT value FROM minitown WHERE name = 'ATT_2'").fetchall()
-    conn.commit()
-    attack2 = rows[0][0]
+        print("ITERATION %d ------------- " % master_time)
+        print("Tank Level %f " % tank.level)
 
-    values_list = []
+        c.execute("UPDATE minitown SET value = %f WHERE name = 'T_LVL'" % tank.level)  # UPDATE TANK LEVEL IN THE DATABASE
+        conn.commit()
 
-    values_list.extend([results.timestamp, tank.level, reservoir.head])
-    for junction in junction_list:
-        values_list.extend([wn.get_node(junction).head - wn.get_node(junction).elevation])
+        c.execute("UPDATE minitown SET value = %d WHERE name = 'TIME'" % master_time)  # UPDATE TANK LEVEL IN THE DATABASE
+        conn.commit()
 
-    values_list.extend([pump1.flow, pump2.flow, pump1_status, pump2_status, attack1, attack2])
+        # take the value of attacks labels from the database
+        rows = c.execute("SELECT value FROM minitown WHERE name = 'ATT_1'").fetchall()
+        conn.commit()
+        attack1 = rows[0][0]
 
-    results_list.append(values_list)
+        rows = c.execute("SELECT value FROM minitown WHERE name = 'ATT_2'").fetchall()
+        conn.commit()
+        attack2 = rows[0][0]
 
-    iteration += 1
+        values_list = []
 
-    if results:
-        time.sleep(0.5)
+        values_list.extend([master_time, results.timestamp, tank.level, reservoir.head])
+        for junction in junction_list:
+            values_list.extend([wn.get_node(junction).head - wn.get_node(junction).elevation])
+
+        values_list.extend([pump1.flow, pump2.flow, pump1_status, pump2_status, attack1, attack2])
+
+        results_list.append(values_list)
+
+        c.execute("UPDATE minitown SET value = 0 WHERE name = 'CONTROL'")
+        conn.commit()
+
+        if results:
+            time.sleep(0.5)
+
+    else:
+        continue
 
 with open('output/'+sys.argv[3], 'w', newline='\n') as f:
     writer = csv.writer(f)
