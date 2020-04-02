@@ -13,7 +13,7 @@ class NodeControl():
 
         plc = self.start_plc()
         plc.wait()
-        print "Stopsping PLC1..."
+        print "Stopping PLC1..."
         process_tcp_dump.kill()
 
     def process_arguments(self,arg_parser):

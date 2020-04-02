@@ -42,6 +42,8 @@ P1_STS = ('P1_STS', 1)
 P2_STS = ('P2_STS', 1)
 ATT_1 = ('ATT_1', 1)
 ATT_2 = ('ATT_2', 1)
+TIME = ('TIME', 1)
+CONTROL = ('CONTROL', 1)
 
 flag_attack_plc1 = 0
 flag_attack_plc2 = 0
@@ -94,7 +96,8 @@ PLC1_TAGS = (
     ('P1_STS', 1, 'REAL'),
     ('P2_STS', 1, 'REAL'),
     ('ATT_1', 1, 'REAL'),
-    ('ATT_2', 1, 'REAL')
+    ('ATT_2', 1, 'REAL'),
+    ('TIME', 1, 'INT')
 )
 
 PLC1_SERVER = {
@@ -112,7 +115,9 @@ PLC2_TAGS = (
     ('P1_STS', 1, 'REAL'),
     ('P2_STS', 1, 'REAL'),
     ('ATT_1', 1, 'REAL'),
-    ('ATT_2', 1, 'REAL')
+    ('ATT_2', 1, 'REAL'),
+    ('TIME', 1, 'INT'),
+    ('CONTROL', 1, 'INT')
 )
 
 PLC2_SERVER = {
@@ -131,7 +136,8 @@ SCADA_TAGS = (
     ('P1_STS', 1, 'REAL'),
     ('P2_STS', 1, 'REAL'),
     ('ATT_1', 1, 'REAL'),
-    ('ATT_2', 1, 'REAL')
+    ('ATT_2', 1, 'REAL'),
+    ('TIME', 1, 'INT')
 )
 
 SCADA_SERVER = {
@@ -217,5 +223,7 @@ SCHEMA_INIT = """
     INSERT INTO minitown VALUES ('P1_STS', 1, '0');
     INSERT INTO minitown VALUES ('P2_STS', 1, '1');  
     INSERT INTO minitown VALUES ('ATT_1', 1, '0');  
-    INSERT INTO minitown VALUES ('ATT_2', 1, '0');  
+    INSERT INTO minitown VALUES ('ATT_2', 1, '0');
+    INSERT INTO minitown VALUES ('TIME', 1, '0');  
+    INSERT INTO minitown VALUES ('CONTROL', 1, '1');
 """

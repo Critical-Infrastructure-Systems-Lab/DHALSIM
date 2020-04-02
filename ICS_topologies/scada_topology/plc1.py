@@ -1,7 +1,7 @@
 from minicps.devices import PLC
 from utils import PLC1_DATA, STATE, PLC1_PROTOCOL
-from utils import PLC_PERIOD_SEC, PLC_SAMPLES, PP_PERIOD_SEC
-from utils import IP, T_LVL, ATT_1, PLC2_ADDR, PLC1_ADDR, flag_attack_plc1, flag_attack_plc2, flag_attack_communication_plc1_scada, flag_attack_communication_plc1_plc2, flag_attack_dos_plc2
+from utils import T_LVL, ATT_1, PLC1_ADDR, flag_attack_plc1, flag_attack_plc2, \
+    flag_attack_communication_plc1_scada, flag_attack_communication_plc1_plc2, flag_attack_dos_plc2, TIME
 
 import csv
 from datetime import datetime
@@ -12,11 +12,13 @@ import sqlite3
 
 plc1_log_path = 'plc1.log'
 
-# TODO: real value tag where to read/write flow sensor
+
 class PLC1(PLC):
 
     def pre_loop(self):
         print 'DEBUG: plc1 enters pre_loop'
+        self.local_time = -1
+        self.tank_level = Decimal(self.get(T_LVL))
 
     def main_loop(self):
         """plc1 main loop.
@@ -24,44 +26,39 @@ class PLC1(PLC):
             - drives actuators according to the control strategy
             - updates its enip server
         """
-        iteration = 0
         fake_values = []
-        i = 0
-        saved_tank_levels = [["timestamp","TANK_LEVEL"]]
+        saved_tank_levels = [["iteration", "timestamp", "TANK_LEVEL"]]
 
-        while (True):
+        while True:
             try:
-                tank_level = Decimal(self.get(T_LVL))
-                saved_tank_levels.append([datetime.now(), tank_level])
-                #print 'DEBUG plc1 tank_level: %f' % tank_level
-                # This will create a huge performance problem. Riccardo got a better way to do this? Opening the file outside the while resulted in this script not writing on the file
+                self.local_time += 1
+                self.tank_level = Decimal(self.get(T_LVL))
+                print("Tank Level %f " % self.tank_level)
+                saved_tank_levels.append([datetime.now(), self.tank_level])
+                self.send(T_LVL, self.tank_level, PLC1_ADDR)
 
                 if flag_attack_plc1:
-                    if iteration in range(100, 200):
-                        print ("Attacker is appending --------------")
-                        fake_values.append(tank_level)
+                    if self.local_time in range(100, 200):
+                        print("Attacker is appending --------------")
+                        fake_values.append(self.tank_level)
                         self.set(ATT_1, 1)
-                    elif iteration in range(250, 350):
-                        print ("Under Attack---------------------- ")
+                    elif self.local_time in range(250, 350):
+                        print("Under Attack---------------------- ")
                         self.set(ATT_1, 2)
-                        tank_level = fake_values[i]
+                        self.tank_level = fake_values[i]
                         i += 1
                     else:
                         if flag_attack_plc2 == 0 and flag_attack_communication_plc1_scada == 0 and flag_attack_communication_plc1_plc2 == 0 and flag_attack_dos_plc2 == 0:
                             self.set(ATT_1, 0)
-
-                self.send(T_LVL, tank_level, PLC1_ADDR)
-                iteration += 1
             except KeyboardInterrupt:
+                print 'DEBUG plc1 shutdown'
                 with open('output/plc1_saved_tank_levels_received.csv', 'w') as f:
                     writer = csv.writer(f)
                     writer.writerows(saved_tank_levels)
                 return
-        print 'DEBUG plc1 shutdown'
 
 
 if __name__ == "__main__":
-    # notice that memory init is different form disk init
     plc1 = PLC1(
         name='plc1',
         state=STATE,
