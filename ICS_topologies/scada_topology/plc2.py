@@ -2,12 +2,11 @@ from minicps.devices import PLC
 from utils import PLC2_DATA, STATE, PLC2_PROTOCOL
 from utils import T_LVL, P1_STS, P2_STS,ATT_1, PLC1_ADDR,  \
     flag_attack_plc2, flag_attack_dos_plc2, TIME, CONTROL
-import time
-import sqlite3
 import csv
 from datetime import datetime
 import logging
 from decimal import Decimal
+import time
 
 logging.basicConfig(filename='plc2_debug.log', level=logging.DEBUG)
 logging.debug("testing")
@@ -84,8 +83,7 @@ class PLC2(PLC):
                     self.set(P2_STS, 0)
 
                 self.set(CONTROL, 1)
-                time.sleep(0.2)
-
+                time.sleep(0.1)
 
 if __name__ == "__main__":
     plc2 = PLC2(

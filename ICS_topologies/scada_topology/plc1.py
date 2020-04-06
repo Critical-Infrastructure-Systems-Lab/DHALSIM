@@ -1,7 +1,7 @@
 from minicps.devices import PLC
 from utils import PLC1_DATA, STATE, PLC1_PROTOCOL
 from utils import T_LVL, ATT_1, PLC1_ADDR, flag_attack_plc1, flag_attack_plc2, \
-    flag_attack_communication_plc1_scada, flag_attack_communication_plc1_plc2, flag_attack_dos_plc2, TIME
+    flag_attack_communication_plc1_scada, flag_attack_communication_plc1_plc2, flag_attack_dos_plc2
 
 import csv
 from datetime import datetime
@@ -45,8 +45,8 @@ class PLC1(PLC):
                     elif self.local_time in range(250, 350):
                         print("Under Attack---------------------- ")
                         self.set(ATT_1, 2)
-                        self.tank_level = fake_values[i]
-                        i += 1
+                        self.tank_level = fake_values[self.local_time]
+                        self.local_time += 1
                     else:
                         if flag_attack_plc2 == 0 and flag_attack_communication_plc1_scada == 0 and flag_attack_communication_plc1_plc2 == 0 and flag_attack_dos_plc2 == 0:
                             self.set(ATT_1, 0)
