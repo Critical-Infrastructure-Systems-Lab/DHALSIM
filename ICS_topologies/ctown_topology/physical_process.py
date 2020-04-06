@@ -5,14 +5,12 @@ import csv
 import time
 import sys
 
-
 def get_node_list_by_type(list, type):
     result = []
     for node in list:
         if wn.get_node(node).node_type == type:
             result.append(str(node))
     return result
-
 
 def get_link_list_by_type(list, type):
     result = []
@@ -21,13 +19,11 @@ def get_link_list_by_type(list, type):
             result.append(str(link))
     return result
 
-
 def create_node_header(list):
     result = []
     for node in list:
         result.append(node + "_LEVEL")
     return result
-
 
 def create_link_header(list):
     result = []
@@ -83,6 +79,8 @@ results_list = [list_header]
 condition = controls.ValueCondition(wn.get_node('T1'), 'level', '>=', -1)
 
 # Create an action and control object for each actuator. Add that control object to the wn
+
+
 
 if sys.argv[1] == 'pdd':
     print('Running simulation using PDD')

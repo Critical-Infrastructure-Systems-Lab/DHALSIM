@@ -1,7 +1,7 @@
 from minicps.devices import PLC
 from utils import PLC1_DATA, STATE, PLC1_PROTOCOL
-from utils import PLC_PERIOD_SEC, PLC_SAMPLES, PP_PERIOD_SEC
-from utils import IP, T_LVL, ATT_1, PLC2_ADDR, PLC1_ADDR, flag_attack_plc1, flag_attack_plc2, flag_attack_communication_plc1_scada, flag_attack_communication_plc1_plc2, flag_attack_dos_plc2
+from utils import T_LVL, ATT_1, PLC1_ADDR, flag_attack_plc1, flag_attack_plc2, flag_attack_communication_plc1_scada, \
+    flag_attack_communication_plc1_plc2, flag_attack_dos_plc2, TIME
 
 import csv
 import time
@@ -10,19 +10,19 @@ from datetime import datetime
 from decimal import Decimal
 import thread
 
-
-from repeat_every import RepeatEvery
-
 plc1_log_path = 'plc1.log'
 tank_level=3.0
 # TODO: real value tag where to read/write flow sensor
 class PLC1(PLC):
 
     def get_tank_level(self, a, b):
+        local_time = 0
         while self.reader:
-            global tank_level
-            tank_level = Decimal(self.get(T_LVL))
-            time.sleep(0.1)
+            master_time = int(self.get(TIME))
+            while local_time < master_time:
+                global tank_level
+                tank_level = Decimal(self.get(T_LVL))
+                local_time += 1
 
     def pre_loop(self):
         print 'DEBUG: plc1 enters pre_loop'
