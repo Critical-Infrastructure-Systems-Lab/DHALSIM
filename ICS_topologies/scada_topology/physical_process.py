@@ -80,34 +80,35 @@ iteration_limit = days_simulated*(24*3600) / wn.options.time.duration
 # START STEP BY STEP SIMULATION
 while master_time <= iteration_limit:
 
-    # Get updated values from the database of : -VALVE VALUE -PUMPS VALUES
-    #  UPDATE WNTR PUMP1 STATUS FROM DATABASE
-    rows_1 = c.execute("SELECT value FROM minitown WHERE name = 'P1_STS'").fetchall()
-    conn.commit()
-
-    rows_2 = c.execute("SELECT value FROM minitown WHERE name = 'P2_STS'").fetchall()
-    conn.commit()
-
-    pump1_status = rows_1[0][0]  # PUMP1 STATUS FROM DATABASE
-    act1 = controls.ControlAction(pump1, 'status', int(pump1_status))
-    pump1_control = controls.Control(condition, act1, name='pump1control')
-
-    #  UPDATE WNTR PUMP2 STATUS FROM DATABASE
-    pump2_status = rows_2[0][0]  # PUMP1 STATUS FROM DATABASE
-    act2 = controls.ControlAction(pump2, 'status', int(pump2_status))
-    pump2_control = controls.Control(condition, act2, name='pump2control')
-
-    wn.remove_control("WnPump1Control")
-    wn.remove_control("WnPump2Control")
-
-    wn.add_control('WnPump1Control', pump1_control)
-    wn.add_control('WnPump2Control', pump2_control)
-
     rows = c.execute("SELECT value FROM minitown WHERE name = 'CONTROL'").fetchall()
     conn.commit()
     control = int(rows[0][0])  # PUMP1 STATUS FROM DATABASE
 
     if control == 1:
+
+        # Get updated values from the database of : -VALVE VALUE -PUMPS VALUES
+        #  UPDATE WNTR PUMP1 STATUS FROM DATABASE
+        rows_1 = c.execute("SELECT value FROM minitown WHERE name = 'P1_STS'").fetchall()
+        conn.commit()
+
+        rows_2 = c.execute("SELECT value FROM minitown WHERE name = 'P2_STS'").fetchall()
+        conn.commit()
+
+        pump1_status = rows_1[0][0]  # PUMP1 STATUS FROM DATABASE
+        act1 = controls.ControlAction(pump1, 'status', int(pump1_status))
+        pump1_control = controls.Control(condition, act1, name='pump1control')
+
+        #  UPDATE WNTR PUMP2 STATUS FROM DATABASE
+        pump2_status = rows_2[0][0]  # PUMP1 STATUS FROM DATABASE
+        act2 = controls.ControlAction(pump2, 'status', int(pump2_status))
+        pump2_control = controls.Control(condition, act2, name='pump2control')
+
+        wn.remove_control("WnPump1Control")
+        wn.remove_control("WnPump2Control")
+
+        wn.add_control('WnPump1Control', pump1_control)
+        wn.add_control('WnPump2Control', pump2_control)
+
         results = sim.run_sim(convergence_error=True)
         master_time += 1
         print("ITERATION %d ------------- " % master_time)
