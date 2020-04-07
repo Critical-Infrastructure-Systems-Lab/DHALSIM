@@ -12,12 +12,18 @@ logging.basicConfig(filename='plc2_debug.log', level=logging.DEBUG)
 logging.debug("testing")
 plc2_log_path = 'plc2.log'
 
+def write_output(saved_tank_levels):
+    print 'DEBUG plc2 shutdown'
+    with open('output/plc2_saved_tank_levels_received.csv', 'w') as f:
+        writer = csv.writer(f)
+        writer.writerows(saved_tank_levels)
+    exit(0)
 
 class PLC2(PLC):
 
     def pre_loop(self):
         print 'DEBUG: plc2 enters pre_loop'
-        self.local_time = -1
+        self.local_time = 0
 
     def main_loop(self):
         """plc2 main loop.
@@ -28,18 +34,18 @@ class PLC2(PLC):
         saved_tank_levels = [["iteration", "timestamp", "TANK_LEVEL"]]
         print 'DEBUG: plc2 enters main_loop.'
         while True:
+            try:
+                control = int(self.get(CONTROL))
+                if control == 0:
+                    try:
+                        self.tank_level = Decimal(self.receive(T_LVL, PLC1_ADDR))
+                    except Exception:
+                        if flag_attack_dos_plc2:
+                            self.set(ATT_1, 1)
+                        continue
 
-            master_time = int(self.get(TIME))
-            while self.local_time < master_time:
-                try:
-
-                    self.tank_level = Decimal(self.receive(T_LVL, PLC1_ADDR))
-
-                    print("master_time %d ------------- " % master_time)
-                    print("ITERATION %d ------------- " % self.local_time)
-                    print("Tank Level %f " % self.tank_level)
-                    saved_tank_levels.append([self.local_time, datetime.now(), self.tank_level])
                     self.local_time += 1
+                    saved_tank_levels.append([self.local_time, datetime.now(), self.tank_level])
 
                     if flag_attack_plc2:
                         if 300 <= self.local_time <= 450:
@@ -51,39 +57,27 @@ class PLC2(PLC):
                     if flag_attack_dos_plc2:
                         self.set(ATT_1, 0)
 
-                except Exception:
-                    if flag_attack_dos_plc2:
-                        self.set(ATT_1, 1)
-                    continue
+                    print("Tank Level %f " % self.tank_level)
+                    print("Applying control")
+                    print("ITERATION %d ------------- " % self.local_time)
 
-                except KeyboardInterrupt:
-                    with open('output/plc2_saved_tank_levels_received.csv', 'w') as f:
-                        writer = csv.writer(f)
-                        writer.writerows(saved_tank_levels)
-                    return
+                    if self.tank_level < 4:
+                        self.set(P1_STS, 1)
 
-            if self.local_time == master_time:
+                    if self.tank_level > 6.3:
+                        self.set(P1_STS, 0)
 
-                # CONTROL PUMP1
-                print("Applying control")
-                print("master_time %d ------------- " % master_time)
-                print("ITERATION %d ------------- " % self.local_time)
+                    # CONTROL PUMP2
+                    if self.tank_level < 1:
+                        self.set(P2_STS, 1)
 
-                if self.tank_level < 4:
-                    self.set(P1_STS, 1)
+                    if self.tank_level > 4.5:
+                        self.set(P2_STS, 0)
 
-                if self.tank_level > 6.3:
-                    self.set(P1_STS, 0)
+                    self.set(CONTROL, 1)
 
-                # CONTROL PUMP2
-                if self.tank_level < 1:
-                    self.set(P2_STS, 1)
-
-                if self.tank_level > 4.5:
-                    self.set(P2_STS, 0)
-
-                self.set(CONTROL, 1)
-                time.sleep(0.1)
+            except KeyboardInterrupt:
+                write_output(saved_tank_levels)
 
 if __name__ == "__main__":
     plc2 = PLC2(

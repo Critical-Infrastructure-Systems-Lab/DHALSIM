@@ -1,7 +1,7 @@
 from minicps.devices import PLC
 from utils import PLC1_DATA, STATE, PLC1_PROTOCOL
 from utils import T_LVL, ATT_1, PLC1_ADDR, flag_attack_plc1, flag_attack_plc2, flag_attack_communication_plc1_scada, \
-    flag_attack_communication_plc1_plc2, flag_attack_dos_plc2, TIME
+    flag_attack_communication_plc1_plc2, flag_attack_dos_plc2, CONTROL
 
 import csv
 import time
@@ -16,17 +16,13 @@ tank_level=3.0
 class PLC1(PLC):
 
     def get_tank_level(self, a, b):
-        local_time = 0
         while self.reader:
-            master_time = int(self.get(TIME))
-            while local_time < master_time:
-                global tank_level
-                tank_level = Decimal(self.get(T_LVL))
-                local_time += 1
+            global tank_level
+            tank_level = Decimal(self.get(T_LVL))
 
     def pre_loop(self):
         print 'DEBUG: plc1 enters pre_loop'
-        self.reader=True
+        self.reader = True
         thread.start_new_thread(self.get_tank_level,(0,0))
 
     def main_loop(self):
@@ -35,7 +31,7 @@ class PLC1(PLC):
         i = 0
         saved_tank_levels = [["timestamp","TANK_LEVEL"]]
 
-        while (True):
+        while True:
             try:
                 global tank_level
                 saved_tank_levels.append([datetime.now(), tank_level])
@@ -55,8 +51,9 @@ class PLC1(PLC):
                             self.set(ATT_1, 0)
                 self.send(T_LVL, tank_level, PLC1_ADDR)
                 iteration += 1
+
             except KeyboardInterrupt:
-                self.reader=False
+                self.reader = False
                 with open('output/plc1_saved_tank_levels_received.csv', 'w') as f:
                     writer = csv.writer(f)
                     writer.writerows(saved_tank_levels)

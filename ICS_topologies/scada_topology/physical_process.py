@@ -108,16 +108,12 @@ while master_time <= iteration_limit:
     control = int(rows[0][0])  # PUMP1 STATUS FROM DATABASE
 
     if control == 1:
-        master_time += 1
         results = sim.run_sim(convergence_error=True)
-
+        master_time += 1
         print("ITERATION %d ------------- " % master_time)
         print("Tank Level %f " % tank.level)
 
         c.execute("UPDATE minitown SET value = %f WHERE name = 'T_LVL'" % tank.level)  # UPDATE TANK LEVEL IN THE DATABASE
-        conn.commit()
-
-        c.execute("UPDATE minitown SET value = %d WHERE name = 'TIME'" % master_time)  # UPDATE TANK LEVEL IN THE DATABASE
         conn.commit()
 
         # take the value of attacks labels from the database
@@ -144,9 +140,6 @@ while master_time <= iteration_limit:
 
         if results:
             time.sleep(0.5)
-
-    else:
-        continue
 
 with open('output/'+sys.argv[3], 'w', newline='\n') as f:
     writer = csv.writer(f)
