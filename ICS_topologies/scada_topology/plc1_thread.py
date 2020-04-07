@@ -49,8 +49,11 @@ class PLC1(PLC):
                     else:
                         if flag_attack_plc2 == 0 and flag_attack_communication_plc1_scada == 0 and flag_attack_communication_plc1_plc2 == 0 and flag_attack_dos_plc2 == 0:
                             self.set(ATT_1, 0)
-                self.send(T_LVL, tank_level, PLC1_ADDR)
-                iteration += 1
+
+                control = int(self.get(CONTROL))
+                if control == 0:
+                    self.send(T_LVL, tank_level, PLC1_ADDR)
+                    iteration += 1
 
             except KeyboardInterrupt:
                 self.reader = False
