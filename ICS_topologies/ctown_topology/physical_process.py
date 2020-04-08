@@ -96,8 +96,8 @@ def update_actuator_values():
 def update_actuator(actuator):
     rows_1 = c.execute("SELECT value FROM ctown WHERE name = actuator['name']").fetchall()
     conn.commit()
-
     new_status = rows_1[0][0]
+
     if new_status != actuator['value']:
         actuator['value'] = new_status
 
@@ -186,7 +186,7 @@ iteration_limit = (days*24*3600)/wn.options.time.hydraulic_timestep
 
 while master_time <= iteration_limit:
 
-    #update_actuator_values()
+    update_actuator_values()
 
     results = sim.run_sim(convergence_error=True)
     values_list = register_results(results)
