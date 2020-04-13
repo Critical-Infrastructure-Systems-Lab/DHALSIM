@@ -19,8 +19,6 @@ class PLC3(PLC):
     def pre_loop(self):
         print 'DEBUG: plc3 enters pre_loop'
         self.local_time = 0
-        self.t2 = Decimal(self.get(T2))
-        self.t3 = Decimal(self.get(T3))
 
     def main_loop(self):
         saved_tank_levels = [["iteration", "timestamp", "TANK_LEVEL"]]
