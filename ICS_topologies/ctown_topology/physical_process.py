@@ -111,7 +111,7 @@ def update_actuator(actuator):
         wn.add_control(actuator['name'], new_control)
 
 # connection to the database
-conn = sqlite3.connect('minitown_db.sqlite')
+conn = sqlite3.connect('ctown_db.sqlite')
 c = conn.cursor()
 
 dummy_condition = controls.ValueCondition(wn.get_node('T1'), 'level', '>=', -1)
