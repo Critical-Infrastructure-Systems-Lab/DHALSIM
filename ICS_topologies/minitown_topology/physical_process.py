@@ -4,6 +4,7 @@ import sqlite3
 import csv
 import time
 import sys
+from datetime import datetime
 
 
 """
@@ -31,8 +32,6 @@ class Simulation:
     def main(self):
         # Set option for step-by-step simulation
         self.wn.options.time.duration = 900
-        self.wn.options.time.hydraulic_timestep = 900
-        self.wn.options.time.pattern_timestep = 3600
 
         # This lists will be used to build the .csv file
         results_list = []
@@ -62,16 +61,18 @@ class Simulation:
         # Set the initial conditions of the actuators to the one pre defined into the DB
         rows = self.cursor.execute("SELECT value FROM minitown WHERE name = 'P1_STS'").fetchall()
         self.conn.commit()
-        pump1_status = rows[0][0]  # PUMP1 STATUS FROM DATABASE
-        act1 = controls.ControlAction(pump1, 'status', 0)
+        pump1_status = int(rows[0][0])  # PUMP1 STATUS FROM DATABASE
+        act1 = controls.ControlAction(pump1, 'status', pump1_status)
         pump1_control = controls.Control(condition, act1, name='pump1control')
+        pump1.status = pump1_status
 
         # Set the initial conditions of the actuators to the one pre defined into the DB
         rows = self.cursor.execute("SELECT value FROM minitown WHERE name = 'P2_STS'").fetchall()
         self.conn.commit()
-        pump2_status = rows[0][0]  # PUMP1 STATUS FROM DATABASE
-        act2 = controls.ControlAction(pump2, 'status', 1)
+        pump2_status = int(rows[0][0])  # PUMP1 STATUS FROM DATABASE
+        act2 = controls.ControlAction(pump2, 'status', pump2_status)
         pump2_control = controls.Control(condition, act2, name='pump2control')
+        pump2.status = pump2_status
 
         # WNTR works by reading these control objects and updating the state of the actuators
         self.wn.add_control('WnPump1Control', pump1_control)
@@ -89,6 +90,22 @@ class Simulation:
 
         days_simulated = 7
         iteration_limit = days_simulated*(24*3600) / self.wn.options.time.duration
+
+        results = None
+        attack1 = 0
+        attack2 = 0
+
+        #toDo Check if this is correct for the timestamps
+        now = (datetime.now()-datetime(1970,1,1)).total_seconds()
+
+        values_list = []
+        values_list.extend([self.master_time, now, tank.level, reservoir.head])
+        # toDo Fix the initial state of the junctions
+        for junction in junction_list:
+            values_list.extend([0.0])
+
+        values_list.extend([pump1.flow, pump2.flow, pump1_status, pump2_status, attack1, attack2])
+        results_list.append(values_list)
 
         # START STEP BY STEP SIMULATION
         while self.master_time <= iteration_limit:
@@ -119,6 +136,15 @@ class Simulation:
                 self.wn.add_control('WnPump1Control', pump1_control)
                 self.wn.add_control('WnPump2Control', pump2_control)
 
+                values_list = []
+                if results:
+                    values_list.extend([self.master_time, results.timestamp, tank.level, reservoir.head])
+                    for junction in junction_list:
+                        values_list.extend([self.wn.get_node(junction).head - self.wn.get_node(junction).elevation])
+
+                    values_list.extend([pump1.flow, pump2.flow, pump1_status, pump2_status, attack1, attack2])
+                    results_list.append(values_list)
+
                 results = sim.run_sim(convergence_error=True)
                 self.master_time += 1
                 print("ITERATION %d ------------- " % self.master_time)
@@ -135,16 +161,6 @@ class Simulation:
                 rows = self.cursor.execute("SELECT value FROM minitown WHERE name = 'ATT_2'").fetchall()
                 self.conn.commit()
                 attack2 = rows[0][0]
-
-                values_list = []
-
-                values_list.extend([self.master_time, results.timestamp, tank.level, reservoir.head])
-                for junction in junction_list:
-                    values_list.extend([self.wn.get_node(junction).head - self.wn.get_node(junction).elevation])
-
-                values_list.extend([pump1.flow, pump2.flow, pump1_status, pump2_status, attack1, attack2])
-
-                results_list.append(values_list)
 
                 self.cursor.execute("UPDATE minitown SET value = 0 WHERE name = 'CONTROL'")
                 self.conn.commit()
