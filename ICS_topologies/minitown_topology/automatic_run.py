@@ -4,7 +4,6 @@ from minicps.mcps import MiniCPS
 from topo import ScadaTopo
 import sys
 import time
-import subprocess
 
 automatic = 0
 
@@ -26,8 +25,6 @@ class Minitown(MiniCPS):
 
     def automatic_start(self):
 
-        subprocess.call(['rm', '-rf', 'logs/protocols_tests_enip_server'], shell=False)
-
         plc1 = net.get('plc1')
         plc2 = net.get('plc2')
 
@@ -41,7 +38,6 @@ class Minitown(MiniCPS):
         simulation.wait()
         plc1_process.kill()
         plc2_process.kill()
-
 
 if __name__ == "__main__":
     topo = ScadaTopo()

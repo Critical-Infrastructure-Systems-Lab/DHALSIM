@@ -114,11 +114,13 @@ def update_actuator(actuator):
 conn = sqlite3.connect('ctown_db.sqlite')
 c = conn.cursor()
 
-dummy_condition = controls.ValueCondition(wn.get_node('T1'), 'level', '>=', -1)
+
 
 # Create the network
 inp_file = sys.argv[2]+'_map.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
+
+dummy_condition = controls.ValueCondition(wn.get_node('T1'), 'level', '>=', -1)
 
 # We define the simulation times in seconds
 wn.options.time.duration = 1
