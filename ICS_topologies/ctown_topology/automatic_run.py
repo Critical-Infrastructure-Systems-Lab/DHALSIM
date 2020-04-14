@@ -6,7 +6,7 @@ import sys
 import time
 import subprocess
 
-automatic = 1
+automatic = 0
 
 class Minitown(MiniCPS):
     """ Script to run the Minitown SCADA topology """
@@ -26,6 +26,8 @@ class Minitown(MiniCPS):
 
     def automatic_start(self):
 
+        subprocess.call(['rm', '-rf', 'logs/protocols_tests_enip_server'], shell=False)
+
         plc1 = net.get('plc1')
         plc2 = net.get('plc2')
 
@@ -34,7 +36,8 @@ class Minitown(MiniCPS):
         plc2_process = plc2.popen(sys.executable, "automatic_plc.py", "-n", "plc2")
 
         plant = net.get('plant')
-        simulation = plant.popen(sys.executable, "automatic_plant.py" )
+        simulation = plant.popen("../../wntr-experiments/env/bin/python", "automatic_plant.py", "" )
+
         simulation.wait()
         plc1_process.kill()
         plc2_process.kill()
