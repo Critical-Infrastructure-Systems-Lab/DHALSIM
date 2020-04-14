@@ -63,6 +63,8 @@ class Simulation:
         self.conn.commit()
         pump1_status = int(rows[0][0])  # PUMP1 STATUS FROM DATABASE
         act1 = controls.ControlAction(pump1, 'status', pump1_status)
+        print("pump1 status %d" %pump1_status)
+
         pump1_control = controls.Control(condition, act1, name='pump1control')
         pump1.status = pump1_status
 
@@ -71,6 +73,8 @@ class Simulation:
         self.conn.commit()
         pump2_status = int(rows[0][0])  # PUMP1 STATUS FROM DATABASE
         act2 = controls.ControlAction(pump2, 'status', pump2_status)
+        print("pump2 status %d" %pump2_status)
+
         pump2_control = controls.Control(condition, act2, name='pump2control')
         pump2.status = pump2_status
 
@@ -147,8 +151,8 @@ class Simulation:
 
                 results = sim.run_sim(convergence_error=True)
                 self.master_time += 1
-                print("ITERATION %d ------------- " % self.master_time)
-                print("Tank Level %f " % tank.level)
+                #print("ITERATION %d ------------- " % self.master_time)
+                #print("Tank Level %f " % tank.level)
 
                 self.cursor.execute("UPDATE minitown SET value = %f WHERE name = 'T_LVL'" % tank.level)  # UPDATE TANK LEVEL IN THE DATABASE
                 self.conn.commit()

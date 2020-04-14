@@ -287,6 +287,12 @@
  11              	40          	10          
 
 [CONTROLS]
+; ----------- Tank 1 ---------------
+LINK          PUMP1 OPEN IF   NODE          TANK            BELOW          4
+LINK          PUMP1 CLOSED IF NODE          TANK            ABOVE          6.3
+
+LINK          PUMP2 OPEN IF   NODE          TANK            BELOW          1
+LINK          PUMP2 CLOSED IF NODE          TANK            ABOVE          4.5
 
 
 
