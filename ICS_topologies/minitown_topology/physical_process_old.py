@@ -46,6 +46,10 @@ pump1 = wn.get_link("PUMP1")  # WNTR PUMP OBJECT
 pump2 = wn.get_link("PUMP2")  # WNTR PUMP OBJECT
 reservoir = wn.get_node("R1")
 
+# Since we now use the same inp file, we need to delete the default controls
+for control in wn.control_name_list:
+    wn.remove_control(control)
+
 # We define a dummy condition that should always be true
 condition = controls.ValueCondition(tank, 'level', '>=', -1)
 

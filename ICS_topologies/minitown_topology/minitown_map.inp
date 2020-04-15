@@ -295,9 +295,6 @@ LINK          PUMP2 OPEN IF   NODE          TANK            BELOW          1
 LINK          PUMP2 CLOSED IF NODE          TANK            ABOVE          4.5
 
 
-
-
-
 [RULES]
 
 

@@ -4,6 +4,7 @@ import sqlite3
 import csv
 import time
 import sys
+from datetime import datetime
 
 
 """
@@ -31,8 +32,6 @@ class Simulation:
     def main(self):
         # Set option for step-by-step simulation
         self.wn.options.time.duration = 900
-        self.wn.options.time.hydraulic_timestep = 900
-        self.wn.options.time.pattern_timestep = 3600
 
         # This lists will be used to build the .csv file
         results_list = []
@@ -56,22 +55,32 @@ class Simulation:
         pump2 = self.wn.get_link("PUMP2")  # WNTR PUMP OBJECT
         reservoir = self.wn.get_node("R1")
 
+        # Since we now use the same inp file, we need to delete the default controls
+        for control in self.wn.control_name_list:
+            self.wn.remove_control(control)
+
         # We define a dummy condition that should always be true
         condition = controls.ValueCondition(tank, 'level', '>=', -1)
 
         # Set the initial conditions of the actuators to the one pre defined into the DB
         rows = self.cursor.execute("SELECT value FROM minitown WHERE name = 'P1_STS'").fetchall()
         self.conn.commit()
-        pump1_status = rows[0][0]  # PUMP1 STATUS FROM DATABASE
-        act1 = controls.ControlAction(pump1, 'status', 0)
+        pump1_status = int(rows[0][0])  # PUMP1 STATUS FROM DATABASE
+        act1 = controls.ControlAction(pump1, 'status', pump1_status)
+        print("pump1 status %d" %pump1_status)
+
         pump1_control = controls.Control(condition, act1, name='pump1control')
+        pump1.status = pump1_status
 
         # Set the initial conditions of the actuators to the one pre defined into the DB
         rows = self.cursor.execute("SELECT value FROM minitown WHERE name = 'P2_STS'").fetchall()
         self.conn.commit()
-        pump2_status = rows[0][0]  # PUMP1 STATUS FROM DATABASE
-        act2 = controls.ControlAction(pump2, 'status', 1)
+        pump2_status = int(rows[0][0])  # PUMP1 STATUS FROM DATABASE
+        act2 = controls.ControlAction(pump2, 'status', pump2_status)
+        print("pump2 status %d" %pump2_status)
+
         pump2_control = controls.Control(condition, act2, name='pump2control')
+        pump2.status = pump2_status
 
         # WNTR works by reading these control objects and updating the state of the actuators
         self.wn.add_control('WnPump1Control', pump1_control)
@@ -89,6 +98,32 @@ class Simulation:
 
         days_simulated = 7
         iteration_limit = days_simulated*(24*3600) / self.wn.options.time.duration
+
+        # To write the time -1 (or 0) of the results
+        results = None
+        attack1 = 0
+        attack2 = 0
+
+        values_list = []
+        values_list.extend([self.master_time, datetime.now(), tank.level, reservoir.head])
+
+        for junction in junction_list:
+            values_list.extend([self.wn.get_node(junction).base_demand])
+
+        values_list.extend([pump1.flow, pump2.flow])
+
+        if type(pump1.status) is int:
+            values_list.extend([pump1.status])
+        else:
+            values_list.extend([pump1.status.value])
+
+        if type(pump2.status) is int:
+            values_list.extend([pump2.status])
+        else:
+            values_list.extend([pump2.status.value])
+
+        values_list.extend([attack1, attack2])
+        results_list.append(values_list)
 
         # START STEP BY STEP SIMULATION
         while self.master_time <= iteration_limit:
@@ -113,10 +148,17 @@ class Simulation:
             self.wn.add_control('WnPump1Control', pump1_control)
             self.wn.add_control('WnPump2Control', pump2_control)
 
-            results = sim.run_sim(convergence_error=True)
+            values_list = []
+            if results:
+                values_list.extend([self.master_time, results.timestamp, tank.level, reservoir.head])
+                for junction in junction_list:
+                    values_list.extend([self.wn.get_node(junction).head - self.wn.get_node(junction).elevation])
 
-            print("ITERATION %d ------------- " % self.master_time)
-            print("Tank Level %f " % tank.level)
+                values_list.extend([pump1.flow, pump2.flow, pump1_status, pump2_status, attack1, attack2])
+                results_list.append(values_list)
+
+            results = sim.run_sim(convergence_error=True)
+            self.master_time += 1
 
             self.cursor.execute("UPDATE minitown SET value = %f WHERE name = 'T_LVL'" % tank.level)  # UPDATE TANK LEVEL IN THE DATABASE
             self.conn.commit()
@@ -130,16 +172,9 @@ class Simulation:
             self.conn.commit()
             attack2 = rows[0][0]
 
-            values_list = []
+            self.cursor.execute("UPDATE minitown SET value = 0 WHERE name = 'CONTROL'")
+            self.conn.commit()
 
-            values_list.extend([self.master_time, results.timestamp, tank.level, reservoir.head])
-            for junction in junction_list:
-                values_list.extend([self.wn.get_node(junction).head - self.wn.get_node(junction).elevation])
-
-            values_list.extend([pump1.flow, pump2.flow, pump1_status, pump2_status, attack1, attack2])
-            results_list.append(values_list)
-
-            self.master_time += 1
             if results:
                 time.sleep(0.5)
 

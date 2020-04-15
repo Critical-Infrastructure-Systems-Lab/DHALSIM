@@ -55,6 +55,10 @@ class Simulation:
         pump2 = self.wn.get_link("PUMP2")  # WNTR PUMP OBJECT
         reservoir = self.wn.get_node("R1")
 
+        # Since we now use the same inp file, we need to delete the default controls
+        for control in self.wn.control_name_list:
+            self.wn.remove_control(control)
+
         # We define a dummy condition that should always be true
         condition = controls.ValueCondition(tank, 'level', '>=', -1)
 
@@ -95,20 +99,30 @@ class Simulation:
         days_simulated = 7
         iteration_limit = days_simulated*(24*3600) / self.wn.options.time.duration
 
+        # To write the time -1 (or 0) of the results
         results = None
         attack1 = 0
         attack2 = 0
 
-        #toDo Check if this is correct for the timestamps
-        now = (datetime.now()-datetime(1970,1,1)).total_seconds()
-
         values_list = []
-        values_list.extend([self.master_time, now, tank.level, reservoir.head])
-        # toDo Fix the initial state of the junctions
-        for junction in junction_list:
-            values_list.extend([0.0])
+        values_list.extend([self.master_time, datetime.now(), tank.level, reservoir.head])
 
-        values_list.extend([pump1.flow, pump2.flow, pump1_status, pump2_status, attack1, attack2])
+        for junction in junction_list:
+            values_list.extend([self.wn.get_node(junction).base_demand])
+
+        values_list.extend([pump1.flow, pump2.flow])
+
+        if type(pump1.status) is int:
+            values_list.extend([pump1.status])
+        else:
+            values_list.extend([pump1.status.value])
+
+        if type(pump2.status) is int:
+            values_list.extend([pump2.status])
+        else:
+            values_list.extend([pump2.status.value])
+
+        values_list.extend([attack1, attack2])
         results_list.append(values_list)
 
         # START STEP BY STEP SIMULATION
@@ -151,8 +165,6 @@ class Simulation:
 
                 results = sim.run_sim(convergence_error=True)
                 self.master_time += 1
-                #print("ITERATION %d ------------- " % self.master_time)
-                #print("Tank Level %f " % tank.level)
 
                 self.cursor.execute("UPDATE minitown SET value = %f WHERE name = 'T_LVL'" % tank.level)  # UPDATE TANK LEVEL IN THE DATABASE
                 self.conn.commit()
@@ -171,6 +183,7 @@ class Simulation:
 
                 if results:
                     time.sleep(0.5)
+
         self.write_results(results_list)
 
     def write_results(self, results):

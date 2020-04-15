@@ -23,6 +23,7 @@ class PLC2(PLC):
 
     def pre_loop(self):
         print 'DEBUG: plc2 enters pre_loop'
+        self.local_time = 0
 
     def main_loop(self):
         """plc2 main loop.
@@ -30,12 +31,33 @@ class PLC2(PLC):
             - update interval enip server
         """
 
-        saved_tank_levels = ["timestamp", "TANK_LEVEL"]
+        saved_tank_levels = [["iteration", "timestamp", "TANK_LEVEL"]]
         print 'DEBUG: plc2 enters main_loop.'
         while True:
             try:
                 self.tank_level = Decimal(self.receive(T_LVL, PLC1_ADDR))
-                saved_tank_levels.append([datetime.now(), self.tank_level])
+
+                control = int(self.get(CONTROL))
+                if control == 1:
+                    print "Continuing..."
+                    continue
+
+                self.local_time += 1
+                saved_tank_levels.append([self.local_time, datetime.now(), self.tank_level])
+
+                if flag_attack_plc2:
+                    if 300 <= self.local_time <= 450:
+                        self.set(ATT_1, 1)
+                        continue
+                    else:
+                        self.set(ATT_1, 0)
+
+                if flag_attack_dos_plc2:
+                    self.set(ATT_1, 0)
+
+                print("Tank Level %f " % self.tank_level)
+                print("Applying control")
+                print("ITERATION %d ------------- " % self.local_time)
 
                 if self.tank_level < 4:
                     self.set(P1_STS, 1)
@@ -54,6 +76,11 @@ class PLC2(PLC):
 
             except KeyboardInterrupt:
                 write_output(saved_tank_levels)
+
+            except Exception:
+                if flag_attack_dos_plc2:
+                    self.set(ATT_1, 1)
+                continue
 
 if __name__ == "__main__":
     plc2 = PLC2(
