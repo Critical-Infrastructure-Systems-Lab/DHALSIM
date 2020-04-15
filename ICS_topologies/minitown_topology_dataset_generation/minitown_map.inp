@@ -287,10 +287,12 @@
  11              	40          	10          
 
 [CONTROLS]
+; ----------- Tank 1 ---------------
+LINK          PUMP1 OPEN IF   NODE          TANK            BELOW          4
+LINK          PUMP1 CLOSED IF NODE          TANK            ABOVE          6.3
 
-
-
-
+LINK          PUMP2 OPEN IF   NODE          TANK            BELOW          1
+LINK          PUMP2 CLOSED IF NODE          TANK            ABOVE          4.5
 
 
 [RULES]
@@ -349,7 +351,15 @@
 ;Tank            	Model
 
 [TIMES]
-
+ Duration           	168:00 
+ Hydraulic Timestep 	0:15
+ Quality Timestep   	0:05 
+ Pattern Timestep   	1:00
+ Pattern Start      	0:00 
+ Report Timestep    	0:15
+ Report Start       	0:00 
+ Start ClockTime    	0:00:00
+ Statistic          	NONE
 
 [REPORT]
  Status             	No

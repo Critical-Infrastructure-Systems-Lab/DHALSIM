@@ -6,7 +6,7 @@ import sys
 import time
 import subprocess
 
-automatic = 1
+automatic = 0
 
 class Minitown(MiniCPS):
     """ Script to run the Minitown SCADA topology """
