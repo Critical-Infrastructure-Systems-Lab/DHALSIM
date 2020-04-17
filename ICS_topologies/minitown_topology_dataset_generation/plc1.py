@@ -7,8 +7,9 @@ import csv
 from datetime import datetime
 from decimal import Decimal
 
-import time
-import thread
+import subprocess
+import shlex
+import sys
 
 plc1_log_path = 'plc1.log'
 tank_level=3.0
@@ -18,6 +19,10 @@ def write_output(saved_tank_levels):
     with open('output/plc1_saved_tank_levels_received.csv', 'w') as f:
         writer = csv.writer(f)
         writer.writerows(saved_tank_levels)
+
+def move_files(path):
+    cmd = shlex.split("./copy_output.sh " + str(path))
+    subprocess.call(cmd)
     exit(0)
 
 class PLC1(PLC):
@@ -71,6 +76,8 @@ class PLC1(PLC):
 
             except KeyboardInterrupt:
                 write_output(saved_tank_levels)
+                print(sys.argv[1])
+                move_files(sys.argv[1])
                 return
 
 

@@ -1,10 +1,14 @@
 import wntr
+import wntr_utils
 import wntr.network.controls as controls
 import sqlite3
 import csv
 import time
 import sys
+import pandas as pd
 from datetime import datetime
+from sklearn.preprocessing import MinMaxScaler
+import subprocess
 
 
 """
@@ -13,6 +17,7 @@ The simulation is run in concurrence with the minitown MiniCPS topology. This cl
 P1 and P2 status, updates the WNTR controls of those actuators, runs a new simulation step, and outputs the new
 water tank level into the DB. Finally, the results of the simulation are stored in .csv format
 """
+
 class Simulation:
 
     def __init__(self):
@@ -29,7 +34,68 @@ class Simulation:
         self.inp_file = sys.argv[2]+'_map.inp'
         self.wn = wntr.network.WaterNetworkModel(self.inp_file)
 
+    def create_initial_conditions(self):
+
+        # Read the generated demands
+        df_new = pd.read_csv('trial_30weeks_version2.csv', index_col=0)
+        d_max = 0.0125
+        constant = 0.00
+        scaler = MinMaxScaler(feature_range=(0, d_max))
+        temp = scaler.fit_transform(df_new.values.reshape(-1, 1))
+        df_scaled = pd.DataFrame(columns=df_new.columns, data=temp.reshape(df_new.shape)) + constant
+
+        tank = self.wn.get_node('TANK')
+
+        # The initial values must be same for the simulations and attacks
+        init_levels = pd.read_csv('minitown_initial_tank_levels.csv', index_col=0)
+        self.tank_init = int(init_levels.iloc[0].name)
+
+        # Get the week index
+        week_index = int(sys.argv[4])
+
+        # Replace the default minitown demands with the new ones and scale them
+        df_check = wntr_utils.get_demand_patterns_from_nodes(self.wn)
+        df_old = wntr_utils.get_demand_patterns_from_nodes(self.wn)
+
+        # Substitute new demands
+        juncs = df_old.columns
+
+        juncs = juncs[(df_old.sum() > 0).values].tolist()  # these are the demand nodes
+        assert (len(juncs) == df_scaled.shape[1])  # check if they match columns in new demands
+        d_juncs = dict(zip(juncs, df_scaled.columns))  # match each demand node with new demand
+
+        # remove old patterns (this seems to work, can be done better to speed it up)
+        for p_name in self.wn.pattern_name_list:
+            for j_name in self.wn.junction_name_list:
+                try:
+                    self.wn._pattern_reg.remove_usage(p_name, (self.wn.name, j_name))
+                except:
+                    pass
+                    # print(f'Junction {j_name} not using pattern {p_name}')
+
+        new_pat = {}
+        new_pat['pat1'] = df_scaled['pat1'].values[168 * week_index:168 * (week_index + 1) - 1]
+        new_pat['pat2'] = df_scaled['pat2'].values[168 * week_index:168 * (week_index + 1) - 1]
+        new_pat['pat3'] = df_scaled['pat3'].values[168 * week_index:168 * (week_index + 1) - 1]
+        new_pat['pat4'] = df_scaled['pat4'].values[168 * week_index:168 * (week_index + 1) - 1]
+
+        # Add the weekly pattern
+        for name in df_scaled.columns:
+            self.wn.add_pattern(name=name, pattern=new_pat[name])
+
+        # We leave this loop as it is
+        for name in juncs:
+            junc = self.wn.get_node(name)
+            junc.add_demand(1, d_juncs[name])
+
+        for name in juncs:
+            junc = self.wn.get_node(name)
+            junc.add_demand(1, d_juncs[name])
+
     def main(self):
+
+        self.create_initial_conditions()
+
         # Set option for step-by-step simulation
         self.wn.options.time.duration = 900
 
@@ -159,6 +225,7 @@ class Simulation:
 
             results = sim.run_sim(convergence_error=True)
             self.master_time += 1
+            print("ITERATION %d ------------- " % self.master_time)
 
             self.cursor.execute("UPDATE minitown SET value = %f WHERE name = 'T_LVL'" % tank.level)  # UPDATE TANK LEVEL IN THE DATABASE
             self.conn.commit()
