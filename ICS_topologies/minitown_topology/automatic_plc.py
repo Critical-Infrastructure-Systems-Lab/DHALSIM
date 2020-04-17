@@ -17,6 +17,7 @@ class NodeControl():
         process_tcp_dump.kill()
 
     def process_arguments(self,arg_parser):
+
         if arg_parser.name:
             self.name = arg_parser.name
             print self.name

@@ -23,6 +23,11 @@ class NodeControl():
         else:
             self.name = 'plc1'
 
+        if arg_parser.week:
+            self.week_index = arg_parser.week
+        else:
+            self.week_index = 1
+
     def delete_log(self):
         subprocess.call(['rm', '-rf', self.name + '.log'])
 
@@ -36,16 +41,17 @@ class NodeControl():
 
     def start_tcpdump_capture(self):
         pcap = self.interface_name+'.pcap'
-        tcp_dump = subprocess.Popen(['tcpdump', '-i', self.interface_name, '-w', 'output/'+pcap], shell=False)
+        tcp_dump = subprocess.Popen(['tcpdump', '-i', self.interface_name, '-w', 'output/' + pcap], shell = False)
         return tcp_dump
 
     def start_plc(self):
-        plc_process = subprocess.Popen(['python', self.name + '.py'], shell=False)
+        plc_process = subprocess.Popen(['python', self.name + '.py', self.week_index], shell=False)
         return plc_process
 
     def get_arguments(self):
         parser = argparse.ArgumentParser(description='Master Script of a node in Minicps')
         parser.add_argument("--name", "-n",help="Name of the mininet node and script to run")
+        parser.add_argument("--week", "-w", help="Week index of the simulation")
         return parser.parse_args()
 
 if __name__=="__main__":
