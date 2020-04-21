@@ -46,12 +46,10 @@ class Simulation:
 
         tank = self.wn.get_node('TANK')
 
-        # The initial values must be same for the simulations and attacks
-        init_levels = pd.read_csv('minitown_initial_tank_levels.csv', index_col=0)
-        self.tank_init = int(init_levels.iloc[0].name)
-
         # Get the week index
         week_index = int(sys.argv[4])
+        init_levels = pd.read_csv('minitown_initial_tank_levels.csv', index_col=0)
+        self.tank_init = float(init_levels.iloc[week_index].name)
 
         # Replace the default minitown demands with the new ones and scale them
         df_check = wntr_utils.get_demand_patterns_from_nodes(self.wn)
@@ -98,6 +96,8 @@ class Simulation:
 
         # Set option for step-by-step simulation
         self.wn.options.time.duration = 900
+        tank = self.wn.get_node('TANK')
+        tank.init_level = self.tank_init
 
         # This lists will be used to build the .csv file
         results_list = []
