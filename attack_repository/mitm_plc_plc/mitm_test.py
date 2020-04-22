@@ -12,7 +12,7 @@ import os
 import sqlite3
 
 # connection to the database
-conn = sqlite3.connect('../../ICS_topologies/scada_topology/minitown_db.sqlite')
+conn = sqlite3.connect('../../ICS_topologies/minitown_topology_dataset_generation/minitown_db.sqlite')
 c = conn.cursor()
 
 enip_port = 44818
