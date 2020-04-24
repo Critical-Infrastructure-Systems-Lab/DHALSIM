@@ -3,9 +3,7 @@ from netfilterqueue import NetfilterQueue
 from scapy.layers.inet import IP
 from scapy.layers.inet import TCP
 from scapy.all import Ether
-from scapy.all import Raw
 from scapy.all import *
-import time
 import sys
 import os
 
@@ -38,7 +36,6 @@ def injection(raw):
     conn.commit()
     pay = translate_float_to_load(fake_value, raw[0], raw[1])
     return pay
-
 
 def capture(packet):
     global injection_phase

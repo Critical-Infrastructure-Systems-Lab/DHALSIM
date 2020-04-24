@@ -1,7 +1,7 @@
 from minicps.devices import PLC
 from utils import PLC2_DATA, STATE, PLC2_PROTOCOL
 from utils import T_LVL, P1_STS, P2_STS,ATT_1, PLC1_ADDR,  \
-    flag_attack_plc2, flag_attack_dos_plc2, TIME, CONTROL
+    flag_attack_plc2, flag_attack_dos_plc2, CONTROL
 import csv
 from datetime import datetime
 import logging
@@ -46,8 +46,11 @@ class PLC2(PLC):
                 saved_tank_levels.append([self.local_time, datetime.now(), self.tank_level])
 
                 if flag_attack_plc2:
-                    if 300 <= self.local_time <= 450:
+                    if 382 <= self.local_time <= 558:
+                        print("ITERATION %d ------------- " % self.local_time)
+                        print "Ignoring pumps"
                         self.set(ATT_1, 1)
+                        self.set(P2_STS, 0)
                         continue
                     else:
                         self.set(ATT_1, 0)
@@ -56,8 +59,8 @@ class PLC2(PLC):
                     self.set(ATT_1, 0)
 
                 print("Tank Level %f " % self.tank_level)
-                print("Applying control")
                 print("ITERATION %d ------------- " % self.local_time)
+                print("Applying control")
 
                 if self.tank_level < 4:
                     self.set(P1_STS, 1)
