@@ -125,6 +125,8 @@ class Simulation:
         for control in self.wn.control_name_list:
             self.wn.remove_control(control)
 
+        print("Control List: " + str(self.wn.control_name_list))
+
         # We define a dummy condition that should always be true
         condition = controls.ValueCondition(tank, 'level', '>=', -1)
 
