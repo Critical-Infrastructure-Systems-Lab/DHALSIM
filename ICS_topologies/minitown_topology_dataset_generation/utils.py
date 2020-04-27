@@ -46,7 +46,7 @@ TIME = ('TIME', 1)
 CONTROL = ('CONTROL', 1)
 
 flag_attack_plc1 = 0
-flag_attack_plc2 = 1
+flag_attack_plc2 = 0
 flag_attack_communication_plc1_scada = 0
 flag_attack_communication_plc1_plc2 = 0
 flag_attack_dos_plc2 = 0

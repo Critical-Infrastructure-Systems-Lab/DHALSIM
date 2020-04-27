@@ -72,7 +72,7 @@ class PLC1(PLC):
                         print("Under Attack---------------------- ")
                         self.tank_level = Decimal(1.5)+fake_values[inject_index]*2 + self.tank_level
                         inject_index += 1
-                        self.set(ATT_1, 2)
+                        self.set(ATT_1, 3)
                         if inject_index == len(fake_values):
                             stop_plc1_attack = True
 
