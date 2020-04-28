@@ -20,6 +20,8 @@ def write_output(saved_tank_levels):
         writer = csv.writer(f)
         writer.writerows(saved_tank_levels)
 
+#todo: Instead of KeyboardInterruption, we should register a signal processer
+
 def move_files(path):
     cmd = shlex.split("./copy_output.sh " + str(path))
     subprocess.call(cmd)
