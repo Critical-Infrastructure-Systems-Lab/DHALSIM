@@ -30,7 +30,7 @@ auto-mitm:
 	   mkdir minitown_topology/output;\
 	fi
 	cd minitown_topology; rm -rf minitown_db.sqlite; $(PYTHON) $(PYTHON_OPTS) init.py; sudo chown mininet:mininet minitown_db.sqlite
-	sudo pkill  -f -u root "python -m cpppo.server.enip"
+	sudo pkill -f -u root "python -m cpppo.server.enip"
 	sudo mn -c
 	cd minitown_topology; sudo $(PYTHON) $(PYTHON_OPTS) automatic_run.py
 

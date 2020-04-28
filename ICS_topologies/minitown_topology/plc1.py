@@ -45,7 +45,8 @@ class PLC1(PLC):
             - updates its enip server
         """
         fake_values = []
-        saved_tank_levels = [["iteration", "timestamp", "TANK_LEVEL"]]
+        saved_tank_levels = [[""
+                              "", "timestamp", "TANK_LEVEL"]]
 
         while True:
             try:

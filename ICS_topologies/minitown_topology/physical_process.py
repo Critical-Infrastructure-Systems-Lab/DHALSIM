@@ -191,6 +191,8 @@ class Simulation:
             writer = csv.writer(f)
             writer.writerows(results)
 
+
 if __name__=="__main__":
     simulation = Simulation()
     simulation.main()
+    exit(0)
