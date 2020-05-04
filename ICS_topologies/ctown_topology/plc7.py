@@ -34,7 +34,6 @@ class PLC7(PLC):
                 saved_tank_levels.append([self.local_time, datetime.now(), self.t5])
 
                 print("Tank Level %f " % self.t5)
-                print("Applying control")
                 print("ITERATION %d ------------- " % self.local_time)
                 self.send(T5, self.t5, PLC7_ADDR)
 

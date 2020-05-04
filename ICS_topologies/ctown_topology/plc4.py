@@ -1,6 +1,6 @@
 from minicps.devices import PLC
 from utils import PLC4_DATA, STATE, PLC4_PROTOCOL
-from utils import T4, PLC4_ADDR
+from utils import T3, PLC4_ADDR
 import csv
 from datetime import datetime
 import logging
@@ -29,14 +29,13 @@ class PLC4(PLC):
         saved_tank_levels = [["iteration", "timestamp", "TANK_LEVEL"]]
         while True:
             try:
-                self.t4 = Decimal(self.get(T4))
+                self.t3 = Decimal(self.get(T3))
                 self.local_time += 1
-                saved_tank_levels.append([self.local_time, datetime.now(), self.t4])
+                saved_tank_levels.append([self.local_time, datetime.now(), self.t3])
 
-                print("Tank Level %f " % self.t4)
-                print("Applying control")
+                print("Tank Level %f " % self.t3)
                 print("ITERATION %d ------------- " % self.local_time)
-                self.send(T4, self.t4, PLC4_ADDR)
+                self.send(T4, self.t3, PLC4_ADDR)
 
             except KeyboardInterrupt:
                 write_output(saved_tank_levels)

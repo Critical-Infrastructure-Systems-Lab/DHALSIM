@@ -3,7 +3,7 @@ import wntr.network.controls as controls
 import sqlite3
 import csv
 import time
-
+from datetime import datetime
 import sys
 
 def get_node_list_by_type(list, type):
@@ -49,7 +49,7 @@ def create_control_dict(actuator):
     act_dict['actuator'] = wn.get_link(actuator)
     act_dict['parameter'] = 'status'
     act_dict['condition'] = dummy_condition
-    act_dict['name'] = actuator + "_control"
+    act_dict['name'] = actuator
     if type(wn.get_link(actuator).status) is int:
         act_dict['value'] = act_dict['actuator'].status
     else:
@@ -72,6 +72,7 @@ def register_results(results):
 
     # Get pumps flows and status
     for pump in pump_list:
+
         values_list.extend([wn.get_link(pump).flow])
 
         if type(wn.get_link(pump).status) is int:
@@ -89,31 +90,35 @@ def register_results(results):
             values_list.extend([wn.get_link(valve).status.value])
     return values_list
 
-def update_actuator_values():
-    for actuator in control_list:
-        update_actuator(actuator)
+def update_controls():
+    for control in control_list:
+        update_control(control)
 
-def update_actuator(actuator):
-    rows_1 = c.execute("SELECT value FROM ctown WHERE name = actuator['name']").fetchall()
+def update_control(control):
+    act_name = '\'' + control['name'] + '\''
+    rows_1 = c.execute('SELECT value FROM ctown WHERE name = ' + act_name).fetchall()
     conn.commit()
-    new_status = rows_1[0][0]
+    new_status = int(rows_1[0][0])
 
-    if new_status != actuator['value']:
-        actuator['value'] = new_status
+    control['value'] = new_status
 
-        #act1 = controls.ControlAction(pump1, 'status', int(pump1_status))
-        new_action  = controls.ControlAction(control['actuator'], control['parameter'], control['value'])
+    #act1 = controls.ControlAction(pump1, 'status', int(pump1_status))
+    new_action  = controls.ControlAction(control['actuator'], control['parameter'], control['value'])
 
-        #pump1_control = controls.Control(condition, act1, name='pump1control')
-        new_control = controls.Control(control['condition'], new_action, control['name'])
+    #pump1_control = controls.Control(condition, act1, name='pump1control')
+    new_control = controls.Control(control['condition'], new_action, name=control['name'])
 
-        wn.remove_control(actuator['name'])
-        wn.add_control(actuator['name'], new_control)
+    wn.remove_control(control['name'])
+    wn.add_control(control['name'], new_control)
+
+def write_results(results):
+    with open('output/'+sys.argv[3], 'w', newline='\n') as f:
+        writer = csv.writer(f)
+        writer.writerows(results)
 
 # connection to the database
 conn = sqlite3.connect('ctown_db.sqlite')
 c = conn.cursor()
-
 
 
 # Create the network
@@ -124,10 +129,6 @@ dummy_condition = controls.ValueCondition(wn.get_node('T1'), 'level', '>=', -1)
 
 # We define the simulation times in seconds
 wn.options.time.duration = 1
-wn.options.time.hydraulic_timestep = 5*60
-wn.options.time.quality_timestep = 5*60
-wn.options.time.pattern_timestep = 60*60
-wn.options.time.report_timestep = 5*60
 
 list_header = []
 node_list = list(wn.node_name_list)
@@ -169,7 +170,7 @@ for pump in pump_list:
 for control in control_list:
     #act1 = controls.ControlAction(pump1, 'status', int(pump1_status))
     an_action = controls.ControlAction(control['actuator'], control['parameter'], control['value'])
-    a_control = controls.Control(control['condition'], an_action, control['name'])
+    a_control = controls.Control(control['condition'], an_action, name=control['name'])
     wn.add_control(control['name'], a_control)
 
 if sys.argv[1] == 'pdd':
@@ -186,12 +187,25 @@ master_time = 0
 days = 1
 iteration_limit = (days*24*3600)/wn.options.time.hydraulic_timestep
 
+
 while master_time <= iteration_limit:
 
-    update_actuator_values()
-
+    update_controls()
+    print("ITERATION %d ------------- " % master_time)
     results = sim.run_sim(convergence_error=True)
     values_list = register_results(results)
 
     results_list.append(values_list)
     master_time += 1
+
+    for tank in tank_list:
+        tank_name = '\'' + tank + '\''
+        a_level = wn.get_node(tank).level
+        #%d days and %d nights' % (40, 40)
+        query = "UPDATE ctown SET value = " + str(a_level) + " WHERE name = " + tank_name
+        c.execute(query)  # UPDATE TANKS IN THE DATABASE
+        conn.commit()
+        #rows_1 = c.execute('SELECT value FROM ctown WHERE name = ' + act_name).fetchall()
+        #self.cursor.execute("UPDATE minitown SET value = %f WHERE name = 'T_LVL'" % tank.level)  # UPDATE TANK LEVEL IN THE DATABASE
+
+write_results(results_list)
