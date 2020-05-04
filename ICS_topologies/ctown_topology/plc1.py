@@ -33,24 +33,34 @@ class PLC1(PLC):
             try:
                 self.local_time += 1
                 self.t1 = Decimal(self.receive( T1, PLC2_ADDR ))
-                print("Tank Level %f " % self.t1)
+                print("ITERATION %d ------------- " % self.local_time)
+                print("Tank 1 Level %f " % self.t1)
                 saved_tank_levels.append([datetime.now(), self.t1])
 
-                if T1 < 4.0:
+                if self.t1 < 4.0:
+                    print("Opening P1")
                     self.set(PU1, 1)
 
-                if T1 > 6.3:
+                if self.t1 > 6.3:
+                    print("Closing P1")
                     self.set(PU1, 0)
 
-                if T1 < 1.0:
+                if self.t1 < 1.0:
+                    print("Opening P2")
                     self.set(PU2, 1)
 
-                if T1 > 4.5:
+                if self.t1 > 4.5:
+                    print("Closing P2")
                     self.set(PU2, 0)
+
+                time.sleep(0.1)
 
             except KeyboardInterrupt:
                 write_output(saved_tank_levels)
                 return
+            except Exception:
+                continue
+
 
 if __name__ == "__main__":
     plc1 = PLC1(

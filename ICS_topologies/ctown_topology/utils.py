@@ -43,6 +43,7 @@ PU9 = ('PU9', 1)
 PU10 = ('PU10', 1)
 PU11 = ('PU11', 1)
 
+v1 = ('v1', 1)
 V2 = ('V2', 1)
 
 ################################ Attack Flags ################################################################
@@ -327,10 +328,13 @@ SCHEMA_INIT = """
     INSERT INTO ctown VALUES ('PU6', 1, '0');  
     INSERT INTO ctown VALUES ('PU7', 1, '0');  
     INSERT INTO ctown VALUES ('PU8', 1,'0');
-    INSERT INTO ctown VALUES ('PU8', 1,'0');
+    INSERT INTO ctown VALUES ('PU9', 1,'0');
     INSERT INTO ctown VALUES ('PU10', 1, '0');  
-    INSERT INTO ctown VALUES ('PU11', 1, '0');    
-    INSERT INTO ctown VALUES ('V2', 1, '1');      
+    INSERT INTO ctown VALUES ('PU11', 1, '0');
+    INSERT INTO ctown VALUES ('v1', 1, '1');    
+    INSERT INTO ctown VALUES ('V2', 1, '0');
+    INSERT INTO ctown VALUES ('V45', 1, '1');    
+    INSERT INTO ctown VALUES ('V47', 1, '1');
     INSERT INTO ctown VALUES ('ATT_1', 1, '0' );  
     INSERT INTO ctown VALUES ('ATT_2', 1, '0' );            
 """
