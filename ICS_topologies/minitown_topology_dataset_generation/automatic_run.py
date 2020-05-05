@@ -7,7 +7,7 @@ import time
 import shlex
 import subprocess
 
-automatic = 0
+automatic = 1
 
 class Minitown(MiniCPS):
     """ Script to run the Minitown SCADA topology """
