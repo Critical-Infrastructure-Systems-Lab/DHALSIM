@@ -35,7 +35,7 @@ class PLC4(PLC):
 
                 print("Tank Level %f " % self.t3)
                 print("ITERATION %d ------------- " % self.local_time)
-                self.send(T4, self.t3, PLC4_ADDR)
+                self.send(T3, self.t3, PLC4_ADDR)
 
             except KeyboardInterrupt:
                 write_output(saved_tank_levels)
