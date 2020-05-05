@@ -22,6 +22,19 @@ scada-mini:
 	sudo mn -c
 	cd minitown_topology; $(PYTHON) $(PYTHON_OPTS) run.py
 
+base:
+	if [ ! -d minitown_topology_base/logs ]; then\
+	   mkdir minitown_topology_base/logs;\
+	fi
+	if [ ! -d minitown_topology_base/output ]; then\
+	   mkdir minitown_topology_base/output;\
+	fi
+	cd minitown_topology_base; rm -rf minitown_db.sqlite; $(PYTHON) $(PYTHON_OPTS) init.py; sudo chown mininet:mininet minitown_db.sqlite
+	sudo pkill -f -u root "python -m cpppo.server.enip"
+	sudo mn -c
+	cd minitown_topology_base; sudo $(PYTHON) $(PYTHON_OPTS) automatic_run.py
+
+
 auto-mitm:
 	if [ ! -d minitown_topology/logs ]; then\
 	   mkdir minitown_topology/logs;\

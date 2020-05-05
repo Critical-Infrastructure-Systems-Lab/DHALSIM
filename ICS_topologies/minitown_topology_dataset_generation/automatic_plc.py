@@ -2,19 +2,34 @@ import subprocess
 import time
 import sys
 import argparse
+import signal
+
 
 class NodeControl():
+
+    def sigint_handler(self, sig, frame):
+        print "Stopping PLC"
+        self.process_tcp_dump.send_signal(signal.SIGINT)
+        self.process_tcp_dump.wait()
+
+        self.plc.terminate()
+        self.plc.wait()
+        sys.exit(0)
+
     def main(self):
         args = self.get_arguments()
         self.process_arguments(args)
+
+        signal.signal(signal.SIGINT, self.sigint_handler)
+        signal.signal(signal.SIGTERM, self.sigint_handler)
+
         self.configure_routing()
         self.delete_log()
-        process_tcp_dump = self.start_tcpdump_capture()
 
-        plc = self.start_plc()
-        plc.wait()
-        print "Stopping PLC1..."
-        process_tcp_dump.kill()
+        self.process_tcp_dump = self.start_tcpdump_capture()
+        self.plc = self.start_plc()
+        while self.plc.poll() is None:
+            pass
 
     def process_arguments(self,arg_parser):
         if arg_parser.name:
