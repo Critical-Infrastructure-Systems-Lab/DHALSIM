@@ -129,8 +129,6 @@ class Simulation:
         print(str(self.wn.get_control('WnPump1Control')))
         print(str(self.wn.get_control('WnPump2Control')))
 
-        iteration_limit = 2
-
         # START STEP BY STEP SIMULATION
         while self.master_time <= iteration_limit:
 

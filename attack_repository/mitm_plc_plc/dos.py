@@ -39,7 +39,7 @@ def start():
         c.execute("UPDATE minitown SET value = 4 WHERE name = 'ATT_1'")
         conn.commit()
         dos_count += 1
-        time.sleep(dos_message_duration)
+        time.sleep(1)
 
     print "[*] Stopping DoS"
     c.execute("UPDATE minitown SET value = 0 WHERE name = 'ATT_1'")

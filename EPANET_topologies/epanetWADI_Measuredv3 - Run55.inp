@@ -357,6 +357,8 @@ LINK V_PUB  CLOSED AT TIME 0
 LINK P_RAW1 CLOSED AT TIME 0
 LINK V_ER2i CLOSED AT TIME 0
 
+
+
 [RULES]
 
 [ENERGY]
@@ -418,7 +420,7 @@ LINK V_ER2i CLOSED AT TIME 0
  MAXCHECK           	10
  DAMPLIMIT          	0
  Unbalanced         	Continue 10
- Pattern            	Pat01
+ Pattern            	Consumer01
  Demand Multiplier  	1.0
  Emitter Exponent   	0.5
  Quality            	Chlorine mg/L
