@@ -71,6 +71,8 @@ ctown:
 	sudo mn -c
 	cd ctown_topology; sudo $(PYTHON) $(PYTHON_OPTS) automatic_run.py
 
+test:
+	echo $(week)
 
 clean-simulation:
 	sudo pkill  -f -u root "python -m cpppo.server.enip"

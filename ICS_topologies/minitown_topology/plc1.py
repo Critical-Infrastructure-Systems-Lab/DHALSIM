@@ -44,6 +44,7 @@ class PLC1(PLC):
         # threading
         self.reader = True
         self.local_time = 0
+        self.tank_level = Decimal(self.get(T_LVL))
         #self.thread_id = thread.start_new_thread(self.get_tank_level, (0, 0))
 
     def main_loop(self):

@@ -8,7 +8,6 @@ import signal
 class NodeControl():
 
     def sigint_handler(self, sig, frame):
-        print "Stopping PLC"
         self.process_tcp_dump.send_signal(signal.SIGINT)
         self.process_tcp_dump.wait()
 

@@ -6,8 +6,9 @@ import sys
 import time
 import shlex
 import subprocess
+import signal
 
-automatic = 1
+automatic = 0
 
 class Minitown(MiniCPS):
     """ Script to run the Minitown SCADA topology """
@@ -31,23 +32,25 @@ class Minitown(MiniCPS):
         plc2 = net.get('plc2')
         scada = net.get('scada')
 
+
+        self.week_index = sys.argv[1]
         self.create_log_files()
 
-        plc1_output = open("plc1.log", 'r+')
-        plc2_output = open("plc2.log", 'r+')
-        scada_output = open("scada.log", 'r+')
+        plc1_output = open("output/plc1.log", 'r+')
+        plc2_output = open("output/plc2.log", 'r+')
+        scada_output = open("output/scada.log", 'r+')
 
-        physical_output = open("physical.log", 'r+')
+        physical_output = open("output/physical.log", 'r+')
 
-        plc1_process = plc1.popen(sys.executable, "automatic_plc.py", "-n", "plc1", "-w", "1", stderr=sys.stdout, stdout=plc1_output )
+        plc1_process = plc1.popen(sys.executable, "automatic_plc.py", "-n", "plc1", "-w", self.week_index, stderr=sys.stdout, stdout=plc1_output )
         time.sleep(0.2)
-        plc2_process = plc2.popen(sys.executable, "automatic_plc.py", "-n", "plc2", "-w", "1", stderr=sys.stdout, stdout=plc2_output )
-        scada_process = scada.popen(sys.executable, "automatic_plc.py", "-n", "scada", "-w", "1", stderr=sys.stdout, stdout=scada_output )
+        plc2_process = plc2.popen(sys.executable, "automatic_plc.py", "-n", "plc2", "-w", self.week_index, stderr=sys.stdout, stdout=plc2_output )
+        scada_process = scada.popen(sys.executable, "automatic_plc.py", "-n", "scada", "-w", self.week_index, stderr=sys.stdout, stdout=scada_output )
 
         print "[*] Launched the PLCs and SCADA process, launching simulation..."
         plant = net.get('plant')
 
-        simulation_cmd = shlex.split("python automatic_plant.py -s pdd -t minitown -o physical_process.csv -w 1")
+        simulation_cmd = shlex.split("python automatic_plant.py -s pdd -t minitown -o physical_process.csv -w " + self.week_index)
         simulation = plant.popen(simulation_cmd, stderr=sys.stdout, stdout=physical_output)
 
         print "[] Simulating..."
@@ -63,8 +66,8 @@ class Minitown(MiniCPS):
         self.finish(plc1_process, plc2_process, scada_process)
 
     def create_log_files(self):
-        cmd = shlex.split("./create_log_files.sh")
-        subprocess.call(cmd)
+        subprocess.call("./create_log_files.sh")
+
 
     def force_finish(self, plc1, plc2, scada, simulation=None):
         plc1.kill()
@@ -81,32 +84,49 @@ class Minitown(MiniCPS):
     def finish(self, plc1, plc2, scada, simulation=None):
 
         #toDo: We have to handle differently the finish process, ideally we want to:
-        #   Send a SIGINT signal to the PLCS
-        #   Register a signal handler to gracefully handle that signal
         #   If the processes still exist after the SIGINT (they shouldn't) we send a SIGKILL
-
         print "[*] Simulation finished"
-        print "[] Terminating PLC1"
-        plc1.terminate()
-        print "[*] PLC1 terminated"
-        print "[] Terminating PLC2"
-        plc2.terminate()
-        print "[*] PLC2 terminated"
-        print "[] Terminating scada"
-        scada.terminate()
-        print "[*] All processes terminated"
 
-        # toDo: We have to handle differently for python 3.7 processes, such as simulation
-        if simulation:
-            simulation.terminate()
+        print "[] Terminating scada"
+        scada.send_signal(signal.SIGINT)
+        scada.wait()
+        if scada.poll() is None:
+            scada.terminate()
+        if scada.poll() is None:
+            scada.kill()
+        print "[*] SCADA terminated"
+
+        print "[] Terminating PLC2"
+        plc2.send_signal(signal.SIGINT)
+        plc2.wait()
+        if plc2.poll() is None:
+            plc2.terminate()
+        if plc2.poll() is None:
+            plc2.kill()
+        print "[*] PLC2 terminated"
+
+        print "[] Terminating PLC1"
+        plc1.send_signal(signal.SIGINT)
+        plc1.wait()
+        if plc1.poll() is None:
+            plc1.terminate()
+        if plc1.poll() is None:
+            plc1.kill()
+        print "[*] PLC1 terminated"
 
         cmd = shlex.split("./kill_cppo.sh")
         subprocess.call(cmd)
+
+        print "[*] All processes terminated"
+        if simulation:
+            simulation.terminate()
+
         net.stop()
         sys.exit(0)
 
 
 if __name__ == "__main__":
+
     topo = ScadaTopo()
     net = Mininet(topo=topo)
     minitown_cps = Minitown(name='minitown', net=net)
