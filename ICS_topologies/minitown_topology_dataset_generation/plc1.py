@@ -53,7 +53,7 @@ class PLC1(PLC):
         """
         fake_values = []
         inject_index = 0
-        stop_plc1_attack = True
+        stop_plc1_attack = False
         while True:
             self.local_time += 1
 
@@ -69,21 +69,19 @@ class PLC1(PLC):
             if flag_attack_plc1:
 
                 # Append measurements to fool the PLC2 that the value is low
-                if self.local_time < 382 and self.tank_level < 1.0:
-                    stop_plc1_attack = False
-                    fake_values.append( self.tank_level)
-                    self.set(ATT_1, 1)
+                if stop_plc1_attack == False:
+                    if self.tank_level < 1.0:
+                        fake_values.append( self.tank_level )
+                        self.set(ATT_1, 1)
 
-                elif self.local_time >= 382 and not stop_plc1_attack:
-                    self.tank_level = Decimal(1.5)+fake_values[inject_index]*2 + self.tank_level
-                    inject_index += 1
-                    self.set(ATT_1, 3)
-                    if inject_index == len(fake_values):
-                        stop_plc1_attack = True
-
-                else:
-                    if flag_attack_plc2 == 0 and flag_attack_communication_plc1_scada == 0 and flag_attack_communication_plc1_plc2 == 0 and flag_attack_dos_plc2 == 0:
-                        self.set(ATT_1, 0)
+                    if self.local_time >= 382:
+                        if inject_index < len(fake_values):
+                            self.tank_level = Decimal(1.5)+fake_values[inject_index]*2 + self.tank_level
+                            inject_index += 1
+                            self.set(ATT_1, 3)
+                        if inject_index >= 176:
+                            stop_plc1_attack = True
+                            self.set(ATT_1, 0)
 
             self.saved_tank_levels.append([datetime.now(), self.tank_level])
             self.send(T_LVL, self.tank_level, PLC1_ADDR)

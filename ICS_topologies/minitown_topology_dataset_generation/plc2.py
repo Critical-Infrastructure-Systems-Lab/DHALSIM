@@ -62,9 +62,6 @@ class PLC2(PLC):
                 else:
                     self.set(ATT_1, 0)
 
-            if flag_attack_dos_plc2:
-                self.set(ATT_1, 0)
-
             if self.tank_level < 4:
                 self.set(P1_STS, 1)
 
