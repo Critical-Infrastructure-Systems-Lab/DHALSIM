@@ -13,10 +13,10 @@ class MitmAttack():
             subprocess.call(['route', 'add', 'default', 'gw', '192.168.2.254', 'attacker2-eth0'], shell=False)
 
     def launch_mitm(self):
-        print 'Running MiTM attack...'
+        print 'Running MiTM attack to ' + self.target
         if self.target == 'scada':
             self.configure_routing()
-        mitm = subprocess.Popen(["../../../attack-experiments/env/bin/python", 'mitm_test.py', self.target])
+        mitm = subprocess.Popen(["../../../attack-experiments/env/bin/python", '/home/mininet/WadiTwin/attack_repository/mitm_plc_plc/mitm_attack.py', self.target])
         return mitm
 
     def launch_dos(self):
@@ -50,7 +50,7 @@ class MitmAttack():
         if arg_parser.target:
             self.target = arg_parser.target
         else:
-            self.target = 'plc2'
+            self.target = 'plc5'
 
     def get_arguments(self):
         parser = argparse.ArgumentParser(description='Master Script that launches LAN communication attacks')

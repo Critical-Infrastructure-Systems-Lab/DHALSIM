@@ -6,8 +6,11 @@ import sys
 import time
 import shlex
 import subprocess
+import signal
+
 
 automatic = 1
+mitm_attack = 1
 
 class Minitown(MiniCPS):
     """ Script to run the Minitown SCADA topology """
@@ -69,8 +72,18 @@ class Minitown(MiniCPS):
 
         simulation_cmd = shlex.split("python automatic_plant.py -s pdd -t ctown -o physical_process.csv")
         self.simulation = plant.popen(simulation_cmd, stderr=sys.stdout, stdout=physical_output)
-
         print "[] Simulating..."
+
+        # Launching automatically mitm attack
+        self.attacker = None
+        self.attacker_file = None
+        self.attacker_process = None
+        if mitm_attack == 1 :
+            self.attacker = net.get('attacker')
+            self.attacker_file =  open("output/attacker.log", 'r+')
+            self.attacker_process = self.attacker.popen(sys.executable, "../../attack_repository/mitm_plc_plc/automatic_ctown_mitm_attack.py", "-a", "mitm", "-t", "plc5", stderr=sys.stdout,
+                                                         stdout=self.attacker_file)
+        print "[] Attacking"
 
         try:
             while self.simulation.poll() is None:
@@ -102,6 +115,16 @@ class Minitown(MiniCPS):
         net.stop()
         sys.exit(1)
 
+    def end_plc_process(self, plc_process):
+
+        plc_process.send_signal(signal.SIGINT)
+        plc_process.wait()
+        if plc_process.poll() is None:
+            plc_process.terminate()
+        if plc_process.poll() is None:
+            plc_process.kill()
+
+
     def finish(self):
 
         #toDo: We have to handle differently the finish process, ideally we want to:
@@ -113,20 +136,20 @@ class Minitown(MiniCPS):
         index = 0
         for plc in self.receiver_plcs_processes:
             print "[] Terminating PLC" + str(self.receiver_plcs[index])
-            plc.kill()
+            self.end_plc_process(plc)
             print "[*] PLC" + str(self.receiver_plcs[index]) + " terminated"
             index += 1
 
         index = 0
         for plc in self.sender_plcs_processes:
             print "[] Terminating PLC" + str(self.sender_plcs[index])
-            plc.kill()
+            self.end_plc_process(plc)
             print "[*] PLC" + str(self.sender_plcs[index]) + " terminated"
             index += 1
 
+        self.end_plc_process(self.attacker_process)
         print "[*] All processes terminated"
 
-        # toDo: We have to handle differently for python 3.7 processes, such as simulation
         if self.simulation:
             self.simulation.terminate()
 

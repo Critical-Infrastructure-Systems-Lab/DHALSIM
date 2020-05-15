@@ -58,6 +58,7 @@ class PLC2(PLC):
                 if 382 <= self.local_time <= 558:
                     self.set(ATT_1, 1)
                     self.set(P2_STS, 0)
+                    time.sleep(0.1)
                     continue
                 else:
                     self.set(ATT_1, 0)
@@ -74,6 +75,7 @@ class PLC2(PLC):
 
             if self.tank_level > 4.5:
                 self.set(P2_STS, 0)
+
 
             time.sleep(0.1)
 

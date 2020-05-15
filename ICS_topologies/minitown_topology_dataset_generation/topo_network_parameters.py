@@ -43,25 +43,18 @@ class ScadaTopo(Topo):
         attacker = self.addHost('attacker', ip=IP['attacker'] + NETMASK, defaultRoute=gateway_1)
 
         self.addLink(s1, plc1)
+        self.addLink(s1, attacker)
 
-
-        #self.addLink(s1, plc2)
         print (mode)
         print (bw)
         print (delay)
         print (loss)
 
-        #linkopts = dict(bw=bw, delay=delay, loss=loss, max_queue_size=1000, use_htb=True)
         if mode == "free":
             self.addLink(s1, plc2)
         else:
-            if bw is None:
-                linkopts = dict(delay=delay, loss=int(loss), max_queue_size=1000, use_htb=True)
-            else:
-                linkopts = dict(bw=int(bw), delay=delay, loss=int(loss), max_queue_size=1000, use_htb=True)
+            linkopts = dict(bw=1000, delay="10ms", loss=1, max_queue_size=1000, use_htb=True)
             self.addLink(s1, plc2, **linkopts)
-
-        self.addLink(s1, attacker)
 
         # ---------------- SUPERVISORY NETWORK --------------  #
 
