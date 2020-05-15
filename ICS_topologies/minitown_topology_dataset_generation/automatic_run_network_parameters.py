@@ -10,7 +10,7 @@ import signal
 import argparse
 from mininet.link import TCLink
 
-automatic = 0
+automatic = 1
 
 delay = 0
 bandwidth = None
@@ -21,27 +21,29 @@ mode = None
 class Minitown(MiniCPS):
     """ Script to run the Minitown SCADA topology """
 
-    def __init__(self, name, net, week_index):
+    def __init__(self, net):
         net.start()
 
         r0 = net.get('r0')
         # Pre experiment configuration, prepare routing path
         r0.cmd('sysctl net.ipv4.ip_forward=1')
+        plc2 = net.get('plc2')
+        plc2.cmd('ping -c 10 192.168.1.10')
 
         if automatic:
-            self.automatic_start(week_index)
+            self.automatic_start()
         else:
             CLI(net)
+
         net.stop()
 
-    def automatic_start(self, week_index) :
+    def automatic_start(self):
 
         plc1 = net.get('plc1')
         plc2 = net.get('plc2')
         scada = net.get('scada')
 
-
-        self.week_index = week_index
+        self.week_index = sys.argv[4]
         self.create_log_files()
 
         plc1_output = open("output/plc1.log", 'r+')
@@ -192,4 +194,4 @@ if __name__ == "__main__":
     else:
         net = Mininet(topo=topo, link=TCLink)
 
-    minitown_cps = Minitown(name='minitown', net=net, week_index=week_index )
+    minitown_cps = Minitown(net=net)

@@ -6,23 +6,30 @@ import csv
 from datetime import datetime
 from decimal import Decimal
 import time
-
-
-def write_output(saved_tank_levels):
-    print 'DEBUG plc5 shutdown'
-    with open('output/plc5_saved_tank_levels_received.csv', 'w') as f:
-        writer = csv.writer(f)
-        writer.writerows(saved_tank_levels)
-    exit(0)
+import signal
+import sys
 
 class PLC5(PLC):
+
+    def sigint_handler(self, sig, frame):
+        self.write_output()
+        sys.exit(0)
+
+    def write_output(self):
+        print 'DEBUG plc5 shutdown'
+        with open('output/plc5_saved_tank_levels_received.csv', 'w') as f:
+            writer = csv.writer(f)
+            writer.writerows(self.saved_tank_levels)
+        exit(0)
 
     def pre_loop(self):
         print 'DEBUG: plc5 enters pre_loop'
         self.local_time = 0
+        self.saved_tank_levels = [["iteration", "timestamp", "T5", "T7"]]
+        signal.signal(signal.SIGINT, self.sigint_handler)
+        signal.signal(signal.SIGTERM, self.sigint_handler)
 
     def main_loop(self):
-        saved_tank_levels = [["iteration", "timestamp", "TANK_LEVEL"]]
 
         while True:
             try:
@@ -33,7 +40,7 @@ class PLC5(PLC):
                 print("T5 Level %f " % self.t5)
                 print("T7 Level %f " % self.t7)
 
-                saved_tank_levels.append([datetime.now(), self.t5, self.t7])
+                self.saved_tank_levels.append([datetime.now(), self.t5, self.t7])
 
                 if self.t5 < 1.5:
                     print("Opening PU8")
@@ -61,9 +68,6 @@ class PLC5(PLC):
 
                 time.sleep(0.1)
 
-            except KeyboardInterrupt:
-                write_output(saved_tank_levels)
-                return
             except Exception:
                 continue
 

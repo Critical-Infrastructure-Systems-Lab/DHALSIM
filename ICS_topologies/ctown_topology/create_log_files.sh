@@ -1,8 +1,8 @@
 #!/bin/bash
 
-files=(plc1 plc2 plc3 plc4 plc5 plc6 plc7 plc9 scada physical)
+files=(plc1 plc2 plc3 plc4 plc5 plc6 plc7 plc9 physical attacker)
 
-rm -rf output/$file".log"
+rm -rf output/*
 
 for file in "${files[@]}"
   do

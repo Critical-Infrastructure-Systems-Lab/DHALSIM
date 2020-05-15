@@ -6,6 +6,7 @@ import time
 from datetime import datetime
 import sys
 
+
 def get_node_list_by_type(list, type):
     result = []
     for node in list:
@@ -88,6 +89,16 @@ def register_results(results):
             values_list.extend([wn.get_link(valve).status])
         else:
             values_list.extend([wn.get_link(valve).status.value])
+
+    rows = c.execute("SELECT value FROM ctown WHERE name = 'ATT_1'").fetchall()
+    conn.commit()
+    attack1 = int(rows[0][0])
+
+    rows = c.execute("SELECT value FROM ctown WHERE name = 'ATT_2'").fetchall()
+    conn.commit()
+    attack2 = int(rows[0][0])
+
+    values_list.extend([attack1, attack2])
     return values_list
 
 def update_controls():
@@ -154,6 +165,8 @@ list_header.extend(aux)
 aux = create_link_header(valve_list)
 list_header.extend(aux)
 
+list_header.extend(["Attack#01", "Attack#02"])
+
 results_list = []
 results_list.append(list_header)
 
@@ -186,7 +199,7 @@ else:
 master_time = 0
 days = 1
 iteration_limit = (days*24*3600)/wn.options.time.hydraulic_timestep
-
+attack = 0
 
 while master_time <= iteration_limit:
 
@@ -201,11 +214,8 @@ while master_time <= iteration_limit:
     for tank in tank_list:
         tank_name = '\'' + tank + '\''
         a_level = wn.get_node(tank).level
-        #%d days and %d nights' % (40, 40)
         query = "UPDATE ctown SET value = " + str(a_level) + " WHERE name = " + tank_name
         c.execute(query)  # UPDATE TANKS IN THE DATABASE
         conn.commit()
-        #rows_1 = c.execute('SELECT value FROM ctown WHERE name = ' + act_name).fetchall()
-        #self.cursor.execute("UPDATE minitown SET value = %f WHERE name = 'T_LVL'" % tank.level)  # UPDATE TANK LEVEL IN THE DATABASE
 
 write_results(results_list)
