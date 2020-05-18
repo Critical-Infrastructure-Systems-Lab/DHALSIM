@@ -81,7 +81,7 @@ class Minitown(MiniCPS):
         if mitm_attack == 1 :
             self.attacker = net.get('attacker')
             self.attacker_file =  open("output/attacker.log", 'r+')
-            self.attacker_process = self.attacker.popen(sys.executable, "../../attack_repository/mitm_plc_plc/automatic_ctown_mitm_attack.py", "-a", "mitm", "-t", "plc5", stderr=sys.stdout,
+            self.attacker_process = self.attacker.popen(sys.executable, "/home/mininet/WadiTwin/attack_repository/mitm_plc_plc/automatic_ctown_mitm_attack.py", "-a", "mitm", "-t", "plc5", stderr=sys.stdout,
                                                          stdout=self.attacker_file)
         print "[] Attacking"
 

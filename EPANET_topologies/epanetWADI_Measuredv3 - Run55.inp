@@ -398,7 +398,7 @@ LINK V_ER2i CLOSED AT TIME 0
  Hydraulic Timestep 	0:01
  Quality Timestep   	0:05 
  Pattern Timestep   	0:01
- Pattern Start      	0:00 
+ Pattern Start      	0:00
  Report Timestep    	0:01 
  Report Start       	0:00 
  Start ClockTime    	0:00

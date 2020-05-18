@@ -13,11 +13,13 @@ class MitmAttack():
             subprocess.call(['route', 'add', 'default', 'gw', '192.168.2.254', 'attacker2-eth0'], shell=False)
 
     def launch_mitm(self):
-        print 'Running MiTM attack to ' + self.target
-        if self.target == 'scada':
-            self.configure_routing()
-        mitm = subprocess.Popen(["../../../attack-experiments/env/bin/python", '/home/mininet/WadiTwin/attack_repository/mitm_plc_plc/mitm_attack.py', self.target])
-        return mitm
+        self.configure_routing()
+        self.mitm_file = open("/home/mininet/WadiTwin/attack_repository/mitm_plc_plc/mitm_file.log", 'r+')
+        mitm_cmd = shlex.split("/home/mininet/attack-experiments/env/bin/python "
+                               "/home/mininet/WadiTwin/attack_repository/mitm_plc_plc/mitm_attack.py " + str(self.target))
+        print 'Running MiTM attack with command ' + str(mitm_cmd)
+        mitm_process = subprocess.Popen(mitm_cmd, stderr=sys.stdout, stdout=self.mitm_file, shell=False )
+        return mitm_process
 
     def launch_dos(self):
         print 'Running DoS attack...'
@@ -30,8 +32,11 @@ class MitmAttack():
 
         if self.attack == "mitm":
             self.start_forwarding()
-            mitm = self.launch_mitm()
-            mitm.wait()
+            attack_process = self.launch_mitm()
+            print "Automatic Ctown mitm attack: Launched attack"
+            attack_process.wait()
+            print "Stopping Attack process..."
+            attack_process.kill()
 
         elif self.attack == "dos":
             self.start_forwarding()
