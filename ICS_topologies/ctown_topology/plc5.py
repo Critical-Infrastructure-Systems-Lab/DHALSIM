@@ -69,6 +69,7 @@ class PLC5(PLC):
                 time.sleep(0.1)
 
             except Exception:
+                print("Connection interrupted at " + str(self.local_time))
                 continue
 
 if __name__ == "__main__":
