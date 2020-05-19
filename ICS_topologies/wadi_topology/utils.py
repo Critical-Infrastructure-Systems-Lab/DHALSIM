@@ -21,22 +21,11 @@ wadi_log = build_debug_logger(
     ldir='logs/',
     suffix='')
 
-################################ Time configuration ################################################################
-
-SCADA_PERIOD_SEC = 2.0
-PLC_PERIOD_SEC = 0.40  # plc update rate in seconds
-PLC_PERIOD_HOURS = PLC_PERIOD_SEC / 3600.0
-PLC_SAMPLES = 1000
-PP_RESCALING_HOURS = 100
-PP_PERIOD_SEC = 0.20  # physical process update rate in seconds
-PP_PERIOD_HOURS = (PP_PERIOD_SEC / 3600.0) * PP_RESCALING_HOURS
-PP_SAMPLES = int(PLC_PERIOD_SEC / PP_PERIOD_SEC) * PLC_SAMPLES
-
 ################################ System State Variables ################################################################
 
-T_LVL_0 = ('T_LVL_0', 1)
-T_LVL_1 = ('T_LVL_1', 1)
-T_LVL_2 = ('T_LVL_2', 1)
+T0 = ('T0', 1)
+T1 = ('T1', 1)
+T2 = ('T2', 1)
 
 P_RAW1 = ('P_RAW1', 1)
 P_RAW2 = ('P_RAW2', 1)
@@ -111,8 +100,8 @@ SCADA_DATA = {
 
 # Adding plc1------------------------------------------------
 PLC1_TAGS = (
-    ('T_LVL_0', 1, 'REAL'),
-    ('T_LVL_2', 1, 'REAL'),
+    ('T0', 1, 'REAL'),
+    ('T2', 1, 'REAL'),
     ('P_RAW1', 1, 'REAL'),
     ('V_PUB', 1, 'REAL'),
     ('ATT_1', 1, 'REAL'),
@@ -133,7 +122,7 @@ PLC1_PROTOCOL = {
 PLC2_TAGS = (
     ('ATT_1', 1, 'REAL'),
     ('ATT_2', 1, 'REAL'),
-    ('T_LVL_2', 1, 'REAL'),
+    ('T2', 1, 'REAL'),
     ('V_ER2i', 1, 'REAL')
 )
 
@@ -149,6 +138,9 @@ PLC2_PROTOCOL = {
 
 # Adding scada--------------------------------------------
 SCADA_TAGS = (
+    ('T0', 1, 'REAL'),
+    ('T1', 1, 'REAL'),
+    ('T2', 1, 'REAL'),
     ('P_RAW1', 1, 'REAL'),
     ('P_RAW2', 1, 'REAL'),
     ('V_PUB', 1, 'REAL'),
@@ -183,7 +175,7 @@ SCADA_PROTOCOL = {
 ATT_ADDR = IP['attacker']
 
 ATT_TAGS = (
-    ('T_LVL', 1, 'REAL'),
+    ('T0', 1, 'REAL'),
     ('P1_STS', 1, 'REAL'),
     ('P2_STS', 1, 'REAL'),
     ('ATT_1', 1, 'REAL'),
@@ -206,7 +198,7 @@ ATT_PROTOCOL = {
 ATT2_ADDR = IP['attacker2']
 
 ATT2_TAGS = (
-    ('T_LVL', 1, 'REAL'),
+    ('T0', 1, 'REAL'),
     ('P1_STS', 1, 'REAL'),
     ('P2_STS', 1, 'REAL'),
     ('ATT_1', 1, 'REAL'),
@@ -245,9 +237,9 @@ CREATE TABLE minitown (
 """
 
 SCHEMA_INIT = """
-    INSERT INTO wadi VALUES ('T_LVL_0', 1, '0.5629288');
-    INSERT INTO wadi VALUES ('T_LVL_1', 1, '0.3212883');
-    INSERT INTO wadi VALUES ('T_LVL_2', 1, '0.1466138');
+    INSERT INTO wadi VALUES ('T0', 1, '0.5629288');
+    INSERT INTO wadi VALUES ('T1', 1, '0.3212883');
+    INSERT INTO wadi VALUES ('T2', 1, '0.1466138');
     INSERT INTO wadi VALUES ('P_RAW1', 1, '0');
     INSERT INTO wadi VALUES ('P_RAW2', 1, '0');  
     INSERT INTO wadi VALUES ('V_PUB', 1, '0');  
