@@ -32,7 +32,6 @@ class Minitown(MiniCPS):
         plc2 = net.get('plc2')
         scada = net.get('scada')
 
-
         self.week_index = sys.argv[1]
         self.create_log_files()
 

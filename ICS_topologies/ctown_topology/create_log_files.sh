@@ -1,6 +1,6 @@
 #!/bin/bash
 
-files=(plc1 plc2 plc3 plc4 plc5 plc6 plc7 plc9 physical attacker arp_poison)
+files=(plc1 plc2 plc3 plc4 plc5 plc6 plc7 plc9 physical attacker arp_poison scada)
 
 rm -rf output/*
 

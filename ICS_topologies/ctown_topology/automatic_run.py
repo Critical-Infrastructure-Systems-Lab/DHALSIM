@@ -10,7 +10,7 @@ import signal
 
 
 automatic = 1
-mitm_attack = 1
+mitm_attack = 0
 
 class Minitown(MiniCPS):
     """ Script to run the Minitown SCADA topology """
@@ -79,6 +79,13 @@ class Minitown(MiniCPS):
             self.mitm_process = attacker.popen(mitm_cmd, stderr=sys.stdout, stdout=attacker_file )
             print "[] Attacking"
 
+        print "[] Launchin SCADA"
+        self.scada_node = net.get('scada')
+        self.scada_file = open("output/scada.log", "r+")
+        self.scada_process = self.scada_node.popen(sys.executable, "automatic_plc.py", "-n", "scada", stderr=sys.stdout,
+                                                         stdout=self.scada_file)
+        print "[*] SCADA Successfully launched"
+
         physical_output = open("output/physical.log", 'r+')
         print "[*] Launched the PLCs and SCADA process, launching simulation..."
         plant = net.get('plant')
@@ -129,6 +136,7 @@ class Minitown(MiniCPS):
 
     def finish(self):
         print "[*] Simulation finished"
+        self.end_plc_process(self.scada_process)
 
         index = 0
         for plc in self.receiver_plcs_processes:
