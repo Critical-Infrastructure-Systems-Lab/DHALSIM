@@ -418,7 +418,7 @@ LINK V_ER2i CLOSED AT TIME 0
  Accuracy           	0.001
  CHECKFREQ          	2
  MAXCHECK           	10
- DAMPLIMIT          	0
+ DAMPLIMIT          	0.1 ;Was giving issues with pandas==0.24.2 (installed this because of mininet preferences, possibly could get a better one?) Fix is mentioned here: https://github.com/USEPA/WNTR/issues/94
  Unbalanced         	Continue 10
  Pattern            	Consumer01
  Demand Multiplier  	1.0
