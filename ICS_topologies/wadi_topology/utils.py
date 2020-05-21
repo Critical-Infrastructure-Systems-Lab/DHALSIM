@@ -228,7 +228,7 @@ STATE = {
 # SPHINX_SWAT_TUTORIAL STATE)
 
 SCHEMA = """
-CREATE TABLE minitown (
+CREATE TABLE wadi (
     name              TEXT NOT NULL,
     pid               INTEGER NOT NULL,
     value             TEXT,

@@ -71,6 +71,19 @@ ctown:
 	sudo mn -c
 	cd ctown_topology; sudo $(PYTHON) $(PYTHON_OPTS) automatic_run.py
 
+wadi:
+	if [ ! -d wadi_topology/logs ]; then\
+	   mkdir wadi_topology/logs;\
+	fi
+	if [ ! -d wadi_topology/output ]; then\
+	   mkdir wadi_topology/output;\
+	fi
+	cd wadi_topology; rm -rf wadi_db.sqlite; $(PYTHON) $(PYTHON_OPTS) init.py; sudo chown mininet:mininet wadi_db.sqlite
+	sudo pkill  -f -u root "python -m cpppo.server.enip"
+	sudo mn -c
+	cd wadi_topology; sudo $(PYTHON) $(PYTHON_OPTS) automatic_run.py
+
+
 test:
 	echo $(week)
 

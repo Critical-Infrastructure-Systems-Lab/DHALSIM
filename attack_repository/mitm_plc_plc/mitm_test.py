@@ -42,7 +42,7 @@ def spoof(raw):
     print("Spoofing-----------")
     float_value = translate_load_to_float(raw)*0.01
     fake_value = float_value
-    c.execute("UPDATE minitown SET value = 4 WHERE name = 'ATT_1'")
+    c.execute("UPDATE minitown SET value = 3 WHERE name = 'ATT_1'")
     conn.commit()
     pay = translate_float_to_load(fake_value, raw[0], raw[1])
     return pay
@@ -52,7 +52,7 @@ def injection(raw):
     float_value = translate_load_to_float(raw)
     fake_value = sniffed_packet[0] + float_value
     sniffed_packet.pop(0)
-    c.execute("UPDATE minitown SET value = 4 WHERE name = 'ATT_1'")
+    c.execute("UPDATE minitown SET value = 3 WHERE name = 'ATT_1'")
     conn.commit()
     pay = translate_float_to_load(fake_value, raw[0], raw[1])
     return pay

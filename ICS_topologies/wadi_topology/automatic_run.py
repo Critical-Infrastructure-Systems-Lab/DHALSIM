@@ -9,11 +9,11 @@ import subprocess
 import signal
 
 
-automatic = 1
+automatic = 0
 mitm_attack = 0
 
 class Minitown(MiniCPS):
-    """ Script to run the Minitown SCADA topology """
+    """ Script to run the WADI topology """
 
     def __init__(self, name, net):
         net.start()
@@ -41,20 +41,22 @@ class Minitown(MiniCPS):
 
         physical_output = open("output/physical.log", 'r+')
 
-        plc1_process = plc1.popen(sys.executable, "automatic_plc.py", "-n", "plc1", stderr=sys.stdout, stdout=plc1_output )
+        self.plc2_process = plc2.popen(sys.executable, "automatic_plc.py", "-n", "plc2", stderr=sys.stdout,
+                                       stdout=plc2_output)
         time.sleep(0.2)
-        plc2_process = plc2.popen(sys.executable, "automatic_plc.py", "-n", "plc2", stderr=sys.stdout, stdout=plc2_output )
-        scada_process = scada.popen(sys.executable, "automatic_plc.py", "-n", "scada", stderr=sys.stdout, stdout=scada_output )
+
+        self.plc1_process = plc1.popen(sys.executable, "automatic_plc.py", "-n", "plc1", stderr=sys.stdout, stdout=plc1_output )
+        self.scada_process = scada.popen(sys.executable, "automatic_plc.py", "-n", "scada", stderr=sys.stdout, stdout=scada_output )
 
         print "[*] Launched the PLCs and SCADA process, launching simulation..."
         plant = net.get('plant')
 
-        simulation_cmd = shlex.split("python automatic_plant.py -s pdd -t wadi -o physical_process.csv -w ")
-        simulation = plant.popen(simulation_cmd, stderr=sys.stdout, stdout=physical_output)
+        simulation_cmd = shlex.split("python automatic_plant.py -s dd -t wadi -o physical_process.csv")
+        self.simulation = plant.popen(simulation_cmd, stderr=sys.stdout, stdout=physical_output)
 
         print "[] Simulating..."
         try:
-            while simulation.poll() is None:
+            while self.simulation.poll() is None:
                 pass
         except KeyboardInterrupt:
             print "Cancelled, finishing simulation"
@@ -68,13 +70,9 @@ class Minitown(MiniCPS):
         subprocess.call(cmd)
 
     def force_finish(self):
-
-        for plc in self.receiver_plcs_processes:
-            plc.kill()
-
-        for plc in self.sender_plcs_processes:
-            plc.kill()
-
+        self.plc1_process.kill()
+        self.plc2_process.kill()
+        self.scada_process.kill()
         self.simulation.kill()
 
         cmd = shlex.split("./kill_cppo.sh")
@@ -92,30 +90,12 @@ class Minitown(MiniCPS):
         if plc_process.poll() is None:
             plc_process.kill()
 
-
     def finish(self):
         print "[*] Simulation finished"
         self.end_plc_process(self.scada_process)
 
-        index = 0
-        for plc in self.receiver_plcs_processes:
-            print "[] Terminating PLC" + str(self.receiver_plcs[index])
-            if plc:
-                self.end_plc_process(plc)
-                print "[*] PLC" + str(self.receiver_plcs[index]) + " terminated"
-            index += 1
-
-        index = 0
-        for plc in self.sender_plcs_processes:
-            print "[] Terminating PLC" + str(self.sender_plcs[index])
-            if plc:
-                self.end_plc_process(plc)
-                print "[*] PLC" + str(self.sender_plcs[index]) + " terminated"
-            index += 1
-
-        if self.mitm_process:
-            self.end_plc_process(self.mitm_process)
-        print "[*] All processes terminated"
+        self.end_plc_process(self.plc1_process)
+        self.end_plc_process(self.plc2_process)
 
         if self.simulation:
             self.simulation.terminate()
@@ -128,4 +108,4 @@ class Minitown(MiniCPS):
 if __name__ == "__main__":
     topo = ScadaTopo()
     net = Mininet(topo=topo)
-    minitown_cps = Minitown(name='minitown', net=net)
+    minitown_cps = Minitown(name='wadi', net=net)

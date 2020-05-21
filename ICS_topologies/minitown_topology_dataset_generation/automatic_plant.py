@@ -9,7 +9,7 @@ class SimulationControl():
         simulation.wait()
 
     def start_simulation(self):
-        simulation = subprocess.Popen(["../../../wntr-experiments/env/bin/python", 'physical_process.py',
+        simulation = subprocess.Popen(["../../../wntr-experiments/bin/python", 'physical_process.py',
                                        self.simulator, self.topology, self.output, self.week])
         return simulation
 
