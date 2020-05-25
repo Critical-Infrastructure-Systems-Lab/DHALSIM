@@ -10,7 +10,7 @@ import signal
 
 
 automatic = 1
-mitm_attack = 0
+mitm_attack = 1
 
 class Minitown(MiniCPS):
     """ Script to run the Minitown SCADA topology """
@@ -73,8 +73,8 @@ class Minitown(MiniCPS):
         if mitm_attack == 1 :
             attacker_file = open("output/attacker.log", 'r+')
             attacker = net.get('attacker')
-            mitm_cmd = shlex.split("/home/mininet/attack-experiments/env/bin/python "
-                                   "/home/mininet/WadiTwin/attack_repository/mitm_plc_plc/mitm_attack.py plc5")
+            mitm_cmd = shlex.split("../../../attack-experiments/env/bin/python "
+                                   "../../attack_repository/mitm_plc_plc/mitm_attack.py plc5")
             print 'Running MiTM attack with command ' + str(mitm_cmd)
             self.mitm_process = attacker.popen(mitm_cmd, stderr=sys.stdout, stdout=attacker_file )
             print "[] Attacking"
@@ -105,7 +105,7 @@ class Minitown(MiniCPS):
         self.finish()
 
     def create_log_files(self):
-        cmd = shlex.split("./create_log_files.sh")
+        cmd = shlex.split("bash ./create_log_files.sh")
         subprocess.call(cmd)
 
     def force_finish(self):
