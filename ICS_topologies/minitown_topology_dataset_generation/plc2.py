@@ -1,7 +1,7 @@
 from minicps.devices import PLC
 from utils import PLC2_DATA, STATE, PLC2_PROTOCOL
 from utils import T_LVL, P1_STS, P2_STS,ATT_1, PLC1_ADDR,  \
-    flag_attack_plc2, flag_attack_dos_plc2, CONTROL
+    flag_attack_plc2, CONTROL
 import csv
 from datetime import datetime
 import logging
@@ -42,7 +42,7 @@ class PLC2(PLC):
         while True:
             try:
                 self.tank_level = Decimal(self.receive(T_LVL, PLC1_ADDR))
-
+                print "Received..."
             except Exception:
                 continue
 

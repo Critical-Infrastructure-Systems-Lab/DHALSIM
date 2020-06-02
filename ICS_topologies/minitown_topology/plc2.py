@@ -1,7 +1,7 @@
 from minicps.devices import PLC
 from utils import PLC2_DATA, STATE, PLC2_PROTOCOL
 from utils import T_LVL, P1_STS, P2_STS,ATT_1, PLC1_ADDR,  \
-    flag_attack_plc2, flag_attack_dos_plc2, TIME, CONTROL
+    flag_attack_plc2, CONTROL
 import csv
 from datetime import datetime
 import logging
@@ -44,8 +44,6 @@ class PLC2(PLC):
                 try:
                     self.tank_level = Decimal(self.receive(T_LVL, PLC1_ADDR))
                 except Exception:
-                    if flag_attack_dos_plc2:
-                        self.set(ATT_1, 1)
                     continue
 
                 self.local_time += 1
@@ -58,9 +56,6 @@ class PLC2(PLC):
                         continue
                     else:
                         self.set(ATT_1, 0)
-
-                if flag_attack_dos_plc2:
-                    self.set(ATT_1, 0)
 
                 if self.tank_level < 4:
                     self.set(P1_STS, 1)

@@ -28,17 +28,22 @@ def stop_forwarding():
     subprocess.call(args)
 
 def start():
-    start_forwarding()
-    launch_arp_poison()
-
-    print "[*] Launching DoS"
     stop_forwarding()
+    launch_arp_poison()
+    print "[*] Launching DoS"
 
     dos_count = 0
+    arp_counter = 0
     while dos_count < dos_message_duration:
         c.execute("UPDATE minitown SET value = 4 WHERE name = 'ATT_1'")
         conn.commit()
         dos_count += 1
+        arp_counter += 1
+
+        if arp_counter >= 10:
+            launch_arp_poison()
+            arp_counter = 0
+
         time.sleep(1)
 
     print "[*] Stopping DoS"

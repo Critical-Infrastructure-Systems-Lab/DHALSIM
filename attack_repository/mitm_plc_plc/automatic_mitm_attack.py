@@ -34,7 +34,6 @@ class MitmAttack():
             mitm.wait()
 
         elif self.attack == "dos":
-            self.start_forwarding()
             dos  = self.launch_dos()
             dos.wait()
         else:
