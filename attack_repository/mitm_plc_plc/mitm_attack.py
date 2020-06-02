@@ -146,7 +146,7 @@ def spoof_arp_cache(targetip, targetmac, sourceip):
 if __name__ == '__main__':
     sleep_count = 0
     sleep_limit = 576
-    sleep_limit = 1 #for debug onlyu
+    #sleep_limit = 1 #for debug onlyu
     print('[] Preparing attack')
     while sleep_count < sleep_limit:
         sleep_count += 1

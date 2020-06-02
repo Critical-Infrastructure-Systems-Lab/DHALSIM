@@ -127,5 +127,5 @@ class Minitown(MiniCPS):
 if __name__ == "__main__":
 
     topo = ScadaTopo()
-    net = Mininet(topo=topo)
-    minitown_cps = Minitown(name='minitown', net=net)
+    net = Mininet( topo=topo, autoSetMacs=True )
+    minitown_cps = Minitown( name='minitown', net=net )

@@ -1,7 +1,6 @@
 from minicps.devices import PLC
 from utils import PLC1_DATA, STATE, PLC1_PROTOCOL
-from utils import T_LVL, ATT_1, PLC1_ADDR, flag_attack_plc1, flag_attack_plc2, \
-    flag_attack_communication_plc1_scada, flag_attack_communication_plc1_plc2, flag_attack_dos_plc2, CONTROL
+from utils import T_LVL, ATT_1, PLC1_ADDR, flag_attack_plc1
 
 import csv
 from datetime import datetime

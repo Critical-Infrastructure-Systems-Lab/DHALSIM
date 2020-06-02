@@ -17,5 +17,3 @@ do
 	sudo mn -c
 	sudo python automatic_run.py $i
 done
-
-

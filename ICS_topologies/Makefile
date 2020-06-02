@@ -83,6 +83,12 @@ wadi:
 	sudo mn -c
 	cd wadi_topology; sudo $(PYTHON) $(PYTHON_OPTS) automatic_run.py
 
+enhanced-ctown:
+	if [ ! -d enhanced_ctown_topology/logs ]; then\
+	   mkdir enhanced_ctown_topology/logs;\
+	fi
+	sudo mn -c
+	cd enhanced_ctown_topology; sudo $(PYTHON) $(PYTHON_OPTS) automatic_run.py
 
 test:
 	echo $(week)
@@ -91,3 +97,7 @@ clean-simulation:
 	sudo pkill  -f -u root "python -m cpppo.server.enip"
 	sudo mn -c
 
+kill:
+	sudo pkill python
+
+finish-ctown: kill clean-simulation
