@@ -14,9 +14,9 @@ class MitmAttack():
 
     def launch_mitm(self):
         self.configure_routing()
-        self.mitm_file = open("/home/mininet/WadiTwin/attack_repository/mitm_plc_plc/mitm_file.log", 'r+')
-        mitm_cmd = shlex.split("/home/mininet/attack-experiments/env/bin/python "
-                               "/home/mininet/WadiTwin/attack_repository/mitm_plc_plc/mitm_attack.py " + str(self.target))
+        self.mitm_file = open("mitm_file.log", 'r+')
+        mitm_cmd = shlex.split("../../../attack-experiments/env/bin/python "
+                               "mitm_attack.py " + str(self.target))
         print 'Running MiTM attack with command ' + str(mitm_cmd)
         #mitm_process = subprocess.Popen(mitm_cmd, stderr=sys.stdout, stdout=self.mitm_file, shell=False )
         mitm_process = subprocess.Popen(mitm_cmd, shell=False)
