@@ -1,6 +1,6 @@
 #!/bin/bash
-iNIC=r1-eth1
-oNIC=r0-eth0
+iNIC=$1-eth0
+oNIC=$1-eth1
 
 # -m extend the packet matching module with module conntrack
 # conntrack This module, when combined with connection tracking, allows access to more
