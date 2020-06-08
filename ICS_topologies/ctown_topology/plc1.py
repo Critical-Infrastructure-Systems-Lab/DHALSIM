@@ -10,7 +10,7 @@ import time
 import sqlite3
 import signal
 import sys
-from utils import ATT_1, ATT_2
+from utils import ATT_1
 
 plc1_log_path = 'plc1.log'
 
