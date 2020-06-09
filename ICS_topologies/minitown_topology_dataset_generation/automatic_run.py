@@ -8,7 +8,8 @@ import shlex
 import subprocess
 import signal
 
-automatic = 0
+automatic = 1
+concealed_mitm = 1
 
 class Minitown(MiniCPS):
     """ Script to run the Minitown SCADA topology """
@@ -46,6 +47,24 @@ class Minitown(MiniCPS):
         plc2_process = plc2.popen(sys.executable, "automatic_plc.py", "-n", "plc2", "-w", self.week_index, stderr=sys.stdout, stdout=plc2_output )
         scada_process = scada.popen(sys.executable, "automatic_plc.py", "-n", "scada", "-w", self.week_index, stderr=sys.stdout, stdout=scada_output )
 
+        if concealed_mitm == 1:
+            plc2_attacker_file = open("output/attacker_plc2.log", 'r+')
+            plc2_attacker = net.get('attacker')
+            mitm_cmd = shlex.split("../../../attack-experiments/env/bin/python "
+                                   "../../attack_repository/mitm_attacks/minitown_mitm_plc2.py")
+            print 'Running MiTM attack with command ' + str(mitm_cmd)
+            self.plc2_mitm_process = plc2_attacker.popen(mitm_cmd, stderr=sys.stdout, stdout=plc2_attacker_file )
+            print "[] Launching MiTM on PLC2"
+
+            scada_attacker_file = open("output/attacker_scada.log", 'r+')
+            scada_attacker = net.get('attacker2')
+            mitm_cmd = shlex.split("../../../attack-experiments/env/bin/python "
+                                   "../../attack_repository/mitm_attacks/minitown_mitm_scada.py")
+            print 'Running MiTM attack with command ' + str(mitm_cmd)
+            self.scada_mitm_process = scada_attacker.popen(mitm_cmd, stderr=sys.stdout, stdout=scada_attacker_file )
+            print "[] Launching MiTM on PLC2"
+
+
         print "[*] Launched the PLCs and SCADA process, launching simulation..."
         plant = net.get('plant')
 
@@ -67,6 +86,11 @@ class Minitown(MiniCPS):
     def create_log_files(self):
         subprocess.call("./create_log_files.sh")
 
+    def end_plc_process(self, process):
+        if process.poll() is None:
+            process.terminate()
+        if process.poll() is None:
+            process.kill()
 
     def force_finish(self, plc1, plc2, scada, simulation=None):
         plc1.kill()
@@ -115,6 +139,12 @@ class Minitown(MiniCPS):
 
         cmd = shlex.split("./kill_cppo.sh")
         subprocess.call(cmd)
+
+        if self.plc2_mitm_process:
+            self.end_process(self.plc2_mitm_process)
+
+        if self.scada_mitm_process:
+            self.end_process(self.scada_mitm_process)
 
         print "[*] All processes terminated"
         if simulation:

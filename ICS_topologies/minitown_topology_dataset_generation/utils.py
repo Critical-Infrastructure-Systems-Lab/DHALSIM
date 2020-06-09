@@ -47,9 +47,11 @@ CONTROL = ('CONTROL', 1)
 
 flag_attack_plc1 = 0
 flag_attack_plc2 = 0
-flag_attack_communication_plc1_scada = 0
+flag_attack_communication_plc1_scada = 1
 flag_attack_communication_plc1_plc2 = 1
 flag_attack_dos_plc2 = 0
+
+flag_concealed_attack_plc1 = 0
 
 iteration = 0  # global variable
 
