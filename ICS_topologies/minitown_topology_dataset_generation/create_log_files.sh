@@ -1,6 +1,6 @@
 #!/bin/bash
 
-files=(plc1 plc2 scada physical)
+files=(plc1 plc2 scada physical attacker_plc2 attacker_scada)
 
 rm -rf output/*
 

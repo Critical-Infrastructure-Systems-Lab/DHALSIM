@@ -18,7 +18,7 @@ class MitmAttack():
         mitm_cmd = shlex.split("../../../attack-experiments/env/bin/python "
                                "mitm_attack.py " + str(self.target))
         print 'Running MiTM attack with command ' + str(mitm_cmd)
-        #mitm_process = subprocess.Popen(mitm_cmd, stderr=sys.stdout, stdout=self.mitm_file, shell=False )
+
         mitm_process = subprocess.Popen(mitm_cmd, shell=False)
         return mitm_process
 

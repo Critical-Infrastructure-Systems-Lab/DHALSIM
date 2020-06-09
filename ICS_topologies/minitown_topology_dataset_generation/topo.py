@@ -24,7 +24,7 @@ class ScadaTopo(Topo):
 
     def build(self):
         # Add router
-        # toDo: Make this nicer and in utils.py
+        # toDo: Make this nicer and in convertions.py
         fieldIP = '192.168.1.254/24'  # IP Address for r0-eth1
 
         # ---------------- FIELD NETWORK ----------------------  #
