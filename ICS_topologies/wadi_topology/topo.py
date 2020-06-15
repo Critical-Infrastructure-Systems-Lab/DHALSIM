@@ -42,13 +42,10 @@ class ScadaTopo(Topo):
         attacker = self.addHost('attacker', ip=IP['attacker'] + NETMASK, defaultRoute=gateway_1)
 
         self.addLink(s1, plc1)
-
-
         self.addLink(s1, plc2)
         self.addLink(s1, attacker)
 
         # ---------------- SUPERVISORY NETWORK --------------  #
-
         # toDo: Check this!
         supervisoryIP = '192.168.2.254/24'
         s2 = self.addSwitch('s2')

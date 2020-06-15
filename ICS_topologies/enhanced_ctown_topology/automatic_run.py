@@ -51,5 +51,5 @@ class CTown(MiniCPS):
 
 if __name__ == "__main__":
     topo = CTownTopo()
-    net = Mininet(topo=topo)
+    net = Mininet(topo=topo, autoSetMacs=True)
     minitown_cps = CTown(name='ctown', net=net)
