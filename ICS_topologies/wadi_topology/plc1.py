@@ -17,6 +17,7 @@ plc1_log_path = 'plc1.log'
 
 class PLC1(PLC):
 
+    # always the same
     def write_output(self):
         print 'DEBUG plc1 shutdown'
         with open('output/plc1_saved_tank_levels_received.csv', 'w') as f:
@@ -24,10 +25,12 @@ class PLC1(PLC):
             writer.writerows(self.saved_tank_levels)
         exit(0)
 
+    # always the same
     def sigint_handler(self, sig, frame):
         self.write_output()
         sys.exit(0)
 
+    # needs some work, easy
     def pre_loop(self):
         print 'DEBUG: plc1 enters pre_loop'
         self.local_time = 0
@@ -43,8 +46,9 @@ class PLC1(PLC):
                 self.t0 = Decimal(self.get(T0))
                 self.t2 = Decimal(self.receive( T2, PLC2_ADDR ))
                 print("ITERATION %d ------------- " % self.local_time)
-                print("Tank 1 Level %f " % self.t1)
-                self.saved_tank_levels.append([datetime.now(), self.t0])
+                print("Tank 0 Level %f " % self.t0)
+                print("Tank 2 Level %f " % self.t2)
+                #self.saved_tank_levels.append([datetime.now(), self.t0])
 
                 if self.t0 < 0.3008:
                     print("Close P_RAW1")

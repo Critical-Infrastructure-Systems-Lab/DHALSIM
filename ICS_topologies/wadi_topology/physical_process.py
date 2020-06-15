@@ -126,7 +126,6 @@ def write_results(results):
         writer = csv.writer(f)
         writer.writerows(results)
 
-
 # connection to the database
 conn = sqlite3.connect('wadi_db.sqlite')
 c = conn.cursor()
@@ -136,21 +135,15 @@ c = conn.cursor()
 inp_file = sys.argv[2]+'_map.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
 
-# We define the simulation times in seconds
-#wn.options.time.duration = 1
-
-
-
 dummy_condition = controls.ValueCondition(wn.get_node('T0'), 'level', '>=', -1)
 list_header = []
 node_list = list(wn.node_name_list)
 link_list = list(wn.link_name_list)
 
 #reservoir_list = get_node_list_by_type(node_list, 'Reservoir')
-tank_list      = get_node_list_by_type(node_list, 'Tank')
-pump_list      = get_link_list_by_type(link_list, 'Pump')
-valve_list     = get_link_list_by_type(link_list, 'Valve')
-#control_names  = wn.control_name_list
+tank_list = get_node_list_by_type(node_list, 'Tank')
+pump_list = get_link_list_by_type(link_list, 'Pump')
+valve_list = get_link_list_by_type(link_list, 'Valve')
 
 list_header = ["Timestamps"]
 aux = create_node_header(tank_list)
@@ -175,16 +168,13 @@ for valve in valve_list:
 for pump in pump_list:
     control_list.append(create_control_dict(pump))
 
-
 for control in control_list:
     an_action = controls.ControlAction(control['actuator'], control['parameter'], control['value'])
     a_control = controls.Control(control['condition'], an_action, name=control['name'])
     wn.add_control(control['name'], a_control)
 
-
 if sys.argv[1] == 'pdd':
-    print('WADI cannot be run with PDD, only DD')
-    sys.exit(1)
+    sim = wntr.sim.WNTRSimulator(wn, mode='PDD')
 elif sys.argv[1] == 'dd':
     print('Running simulation using DD')
     sim = wntr.sim.EpanetSimulator(wn)
@@ -193,30 +183,24 @@ else:
     sys.exit(1)
 
 
-
-#inp_file = "wadi_map.inp"
-#wn = wntr.network.WaterNetworkModel(inp_file)
-sim = wntr.sim.EpanetSimulator(wn)
 sim.run_sim()
 master_time = 0
-iteration_limit = (14*60)/5
+iteration_limit = (14*60)     #14 hours
 
 while master_time <= iteration_limit:
 
-    #update_controls()
+    update_controls()
     print("ITERATION %d ------------- " % master_time)
-    sim.run_sim()
-    #values_list = register_results()
-
-    #results_list.append(values_list)
+    results = sim.run_sim()
+    values_list = register_results(results)
+    results_list.append(values_list)
     master_time += 1
 
-    """
     for tank in tank_list:
         tank_name = '\'' + tank + '\''
         a_level = wn.get_node(tank).level
         query = "UPDATE wadi SET value = " + str(a_level) + " WHERE name = " + tank_name
         c.execute(query)  # UPDATE TANKS IN THE DATABASE
         conn.commit()
-    """
+
 write_results(results_list)
