@@ -9,7 +9,7 @@ import subprocess
 import signal
 
 
-automatic = 1
+automatic = 0
 mitm_attack = 1
 
 class Minitown(MiniCPS):

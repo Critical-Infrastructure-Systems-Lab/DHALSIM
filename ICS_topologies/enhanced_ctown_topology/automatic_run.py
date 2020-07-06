@@ -8,6 +8,9 @@ import shlex
 import subprocess
 import signal
 
+automatic = 1
+mitm_attack = 0
+
 class CTown(MiniCPS):
     """ Script to run the Minitown SCADA topology """
 
@@ -28,26 +31,162 @@ class CTown(MiniCPS):
         node.cmd('route add default gw ' + gw_ip)
         node.waitOutput()
 
-    def __init__(self, name, net):
-        net.start()
-
-        for i in range(0, 3):
+    def setup_network(self):
+        for i in range(0, 9):
             self.do_forward(net.get('r' + str(i)))
-
-        self.add_degault_gateway(net.get('plc1'), '192.168.1.254')
-        self.add_degault_gateway(net.get('plc2'), '192.168.1.254')
-
-        self.add_degault_gateway(net.get('r1'), '10.0.1.254')
-        self.add_degault_gateway(net.get('r2'), '10.0.2.254')
-
-        for i in range(1, 3):
+            self.add_degault_gateway(net.get('plc' + str(i+1)), '192.168.1.254')
+            self.add_degault_gateway(net.get('r' + str(i+1)), '10.0.' + str(i+1) + '.254')
+        for i in range(1, 10):
             self.setup_iptables('r' + str(i))
 
-        CLI(net)
+    def __init__(self, name, net):
+        net.start()
+        self.setup_network()
+
+        self.sender_plcs =  [2, 4, 6, 7, 9]
+        self.receiver_plcs = [1, 3, 5]
+
+        self.sender_plcs_nodes = []
+        self.receiver_plcs_nodes = []
+
+        self.sender_plcs_files = []
+        self.receiver_plcs_files = []
+
+        self.sender_plcs_processes = []
+        self.receiver_plcs_processes = []
+
+        self.attacker = None
+        self.attacker_file = None
+        self.mitm_process = None
+
+        if automatic:
+            self.automatic_start()
+        else:
+            CLI(net)
         net.stop()
 
+    def automatic_start(self):
+        self.create_log_files()
+
+        # Because of our sockets, we gotta launch all the PLCs "sending" variables first
+        index = 0
+        for plc in self.sender_plcs:
+            self.sender_plcs_nodes.append(net.get('plc' + str( self.sender_plcs[index] ) ) )
+
+            self.sender_plcs_files.append( open("output/plc" + str( self.sender_plcs[index]) + ".log", 'r+' ) )
+            self.sender_plcs_processes.append( self.sender_plcs_nodes[index].popen(sys.executable, "automatic_plc.py", "-n", "plc" + str(self.sender_plcs[index]), stderr=sys.stdout,
+                                                         stdout=self.sender_plcs_files[index]) )
+            print("Launched plc" + str(self.sender_plcs[index]))
+            index += 1
+            time.sleep(0.2)
+
+        # After the servers are done, we can launch the client PLCs
+        index = 0
+        for plc in self.receiver_plcs:
+            self.receiver_plcs_nodes.append(net.get('plc' + str( self.receiver_plcs[index] ) ) )
+            self.receiver_plcs_files.append( open("output/plc" + str(self.receiver_plcs[index]) + ".log", 'r+') )
+            self.receiver_plcs_processes.append( self.receiver_plcs_nodes[index].popen(sys.executable, "automatic_plc.py", "-n", "plc" + str(self.receiver_plcs[index]), stderr=sys.stdout,
+                                                         stdout=self.receiver_plcs_files[index]) )
+            print("Launched plc" + str(self.receiver_plcs[index]))
+            index += 1
+
+        # Launching automatically mitm attack
+        if mitm_attack == 1 :
+            attacker_file = open("output/attacker.log", 'r+')
+            attacker = net.get('attacker')
+            mitm_cmd = shlex.split("../../../attack-experiments/env/bin/python "
+                                   "../../attack_repository/mitm_plc/mitm_attack.py plc5")
+            print 'Running MiTM attack with command ' + str(mitm_cmd)
+            self.mitm_process = attacker.popen(mitm_cmd, stderr=sys.stdout, stdout=attacker_file )
+            print "[] Attacking"
+
+        print "[] Launchin SCADA"
+        self.scada_node = net.get('scada')
+        self.scada_file = open("output/scada.log", "r+")
+        self.scada_process = self.scada_node.popen(sys.executable, "automatic_plc.py", "-n", "scada", stderr=sys.stdout,
+                                                         stdout=self.scada_file)
+        print "[*] SCADA Successfully launched"
+
+        physical_output = open("output/physical.log", 'r+')
+        print "[*] Launched the PLCs and SCADA process, launching simulation..."
+        plant = net.get('plant')
+
+        simulation_cmd = shlex.split("python automatic_plant.py -s pdd -t ctown -o physical_process.csv")
+        self.simulation = plant.popen(simulation_cmd, stderr=sys.stdout, stdout=physical_output)
+        print "[] Simulating..."
+
+        try:
+            while self.simulation.poll() is None:
+                pass
+        except KeyboardInterrupt:
+            print "Cancelled, finishing simulation"
+            self.force_finish()
+            return
+
+        self.finish()
+
+    def create_log_files(self):
+        cmd = shlex.split("bash ./create_log_files.sh")
+        subprocess.call(cmd)
+
+    def force_finish(self):
+
+        for plc in self.receiver_plcs_processes:
+            plc.kill()
+
+        for plc in self.sender_plcs_processes:
+            plc.kill()
+
+        self.simulation.kill()
+
+        cmd = shlex.split("./kill_cppo.sh")
+        subprocess.call(cmd)
+
+        net.stop()
+        sys.exit(1)
+
+    def end_plc_process(self, plc_process):
+
+        plc_process.send_signal(signal.SIGINT)
+        plc_process.wait()
+        if plc_process.poll() is None:
+            plc_process.terminate()
+        if plc_process.poll() is None:
+            plc_process.kill()
+
+
+    def finish(self):
+        print "[*] Simulation finished"
+        self.end_plc_process(self.scada_process)
+
+        index = 0
+        for plc in self.receiver_plcs_processes:
+            print "[] Terminating PLC" + str(self.receiver_plcs[index])
+            if plc:
+                self.end_plc_process(plc)
+                print "[*] PLC" + str(self.receiver_plcs[index]) + " terminated"
+            index += 1
+
+        index = 0
+        for plc in self.sender_plcs_processes:
+            print "[] Terminating PLC" + str(self.sender_plcs[index])
+            if plc:
+                self.end_plc_process(plc)
+                print "[*] PLC" + str(self.sender_plcs[index]) + " terminated"
+            index += 1
+
+        if self.mitm_process:
+            self.end_plc_process(self.mitm_process)
+        print "[*] All processes terminated"
+
+        if self.simulation:
+            self.simulation.terminate()
+
+        cmd = shlex.split("./kill_cppo.sh")
+        subprocess.call(cmd)
         net.stop()
         sys.exit(0)
+
 
 if __name__ == "__main__":
     topo = CTownTopo()

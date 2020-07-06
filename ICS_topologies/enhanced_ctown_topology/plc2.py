@@ -1,50 +1,48 @@
 from minicps.devices import PLC
 from utils import PLC2_DATA, STATE, PLC2_PROTOCOL
-from utils import T1, PLC1_SERVER_ADDR
+from utils import T1, ENIP_LISTEN_PLC_ADDR, CTOWN_IPS
 import csv
+from datetime import datetime
+import logging
 from decimal import Decimal
 import time
-import sys
 import signal
+import sys
+
+logging.basicConfig(filename='plc2_debug.log', level=logging.DEBUG)
+logging.debug("testing")
+plc2_log_path = 'plc2.log'
+
 
 class PLC2(PLC):
+
+    def sigint_handler(self, sig, frame):
+        self.write_output()
+        sys.exit(0)
 
     def write_output(self):
         print 'DEBUG plc2 shutdown'
         with open('output/plc2_saved_tank_levels_received.csv', 'w') as f:
             writer = csv.writer(f)
             writer.writerows(self.saved_tank_levels)
-
-    def sigint_handler(self, sig, frame):
-        print "I received a SIGINT!"
-        self.write_output()
-        sys.exit(0)
+        exit(0)
 
     def pre_loop(self):
         print 'DEBUG: plc2 enters pre_loop'
         self.local_time = 0
-
-    def main_loop(self):
-        """plc2 main loop.
-            - read flow level sensors #2
-            - update interval enip server
-        """
-
-        self.saved_tank_levels = [["iteration", "timestamp", "TANK_LEVEL"]]
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
-        print 'DEBUG: plc2 enters main_loop.'
-        self.local_time = 0
+        self.saved_tank_levels = [["iteration", "timestamp", "T1"]]
 
+    def main_loop(self):
         while True:
-            try:
-                self.tank_level = Decimal(self.receive(T1, PLC1_SERVER_ADDR))
-                print "Received..."
-            except Exception:
-                time.sleep(0.3)
-                continue
+            self.t1 = Decimal(self.get(T1))
+            self.local_time += 1
+            self.saved_tank_levels.append([self.local_time, datetime.now(), self.t1])
 
-            time.sleep(1.0)
+            print("Tank Level 1 %f " % self.t1)
+            print("ITERATION %d ------------- " % self.local_time)
+            self.send(T1, self.t1, ENIP_LISTEN_PLC_ADDR)
 
 if __name__ == "__main__":
     plc2 = PLC2(

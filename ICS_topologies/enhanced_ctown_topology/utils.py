@@ -121,7 +121,7 @@ PLC1_TAGS = (
     ('ATT_2', 1, 'REAL')
 )
 PLC1_SERVER = {
-    'address': CTOWN_IPS['plc1'],
+    'address': ENIP_LISTEN_PLC_ADDR,
     'tags': PLC1_TAGS
 }
 PLC1_PROTOCOL = {
@@ -137,7 +137,7 @@ PLC2_TAGS = (
     ('ATT_2', 1, 'REAL')
 )
 PLC2_SERVER = {
-    'address': CTOWN_IPS['plc2'],
+    'address': ENIP_LISTEN_PLC_ADDR,
     'tags': PLC2_TAGS
 }
 PLC2_PROTOCOL = {
@@ -158,7 +158,7 @@ PLC3_TAGS = (
     ('ATT_2', 1, 'REAL')
 )
 PLC3_SERVER = {
-    'address': CTOWN_IPS['plc3'],
+    'address': ENIP_LISTEN_PLC_ADDR,
     'tags': PLC3_TAGS
 }
 PLC3_PROTOCOL = {
@@ -173,7 +173,7 @@ PLC4_TAGS = (
     ('ATT_2', 1, 'REAL')
 )
 PLC4_SERVER = {
-    'address': CTOWN_IPS['plc4'],
+    'address': ENIP_LISTEN_PLC_ADDR,
     'tags': PLC4_TAGS
 }
 PLC4_PROTOCOL = {
@@ -192,7 +192,7 @@ PLC5_TAGS = (
     ('ATT_2', 1, 'REAL')
 )
 PLC5_SERVER = {
-    'address': CTOWN_IPS['plc5'],
+    'address': ENIP_LISTEN_PLC_ADDR,
     'tags': PLC5_TAGS
 }
 PLC5_PROTOCOL = {
@@ -207,7 +207,7 @@ PLC6_TAGS = (
     ('ATT_2', 1, 'REAL')
 )
 PLC6_SERVER = {
-    'address': CTOWN_IPS['plc6'],
+    'address': ENIP_LISTEN_PLC_ADDR,
     'tags': PLC6_TAGS
 }
 PLC6_PROTOCOL = {
@@ -222,7 +222,7 @@ PLC7_TAGS = (
     ('ATT_2', 1, 'REAL')
 )
 PLC7_SERVER = {
-    'address': CTOWN_IPS['plc7'],
+    'address': ENIP_LISTEN_PLC_ADDR,
     'tags': PLC7_TAGS
 }
 PLC7_PROTOCOL = {
@@ -238,7 +238,7 @@ PLC9_TAGS = (
     ('ATT_2', 1, 'REAL')
 )
 PLC9_SERVER = {
-    'address': CTOWN_IPS['plc9'],
+    'address': ENIP_LISTEN_PLC_ADDR,
     'tags': PLC9_TAGS
 }
 PLC9_PROTOCOL = {
