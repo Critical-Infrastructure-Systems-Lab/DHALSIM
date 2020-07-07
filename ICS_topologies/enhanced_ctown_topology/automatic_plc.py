@@ -7,7 +7,8 @@ class NodeControl():
     def main(self):
         args = self.get_arguments()
         self.process_arguments(args)
-        self.configure_routing()
+        self.interface_name = self.name + '-eth0'
+        #self.configure_routing() # In enhanced ctown topology, this is handled by automatic_run.py
         self.delete_log()
         process_tcp_dump = self.start_tcpdump_capture()
 
@@ -25,14 +26,6 @@ class NodeControl():
 
     def delete_log(self):
         subprocess.call(['rm', '-rf', self.name + '.log'])
-
-    def configure_routing(self):
-        self.interface_name = self.name + '-eth0'
-        if self.name == 'scada':
-            routing = subprocess.call(['route', 'add', 'default', 'gw', '192.168.2.254', self.interface_name],shell=False)
-        else:
-            routing = subprocess.call(['route','add','default', 'gw' ,'192.168.1.254', self.interface_name], shell=False)
-        return routing
 
     def start_tcpdump_capture(self):
         pcap = self.interface_name+'.pcap'

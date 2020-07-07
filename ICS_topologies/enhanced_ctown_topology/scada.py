@@ -1,6 +1,6 @@
 from minicps.devices import SCADAServer
 from utils import SCADA_PROTOCOL, STATE
-from utils import PLC2_ADDR, PLC3_ADDR, PLC4_ADDR, PLC6_ADDR, PLC7_ADDR, PLC9_ADDR
+from utils import CTOWN_IPS
 from utils import T1, T2, T3, T4, T5, T7
 
 import time
@@ -38,12 +38,12 @@ class SCADAServer(SCADAServer):
         while True:
 
             try:
-                t1 = Decimal(self.receive(T1, PLC2_ADDR))
-                t2 = Decimal(self.receive(T2, PLC3_ADDR))
-                t3 = Decimal(self.receive(T3, PLC4_ADDR))
-                t4 = Decimal(self.receive(T4, PLC6_ADDR))
-                t5 = Decimal(self.receive(T5, PLC7_ADDR))
-                t7 = Decimal(self.receive(T7, PLC9_ADDR))
+                t1 = Decimal(self.receive(T1, CTOWN_IPS['plc2']))
+                t2 = Decimal(self.receive(T2, CTOWN_IPS['plc3']))
+                t3 = Decimal(self.receive(T3, CTOWN_IPS['plc4']))
+                t4 = Decimal(self.receive(T4, CTOWN_IPS['plc6']))
+                t5 = Decimal(self.receive(T5, CTOWN_IPS['plc7']))
+                t7 = Decimal(self.receive(T7, CTOWN_IPS['plc9']))
                 self.saved_tank_levels.append([datetime.now(), t1, t2, t3, t4, t5, t7])
                 time.sleep(0.3)
             except Exception, msg:

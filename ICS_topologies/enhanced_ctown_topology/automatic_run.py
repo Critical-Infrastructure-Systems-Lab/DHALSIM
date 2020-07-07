@@ -39,6 +39,9 @@ class CTown(MiniCPS):
         for i in range(1, 10):
             self.setup_iptables('r' + str(i))
 
+        self.add_degault_gateway(net.get('scada'), '192.168.1.254')
+        self.add_degault_gateway(net.get('attacker'), '192.168.1.254')
+
     def __init__(self, name, net):
         net.start()
         self.setup_network()
@@ -95,7 +98,7 @@ class CTown(MiniCPS):
             attacker_file = open("output/attacker.log", 'r+')
             attacker = net.get('attacker')
             mitm_cmd = shlex.split("../../../attack-experiments/env/bin/python "
-                                   "../../attack_repository/mitm_plc/mitm_attack.py plc5")
+                                   "../../attack_repository/mitm_plc/mitm_attack.py 192.168.1.2 192.168.1.1")
             print 'Running MiTM attack with command ' + str(mitm_cmd)
             self.mitm_process = attacker.popen(mitm_cmd, stderr=sys.stdout, stdout=attacker_file )
             print "[] Attacking"
@@ -103,8 +106,7 @@ class CTown(MiniCPS):
         print "[] Launchin SCADA"
         self.scada_node = net.get('scada')
         self.scada_file = open("output/scada.log", "r+")
-        self.scada_process = self.scada_node.popen(sys.executable, "automatic_plc.py", "-n", "scada", stderr=sys.stdout,
-                                                         stdout=self.scada_file)
+        self.scada_process = self.scada_node.popen(sys.executable, "automatic_plc.py", "-n", "scada", stderr=sys.stdout,stdout=self.scada_file)
         print "[*] SCADA Successfully launched"
 
         physical_output = open("output/physical.log", 'r+')
