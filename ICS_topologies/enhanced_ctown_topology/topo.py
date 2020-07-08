@@ -41,8 +41,12 @@ class CTownTopo(Topo):
             self.addLink(switches[i - 1], routers[i], intfName2='r'+str(i)+'-eth1', params2={'ip': '192.168.1.254/24'})
 
         plant = self.addHost('plant')
-        scada = self.addNode('scada', ip='192.168.1.2/24', defaultRoute='via 192.168.1.254/24')
-        attacker = self.addNode('scada', ip='192.168.1.2/24', defaultRoute='via 192.168.1.254/24')
-        self.addLink(scada, switches[0])
 
-        self.addLink(attacker, switches[4])
+        # SCADA wil be on the same LAN as the PLC3
+        scada = self.addNode('scada', ip='192.168.1.2/24', defaultRoute='via 192.168.1.254/24')
+
+        # Attacker will be on the same LAN as the PLC5
+        attacker = self.addNode('attacker', ip='192.168.1.2/24', defaultRoute='via 192.168.1.254/24')
+
+        self.addLink(scada, switches[0])
+        self.addLink(attacker, switches[8])
