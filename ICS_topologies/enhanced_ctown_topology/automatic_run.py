@@ -9,7 +9,7 @@ import subprocess
 import signal
 
 automatic = 1
-mitm_attack = 0
+mitm_attack = 1
 
 class CTown(MiniCPS):
     """ Script to run the Minitown SCADA topology """
@@ -41,6 +41,7 @@ class CTown(MiniCPS):
 
         self.add_degault_gateway(net.get('scada'), '192.168.1.254')
         self.add_degault_gateway(net.get('attacker'), '192.168.1.254')
+        self.do_forward(net.get('attacker'))
 
     def __init__(self, name, net):
         net.start()
@@ -98,7 +99,7 @@ class CTown(MiniCPS):
             attacker_file = open("output/attacker.log", 'r+')
             attacker = net.get('attacker')
             mitm_cmd = shlex.split("../../../attack-experiments/env/bin/python "
-                                   "../../attack_repository/mitm_plc/mitm_attack.py 192.168.1.2 192.168.1.1")
+                                   "../../attack_repository/mitm_plc/mitm_attack.py 192.168.1.1 192.168.1.254")
             print 'Running MiTM attack with command ' + str(mitm_cmd)
             self.mitm_process = attacker.popen(mitm_cmd, stderr=sys.stdout, stdout=attacker_file )
             print "[] Attacking"
