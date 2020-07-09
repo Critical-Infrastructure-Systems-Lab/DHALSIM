@@ -9,7 +9,7 @@ import subprocess
 import signal
 
 
-automatic = 0
+automatic = 1
 mitm_attack = 0
 
 class Minitown(MiniCPS):
@@ -51,7 +51,7 @@ class Minitown(MiniCPS):
         print "[*] Launched the PLCs and SCADA process, launching simulation..."
         plant = net.get('plant')
 
-        simulation_cmd = shlex.split("python automatic_plant.py -s dd -t wadi -o physical_process.csv")
+        simulation_cmd = shlex.split("python automatic_plant.py -s pdd -t wadi -o physical_process.csv")
         self.simulation = plant.popen(simulation_cmd, stderr=sys.stdout, stdout=physical_output)
 
         print "[] Simulating..."
