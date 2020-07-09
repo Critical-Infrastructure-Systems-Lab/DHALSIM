@@ -38,6 +38,12 @@ class PLC1(PLC):
         self.saved_tank_levels = [["iteration", "timestamp", "T0"]]
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
+        self.p_raw_delay_timer = 0
+
+        if flag_attack_plc1 == 1:
+            self.launch_attack = 1
+        else:
+            self.launch_attack = 0
 
     def main_loop(self):
         while True:
@@ -62,8 +68,19 @@ class PLC1(PLC):
                     self.set(V_PUB, 0)
 
                 if self.t2 < 0.08:
-                    print("Opening P_RAW1")
-                    self.set(P_RAW1, 1)
+                    if flag_attack_plc1 == 1 and self.launch_attack:
+                        self.p_raw_delay_timer += 1
+                        print("Delaying")
+                        if self.p_raw_delay_timer >= 200:
+                            self.set(ATT_1, 1)
+                            print("Opening P_RAW1")
+                            self.set(P_RAW1, 1)
+                            self.p_raw_delay_timer = 0
+                            self.launch_attack = 0
+
+                    else:
+                        print("Opening P_RAW1")
+                        self.set(P_RAW1, 1)
 
                 if self.t2 > 0.36:
                     print("Closing P_RAW1")
