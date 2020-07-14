@@ -39,6 +39,7 @@ class PLC1(PLC):
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
         self.p_raw_delay_timer = 0
+        self.timeout_counter = 0
 
         if flag_attack_plc1 == 1:
             self.launch_attack = 1
@@ -90,8 +91,8 @@ class PLC1(PLC):
                 time.sleep(0.1)
 
             except Exception:
-                continue
-
+                # Warning for debug only!!!!
+                sys.exit(1)
 
 if __name__ == "__main__":
     plc1 = PLC1(

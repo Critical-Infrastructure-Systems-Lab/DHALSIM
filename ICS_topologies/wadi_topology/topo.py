@@ -1,6 +1,6 @@
 from mininet.node import Node
 from mininet.topo import Topo
-from utils import IP, NETMASK
+from utils import wadi_ip, NETMASK
 
 class LinuxRouter(Node):
     """
@@ -37,9 +37,9 @@ class ScadaTopo(Topo):
         gateway_1 = 'via ' + fieldIP
 
         plant = self.addHost('plant')
-        plc1 = self.addHost('plc1', ip=IP['plc1'] + NETMASK, defaultRoute=gateway_1)
-        plc2 = self.addHost('plc2', ip=IP['plc2'] + NETMASK, defaultRoute=gateway_1)
-        attacker = self.addHost('attacker', ip=IP['attacker'] + NETMASK, defaultRoute=gateway_1)
+        plc1 = self.addHost('plc1', ip=wadi_ip['plc1'] + NETMASK, defaultRoute=gateway_1)
+        plc2 = self.addHost('plc2', ip=wadi_ip['plc2'] + NETMASK, defaultRoute=gateway_1)
+        attacker = self.addHost('attacker', ip=wadi_ip['attacker'] + NETMASK, defaultRoute=gateway_1)
 
         self.addLink(s1, plc1)
         self.addLink(s1, plc2)
@@ -52,8 +52,8 @@ class ScadaTopo(Topo):
         self.addLink(s2, router, intfName2='r0-eth2', params2={'ip': supervisoryIP})
         gateway_2 = 'via ' + supervisoryIP
 
-        scada = self.addHost('scada', ip=IP['scada'] + NETMASK, defaultRoute=gateway_2)
-        attacker2 = self.addHost('attacker2', ip=IP['attacker2'] + NETMASK, defaultRoute=gateway_2)
+        scada = self.addHost('scada', ip=wadi_ip['scada'] + NETMASK, defaultRoute=gateway_2)
+        attacker2 = self.addHost('attacker2', ip=wadi_ip['attacker2'] + NETMASK, defaultRoute=gateway_2)
 
         self.addLink(s2, scada)
         self.addLink(s2, attacker2)
