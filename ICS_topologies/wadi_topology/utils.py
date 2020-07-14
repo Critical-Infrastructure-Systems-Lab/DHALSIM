@@ -48,7 +48,7 @@ FCV_RWin = ('FCV_RWin', 1)
 ATT_1 = ('ATT_1', 1)
 ATT_2 = ('ATT_2', 1)
 
-flag_attack_plc1 = 1
+flag_attack_plc1 = 0
 flag_attack_plc2 = 0
 flag_attack_communication_plc1_scada = 0
 flag_attack_communication_plc1_plc2 = 0
@@ -57,7 +57,7 @@ flag_attack_dos_plc2 = 0
 ################################ Network Configuration ################################################################
 
 # topo {{{1
-IP = {
+wadi_ip = {
     'plc1': '192.168.1.10',
     'plc2': '192.168.1.20',
     'plc3': '192.168.1.30',
@@ -77,10 +77,10 @@ MAC = {
     'attacker2': 'BB:BB:BB:BB:BB:BB',
 }
 
-PLC1_ADDR = IP['plc1']
-PLC2_ADDR = IP['plc2']
-PLC3_ADDR = IP['plc2']
-SCADA_ADDR = IP['scada']
+PLC1_ADDR = wadi_ip['plc1']
+PLC2_ADDR = wadi_ip['plc2']
+PLC3_ADDR = wadi_ip['plc2']
+SCADA_ADDR = wadi_ip['scada']
 
 PLC1_DATA = {
     'TODO': 'TODO',
@@ -171,8 +171,7 @@ SCADA_PROTOCOL = {
 }
 
 # Adding Attacker-----------------------------------------
-
-ATT_ADDR = IP['attacker']
+ATT_ADDR = wadi_ip['attacker']
 
 ATT_TAGS = (
     ('T0', 1, 'REAL'),
@@ -195,7 +194,7 @@ ATT_PROTOCOL = {
 
 # Adding Attacker_SCADA-----------------------------------------
 
-ATT2_ADDR = IP['attacker2']
+ATT2_ADDR = wadi_ip['attacker2']
 
 ATT2_TAGS = (
     ('T0', 1, 'REAL'),

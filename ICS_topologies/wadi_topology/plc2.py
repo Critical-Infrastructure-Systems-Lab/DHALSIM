@@ -33,27 +33,31 @@ class PLC2(PLC):
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
         self.saved_tank_levels = [["iteration", "timestamp", "T2"]]
+        self.timeout_counter = 0
 
     def main_loop(self):
         while True:
-            self.local_time += 1
-            self.t2 = Decimal(self.get(T2))
+            try:
+                self.local_time += 1
+                self.t2 = Decimal(self.get(T2))
 
-            if self.t2 > 0.36:
-                print("Close V_ER2i")
-                self.set(V_ER2i, 0)
+                if self.t2 > 0.36:
+                    print("Close V_ER2i")
+                    self.set(V_ER2i, 0)
 
-            if self.t2 < 0.08:
-                print("Open V_ER2i")
-                self.set(V_ER2i, 1)
+                if self.t2 < 0.08:
+                    print("Open V_ER2i")
+                    self.set(V_ER2i, 1)
 
-            self.saved_tank_levels.append([self.local_time, datetime.now(), self.t2])
+                self.saved_tank_levels.append([self.local_time, datetime.now(), self.t2])
 
-            print("Tank Level 2 %f " % self.t2)
-            print("ITERATION %d ------------- " % self.local_time)
+                print("Tank Level 2 %f " % self.t2)
+                print("ITERATION %d ------------- " % self.local_time)
 
-            self.send(T2, self.t2, PLC2_ADDR)
-
+                self.send(T2, self.t2, PLC2_ADDR)
+            except Exception:
+                # Warning for debug only!!!!
+                sys.exit(1)
 if __name__ == "__main__":
     plc2 = PLC2(
         name='plc2',
