@@ -28,7 +28,7 @@ class SimulationControl():
             self.simulation.kill()
 
     def start_simulation(self):
-        simulation = subprocess.Popen(["../../../wntr-experiments/env/bin/python", 'physical_process.py',
+        simulation = subprocess.Popen(["../../../wntr-experiments/bin/python", 'physical_process.py',
                                        self.simulator, self.topology, self.output])
         return simulation
 

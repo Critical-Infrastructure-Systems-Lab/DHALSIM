@@ -4,7 +4,6 @@ import sys
 import argparse
 import signal
 
-
 class NodeControl():
 
     def sigint_handler(self, sig, frame):

@@ -94,14 +94,6 @@ class PLC1(PLC):
 
         while True:
             self.local_time += 1
-
-            #threading
-            #global tank_level
-            #saved_tank_levels.append([datetime.now(), tank_level])
-            #self.send(T_LVL, tank_level, PLC1_ADDR)
-            #print("Tank Level %f " % tank_level)
-
-            #non threading
             self.tank_level = Decimal(self.get(T_LVL))
 
             if flag_attack_plc1:
@@ -112,7 +104,6 @@ class PLC1(PLC):
             else:
                 self.saved_tank_levels.append([datetime.now(), self.tank_level])
                 self.send(T_LVL, self.tank_level, PLC1_ADDR)
-                #print("Tank Level %f " % self.tank_level)
 
 if __name__ == "__main__":
     plc1 = PLC1(
