@@ -8,12 +8,20 @@ import signal
 class NodeControl():
 
     def sigint_handler(self, sig, frame):
-        self.process_tcp_dump.send_signal(signal.SIGINT)
-        self.process_tcp_dump.wait()
-
-        self.plc.terminate()
-        self.plc.wait()
+        self.terminate()
         sys.exit(0)
+
+    def terminate(self):
+        print "Stopping Tcp dump process on PLC..."
+        self.process_tcp_dump.kill()
+
+        print "Stopping PLC..."
+        self.plc_process.send_signal(signal.SIGINT)
+        self.plc_process.wait()
+        if self.plc_process.poll() is None:
+            self.plc_process.terminate()
+        if self.plc_process.poll() is None:
+            self.plc_process.kill()
 
     def main(self):
         args = self.get_arguments()
@@ -26,9 +34,11 @@ class NodeControl():
         self.delete_log()
 
         self.process_tcp_dump = self.start_tcpdump_capture()
-        self.plc = self.start_plc()
-        while self.plc.poll() is None:
+        self.plc_process = self.start_plc()
+
+        while self.plc_process.poll() is None:
             pass
+        self.terminate()
 
     def process_arguments(self,arg_parser):
         if arg_parser.name:

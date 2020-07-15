@@ -8,8 +8,8 @@ import shlex
 import subprocess
 import signal
 
-automatic = 0
-mitm_attack = 1
+automatic = 1
+mitm_attack = 0
 
 class Minitown(MiniCPS):
     """ Script to run the Minitown SCADA topology """

@@ -8,7 +8,7 @@ import shlex
 import subprocess
 import signal
 
-automatic = 0
+automatic = 1
 concealed_mitm = 0
 
 class Minitown(MiniCPS):
@@ -31,13 +31,21 @@ class Minitown(MiniCPS):
             CLI(net)
         net.stop()
 
+    def interrupt(self, sig, frame):
+        self.finish()
+        sys.exit(0)
+
     def automatic_start(self):
 
         plc1 = net.get('plc1')
         plc2 = net.get('plc2')
         scada = net.get('scada')
 
-        self.week_index = sys.argv[1]
+        if len(sys.argv) < 2:
+            self.week_index = str(0)
+        else:
+            self.week_index = sys.argv[1]
+
         self.create_log_files()
 
         plc1_output = open("output/plc1.log", 'r+')
@@ -96,7 +104,6 @@ class Minitown(MiniCPS):
         self.end_process(self.plc2_process)
         self.end_process(self.plc1_process)
 
-
         if self.plc2_mitm_process:
             self.end_process(self.plc2_mitm_process)
 
@@ -106,8 +113,8 @@ class Minitown(MiniCPS):
         if self.simulation:
             self.simulation.terminate()
 
-        #cmd = shlex.split("./kill_cppo.sh")
-        #subprocess.call(cmd)
+        cmd = shlex.split("./kill_cppo.sh")
+        subprocess.call(cmd)
 
         net.stop()
         sys.exit(0)

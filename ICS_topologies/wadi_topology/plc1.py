@@ -92,7 +92,7 @@ class PLC1(PLC):
 
             except Exception:
                 # Warning for debug only!!!!
-                sys.exit(1)
+                continue
 
 if __name__ == "__main__":
     plc1 = PLC1(

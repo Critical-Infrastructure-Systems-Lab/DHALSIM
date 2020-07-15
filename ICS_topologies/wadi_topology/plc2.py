@@ -56,8 +56,8 @@ class PLC2(PLC):
 
                 self.send(T2, self.t2, PLC2_ADDR)
             except Exception:
-                # Warning for debug only!!!!
-                sys.exit(1)
+                continue
+
 if __name__ == "__main__":
     plc2 = PLC2(
         name='plc2',
