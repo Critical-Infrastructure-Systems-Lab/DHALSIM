@@ -8,7 +8,7 @@ import shlex
 import subprocess
 import signal
 
-automatic = 0
+automatic = 1
 mitm_attack = 0
 
 class CTown(MiniCPS):
