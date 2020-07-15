@@ -17,6 +17,9 @@ class Minitown(MiniCPS):
     """ Script to run the WADI topology """
 
     def __init__(self, name, net):
+
+        signal.signal(signal.SIGINT, self.interrupt)
+        signal.signal(signal.SIGTERM, self.interrupt)
         net.start()
 
         r0 = net.get('r0')
@@ -28,6 +31,10 @@ class Minitown(MiniCPS):
         else:
             CLI(net)
         net.stop()
+
+    def interrupt(self, sig, frame):
+        self.finish()
+        sys.exit(0)
 
     def automatic_start(self):
 
@@ -66,31 +73,13 @@ class Minitown(MiniCPS):
         self.simulation = plant.popen(simulation_cmd, stderr=sys.stdout, stdout=physical_output)
 
         print "[] Simulating..."
-        try:
-            while self.simulation.poll() is None:
-                pass
-        except KeyboardInterrupt:
-            print "Cancelled, finishing simulation"
-            self.force_finish()
-            return
-
+        while self.simulation.poll() is None:
+            pass
         self.finish()
 
     def create_log_files(self):
         cmd = shlex.split("./create_log_files.sh")
         subprocess.call(cmd)
-
-    def force_finish(self):
-        self.plc1_process.kill()
-        self.plc2_process.kill()
-        self.scada_process.kill()
-        self.simulation.kill()
-
-        cmd = shlex.split("./kill_cppo.sh")
-        subprocess.call(cmd)
-
-        net.stop()
-        sys.exit(1)
 
     def end_plc_process(self, plc_process):
 
@@ -104,7 +93,6 @@ class Minitown(MiniCPS):
     def finish(self):
         print "[*] Simulation finished"
         self.end_plc_process(self.scada_process)
-
         self.end_plc_process(self.plc1_process)
         self.end_plc_process(self.plc2_process)
 
@@ -113,6 +101,7 @@ class Minitown(MiniCPS):
 
         cmd = shlex.split("./kill_cppo.sh")
         subprocess.call(cmd)
+
         net.stop()
         sys.exit(0)
 
