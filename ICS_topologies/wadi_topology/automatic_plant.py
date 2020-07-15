@@ -1,12 +1,31 @@
 import subprocess
 import argparse
+import signal
+import sys
 
 class SimulationControl():
+
     def main(self):
         args = self.get_arguments()
         self.process_arguments(args)
-        simulation = self.start_simulation()
-        simulation.wait()
+        signal.signal(signal.SIGINT, self.interrupt)
+        signal.signal(signal.SIGTERM, self.interrupt)
+        self.simulation = self.start_simulation()
+
+        while self.simulation.poll() is None:
+            pass
+
+    def interrupt(self, sig, frame):
+        self.finish()
+        sys.exit(0)
+
+    def finish(self):
+        self.simulation.send_signal(signal.SIGINT)
+        self.simulation.wait()
+        if self.simulation.poll() is None:
+            self.simulation.terminate()
+        if self.simulation.poll() is None:
+            self.simulation.kill()
 
     def start_simulation(self):
         simulation = subprocess.Popen(["../../../wntr-experiments/env/bin/python", 'physical_process.py',

@@ -8,7 +8,6 @@ import shlex
 import subprocess
 import signal
 
-
 automatic = 0
 mitm_attack = 1
 
@@ -16,6 +15,8 @@ class Minitown(MiniCPS):
     """ Script to run the Minitown SCADA topology """
 
     def __init__(self, name, net):
+        signal.signal(signal.SIGINT, self.interrupt)
+        signal.signal(signal.SIGTERM, self.interrupt)
         net.start()
 
         r0 = net.get('r0')
@@ -43,6 +44,10 @@ class Minitown(MiniCPS):
         else:
             CLI(net)
         net.stop()
+
+    def interrupt(self, sig, frame):
+        self.finish()
+        sys.exit(0)
 
     def automatic_start(self):
         self.create_log_files()
@@ -94,35 +99,14 @@ class Minitown(MiniCPS):
         self.simulation = plant.popen(simulation_cmd, stderr=sys.stdout, stdout=physical_output)
         print "[] Simulating..."
 
-        try:
-            while self.simulation.poll() is None:
-                pass
-        except KeyboardInterrupt:
-            print "Cancelled, finishing simulation"
-            self.force_finish()
-            return
-
+        print "[] Simulating..."
+        while self.simulation.poll() is None:
+            pass
         self.finish()
 
     def create_log_files(self):
         cmd = shlex.split("bash ./create_log_files.sh")
         subprocess.call(cmd)
-
-    def force_finish(self):
-
-        for plc in self.receiver_plcs_processes:
-            plc.kill()
-
-        for plc in self.sender_plcs_processes:
-            plc.kill()
-
-        self.simulation.kill()
-
-        cmd = shlex.split("./kill_cppo.sh")
-        subprocess.call(cmd)
-
-        net.stop()
-        sys.exit(1)
 
     def end_plc_process(self, plc_process):
 
