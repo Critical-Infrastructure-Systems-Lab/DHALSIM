@@ -91,7 +91,6 @@ class PLC1(PLC):
                 time.sleep(0.1)
 
             except Exception:
-                # Warning for debug only!!!!
                 continue
 
 if __name__ == "__main__":

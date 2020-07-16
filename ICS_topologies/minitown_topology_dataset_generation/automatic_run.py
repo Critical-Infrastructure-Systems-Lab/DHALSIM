@@ -19,6 +19,9 @@ class Minitown(MiniCPS):
         signal.signal(signal.SIGINT, self.interrupt)
         signal.signal(signal.SIGTERM, self.interrupt)
 
+        self.plc2_mitm_process = None
+        self.scada_mitm_process = None
+
         net.start()
 
         r0 = net.get('r0')
@@ -92,6 +95,8 @@ class Minitown(MiniCPS):
         subprocess.call("./create_log_files.sh")
 
     def end_process(self, process):
+        process.send_signal(signal.SIGINT)
+        process.wait()
         if process.poll() is None:
             process.terminate()
         if process.poll() is None:

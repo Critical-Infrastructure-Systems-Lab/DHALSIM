@@ -21,7 +21,7 @@ class PLC7(PLC):
 
     def write_output(self):
         print 'DEBUG plc7 shutdown'
-        with open('output/plc7_saved_tank_levels_received.csv', 'w') as f:
+        with open('no_attack/output/plc7_saved_tank_levels_received.csv', 'w') as f:
             writer = csv.writer(f)
             writer.writerows(self.saved_tank_levels)
         exit(0)
