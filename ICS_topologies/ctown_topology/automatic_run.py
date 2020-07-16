@@ -79,7 +79,7 @@ class Minitown(MiniCPS):
             attacker_file = open("output/attacker.log", 'r+')
             attacker = net.get('attacker')
             mitm_cmd = shlex.split("../../../attack-experiments/env/bin/python "
-                                   "../../attack_repository/mitm_plc/mitm_attack.py plc5")
+                                   "../../attack_repository/mitm_plc/mitm_attack.py 192.168.1.77 192.168.1.50")
             print 'Running MiTM attack with command ' + str(mitm_cmd)
             self.mitm_process = attacker.popen(mitm_cmd, stderr=sys.stdout, stdout=attacker_file )
             print "[] Attacking"

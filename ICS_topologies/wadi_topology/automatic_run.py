@@ -11,7 +11,7 @@ from utils import wadi_ip
 
 
 automatic = 1
-mitm_attack = 0
+mitm_attack = 1
 
 class Minitown(MiniCPS):
     """ Script to run the WADI topology """

@@ -4,7 +4,6 @@ import sys
 import argparse
 import signal
 
-
 class NodeControl():
 
     def sigint_handler(self, sig, frame):
@@ -32,12 +31,13 @@ class NodeControl():
 
         self.configure_routing()
         self.delete_log()
-
         self.process_tcp_dump = self.start_tcpdump_capture()
+
         self.plc_process = self.start_plc()
 
         while self.plc_process.poll() is None:
             pass
+
         self.terminate()
 
     def process_arguments(self,arg_parser):
