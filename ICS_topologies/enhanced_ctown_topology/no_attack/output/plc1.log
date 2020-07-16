@@ -1,0 +1,161 @@
+DEBUG get_query: SELECT value FROM ctown WHERE name = ? AND pid = ?
+DEBUG set_query: UPDATE ctown SET value = ? WHERE name = ? AND pid = ?
+DEBUG EnipProtocol server addr:  192.168.1.1
+DEBUG: concatenating server address with default port.
+DEBUG enip server tags_string:  T1:1=REAL PU1:1=REAL PU2:1=REAL ATT_1:1=REAL ATT_2:1=REAL 
+DEBUG enip _start_server cmd:  ['/usr/bin/python', '-m', 'cpppo.server.enip', '--print', '--log', 'logs/protocols_tests_enip_server', '--address', '192.168.1.1:44818', 'T1:1=REAL', 'PU1:1=REAL', 'PU2:1=REAL', 'ATT_1:1=REAL', 'ATT_2:1=REAL']
+DEBUG: plc1 enters pre_loop
+ITERATION 1 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 2 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 3 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 4 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 5 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 6 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 7 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 8 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 9 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 10 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 11 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 12 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 13 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 14 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 15 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 16 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 17 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 18 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 19 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 20 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 21 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 22 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 23 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 24 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 25 ------------- 
+Tank 1 Level 3.031910 
+Opening P1
+ITERATION 26 ------------- 
+Tank 1 Level 3.031910 
+Opening P1
+ITERATION 27 ------------- 
+Tank 1 Level 3.031910 
+Opening P1
+ITERATION 28 ------------- 
+Tank 1 Level 3.031910 
+Opening P1
+ITERATION 29 ------------- 
+Tank 1 Level 3.031910 
+Opening P1
+ITERATION 30 ------------- 
+Tank 1 Level 3.031910 
+Opening P1
+ITERATION 31 ------------- 
+Tank 1 Level 3.031910 
+Opening P1
+ITERATION 32 ------------- 
+Tank 1 Level 3.031910 
+Opening P1
+ITERATION 33 ------------- 
+Tank 1 Level 3.063797 
+Opening P1
+ITERATION 34 ------------- 
+Tank 1 Level 3.063797 
+Opening P1
+ITERATION 35 ------------- 
+Tank 1 Level 3.063797 
+Opening P1
+ITERATION 36 ------------- 
+Tank 1 Level 3.063797 
+Opening P1
+ITERATION 37 ------------- 
+Tank 1 Level 3.063797 
+Opening P1
+ITERATION 38 ------------- 
+Tank 1 Level 3.063797 
+Opening P1
+ITERATION 39 ------------- 
+Tank 1 Level 3.063797 
+Opening P1
+ITERATION 40 ------------- 
+Tank 1 Level 3.063797 
+Opening P1
+ITERATION 41 ------------- 
+Tank 1 Level 3.063797 
+Opening P1
+ITERATION 42 ------------- 
+Tank 1 Level 3.095663 
+Opening P1
+ITERATION 43 ------------- 
+Tank 1 Level 3.095663 
+Opening P1
+ITERATION 44 ------------- 
+Tank 1 Level 3.095663 
+Opening P1
+ITERATION 45 ------------- 
+Tank 1 Level 3.095663 
+Opening P1
+ITERATION 46 ------------- 
+Tank 1 Level 3.095663 
+Opening P1
+ITERATION 47 ------------- 
+Tank 1 Level 3.095663 
+Opening P1
+ITERATION 48 ------------- 
+Tank 1 Level 3.095663 
+Opening P1
+ITERATION 49 ------------- 
+Tank 1 Level 3.095663 
+Opening P1
+ITERATION 50 ------------- 
+Tank 1 Level 3.080071 
+Opening P1
+DEBUG plc1 shutdown
+plc1
+Stopping Tcp dump process on PLC...
+Stopping PLC...
