@@ -1,0 +1,922 @@
+DEBUG get_query: SELECT value FROM wadi WHERE name = ? AND pid = ?
+DEBUG set_query: UPDATE wadi SET value = ? WHERE name = ? AND pid = ?
+DEBUG EnipProtocol server addr:  192.168.1.10
+DEBUG: concatenating server address with default port.
+DEBUG enip server tags_string:  T0:1=REAL T2:1=REAL P_RAW1:1=REAL V_PUB:1=REAL ATT_1:1=REAL ATT_2:1=REAL 
+DEBUG enip _start_server cmd:  ['/usr/bin/python', '-m', 'cpppo.server.enip', '--print', '--log', 'logs/protocols_tests_enip_server', '--address', '192.168.1.10:44818', 'T0:1=REAL', 'T2:1=REAL', 'P_RAW1:1=REAL', 'V_PUB:1=REAL', 'ATT_1:1=REAL', 'ATT_2:1=REAL']
+DEBUG: plc1 enters pre_loop
+ITERATION 1 ------------- 
+Tank 0 Level 0.562929 
+Tank 2 Level 0.146614 
+ITERATION 2 ------------- 
+Tank 0 Level 0.562929 
+Tank 2 Level 0.146614 
+ITERATION 3 ------------- 
+Tank 0 Level 0.562929 
+Tank 2 Level 0.146614 
+ITERATION 4 ------------- 
+Tank 0 Level 0.562929 
+Tank 2 Level 0.146614 
+ITERATION 5 ------------- 
+Tank 0 Level 0.562929 
+Tank 2 Level 0.146614 
+ITERATION 6 ------------- 
+Tank 0 Level 0.562929 
+Tank 2 Level 0.146614 
+ITERATION 7 ------------- 
+Tank 0 Level 0.562929 
+Tank 2 Level 0.146614 
+ITERATION 8 ------------- 
+Tank 0 Level 0.538071 
+Tank 2 Level 0.146614 
+ITERATION 9 ------------- 
+Tank 0 Level 0.538071 
+Tank 2 Level 0.174437 
+ITERATION 10 ------------- 
+Tank 0 Level 0.538071 
+Tank 2 Level 0.174437 
+ITERATION 11 ------------- 
+Tank 0 Level 0.538071 
+Tank 2 Level 0.174096 
+ITERATION 12 ------------- 
+Tank 0 Level 0.538071 
+Tank 2 Level 0.173414 
+ITERATION 13 ------------- 
+Tank 0 Level 0.538071 
+Tank 2 Level 0.172736 
+ITERATION 14 ------------- 
+Tank 0 Level 0.538071 
+Tank 2 Level 0.172404 
+ITERATION 15 ------------- 
+Tank 0 Level 0.538071 
+Tank 2 Level 0.172075 
+ITERATION 16 ------------- 
+Tank 0 Level 0.538071 
+Tank 2 Level 0.171428 
+ITERATION 17 ------------- 
+Tank 0 Level 0.538071 
+Tank 2 Level 0.171111 
+ITERATION 18 ------------- 
+Tank 0 Level 0.538071 
+Tank 2 Level 0.171111 
+ITERATION 19 ------------- 
+Tank 0 Level 0.538071 
+Tank 2 Level 0.170477 
+ITERATION 20 ------------- 
+Tank 0 Level 0.538071 
+Tank 2 Level 0.170161 
+ITERATION 21 ------------- 
+Tank 0 Level 0.538071 
+Tank 2 Level 0.169531 
+ITERATION 22 ------------- 
+Tank 0 Level 0.538071 
+Tank 2 Level 0.169221 
+ITERATION 23 ------------- 
+Tank 0 Level 0.538071 
+Tank 2 Level 0.168913 
+ITERATION 65 ------------- 
+Tank 0 Level 0.538071 
+Tank 2 Level 0.030904 
+Opening P_RAW1
+ITERATION 66 ------------- 
+Tank 0 Level 0.538071 
+Tank 2 Level 0.029295 
+Opening P_RAW1
+ITERATION 67 ------------- 
+Tank 0 Level 0.538071 
+Tank 2 Level 0.029123 
+Opening P_RAW1
+ITERATION 68 ------------- 
+Tank 0 Level 0.538071 
+Tank 2 Level 0.028953 
+Opening P_RAW1
+ITERATION 69 ------------- 
+Tank 0 Level 0.515577 
+Tank 2 Level 0.028953 
+Opening P_RAW1
+ITERATION 70 ------------- 
+Tank 0 Level 0.493186 
+Tank 2 Level 0.081263 
+ITERATION 71 ------------- 
+Tank 0 Level 0.448708 
+Tank 2 Level 0.107183 
+ITERATION 72 ------------- 
+Tank 0 Level 0.426622 
+Tank 2 Level 0.158997 
+ITERATION 73 ------------- 
+Tank 0 Level 0.404638 
+Tank 2 Level 0.184804 
+ITERATION 74 ------------- 
+Tank 0 Level 0.382755 
+Tank 2 Level 0.210492 
+ITERATION 75 ------------- 
+Tank 0 Level 0.360975 
+Tank 2 Level 0.236060 
+ITERATION 76 ------------- 
+Tank 0 Level 0.339297 
+Tank 2 Level 0.261508 
+ITERATION 77 ------------- 
+Tank 0 Level 0.317721 
+Tank 2 Level 0.286837 
+ITERATION 78 ------------- 
+Tank 0 Level 0.296246 
+Tank 2 Level 0.312046 
+Close P_RAW1
+Open V_PUB
+ITERATION 79 ------------- 
+Tank 0 Level 0.274873 
+Tank 2 Level 0.337136 
+Close P_RAW1
+Open V_PUB
+ITERATION 80 ------------- 
+Tank 0 Level 0.253602 
+Tank 2 Level 0.362106 
+Close P_RAW1
+Open V_PUB
+Closing P_RAW1
+ITERATION 81 ------------- 
+Tank 0 Level 0.232432 
+Tank 2 Level 0.386958 
+Close P_RAW1
+Open V_PUB
+Closing P_RAW1
+ITERATION 82 ------------- 
+Tank 0 Level 0.287506 
+Tank 2 Level 0.386958 
+Close P_RAW1
+Open V_PUB
+Closing P_RAW1
+ITERATION 83 ------------- 
+Tank 0 Level 0.314864 
+Tank 2 Level 0.386958 
+Closing P_RAW1
+ITERATION 84 ------------- 
+Tank 0 Level 0.342104 
+Tank 2 Level 0.386958 
+Closing P_RAW1
+ITERATION 85 ------------- 
+Tank 0 Level 0.369225 
+Tank 2 Level 0.386958 
+Closing P_RAW1
+ITERATION 86 ------------- 
+Tank 0 Level 0.423112 
+Tank 2 Level 0.386958 
+Closing P_RAW1
+ITERATION 87 ------------- 
+Tank 0 Level 0.449878 
+Tank 2 Level 0.386958 
+Closing P_RAW1
+ITERATION 88 ------------- 
+Tank 0 Level 0.476526 
+Tank 2 Level 0.386958 
+Closing P_RAW1
+ITERATION 89 ------------- 
+Tank 0 Level 0.529467 
+Tank 2 Level 0.386958 
+Closing P_RAW1
+ITERATION 90 ------------- 
+Tank 0 Level 0.555760 
+Tank 2 Level 0.386087 
+Closing P_RAW1
+ITERATION 91 ------------- 
+Tank 0 Level 0.581936 
+Tank 2 Level 0.385444 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 92 ------------- 
+Tank 0 Level 0.607993 
+Tank 2 Level 0.385444 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 93 ------------- 
+Tank 0 Level 0.633933 
+Tank 2 Level 0.384229 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 94 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.383626 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 95 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.383031 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 96 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.382434 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 97 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.380655 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 98 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.380062 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 99 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.379470 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 100 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.378879 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 101 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.377712 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 102 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.377137 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 103 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.376566 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 104 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.375429 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 105 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.374868 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 106 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.374316 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 107 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.373767 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 108 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.372689 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 109 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.372151 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 110 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.371615 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 111 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.370555 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 112 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.370555 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 113 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.369507 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 114 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.368474 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 115 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.367960 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 116 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.367448 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 117 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.366440 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 118 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.366440 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 119 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.365947 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 120 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.364971 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 121 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.364486 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 122 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.364002 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 123 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.363519 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 124 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.363036 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 125 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.362071 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 126 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.361590 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 127 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.360632 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 128 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.360157 
+Closing V_PUB
+Closing P_RAW1
+ITERATION 129 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.359684 
+Closing V_PUB
+ITERATION 130 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.358736 
+Closing V_PUB
+ITERATION 131 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.358736 
+Closing V_PUB
+ITERATION 132 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.357786 
+Closing V_PUB
+ITERATION 133 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.357311 
+Closing V_PUB
+ITERATION 134 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.356838 
+Closing V_PUB
+ITERATION 135 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.355900 
+Closing V_PUB
+ITERATION 136 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.355433 
+Closing V_PUB
+ITERATION 137 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.354967 
+Closing V_PUB
+ITERATION 138 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.354042 
+Closing V_PUB
+ITERATION 139 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.353582 
+Closing V_PUB
+ITERATION 140 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.353122 
+Closing V_PUB
+ITERATION 141 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.352208 
+Closing V_PUB
+ITERATION 142 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.351754 
+Closing V_PUB
+ITERATION 143 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.351303 
+Closing V_PUB
+ITERATION 144 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.350854 
+Closing V_PUB
+ITERATION 145 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.349965 
+Closing V_PUB
+ITERATION 146 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.349524 
+Closing V_PUB
+ITERATION 147 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.349087 
+Closing V_PUB
+ITERATION 148 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.348215 
+Closing V_PUB
+ITERATION 149 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.348215 
+Closing V_PUB
+ITERATION 150 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.347349 
+Closing V_PUB
+ITERATION 151 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.346922 
+Closing V_PUB
+ITERATION 152 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.346499 
+Closing V_PUB
+ITERATION 153 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.345665 
+Closing V_PUB
+ITERATION 154 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.345256 
+Closing V_PUB
+ITERATION 155 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.344443 
+Closing V_PUB
+ITERATION 156 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.344038 
+Closing V_PUB
+ITERATION 157 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.343634 
+Closing V_PUB
+ITERATION 158 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.342838 
+Closing V_PUB
+ITERATION 159 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.342443 
+Closing V_PUB
+ITERATION 160 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.342052 
+Closing V_PUB
+ITERATION 161 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.341664 
+Closing V_PUB
+ITERATION 162 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.341393 
+Closing V_PUB
+ITERATION 163 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.341393 
+Closing V_PUB
+ITERATION 164 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.341393 
+Closing V_PUB
+ITERATION 165 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.341393 
+Closing V_PUB
+ITERATION 166 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.341393 
+Closing V_PUB
+ITERATION 167 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.341393 
+Closing V_PUB
+ITERATION 168 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.341393 
+Closing V_PUB
+ITERATION 169 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.341393 
+Closing V_PUB
+ITERATION 170 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.341393 
+Closing V_PUB
+ITERATION 171 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.341393 
+Closing V_PUB
+ITERATION 172 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.341393 
+Closing V_PUB
+ITERATION 173 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.341393 
+Closing V_PUB
+ITERATION 174 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.341393 
+Closing V_PUB
+ITERATION 175 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.341393 
+Closing V_PUB
+ITERATION 176 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.341393 
+Closing V_PUB
+ITERATION 177 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.341393 
+Closing V_PUB
+ITERATION 178 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.341393 
+Closing V_PUB
+ITERATION 179 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.339445 
+Closing V_PUB
+ITERATION 180 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.338869 
+Closing V_PUB
+ITERATION 181 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.338298 
+Closing V_PUB
+ITERATION 182 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.337730 
+Closing V_PUB
+ITERATION 183 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.336598 
+Closing V_PUB
+ITERATION 184 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.336033 
+Closing V_PUB
+ITERATION 185 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.335469 
+Closing V_PUB
+ITERATION 186 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.334905 
+Closing V_PUB
+ITERATION 187 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.334342 
+Closing V_PUB
+ITERATION 188 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.333225 
+Closing V_PUB
+ITERATION 189 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.332671 
+Closing V_PUB
+ITERATION 190 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.332120 
+Closing V_PUB
+ITERATION 191 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.331032 
+Closing V_PUB
+ITERATION 192 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.330490 
+Closing V_PUB
+ITERATION 193 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.329954 
+Closing V_PUB
+ITERATION 194 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.328910 
+Closing V_PUB
+ITERATION 195 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.328390 
+Closing V_PUB
+ITERATION 196 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.327876 
+Closing V_PUB
+ITERATION 197 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.327364 
+Closing V_PUB
+ITERATION 198 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.326344 
+Closing V_PUB
+ITERATION 199 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.325840 
+Closing V_PUB
+ITERATION 200 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.325339 
+Closing V_PUB
+ITERATION 201 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.324841 
+Closing V_PUB
+ITERATION 202 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.324346 
+Closing V_PUB
+ITERATION 203 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.323853 
+Closing V_PUB
+ITERATION 204 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.322387 
+Closing V_PUB
+ITERATION 205 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.321906 
+Closing V_PUB
+ITERATION 206 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.321430 
+Closing V_PUB
+ITERATION 207 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.320957 
+Closing V_PUB
+ITERATION 208 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.320030 
+Closing V_PUB
+ITERATION 209 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.319110 
+Closing V_PUB
+ITERATION 210 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.318651 
+Closing V_PUB
+ITERATION 211 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.317733 
+Closing V_PUB
+ITERATION 212 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.317274 
+Closing V_PUB
+ITERATION 213 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.316363 
+Closing V_PUB
+ITERATION 214 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.315912 
+Closing V_PUB
+ITERATION 215 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.315014 
+Closing V_PUB
+ITERATION 216 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.314566 
+Closing V_PUB
+ITERATION 217 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.314118 
+Closing V_PUB
+ITERATION 218 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.313229 
+Closing V_PUB
+ITERATION 219 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.312783 
+Closing V_PUB
+ITERATION 220 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.312338 
+Closing V_PUB
+ITERATION 221 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.311452 
+Closing V_PUB
+ITERATION 222 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.311014 
+Closing V_PUB
+ITERATION 223 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.310573 
+Closing V_PUB
+ITERATION 224 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.310137 
+Closing V_PUB
+ITERATION 225 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.309701 
+Closing V_PUB
+ITERATION 226 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.308830 
+Closing V_PUB
+ITERATION 227 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.308399 
+Closing V_PUB
+ITERATION 228 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.307971 
+Closing V_PUB
+ITERATION 229 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.307119 
+Closing V_PUB
+ITERATION 230 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.306695 
+Closing V_PUB
+ITERATION 231 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.306275 
+Closing V_PUB
+ITERATION 232 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.305858 
+Closing V_PUB
+ITERATION 233 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.305443 
+Closing V_PUB
+ITERATION 234 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.304613 
+Closing V_PUB
+ITERATION 235 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.304200 
+Closing V_PUB
+ITERATION 236 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.303383 
+Closing V_PUB
+ITERATION 237 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.302980 
+Closing V_PUB
+ITERATION 238 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.302582 
+Closing V_PUB
+ITERATION 239 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.302190 
+Closing V_PUB
+ITERATION 240 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.301415 
+Closing V_PUB
+ITERATION 241 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.301030 
+Closing V_PUB
+ITERATION 242 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.300260 
+Closing V_PUB
+ITERATION 243 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.299880 
+Closing V_PUB
+ITERATION 244 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.299502 
+Closing V_PUB
+ITERATION 245 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.298756 
+Closing V_PUB
+ITERATION 246 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.298388 
+Closing V_PUB
+ITERATION 247 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.298199 
+Closing V_PUB
+ITERATION 248 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.298199 
+Closing V_PUB
+ITERATION 249 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.298199 
+Closing V_PUB
+ITERATION 250 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.298199 
+Closing V_PUB
+ITERATION 251 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.298199 
+Closing V_PUB
+ITERATION 252 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.298199 
+Closing V_PUB
+ITERATION 253 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.298199 
+Closing V_PUB
+ITERATION 254 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.298199 
+Closing V_PUB
+ITERATION 255 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.298199 
+Closing V_PUB
+ITERATION 256 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.298199 
+Closing V_PUB
+ITERATION 257 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.298199 
+Closing V_PUB
+ITERATION 258 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.298199 
+Closing V_PUB
+ITERATION 259 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.298199 
+Closing V_PUB
+ITERATION 260 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.298199 
+Closing V_PUB
+ITERATION 261 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.298199 
+Closing V_PUB
+ITERATION 262 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.297376 
+Closing V_PUB
+ITERATION 263 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.296799 
+Closing V_PUB
+ITERATION 264 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.296250 
+Closing V_PUB
+ITERATION 265 ------------- 
+Tank 0 Level 0.659755 
+Tank 2 Level 0.295704 
+Closing V_PUB
+DEBUG plc1 shutdown
+plc1
+Stopping Tcp dump process on PLC...
+Stopping PLC...
