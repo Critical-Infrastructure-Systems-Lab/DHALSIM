@@ -1,0 +1,6 @@
+pump1 status 0
+pump2 status 1
+Running simulation using PDD
+['WnPump1Control', 'WnPump2Control']
+Control pump1control := if Tank('TANK').level >= -1.0 then set HeadPump('PUMP1').status to Closed with priority 3
+Control pump2control := if Tank('TANK').level >= -1.0 then set HeadPump('PUMP2').status to Open with priority 3
