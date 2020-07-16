@@ -12,7 +12,15 @@ automatic = 1
 mitm_attack = 0
 
 class Minitown(MiniCPS):
-    """ Script to run the Minitown SCADA topology """
+    """ Main script controlling an experiment
+    All the automatic_run.py follow roughly the same pattern by launching subprocesses representing each element in the simulation
+    The flag automatic controls if this simulation is run automatically, in which case this process will only finish when the automatic_plant.py finishes.
+    automatic_plant will only finish when physical_process.py and in turn that is controlled by the duration parameters configured in the .inp file
+    If automatic is 1 and automatic mitm_attack can also be simulated by giving the mitm_attack a flag value of 1
+    Every device outputs two files: a .csv file with the values it received during the simulation and a .pcap file with the network messages sent/received during simuilation.
+    Those files will be stored into the output/ folder. In addition, output/ will contain a file named by default "physical_process.py" which contains the physical state of the system
+    This represents the "ground truth" values of the simulated plant
+    """
 
     def __init__(self, name, net):
         signal.signal(signal.SIGINT, self.interrupt)
@@ -23,6 +31,7 @@ class Minitown(MiniCPS):
         # Pre experiment configuration, prepare routing path
         r0.cmd('sysctl net.ipv4.ip_forward=1')
 
+        # To avoid MiniCPS servers and clients sending exceptions, we start first the PLCs that send information and later the PLCs receiving information
         self.sender_plcs =  [2, 4, 6, 7, 9]
         self.receiver_plcs = [1, 3, 5]
 
@@ -95,6 +104,8 @@ class Minitown(MiniCPS):
         print "[*] Launched the PLCs and SCADA process, launching simulation..."
         plant = net.get('plant')
 
+        # simulation process controls when this script and the experiment ends. Once the simulation process is finished (either by normal termination or SIGINT, SIGTERM)
+        # the devices and their subprocess will finish, the output files will be generated and the experiment will be over
         simulation_cmd = shlex.split("python automatic_plant.py -s pdd -t ctown -o physical_process.csv")
         self.simulation = plant.popen(simulation_cmd, stderr=sys.stdout, stdout=physical_output)
         print "[] Simulating..."
@@ -145,6 +156,7 @@ class Minitown(MiniCPS):
         if self.simulation:
             self.simulation.terminate()
 
+        # This was neccesary in order to guarantee that the python cpppo servers processes are terminated
         cmd = shlex.split("./kill_cppo.sh")
         subprocess.call(cmd)
         net.stop()

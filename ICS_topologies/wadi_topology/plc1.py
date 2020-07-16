@@ -35,7 +35,7 @@ class PLC1(PLC):
         print 'DEBUG: plc1 enters pre_loop'
         self.local_time = 0
         self.t0 = Decimal(self.get(T0))
-        self.saved_tank_levels = [["iteration", "timestamp", "T0"]]
+        self.saved_tank_levels = [["iteration", "timestamp", "T0", "T2"]]
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
         self.p_raw_delay_timer = 0
@@ -55,7 +55,7 @@ class PLC1(PLC):
                 print("ITERATION %d ------------- " % self.local_time)
                 print("Tank 0 Level %f " % self.t0)
                 print("Tank 2 Level %f " % self.t2)
-                #self.saved_tank_levels.append([datetime.now(), self.t0])
+                self.saved_tank_levels.append([self.local_time, datetime.now(), self.t0, self.t2])
 
                 if self.t0 < 0.3008:
                     print("Close P_RAW1")

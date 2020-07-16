@@ -2,6 +2,9 @@ from minicps.states import SQLiteState
 from utils import PATH, SCHEMA, SCHEMA_INIT
 from sqlite3 import OperationalError
 
+"""
+This script generates the sqlite used to store the system state while the simulation is running
+"""
 
 if __name__ == "__main__":
 
