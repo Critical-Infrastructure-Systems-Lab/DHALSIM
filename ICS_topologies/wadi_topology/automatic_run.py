@@ -11,7 +11,7 @@ from utils import wadi_ip
 
 
 automatic = 1
-mitm_attack = 1
+mitm_attack = 0
 
 class Minitown(MiniCPS):
     """ Main script controlling an experiment
