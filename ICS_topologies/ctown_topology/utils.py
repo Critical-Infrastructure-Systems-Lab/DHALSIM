@@ -1,14 +1,10 @@
 """
-sqlite and enip use name (string) and pid (int) has key and the state stores
-values as strings.
-
-Actuator tags are redundant, we will use only the XXX_XXX_OPEN tag ignoring
-the XXX_XXX_CLOSE with the following convention:
-    - 0 = error
-    - 1 = off
-    - 2 = on
-
-sqlite uses float keyword and cpppo use REAL keyword.
+utils files define the following:
+- The tags stored in the sqlite db and exchanged by the devices using ENIP. These tags represent variables in the system; hence, a "T0" tank represents the level of tank 0
+  In addition, two special tags are used: ATT_1 and ATT_2, these are used to signal the presence of an attack
+- setting flags that enable the devices if they're being compromised and the attack behavior.
+- network configuration: That section configures the ENIP devices in the simulation
+- database configuration, while the simulation is running, the system state is stored in a sqlite database
 """
 
 from minicps.utils import build_debug_logger
@@ -50,6 +46,7 @@ V2 = ('V2', 1)
 ATT_1 = ('ATT_1', 1)
 ATT_2 = ('ATT_2', 1)
 
+################################ Flags controlling atack on devices  #########################################
 flag_attack_plc1 = 0
 flag_attack_plc2 = 0
 flag_attack_communication_plc1_scada = 0
@@ -292,6 +289,7 @@ SCADA_PROTOCOL = {
     'server': SCADA_SERVER
 }
 
+########################### Database configuration ####################################################################
 # ---------------------------------------------------------
 # SPHINX_SWAT_TUTORIAL STATE(
 PATH = 'ctown_db.sqlite'

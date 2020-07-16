@@ -6,11 +6,19 @@ import signal
 
 class NodeControl():
 
+    """
+    This class represents a PLC or SCADA node. All of these devices have the same pattern of launching a tcpdump process in
+    the eth0 interface, launching a plc_n.py script or scada.py script and when receives a SIGINT or SIGTERM signal store the recevied values into a .csv file.
+    In addition, a pcap file is created with the tcpdump results
+    """
     def sigint_handler(self, sig, frame):
         self.terminate()
         sys.exit(0)
 
     def terminate(self):
+        """
+         All the subprocesses launched in this Digital Twin follow the same pattern to ensure that they finish before continuing with the finishing of the parent process
+         """
         print "Stopping Tcp dump process on PLC..."
         self.process_tcp_dump.kill()
 
@@ -23,6 +31,11 @@ class NodeControl():
             self.plc_process.kill()
 
     def main(self):
+        """
+        Main method of a device. The signal handler methods are define, the routing is configured (adding default gateways for the deviceS), a tcpdump process is started
+        and a plc_n.py or scada.py script is launched
+        :return:
+        """
         args = self.get_arguments()
         self.process_arguments(args)
 
@@ -48,6 +61,10 @@ class NodeControl():
             self.name = 'plc1'
 
     def delete_log(self):
+        """
+        We delete the log of previous experiments
+        :return:
+        """
         subprocess.call(['rm', '-rf', self.name + '.log'])
 
     def configure_routing(self):

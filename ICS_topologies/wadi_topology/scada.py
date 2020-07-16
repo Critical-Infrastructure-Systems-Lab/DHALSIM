@@ -28,7 +28,7 @@ class SCADAServer(SCADAServer):
         """scada pre loop.
             - sleep
         """
-        self.saved_tank_levels = [["iteration", "timestamp", "T0", "T2"]]
+        self.saved_tank_levels = [["timestamp", "T0", "T2"]]
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
 
