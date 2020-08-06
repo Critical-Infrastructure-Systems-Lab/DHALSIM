@@ -16,7 +16,7 @@ class SCADAServer(SCADAServer):
 
     def write_output(self):
         print 'DEBUG SCADA shutdown'
-        with open('no_attack/output/scada_saved_tank_levels_received.csv', 'w') as f:
+        with open('output/scada_saved_tank_levels_received.csv', 'w') as f:
             writer = csv.writer(f)
             writer.writerows(self.saved_tank_levels)
 
