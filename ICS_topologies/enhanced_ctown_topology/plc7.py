@@ -35,9 +35,19 @@ class PLC7(PLC):
         signal.signal(signal.SIGTERM, self.sigint_handler)
 
     def main_loop(self):
-
+        get_error_counter = 0
+        get_error_counter_limit = 100
         while True:
-            self.t5 = Decimal(self.get(T5))
+            try:
+                self.t5 = Decimal(self.get(T5))
+            except Exception:
+                get_error_counter += 1
+                if get_error_counter < get_error_counter_limit:
+                    continue
+                else:
+                    print("PLC process encountered errors, aborting process")
+                    exit(0)
+
             self.local_time += 1
             self.saved_tank_levels.append([self.local_time, datetime.now(), self.t5])
 
