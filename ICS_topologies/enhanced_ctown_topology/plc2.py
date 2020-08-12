@@ -35,8 +35,18 @@ class PLC2(PLC):
         self.saved_tank_levels = [["iteration", "timestamp", "T1"]]
 
     def main_loop(self):
+        get_error_counter = 0
+        get_error_counter_limit = 100
         while True:
-            self.t1 = Decimal(self.get(T1))
+            try:
+                self.t1 = Decimal(self.get(T1))
+            except Exception:
+                get_error_counter += 1
+                if get_error_counter < get_error_counter_limit:
+                    continue
+                else:
+                    print("PLC process encountered errors, aborting process")
+                    exit(0)
             self.local_time += 1
             self.saved_tank_levels.append([self.local_time, datetime.now(), self.t1])
 

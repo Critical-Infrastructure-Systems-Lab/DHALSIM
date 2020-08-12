@@ -36,15 +36,25 @@ class PLC4(PLC):
 
 
     def main_loop(self):
-
+        get_error_counter = 0
+        get_error_counter_limit = 100
         while True:
-            self.t3 = Decimal(self.get(T3))
-            self.local_time += 1
-            self.saved_tank_levels.append([self.local_time, datetime.now(), self.t3])
+            try:
+                self.t3 = Decimal(self.get(T3))
+            except Exception:
+                get_error_counter += 1
+                if get_error_counter < get_error_counter_limit:
+                    continue
+                else:
+                    print("PLC process encountered errors, aborting process")
+                    exit(0)
 
-            print("Tank Level %f " % self.t3)
-            print("ITERATION %d ------------- " % self.local_time)
-            self.send(T3, self.t3, ENIP_LISTEN_PLC_ADDR)
+                self.local_time += 1
+                self.saved_tank_levels.append([self.local_time, datetime.now(), self.t3])
+
+                print("Tank Level %f " % self.t3)
+                print("ITERATION %d ------------- " % self.local_time)
+                self.send(T3, self.t3, ENIP_LISTEN_PLC_ADDR)
 
 if __name__ == "__main__":
     plc4 = PLC4(
