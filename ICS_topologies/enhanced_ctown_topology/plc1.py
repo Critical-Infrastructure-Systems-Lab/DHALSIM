@@ -16,7 +16,6 @@ plc1_log_path = 'plc1.log'
 
 
 class PLC1(PLC):
-
     def write_output(self):
         print 'DEBUG plc1 shutdown'
         with open('output/plc1_saved_tank_levels_received.csv', 'w') as f:
@@ -44,8 +43,6 @@ class PLC1(PLC):
 
 
     def main_loop(self):
-
-
         while True:
             try:
                 self.local_time += 1

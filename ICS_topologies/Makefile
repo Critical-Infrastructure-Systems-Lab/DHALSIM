@@ -8,10 +8,18 @@ MININET = sudo mn
 PYTHON = sudo python
 PYTHON_OPTS =
 
-# regex testMatch: (?:^|[b_.-])[Tt]est)
-# --exe: include also executable files
-# -s: don't capture std output
-# nosetests -s tests/devices_tests.py:fun_name
+general-minitown:
+	if [ ! -d general_topology/logs ]; then\
+	   mkdir general_topology/logs;\
+	fi
+	if [ ! -d general_topology/output ]; then\
+	   mkdir general_topology/output;\
+	fi
+	cd general_topology; rm -rf minitown_db.sqlite; $(PYTHON) $(PYTHON_OPTS) init.py; sudo chown mininet:mininet minitown_db.sqlite
+	sudo pkill -f -u root "python -m cpppo.server.enip"
+	sudo mn -c
+	cd general_topology; sudo $(PYTHON) $(PYTHON_OPTS) automatic_run.py
+
 single-minitown:
 	if [ ! -d minitown_topology/logs ]; then\
 	   mkdir minitown_topology/logs;\
