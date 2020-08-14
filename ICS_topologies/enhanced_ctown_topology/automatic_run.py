@@ -51,7 +51,6 @@ class CTown(MiniCPS):
         self.do_forward(net.get('attacker'))
 
     def __init__(self, name, net):
-
         signal.signal(signal.SIGINT, self.interrupt)
         signal.signal(signal.SIGTERM, self.interrupt)
         net.start()
