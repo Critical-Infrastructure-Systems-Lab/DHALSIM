@@ -109,7 +109,7 @@ class CTown(MiniCPS):
 
         # Launching automatically mitm attack
         if mitm_attack == 1 :
-            attacker_file = open("no_attack/output/attacker.log", 'r+')
+            attacker_file = open("output/attacker.log", 'r+')
             attacker = net.get('attacker')
             mitm_cmd = shlex.split("../../../attack-experiments/env/bin/python "
                                    "../../attack_repository/mitm_plc/mitm_attack.py 192.168.1.1 192.168.1.254")
@@ -119,11 +119,11 @@ class CTown(MiniCPS):
 
         print "[] Launchin SCADA"
         self.scada_node = net.get('scada')
-        self.scada_file = open("no_attack/output/scada.log", "r+")
+        self.scada_file = open("output/scada.log", "r+")
         self.scada_process = self.scada_node.popen(sys.executable, "automatic_plc.py", "-n", "scada", stderr=sys.stdout,stdout=self.scada_file)
         print "[*] SCADA Successfully launched"
 
-        physical_output = open("no_attack/output/physical.log", 'r+')
+        physical_output = open("output/physical.log", 'r+')
         print "[*] Launched the PLCs and SCADA process, launching simulation..."
         plant = net.get('plant')
 
