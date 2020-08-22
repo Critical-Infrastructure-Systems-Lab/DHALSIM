@@ -5,7 +5,20 @@ import csv
 import time
 from datetime import datetime
 import sys
+import pandas as pd
 
+def initialize_simulation():
+    total_demands = pd.read_csv('../../Demand_patterns/three_year_demands_ctown.csv', index_col=0)
+    demand_starting_points = pd.read_csv('../../Demand_patterns/starting_demand_points.csv', index_col=0)
+    initial_tank_levels = pd.read_csv('../../Demand_patterns/tank_initial_conditions.csv', index_col=0)
+    week_start = demand_starting_points.iloc[week_index][0]
+    week_demands = total_demands.loc[week_start:week_start + 167, :]
+
+    for name, pat in wn.patterns():
+        pat.multipliers = week_demands[name].values.tolist()
+
+    for i in range(1,8):
+        wn.get_node('T' + str(i)).init_level = float(initial_tank_levels.iloc[week_index]['T'+ str(i)])
 
 def get_node_list_by_type(list, type):
     result = []
@@ -127,6 +140,10 @@ def write_results(results):
         writer = csv.writer(f)
         writer.writerows(results)
 
+
+# Week index to initialize the simulation
+week_index = 0
+
 # connection to the database
 conn = sqlite3.connect('ctown_db.sqlite')
 c = conn.cursor()
@@ -170,8 +187,6 @@ list_header.extend(["Attack#01", "Attack#02"])
 results_list = []
 results_list.append(list_header)
 
-#control_list_str = get_controls(control_names)
-
 control_list = []
 for valve in valve_list:
     control_list.append(create_control_dict(valve))
@@ -186,6 +201,9 @@ for control in control_list:
     a_control = controls.Control(control['condition'], an_action, name=control['name'])
     wn.add_control(control['name'], a_control)
 
+# intialize the simulation with the random demand patterns and tank levels
+initialize_simulation()
+
 if sys.argv[1] == 'pdd':
     print('Running simulation using PDD')
     sim = wntr.sim.WNTRSimulator(wn, mode='PDD')
@@ -197,7 +215,7 @@ else:
     sys.exit(1)
 
 master_time = 0
-days = 1
+days = 7
 iteration_limit = (days*24*3600)/(wn.options.time.hydraulic_timestep)
 attack = 0
 

@@ -7,6 +7,7 @@ import time
 import shlex
 import subprocess
 import signal
+from mininet.link import TCLink
 
 automatic = 1
 mitm_attack = 0
@@ -184,5 +185,5 @@ class CTown(MiniCPS):
 
 if __name__ == "__main__":
     topo = CTownTopo()
-    net = Mininet(topo=topo, autoSetMacs=True)
+    net = Mininet(topo=topo, autoSetMacs=True, link=TCLink)
     minitown_cps = CTown(name='ctown', net=net)

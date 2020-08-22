@@ -1,5 +1,6 @@
 from mininet.node import Node
 from mininet.topo import Topo
+import pandas as pd
 
 class LinuxRouter(Node):
     """
@@ -23,9 +24,13 @@ class CTownTopo(Topo):
     """
 
     def build(self):
+        week_index = 0
         routers = []
         plcs = []
         switches = []
+
+        network_delays = pd.read_csv('../../Demand_patterns/network_links_delay.csv', index_col=0)
+        network_losses = pd.read_csv('../../Demand_patterns/network_loss_small.csv', index_col=0)
 
         r0_ip = '10.0.1.254/24'
         r0 = self.addNode('r0', cls=LinuxRouter, ip=r0_ip)
@@ -38,7 +43,8 @@ class CTownTopo(Topo):
 
             self.addLink(routers[i], r0, intfName2='r0-eth' + str(i - 1), params2={'ip': '10.0.' + str(i) + '.254/24'})
             self.addLink(plcs[i-1], switches[i-1])
-            self.addLink(switches[i - 1], routers[i], intfName2='r'+str(i)+'-eth1', params2={'ip': '192.168.1.254/24'})
+            self.addLink(switches[i - 1], routers[i], intfName2='r'+str(i)+'-eth1', params2={'ip': '192.168.1.254/24'},
+                         delay=network_delays.iloc[week_index]['r' + str(i)], loss=network_losses.iloc[week_index]['r' + str(i)], max_queue_size=1000, use_htb=True)
 
         plant = self.addHost('plant')
 
