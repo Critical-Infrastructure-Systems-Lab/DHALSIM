@@ -1,7 +1,7 @@
 from mininet.node import Node
 from mininet.topo import Topo
 from utils import IP, NETMASK
-
+import pandas as pd
 
 class LinuxRouter(Node):
     """
@@ -25,6 +25,9 @@ class ScadaTopo(Topo):
     def build(self):
         # Add router
         fieldIP = '192.168.1.254/24'  # IP Address for r0-eth1
+        network_delays = pd.read_csv('../../Demand_patterns/network_links_delay.csv', index_col=0)
+        network_losses = pd.read_csv('../../Demand_patterns/network_loss_small.csv', index_col=0)
+        week_index = 0
 
         # ---------------- FIELD NETWORK ----------------------  #
         router = self.addNode('r0', cls=LinuxRouter, ip=fieldIP)
@@ -42,7 +45,11 @@ class ScadaTopo(Topo):
 
         for i in range(1,10):
             plcs.append(self.addHost('plc' + str(i), ip=IP['plc'+str(i)] + NETMASK, defaultRoute=gateway_1))
-            self.addLink(s1, plcs[i-1])
+            this_delay = str(network_delays.iloc[week_index]['r' + str(i)]) + "ms"
+            print("Link " + str(i) + " delay: " + this_delay + " loss: " + str(network_losses.iloc[week_index]['r' + str(i)]))
+            #linkopts = dict(bw=1000, delay=this_delay + "ms", loss=network_losses.iloc[week_index]['r' + str(i)], max_queue_size=1000, use_htb=True)
+            linkopts = dict(bw=1000, delay="4.501130591094455ms",loss=0.2448607788241941, max_queue_size=1000, use_htb=True)
+            self.addLink(s1, plcs[i-1], **linkopts)
 
         self.addLink(s1, attacker)
 
