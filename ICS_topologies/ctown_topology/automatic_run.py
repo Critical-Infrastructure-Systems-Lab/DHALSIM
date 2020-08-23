@@ -7,6 +7,7 @@ import time
 import shlex
 import subprocess
 import signal
+from mininet.link import TCLink
 
 automatic = 1
 mitm_attack = 0
@@ -164,5 +165,5 @@ class Minitown(MiniCPS):
 
 if __name__ == "__main__":
     topo = ScadaTopo()
-    net = Mininet(topo=topo)
+    net = Mininet(topo=topo, autoSetMacs=True, link=TCLink)
     minitown_cps = Minitown(name='minitown', net=net)
