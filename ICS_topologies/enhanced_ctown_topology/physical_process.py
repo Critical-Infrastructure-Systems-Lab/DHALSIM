@@ -8,6 +8,7 @@ import sys
 import pandas as pd
 
 def initialize_simulation():
+    print("Running simulation with week index: " + str(week_index))
     total_demands = pd.read_csv('../../Demand_patterns/three_year_demands_ctown.csv', index_col=0)
     demand_starting_points = pd.read_csv('../../Demand_patterns/starting_demand_points.csv', index_col=0)
     initial_tank_levels = pd.read_csv('../../Demand_patterns/tank_initial_conditions.csv', index_col=0)
@@ -142,7 +143,7 @@ def write_results(results):
 
 
 # Week index to initialize the simulation
-week_index = 0
+week_index = int(sys.argv[4])
 
 # connection to the database
 conn = sqlite3.connect('ctown_db.sqlite')
@@ -215,7 +216,7 @@ else:
     sys.exit(1)
 
 master_time = 0
-days = 1
+days = 7
 iteration_limit = (days*24*3600)/(wn.options.time.hydraulic_timestep)
 attack = 0
 

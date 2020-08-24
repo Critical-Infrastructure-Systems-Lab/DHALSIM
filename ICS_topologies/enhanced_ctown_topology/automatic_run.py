@@ -39,9 +39,22 @@ class CTown(MiniCPS):
         node.cmd('route add default gw ' + gw_ip)
         node.waitOutput()
 
+    # This method exists, because using TCLinks mininet ignores the ip parameter of some interfaces. We use TCLinks to support bw and delay configurations on interfaces
+    def configure_routers_interface(self, index):
+        a_router = net.get('r' + index)
+        a_router.cmd('ifconfig r' + index + '-eth1 192.168.1.254')
+        a_router.waitOutput()
+
+    # This method exists, because using TCLinks mininet ignores the ip parameter of some interfaces. We use TCLinks to support bw and delay configurations on interfaces
+    def configure_r0_interfaces(self, index):
+        router0 = net.get('r0')
+        router0.cmd('ifconfig r0-eth' + str(index) + ' 10.0.' + str(index+1) + '.254 netmask 255.255.255.0' )
+
     def setup_network(self):
         for i in range(0, 9):
             self.do_forward(net.get('r' + str(i)))
+            self.configure_routers_interface(str(i+1))
+            self.configure_r0_interfaces(i+1)
             self.add_degault_gateway(net.get('plc' + str(i+1)), '192.168.1.254')
             self.add_degault_gateway(net.get('r' + str(i+1)), '10.0.' + str(i+1) + '.254')
         for i in range(1, 10):
@@ -54,6 +67,12 @@ class CTown(MiniCPS):
     def __init__(self, name, net):
         signal.signal(signal.SIGINT, self.interrupt)
         signal.signal(signal.SIGTERM, self.interrupt)
+
+        if len(sys.argv) < 2:
+            self.week_index = str(0)
+        else:
+            self.week_index = sys.argv[1]
+
         net.start()
         self.setup_network()
 
@@ -103,7 +122,7 @@ class CTown(MiniCPS):
         for plc in self.receiver_plcs:
             self.receiver_plcs_nodes.append(net.get('plc' + str( self.receiver_plcs[index] ) ) )
             self.receiver_plcs_files.append( open("output/plc" + str(self.receiver_plcs[index]) + ".log", 'r+') )
-            self.receiver_plcs_processes.append( self.receiver_plcs_nodes[index].popen(sys.executable, "automatic_plc.py", "-n", "plc" + str(self.receiver_plcs[index]), stderr=sys.stdout,
+            self.receiver_plcs_processes.append( self.receiver_plcs_nodes[index].popen(sys.executable, "automatic_plc.py", "-n", "plc" + str(self.receiver_plcs[index]), "-w", self.week_index, stderr=sys.stdout,
                                                          stdout=self.receiver_plcs_files[index]) )
             print("Launched plc" + str(self.receiver_plcs[index]))
             index += 1
@@ -118,7 +137,7 @@ class CTown(MiniCPS):
             self.mitm_process = attacker.popen(mitm_cmd, stderr=sys.stdout, stdout=attacker_file )
             print "[] Attacking"
 
-        print "[] Launchin SCADA"
+        print "[] Launching SCADA"
         self.scada_node = net.get('scada')
         self.scada_file = open("output/scada.log", "r+")
         self.scada_process = self.scada_node.popen(sys.executable, "automatic_plc.py", "-n", "scada", stderr=sys.stdout,stdout=self.scada_file)
@@ -128,7 +147,7 @@ class CTown(MiniCPS):
         print "[*] Launched the PLCs and SCADA process, launching simulation..."
         plant = net.get('plant')
 
-        simulation_cmd = shlex.split("python automatic_plant.py -s pdd -t ctown -o physical_process.csv")
+        simulation_cmd = shlex.split("python automatic_plant.py -s pdd -t ctown -o physical_process.csv -w" + self.week_index)
         self.simulation = plant.popen(simulation_cmd, stderr=sys.stdout, stdout=physical_output)
         print "[] Simulating..."
 
@@ -184,6 +203,13 @@ class CTown(MiniCPS):
 
 
 if __name__ == "__main__":
-    topo = CTownTopo()
+
+    if len(sys.argv) < 2:
+        week_index = str(0)
+    else:
+        week_index = sys.argv[1]
+    print week_index
+
+    topo = CTownTopo(week_index)
     net = Mininet(topo=topo, autoSetMacs=True, link=TCLink)
     minitown_cps = CTown(name='ctown', net=net)

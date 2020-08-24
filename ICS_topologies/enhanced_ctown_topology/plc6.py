@@ -25,7 +25,6 @@ class PLC6(PLC):
         with open('output/plc6_saved_tank_levels_received.csv', 'w') as f:
             writer = csv.writer(f)
             writer.writerows(self.saved_tank_levels)
-        exit(0)
 
     def pre_loop(self):
         print 'DEBUG: plc6 enters pre_loop'
@@ -48,12 +47,12 @@ class PLC6(PLC):
                     print("PLC process encountered errors, aborting process")
                     exit(0)
 
-                self.local_time += 1
-                self.saved_tank_levels.append([self.local_time, datetime.now(), self.t4])
+            self.local_time += 1
+            self.saved_tank_levels.append([self.local_time, datetime.now(), self.t4])
 
-                print("Tank Level %f " % self.t4)
-                print("ITERATION %d ------------- " % self.local_time)
-                self.send(T4, self.t4, ENIP_LISTEN_PLC_ADDR)
+            print("Tank Level %f " % self.t4)
+            print("ITERATION %d ------------- " % self.local_time)
+            self.send(T4, self.t4, ENIP_LISTEN_PLC_ADDR)
 
 if __name__ == "__main__":
     plc6 = PLC6(
