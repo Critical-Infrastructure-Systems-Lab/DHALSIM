@@ -9,8 +9,6 @@ import time
 import signal
 import sys
 
-logging.basicConfig(filename='plc7_debug.log', level=logging.DEBUG)
-logging.debug("testing")
 plc7_log_path = 'plc7.log'
 
 class PLC7(PLC):
@@ -24,7 +22,6 @@ class PLC7(PLC):
         with open('output/plc7_saved_tank_levels_received.csv', 'w') as f:
             writer = csv.writer(f)
             writer.writerows(self.saved_tank_levels)
-        exit(0)
 
 
     def pre_loop(self):

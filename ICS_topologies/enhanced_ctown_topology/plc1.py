@@ -1,6 +1,6 @@
 from minicps.devices import PLC
 from utils import PLC1_DATA, STATE, PLC1_PROTOCOL
-from utils import T1, PU1, PU2, flag_attack_plc1, ENIP_LISTEN_PLC_ADDR, CTOWN_IPS
+from utils import T1, PU1, PU2, flag_attack_plc1, CTOWN_IPS
 
 import csv
 from datetime import datetime
@@ -21,7 +21,6 @@ class PLC1(PLC):
         with open('output/plc1_saved_tank_levels_received.csv', 'w') as f:
             writer = csv.writer(f)
             writer.writerows(self.saved_tank_levels)
-        exit(0)
 
     def sigint_handler(self, sig, frame):
         self.write_output()
@@ -49,7 +48,7 @@ class PLC1(PLC):
                 self.t1 = Decimal(self.receive( T1, CTOWN_IPS['plc2'] ))
                 print("ITERATION %d ------------- " % self.local_time)
                 print("Tank 1 Level %f " % self.t1)
-                self.saved_tank_levels.append([datetime.now(), self.t1])
+                self.saved_tank_levels.append([self.local_time, datetime.now(), self.t1])
 
                 if flag_attack_plc1 == 1:
                     #We Want to go around iteration 200, we have to check what self.local_time that's it

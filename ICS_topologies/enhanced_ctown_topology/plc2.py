@@ -9,8 +9,6 @@ import time
 import signal
 import sys
 
-logging.basicConfig(filename='plc2_debug.log', level=logging.DEBUG)
-logging.debug("testing")
 plc2_log_path = 'plc2.log'
 
 
@@ -25,7 +23,6 @@ class PLC2(PLC):
         with open('output/plc2_saved_tank_levels_received.csv', 'w') as f:
             writer = csv.writer(f)
             writer.writerows(self.saved_tank_levels)
-        exit(0)
 
     def pre_loop(self):
         print 'DEBUG: plc2 enters pre_loop'
@@ -49,7 +46,7 @@ class PLC2(PLC):
                     exit(0)
             self.local_time += 1
             self.saved_tank_levels.append([self.local_time, datetime.now(), self.t1])
-
+            get_error_counter = 0
             print("Tank Level 1 %f " % self.t1)
             print("ITERATION %d ------------- " % self.local_time)
             self.send(T1, self.t1, ENIP_LISTEN_PLC_ADDR)

@@ -9,7 +9,7 @@ import subprocess
 import signal
 from mininet.link import TCLink
 
-automatic = 1
+automatic = 0
 mitm_attack = 0
 
 class Minitown(MiniCPS):

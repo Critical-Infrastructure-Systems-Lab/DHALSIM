@@ -20,7 +20,6 @@ class PLC3(PLC):
         with open('output/plc3_saved_tank_levels_received.csv', 'w') as f:
             writer = csv.writer(f)
             writer.writerows(self.saved_tank_levels)
-        exit(0)
 
     def pre_loop(self):
         print 'DEBUG: plc3 enters pre_loop'
@@ -40,33 +39,43 @@ class PLC3(PLC):
                 self.saved_tank_levels.append([datetime.now(), self.t2, self.t3, self.t4])
 
                 if self.t2 < 0.5:
+                    print("Opening V2")
                     self.set(V2, 1)
 
                 if self.t2 > 5.5:
+                    print("Closing V2")
                     self.set(V2, 0)
 
                 if self.t3 < 3.0:
+                    print("Opening PU4")
                     self.set(PU4, 1)
 
                 if self.t3 > 5.3:
+                    print("Closing PU4")
                     self.set(PU4, 0)
 
                 if self.t3 < 1.0:
+                    print("Opening PU5")
                     self.set(PU5, 1)
 
                 if self.t3 > 3.5:
+                    print("Closing PU5")
                     self.set(PU5, 0)
 
                 if self.t4 < 2.0:
+                    print("Opening PU6")
                     self.set(PU6, 1)
 
                 if self.t4 > 3.5:
+                    print("Closing PU6")
                     self.set(PU6, 0)
 
                 if self.t4 < 3.0:
+                    print("Opening PU7")
                     self.set(PU7, 1)
 
                 if self.t4 > 4.5:
+                    print("Closing PU7")
                     self.set(PU7, 0)
 
                 time.sleep(0.1)

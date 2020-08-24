@@ -8,22 +8,32 @@ from decimal import Decimal
 import time
 import signal
 import sys
+import subprocess
+import shlex
 
 class PLC5(PLC):
 
     def sigint_handler(self, sig, frame):
         self.write_output()
+        self.move_files()
         sys.exit(0)
+
+    def move_files(self):
+        cmd = shlex.split("./copy_output.sh " + str(self.week_index))
+        subprocess.call(cmd)
 
     def write_output(self):
         print 'DEBUG plc5 shutdown'
         with open('output/plc5_saved_tank_levels_received.csv', 'w') as f:
             writer = csv.writer(f)
             writer.writerows(self.saved_tank_levels)
-        exit(0)
 
     def pre_loop(self):
         print 'DEBUG: plc5 enters pre_loop'
+
+        self.week_index = sys.argv[1]
+        print "Week index in PLC5 is: " + str(self.week_index)
+
         self.local_time = 0
         self.saved_tank_levels = [["iteration", "timestamp", "T5", "T7"]]
         signal.signal(signal.SIGINT, self.sigint_handler)
