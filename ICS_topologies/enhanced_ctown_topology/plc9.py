@@ -8,6 +8,9 @@ from decimal import Decimal
 import time
 import signal
 import sys
+import shlex
+import subprocess
+
 
 plc9_log_path = 'plc9.log'
 
@@ -16,7 +19,12 @@ class PLC9(PLC):
 
     def sigint_handler(self, sig, frame):
         self.write_output()
+        self.move_files()
         sys.exit(0)
+
+    def move_files(self):
+        cmd = shlex.split("./copy_output.sh " + str(self.week_index))
+        subprocess.call(cmd)
 
     def write_output(self):
         print 'DEBUG plc9 shutdown'
@@ -27,6 +35,8 @@ class PLC9(PLC):
     def pre_loop(self):
         print 'DEBUG: plc9 enters pre_loop'
         self.local_time = 0
+        self.week_index = sys.argv[1]
+        print "Week index in PLC9 is: " + str(self.week_index)
         self.saved_tank_levels = [["iteration", "timestamp", "T7"]]
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
