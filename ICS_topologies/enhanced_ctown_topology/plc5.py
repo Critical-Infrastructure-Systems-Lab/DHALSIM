@@ -15,12 +15,7 @@ class PLC5(PLC):
 
     def sigint_handler(self, sig, frame):
         self.write_output()
-        self.move_files()
         sys.exit(0)
-
-    def move_files(self):
-        cmd = shlex.split("./copy_output.sh " + str(self.week_index))
-        subprocess.call(cmd)
 
     def write_output(self):
         print 'DEBUG plc5 shutdown'
@@ -30,10 +25,6 @@ class PLC5(PLC):
 
     def pre_loop(self):
         print 'DEBUG: plc5 enters pre_loop'
-
-        self.week_index = sys.argv[1]
-        print "Week index in PLC5 is: " + str(self.week_index)
-
         self.local_time = 0
         self.saved_tank_levels = [["iteration", "timestamp", "T5", "T7"]]
         signal.signal(signal.SIGINT, self.sigint_handler)
@@ -50,7 +41,7 @@ class PLC5(PLC):
                 print("T5 Level %f " % self.t5)
                 print("T7 Level %f " % self.t7)
 
-                self.saved_tank_levels.append([datetime.now(), self.t5, self.t7])
+                self.saved_tank_levels.append([self.local_time, datetime.now(), self.t5, self.t7])
 
                 if self.t5 < 1.5:
                     print("Opening PU8")
