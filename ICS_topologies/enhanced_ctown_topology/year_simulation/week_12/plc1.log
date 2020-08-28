@@ -1,0 +1,1016 @@
+DEBUG get_query: SELECT value FROM ctown WHERE name = ? AND pid = ?
+DEBUG set_query: UPDATE ctown SET value = ? WHERE name = ? AND pid = ?
+DEBUG EnipProtocol server addr:  192.168.1.1
+DEBUG: concatenating server address with default port.
+DEBUG enip server tags_string:  T1:1=REAL PU1:1=REAL PU2:1=REAL ATT_1:1=REAL ATT_2:1=REAL 
+DEBUG enip _start_server cmd:  ['/usr/bin/python', '-m', 'cpppo.server.enip', '--print', '--log', 'logs/protocols_tests_enip_server', '--address', '192.168.1.1:44818', 'T1:1=REAL', 'PU1:1=REAL', 'PU2:1=REAL', 'ATT_1:1=REAL', 'ATT_2:1=REAL']
+DEBUG: plc1 enters pre_loop
+ITERATION 1 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 2 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 3 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 4 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 5 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 6 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 7 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 8 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 9 ------------- 
+Tank 1 Level 3.000000 
+Opening P1
+ITERATION 10 ------------- 
+Tank 1 Level 1.812665 
+Opening P1
+ITERATION 11 ------------- 
+Tank 1 Level 1.812665 
+Opening P1
+ITERATION 12 ------------- 
+Tank 1 Level 1.812665 
+Opening P1
+ITERATION 13 ------------- 
+Tank 1 Level 1.812665 
+Opening P1
+ITERATION 14 ------------- 
+Tank 1 Level 1.812665 
+Opening P1
+ITERATION 15 ------------- 
+Tank 1 Level 1.849127 
+Opening P1
+ITERATION 16 ------------- 
+Tank 1 Level 1.849127 
+Opening P1
+ITERATION 17 ------------- 
+Tank 1 Level 1.849127 
+Opening P1
+ITERATION 18 ------------- 
+Tank 1 Level 1.849127 
+Opening P1
+ITERATION 19 ------------- 
+Tank 1 Level 1.849127 
+Opening P1
+ITERATION 20 ------------- 
+Tank 1 Level 1.885564 
+Opening P1
+ITERATION 21 ------------- 
+Tank 1 Level 1.885564 
+Opening P1
+ITERATION 22 ------------- 
+Tank 1 Level 1.885564 
+Opening P1
+ITERATION 23 ------------- 
+Tank 1 Level 1.885564 
+Opening P1
+ITERATION 24 ------------- 
+Tank 1 Level 1.885564 
+Opening P1
+ITERATION 25 ------------- 
+Tank 1 Level 1.885564 
+Opening P1
+ITERATION 26 ------------- 
+Tank 1 Level 1.906042 
+Opening P1
+ITERATION 27 ------------- 
+Tank 1 Level 1.906042 
+Opening P1
+ITERATION 28 ------------- 
+Tank 1 Level 1.906042 
+Opening P1
+ITERATION 29 ------------- 
+Tank 1 Level 1.906042 
+Opening P1
+ITERATION 30 ------------- 
+Tank 1 Level 1.906042 
+Opening P1
+ITERATION 31 ------------- 
+Tank 1 Level 1.926518 
+Opening P1
+ITERATION 32 ------------- 
+Tank 1 Level 1.926518 
+Opening P1
+ITERATION 33 ------------- 
+Tank 1 Level 1.926518 
+Opening P1
+ITERATION 34 ------------- 
+Tank 1 Level 1.926518 
+Opening P1
+ITERATION 35 ------------- 
+Tank 1 Level 1.926518 
+Opening P1
+ITERATION 36 ------------- 
+Tank 1 Level 1.946992 
+Opening P1
+ITERATION 37 ------------- 
+Tank 1 Level 1.946992 
+Opening P1
+ITERATION 38 ------------- 
+Tank 1 Level 1.946992 
+Opening P1
+ITERATION 39 ------------- 
+Tank 1 Level 1.946992 
+Opening P1
+ITERATION 40 ------------- 
+Tank 1 Level 1.946992 
+Opening P1
+ITERATION 41 ------------- 
+Tank 1 Level 1.967465 
+Opening P1
+ITERATION 42 ------------- 
+Tank 1 Level 1.967465 
+Opening P1
+ITERATION 43 ------------- 
+Tank 1 Level 1.967465 
+Opening P1
+ITERATION 44 ------------- 
+Tank 1 Level 1.967465 
+Opening P1
+ITERATION 45 ------------- 
+Tank 1 Level 1.967465 
+Opening P1
+ITERATION 46 ------------- 
+Tank 1 Level 1.967465 
+Opening P1
+ITERATION 47 ------------- 
+Tank 1 Level 1.987935 
+Opening P1
+ITERATION 48 ------------- 
+Tank 1 Level 1.987935 
+Opening P1
+ITERATION 49 ------------- 
+Tank 1 Level 1.987935 
+Opening P1
+ITERATION 50 ------------- 
+Tank 1 Level 1.987935 
+Opening P1
+ITERATION 51 ------------- 
+Tank 1 Level 1.987935 
+Opening P1
+ITERATION 52 ------------- 
+Tank 1 Level 2.008404 
+Opening P1
+ITERATION 53 ------------- 
+Tank 1 Level 2.008404 
+Opening P1
+ITERATION 54 ------------- 
+Tank 1 Level 2.008404 
+Opening P1
+ITERATION 55 ------------- 
+Tank 1 Level 2.008404 
+Opening P1
+ITERATION 56 ------------- 
+Tank 1 Level 2.008404 
+Opening P1
+ITERATION 57 ------------- 
+Tank 1 Level 2.028870 
+Opening P1
+ITERATION 58 ------------- 
+Tank 1 Level 2.028870 
+Opening P1
+ITERATION 59 ------------- 
+Tank 1 Level 2.028870 
+Opening P1
+ITERATION 60 ------------- 
+Tank 1 Level 2.028870 
+Opening P1
+ITERATION 61 ------------- 
+Tank 1 Level 2.028870 
+Opening P1
+ITERATION 62 ------------- 
+Tank 1 Level 2.028870 
+Opening P1
+ITERATION 63 ------------- 
+Tank 1 Level 2.049335 
+Opening P1
+ITERATION 64 ------------- 
+Tank 1 Level 2.049335 
+Opening P1
+ITERATION 65 ------------- 
+Tank 1 Level 2.049335 
+Opening P1
+ITERATION 66 ------------- 
+Tank 1 Level 2.049335 
+Opening P1
+ITERATION 67 ------------- 
+Tank 1 Level 2.049335 
+Opening P1
+ITERATION 68 ------------- 
+Tank 1 Level 2.049335 
+Opening P1
+ITERATION 69 ------------- 
+Tank 1 Level 2.069798 
+Opening P1
+ITERATION 70 ------------- 
+Tank 1 Level 2.069798 
+Opening P1
+ITERATION 71 ------------- 
+Tank 1 Level 2.069798 
+Opening P1
+ITERATION 72 ------------- 
+Tank 1 Level 2.069798 
+Opening P1
+ITERATION 73 ------------- 
+Tank 1 Level 2.069798 
+Opening P1
+ITERATION 74 ------------- 
+Tank 1 Level 2.069798 
+Opening P1
+ITERATION 75 ------------- 
+Tank 1 Level 2.090259 
+Opening P1
+ITERATION 76 ------------- 
+Tank 1 Level 2.090259 
+Opening P1
+ITERATION 77 ------------- 
+Tank 1 Level 2.090259 
+Opening P1
+ITERATION 78 ------------- 
+Tank 1 Level 2.090259 
+Opening P1
+ITERATION 79 ------------- 
+Tank 1 Level 2.090259 
+Opening P1
+ITERATION 80 ------------- 
+Tank 1 Level 2.112797 
+Opening P1
+ITERATION 81 ------------- 
+Tank 1 Level 2.112797 
+Opening P1
+ITERATION 82 ------------- 
+Tank 1 Level 2.112797 
+Opening P1
+ITERATION 83 ------------- 
+Tank 1 Level 2.112797 
+Opening P1
+ITERATION 84 ------------- 
+Tank 1 Level 2.112797 
+Opening P1
+ITERATION 85 ------------- 
+Tank 1 Level 2.112797 
+Opening P1
+ITERATION 86 ------------- 
+Tank 1 Level 2.135334 
+Opening P1
+ITERATION 87 ------------- 
+Tank 1 Level 2.135334 
+Opening P1
+ITERATION 88 ------------- 
+Tank 1 Level 2.135334 
+Opening P1
+ITERATION 89 ------------- 
+Tank 1 Level 2.135334 
+Opening P1
+ITERATION 90 ------------- 
+Tank 1 Level 2.135334 
+Opening P1
+ITERATION 91 ------------- 
+Tank 1 Level 2.157868 
+Opening P1
+ITERATION 92 ------------- 
+Tank 1 Level 2.157868 
+Opening P1
+ITERATION 93 ------------- 
+Tank 1 Level 2.157868 
+Opening P1
+ITERATION 94 ------------- 
+Tank 1 Level 2.157868 
+Opening P1
+ITERATION 95 ------------- 
+Tank 1 Level 2.157868 
+Opening P1
+ITERATION 96 ------------- 
+Tank 1 Level 2.180400 
+Opening P1
+ITERATION 97 ------------- 
+Tank 1 Level 2.180400 
+Opening P1
+ITERATION 98 ------------- 
+Tank 1 Level 2.180400 
+Opening P1
+ITERATION 99 ------------- 
+Tank 1 Level 2.180400 
+Opening P1
+ITERATION 100 ------------- 
+Tank 1 Level 2.180400 
+Opening P1
+ITERATION 101 ------------- 
+Tank 1 Level 2.180400 
+Opening P1
+ITERATION 102 ------------- 
+Tank 1 Level 2.202930 
+Opening P1
+ITERATION 103 ------------- 
+Tank 1 Level 2.202930 
+Opening P1
+ITERATION 104 ------------- 
+Tank 1 Level 2.202930 
+Opening P1
+ITERATION 105 ------------- 
+Tank 1 Level 2.202930 
+Opening P1
+ITERATION 106 ------------- 
+Tank 1 Level 2.202930 
+Opening P1
+ITERATION 107 ------------- 
+Tank 1 Level 2.225458 
+Opening P1
+ITERATION 108 ------------- 
+Tank 1 Level 2.225458 
+Opening P1
+ITERATION 109 ------------- 
+Tank 1 Level 2.225458 
+Opening P1
+ITERATION 110 ------------- 
+Tank 1 Level 2.225458 
+Opening P1
+ITERATION 111 ------------- 
+Tank 1 Level 2.225458 
+Opening P1
+ITERATION 112 ------------- 
+Tank 1 Level 2.225458 
+Opening P1
+ITERATION 113 ------------- 
+Tank 1 Level 2.247984 
+Opening P1
+ITERATION 114 ------------- 
+Tank 1 Level 2.247984 
+Opening P1
+ITERATION 115 ------------- 
+Tank 1 Level 2.247984 
+Opening P1
+ITERATION 116 ------------- 
+Tank 1 Level 2.247984 
+Opening P1
+ITERATION 117 ------------- 
+Tank 1 Level 2.247984 
+Opening P1
+ITERATION 118 ------------- 
+Tank 1 Level 2.247984 
+Opening P1
+ITERATION 119 ------------- 
+Tank 1 Level 2.270508 
+Opening P1
+ITERATION 120 ------------- 
+Tank 1 Level 2.270508 
+Opening P1
+ITERATION 121 ------------- 
+Tank 1 Level 2.270508 
+Opening P1
+ITERATION 122 ------------- 
+Tank 1 Level 2.270508 
+Opening P1
+ITERATION 123 ------------- 
+Tank 1 Level 2.270508 
+Opening P1
+ITERATION 124 ------------- 
+Tank 1 Level 2.270508 
+Opening P1
+ITERATION 125 ------------- 
+Tank 1 Level 2.293029 
+Opening P1
+ITERATION 126 ------------- 
+Tank 1 Level 2.293029 
+Opening P1
+ITERATION 127 ------------- 
+Tank 1 Level 2.293029 
+Opening P1
+ITERATION 128 ------------- 
+Tank 1 Level 2.293029 
+Opening P1
+ITERATION 129 ------------- 
+Tank 1 Level 2.293029 
+Opening P1
+ITERATION 130 ------------- 
+Tank 1 Level 2.315549 
+Opening P1
+ITERATION 131 ------------- 
+Tank 1 Level 2.315549 
+Opening P1
+ITERATION 132 ------------- 
+Tank 1 Level 2.315549 
+Opening P1
+ITERATION 133 ------------- 
+Tank 1 Level 2.315549 
+Opening P1
+ITERATION 134 ------------- 
+Tank 1 Level 2.315549 
+Opening P1
+ITERATION 135 ------------- 
+Tank 1 Level 2.315549 
+Opening P1
+ITERATION 136 ------------- 
+Tank 1 Level 2.338066 
+Opening P1
+ITERATION 137 ------------- 
+Tank 1 Level 2.338066 
+Opening P1
+ITERATION 138 ------------- 
+Tank 1 Level 2.338066 
+Opening P1
+ITERATION 139 ------------- 
+Tank 1 Level 2.338066 
+Opening P1
+ITERATION 140 ------------- 
+Tank 1 Level 2.338066 
+Opening P1
+ITERATION 141 ------------- 
+Tank 1 Level 2.365846 
+Opening P1
+ITERATION 142 ------------- 
+Tank 1 Level 2.365846 
+Opening P1
+ITERATION 143 ------------- 
+Tank 1 Level 2.365846 
+Opening P1
+ITERATION 144 ------------- 
+Tank 1 Level 2.365846 
+Opening P1
+ITERATION 145 ------------- 
+Tank 1 Level 2.365846 
+Opening P1
+ITERATION 146 ------------- 
+Tank 1 Level 2.365846 
+Opening P1
+ITERATION 147 ------------- 
+Tank 1 Level 2.397441 
+Opening P1
+ITERATION 148 ------------- 
+Tank 1 Level 2.397441 
+Opening P1
+ITERATION 149 ------------- 
+Tank 1 Level 2.397441 
+Opening P1
+ITERATION 150 ------------- 
+Tank 1 Level 2.397441 
+Opening P1
+ITERATION 151 ------------- 
+Tank 1 Level 2.397441 
+Opening P1
+ITERATION 152 ------------- 
+Tank 1 Level 2.397441 
+Opening P1
+ITERATION 153 ------------- 
+Tank 1 Level 2.429019 
+Opening P1
+ITERATION 154 ------------- 
+Tank 1 Level 2.429019 
+Opening P1
+ITERATION 155 ------------- 
+Tank 1 Level 2.429019 
+Opening P1
+ITERATION 156 ------------- 
+Tank 1 Level 2.429019 
+Opening P1
+ITERATION 157 ------------- 
+Tank 1 Level 2.460579 
+Opening P1
+ITERATION 158 ------------- 
+Tank 1 Level 2.460579 
+Opening P1
+ITERATION 159 ------------- 
+Tank 1 Level 2.460579 
+Opening P1
+ITERATION 160 ------------- 
+Tank 1 Level 2.460579 
+Opening P1
+ITERATION 161 ------------- 
+Tank 1 Level 2.460579 
+Opening P1
+ITERATION 162 ------------- 
+Tank 1 Level 2.460579 
+Opening P1
+ITERATION 163 ------------- 
+Tank 1 Level 2.492121 
+Opening P1
+ITERATION 164 ------------- 
+Tank 1 Level 2.492121 
+Opening P1
+ITERATION 165 ------------- 
+Tank 1 Level 2.492121 
+Opening P1
+ITERATION 166 ------------- 
+Tank 1 Level 2.492121 
+Opening P1
+ITERATION 167 ------------- 
+Tank 1 Level 2.492121 
+Opening P1
+ITERATION 168 ------------- 
+Tank 1 Level 2.492121 
+Opening P1
+ITERATION 169 ------------- 
+Tank 1 Level 2.523644 
+Opening P1
+ITERATION 170 ------------- 
+Tank 1 Level 2.523644 
+Opening P1
+ITERATION 171 ------------- 
+Tank 1 Level 2.523644 
+Opening P1
+ITERATION 172 ------------- 
+Tank 1 Level 2.523644 
+Opening P1
+ITERATION 173 ------------- 
+Tank 1 Level 2.523644 
+Opening P1
+ITERATION 174 ------------- 
+Tank 1 Level 2.523644 
+Opening P1
+ITERATION 175 ------------- 
+Tank 1 Level 2.555150 
+Opening P1
+ITERATION 176 ------------- 
+Tank 1 Level 2.555150 
+Opening P1
+ITERATION 177 ------------- 
+Tank 1 Level 2.555150 
+Opening P1
+ITERATION 178 ------------- 
+Tank 1 Level 2.555150 
+Opening P1
+ITERATION 179 ------------- 
+Tank 1 Level 2.555150 
+Opening P1
+ITERATION 180 ------------- 
+Tank 1 Level 2.555150 
+Opening P1
+ITERATION 181 ------------- 
+Tank 1 Level 2.586638 
+Opening P1
+ITERATION 182 ------------- 
+Tank 1 Level 2.586638 
+Opening P1
+ITERATION 183 ------------- 
+Tank 1 Level 2.586638 
+Opening P1
+ITERATION 184 ------------- 
+Tank 1 Level 2.586638 
+Opening P1
+ITERATION 185 ------------- 
+Tank 1 Level 2.586638 
+Opening P1
+ITERATION 186 ------------- 
+Tank 1 Level 2.586638 
+Opening P1
+ITERATION 187 ------------- 
+Tank 1 Level 2.586638 
+Opening P1
+ITERATION 188 ------------- 
+Tank 1 Level 2.586638 
+Opening P1
+ITERATION 189 ------------- 
+Tank 1 Level 2.610765 
+Opening P1
+ITERATION 190 ------------- 
+Tank 1 Level 2.610765 
+Opening P1
+ITERATION 191 ------------- 
+Tank 1 Level 2.610765 
+Opening P1
+ITERATION 192 ------------- 
+Tank 1 Level 2.610765 
+Opening P1
+ITERATION 193 ------------- 
+Tank 1 Level 2.610765 
+Opening P1
+ITERATION 194 ------------- 
+Tank 1 Level 2.610765 
+Opening P1
+ITERATION 195 ------------- 
+Tank 1 Level 2.619919 
+Opening P1
+ITERATION 196 ------------- 
+Tank 1 Level 2.619919 
+Opening P1
+ITERATION 197 ------------- 
+Tank 1 Level 2.619919 
+Opening P1
+ITERATION 198 ------------- 
+Tank 1 Level 2.619919 
+Opening P1
+ITERATION 199 ------------- 
+Tank 1 Level 2.619919 
+Opening P1
+ITERATION 200 ------------- 
+Tank 1 Level 2.619919 
+Opening P1
+ITERATION 201 ------------- 
+Tank 1 Level 2.619919 
+Opening P1
+ITERATION 202 ------------- 
+Tank 1 Level 2.619919 
+Opening P1
+ITERATION 203 ------------- 
+Tank 1 Level 2.659146 
+Opening P1
+ITERATION 204 ------------- 
+Tank 1 Level 2.659146 
+Opening P1
+ITERATION 205 ------------- 
+Tank 1 Level 2.659146 
+Opening P1
+ITERATION 206 ------------- 
+Tank 1 Level 2.659146 
+Opening P1
+ITERATION 207 ------------- 
+Tank 1 Level 2.659146 
+Opening P1
+ITERATION 208 ------------- 
+Tank 1 Level 2.659146 
+Opening P1
+ITERATION 209 ------------- 
+Tank 1 Level 2.701976 
+Opening P1
+ITERATION 210 ------------- 
+Tank 1 Level 2.701976 
+Opening P1
+ITERATION 211 ------------- 
+Tank 1 Level 2.701976 
+Opening P1
+ITERATION 212 ------------- 
+Tank 1 Level 2.701976 
+Opening P1
+ITERATION 213 ------------- 
+Tank 1 Level 2.701976 
+Opening P1
+ITERATION 214 ------------- 
+Tank 1 Level 2.744776 
+Opening P1
+ITERATION 215 ------------- 
+Tank 1 Level 2.744776 
+Opening P1
+ITERATION 216 ------------- 
+Tank 1 Level 2.744776 
+Opening P1
+ITERATION 217 ------------- 
+Tank 1 Level 2.744776 
+Opening P1
+ITERATION 218 ------------- 
+Tank 1 Level 2.744776 
+Opening P1
+ITERATION 219 ------------- 
+Tank 1 Level 2.744776 
+Opening P1
+ITERATION 220 ------------- 
+Tank 1 Level 2.787546 
+Opening P1
+ITERATION 221 ------------- 
+Tank 1 Level 2.787546 
+Opening P1
+ITERATION 222 ------------- 
+Tank 1 Level 2.787546 
+Opening P1
+ITERATION 223 ------------- 
+Tank 1 Level 2.787546 
+Opening P1
+ITERATION 224 ------------- 
+Tank 1 Level 2.787546 
+Opening P1
+ITERATION 225 ------------- 
+Tank 1 Level 2.787546 
+Opening P1
+ITERATION 226 ------------- 
+Tank 1 Level 2.830764 
+Opening P1
+ITERATION 227 ------------- 
+Tank 1 Level 2.830764 
+Opening P1
+ITERATION 228 ------------- 
+Tank 1 Level 2.830764 
+Opening P1
+ITERATION 229 ------------- 
+Tank 1 Level 2.830764 
+Opening P1
+ITERATION 230 ------------- 
+Tank 1 Level 2.830764 
+Opening P1
+ITERATION 231 ------------- 
+Tank 1 Level 2.873951 
+Opening P1
+ITERATION 232 ------------- 
+Tank 1 Level 2.873951 
+Opening P1
+ITERATION 233 ------------- 
+Tank 1 Level 2.873951 
+Opening P1
+ITERATION 234 ------------- 
+Tank 1 Level 2.873951 
+Opening P1
+ITERATION 235 ------------- 
+Tank 1 Level 2.873951 
+Opening P1
+ITERATION 236 ------------- 
+Tank 1 Level 2.873951 
+Opening P1
+ITERATION 237 ------------- 
+Tank 1 Level 2.873951 
+Opening P1
+ITERATION 238 ------------- 
+Tank 1 Level 2.917109 
+Opening P1
+ITERATION 239 ------------- 
+Tank 1 Level 2.917109 
+Opening P1
+ITERATION 240 ------------- 
+Tank 1 Level 2.917109 
+Opening P1
+ITERATION 241 ------------- 
+Tank 1 Level 2.917109 
+Opening P1
+ITERATION 242 ------------- 
+Tank 1 Level 2.917109 
+Opening P1
+ITERATION 243 ------------- 
+Tank 1 Level 2.960238 
+Opening P1
+ITERATION 244 ------------- 
+Tank 1 Level 2.960238 
+Opening P1
+ITERATION 245 ------------- 
+Tank 1 Level 2.960238 
+Opening P1
+ITERATION 246 ------------- 
+Tank 1 Level 2.960238 
+Opening P1
+ITERATION 247 ------------- 
+Tank 1 Level 2.960238 
+Opening P1
+ITERATION 248 ------------- 
+Tank 1 Level 3.003335 
+Opening P1
+ITERATION 249 ------------- 
+Tank 1 Level 3.003335 
+Opening P1
+ITERATION 250 ------------- 
+Tank 1 Level 3.003335 
+Opening P1
+ITERATION 251 ------------- 
+Tank 1 Level 3.003335 
+Opening P1
+ITERATION 252 ------------- 
+Tank 1 Level 3.003335 
+Opening P1
+ITERATION 253 ------------- 
+Tank 1 Level 3.003335 
+Opening P1
+ITERATION 254 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 255 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 256 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 257 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 258 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 259 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 260 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 261 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 262 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 263 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 264 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 265 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 266 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 267 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 268 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 269 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 270 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 271 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 272 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 273 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 274 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 275 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 276 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 277 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 278 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 279 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 280 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 281 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 282 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 283 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 284 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 285 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 286 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 287 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 288 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 289 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 290 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 291 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 292 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 293 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 294 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 295 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 296 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 297 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 298 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 299 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 300 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 301 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 302 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 303 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 304 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 305 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 306 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 307 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 308 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 309 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 310 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 311 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 312 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 313 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 314 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 315 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 316 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 317 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 318 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 319 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 320 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 321 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 322 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 323 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 324 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 325 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 326 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 327 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 328 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 329 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 330 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 331 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 332 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 333 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 334 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+ITERATION 335 ------------- 
+Tank 1 Level 3.046403 
+Opening P1
+DEBUG plc1 shutdown
+plc1
+Stopping Tcp dump process on PLC...
+Stopping PLC...

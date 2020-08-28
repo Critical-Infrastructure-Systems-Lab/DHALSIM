@@ -111,7 +111,7 @@ class CTown(MiniCPS):
             self.sender_plcs_nodes.append(net.get('plc' + str( self.sender_plcs[index] ) ) )
 
             self.sender_plcs_files.append( open("output/plc" + str( self.sender_plcs[index]) + ".log", 'r+' ) )
-            self.sender_plcs_processes.append( self.sender_plcs_nodes[index].popen(sys.executable, "automatic_plc.py", "-n", "plc" + str(self.sender_plcs[index]), stderr=sys.stdout,
+            self.sender_plcs_processes.append( self.sender_plcs_nodes[index].popen(sys.executable, "automatic_plc.py", "-n", "plc" + str(self.sender_plcs[index]), "-w", self.week_index, stderr=sys.stdout,
                                                          stdout=self.sender_plcs_files[index]) )
             print("Launched plc" + str(self.sender_plcs[index]))
             index += 1
