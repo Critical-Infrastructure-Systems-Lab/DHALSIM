@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for i in {0..29}
+for i in {0..12}
 do
 	echo "Running week " $i
 

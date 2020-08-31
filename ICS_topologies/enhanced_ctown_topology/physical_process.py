@@ -7,13 +7,22 @@ from datetime import datetime
 import sys
 import pandas as pd
 
+################################ Weekly or Ten Days Simulation ###############################################
+WEEKLY =  True
+
 def initialize_simulation():
+
+    if WEEKLY:
+        limit = 167
+    else:
+        limit = 239
+
     print("Running simulation with week index: " + str(week_index))
     total_demands = pd.read_csv('../../Demand_patterns/three_year_demands_ctown.csv', index_col=0)
     demand_starting_points = pd.read_csv('../../Demand_patterns/starting_demand_points.csv', index_col=0)
     initial_tank_levels = pd.read_csv('../../Demand_patterns/tank_initial_conditions.csv', index_col=0)
     week_start = demand_starting_points.iloc[week_index][0]
-    week_demands = total_demands.loc[week_start:week_start + 167, :]
+    week_demands = total_demands.loc[week_start:week_start + limit, :]
 
     for name, pat in wn.patterns():
         pat.multipliers = week_demands[name].values.tolist()
