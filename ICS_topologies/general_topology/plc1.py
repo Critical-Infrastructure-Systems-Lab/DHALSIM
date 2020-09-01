@@ -31,6 +31,7 @@ class PLC(BasePLC):
                 self.local_time += 1
                 self.tank_level = Decimal(self.get(T_LVL))
                 self.saved_tank_levels.append([datetime.now(), self.tank_level])
+                print "DEBUG: T_LVL: " + str(self.tank_level)
                 self.send(T_LVL, self.tank_level, PLC1_ADDR)
 
                 if flag_attack_plc1:
