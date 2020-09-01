@@ -264,8 +264,8 @@ else:
 
 master_time = 0
 days = 1
-#iteration_limit = (days*24*3600)/(wn.options.time.hydraulic_timestep)
-iteration_limit = (days*24)/(wn.options.time.hydraulic_timestep)
+iteration_limit = (days*24*3600)/(wn.options.time.hydraulic_timestep)
+#iteration_limit = (days*24)/(wn.options.time.hydraulic_timestep)
 attack = 0
 
 print("Simulation will run for " + str(days) + " hydraulic timestep is " + str(wn.options.time.hydraulic_timestep) +

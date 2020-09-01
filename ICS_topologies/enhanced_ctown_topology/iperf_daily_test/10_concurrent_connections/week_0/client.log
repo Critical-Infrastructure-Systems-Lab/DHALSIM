@@ -1,0 +1,26 @@
+------------------------------------------------------------
+Client connecting to 10.0.1.1, TCP port 5001
+TCP window size: 85.3 KByte (default)
+------------------------------------------------------------
+[ 91] local 192.168.1.2 port 47394 connected with 10.0.1.1 port 5001
+[ 82] local 192.168.1.2 port 47376 connected with 10.0.1.1 port 5001
+[ 83] local 192.168.1.2 port 47378 connected with 10.0.1.1 port 5001
+[ 85] local 192.168.1.2 port 47382 connected with 10.0.1.1 port 5001
+[ 84] local 192.168.1.2 port 47380 connected with 10.0.1.1 port 5001
+[ 86] local 192.168.1.2 port 47384 connected with 10.0.1.1 port 5001
+[ 88] local 192.168.1.2 port 47388 connected with 10.0.1.1 port 5001
+[ 87] local 192.168.1.2 port 47386 connected with 10.0.1.1 port 5001
+[ 89] local 192.168.1.2 port 47390 connected with 10.0.1.1 port 5001
+[ 90] local 192.168.1.2 port 47392 connected with 10.0.1.1 port 5001
+[ ID] Interval       Transfer     Bandwidth
+[ 82]  0.0-690.0 sec   267 GBytes  3.32 Gbits/sec
+[ 83]  0.0-690.0 sec   248 GBytes  3.09 Gbits/sec
+[ 85]  0.0-690.0 sec   243 GBytes  3.02 Gbits/sec
+[ 84]  0.0-690.0 sec   247 GBytes  3.08 Gbits/sec
+[ 86]  0.0-690.0 sec   253 GBytes  3.15 Gbits/sec
+[ 90]  0.0-690.0 sec   278 GBytes  3.46 Gbits/sec
+[ 88]  0.0-690.0 sec   253 GBytes  3.15 Gbits/sec
+[ 87]  0.0-690.0 sec   266 GBytes  3.31 Gbits/sec
+[ 89]  0.0-690.0 sec   245 GBytes  3.05 Gbits/sec
+[ 91]  0.0-690.0 sec   281 GBytes  3.50 Gbits/sec
+[SUM]  0.0-690.0 sec  2.52 TBytes  32.1 Gbits/sec
