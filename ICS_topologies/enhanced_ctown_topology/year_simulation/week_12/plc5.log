@@ -51,7 +51,7 @@ T7 Level 0.453538
 Opening PU10
 Opening PU11
 ITERATION 11 ------------- 
-T5 Level 2.832937 
+T5 Level 2.894403 
 T7 Level 0.335636 
 Opening PU10
 Opening PU11
@@ -91,7 +91,7 @@ T7 Level 0.605125
 Opening PU10
 Opening PU11
 ITERATION 19 ------------- 
-T5 Level 2.996038 
+T5 Level 3.046827 
 T7 Level 0.739391 
 Opening PU10
 Opening PU11
@@ -106,7 +106,7 @@ T7 Level 0.739391
 Opening PU10
 Opening PU11
 ITERATION 22 ------------- 
-T5 Level 3.046827 
+T5 Level 3.097597 
 T7 Level 0.873339 
 Opening PU10
 Opening PU11
@@ -121,7 +121,7 @@ T7 Level 0.873339
 Opening PU10
 Opening PU11
 ITERATION 25 ------------- 
-T5 Level 3.097597 
+T5 Level 3.148348 
 T7 Level 1.006970 
 Opening PU10
 ITERATION 26 ------------- 
@@ -129,8 +129,8 @@ T5 Level 3.148348
 T7 Level 1.006970 
 Opening PU10
 ITERATION 27 ------------- 
-T5 Level 3.148348 
-T7 Level 1.006970 
+T5 Level 3.199080 
+T7 Level 1.140286 
 Opening PU10
 ITERATION 28 ------------- 
 T5 Level 3.199080 
@@ -141,19 +141,19 @@ T5 Level 3.199080
 T7 Level 1.140286 
 Opening PU10
 ITERATION 30 ------------- 
-T5 Level 3.199080 
-T7 Level 1.140286 
+T5 Level 3.249793 
+T7 Level 1.273287 
 Opening PU10
 ITERATION 31 ------------- 
 T5 Level 3.249793 
 T7 Level 1.273287 
 Opening PU10
 ITERATION 32 ------------- 
-T5 Level 3.249793 
-T7 Level 1.273287 
+T5 Level 3.300488 
+T7 Level 1.405975 
 Opening PU10
 ITERATION 33 ------------- 
-T5 Level 3.249793 
+T5 Level 3.300488 
 T7 Level 1.405975 
 Opening PU10
 ITERATION 34 ------------- 
@@ -161,11 +161,11 @@ T5 Level 3.300488
 T7 Level 1.405975 
 Opening PU10
 ITERATION 35 ------------- 
-T5 Level 3.300488 
-T7 Level 1.405975 
+T5 Level 3.351163 
+T7 Level 1.538351 
 Opening PU10
 ITERATION 36 ------------- 
-T5 Level 3.300488 
+T5 Level 3.351163 
 T7 Level 1.538351 
 Opening PU10
 ITERATION 37 ------------- 
@@ -173,23 +173,23 @@ T5 Level 3.351163
 T7 Level 1.538351 
 Opening PU10
 ITERATION 38 ------------- 
-T5 Level 3.351163 
-T7 Level 1.538351 
+T5 Level 3.401819 
+T7 Level 1.670415 
 Opening PU10
 ITERATION 39 ------------- 
-T5 Level 3.351163 
-T7 Level 1.538351 
+T5 Level 3.401819 
+T7 Level 1.670415 
 Opening PU10
 ITERATION 40 ------------- 
 T5 Level 3.401819 
 T7 Level 1.670415 
 Opening PU10
 ITERATION 41 ------------- 
-T5 Level 3.401819 
-T7 Level 1.670415 
+T5 Level 3.451955 
+T7 Level 1.824335 
 Opening PU10
 ITERATION 42 ------------- 
-T5 Level 3.401819 
+T5 Level 3.451955 
 T7 Level 1.824335 
 Opening PU10
 ITERATION 43 ------------- 
@@ -197,11 +197,11 @@ T5 Level 3.451955
 T7 Level 1.824335 
 Opening PU10
 ITERATION 44 ------------- 
-T5 Level 3.451955 
-T7 Level 1.824335 
+T5 Level 3.502075 
+T7 Level 1.977900 
 Opening PU10
 ITERATION 45 ------------- 
-T5 Level 3.451955 
+T5 Level 3.502075 
 T7 Level 1.977900 
 Opening PU10
 ITERATION 46 ------------- 
@@ -209,8 +209,8 @@ T5 Level 3.502075
 T7 Level 1.977900 
 Opening PU10
 ITERATION 47 ------------- 
-T5 Level 3.502075 
-T7 Level 1.977900 
+T5 Level 3.552180 
+T7 Level 2.131111 
 Opening PU10
 ITERATION 48 ------------- 
 T5 Level 3.552180 
@@ -221,8 +221,8 @@ T5 Level 3.552180
 T7 Level 2.131111 
 Opening PU10
 ITERATION 50 ------------- 
-T5 Level 3.552180 
-T7 Level 2.131111 
+T5 Level 3.602270 
+T7 Level 2.283968 
 Opening PU10
 ITERATION 51 ------------- 
 T5 Level 3.602270 
@@ -230,84 +230,85 @@ T7 Level 2.283968
 Opening PU10
 ITERATION 52 ------------- 
 T5 Level 3.602270 
-T7 Level 2.283968 
+T7 Level 2.436474 
 Opening PU10
 ITERATION 53 ------------- 
-T5 Level 3.602270 
-T7 Level 2.283968 
+T5 Level 3.652344 
+T7 Level 2.436474 
 Opening PU10
 ITERATION 54 ------------- 
 T5 Level 3.652344 
 T7 Level 2.436474 
 Opening PU10
 ITERATION 55 ------------- 
-T5 Level 3.652344 
-T7 Level 2.436474 
-Opening PU10
+T5 Level 3.702404 
+T7 Level 2.588627 
 ITERATION 56 ------------- 
-T5 Level 3.652344 
+T5 Level 3.702404 
 T7 Level 2.588627 
 ITERATION 57 ------------- 
 T5 Level 3.702404 
 T7 Level 2.588627 
 ITERATION 58 ------------- 
-T5 Level 3.702404 
-T7 Level 2.588627 
+T5 Level 3.752447 
+T7 Level 2.740430 
 ITERATION 59 ------------- 
-T5 Level 3.702404 
+T5 Level 3.752447 
 T7 Level 2.740430 
 ITERATION 60 ------------- 
 T5 Level 3.752447 
 T7 Level 2.740430 
 ITERATION 61 ------------- 
-T5 Level 3.752447 
-T7 Level 2.740430 
+T5 Level 3.802476 
+T7 Level 2.891884 
 ITERATION 62 ------------- 
-T5 Level 3.752447 
-T7 Level 2.740430 
+T5 Level 3.802476 
+T7 Level 2.891884 
 ITERATION 63 ------------- 
 T5 Level 3.802476 
 T7 Level 2.891884 
 ITERATION 64 ------------- 
-T5 Level 3.802476 
-T7 Level 2.891884 
+T5 Level 3.852489 
+T7 Level 3.042989 
+Closing PU11
 ITERATION 65 ------------- 
-T5 Level 3.802476 
-T7 Level 2.891884 
+T5 Level 3.852489 
+T7 Level 3.042989 
+Closing PU11
 ITERATION 66 ------------- 
 T5 Level 3.852489 
 T7 Level 3.042989 
 Closing PU11
 ITERATION 67 ------------- 
-T5 Level 3.852489 
-T7 Level 3.042989 
+T5 Level 3.902487 
+T7 Level 3.193746 
 Closing PU11
 ITERATION 68 ------------- 
-T5 Level 3.852489 
-T7 Level 3.042989 
+T5 Level 3.902487 
+T7 Level 3.193746 
 Closing PU11
 ITERATION 69 ------------- 
 T5 Level 3.902487 
 T7 Level 3.193746 
 Closing PU11
 ITERATION 70 ------------- 
-T5 Level 3.902487 
-T7 Level 3.193746 
+T5 Level 3.952469 
+T7 Level 3.344156 
 Closing PU11
 ITERATION 71 ------------- 
-T5 Level 3.902487 
-T7 Level 3.193746 
+T5 Level 3.952469 
+T7 Level 3.344156 
 Closing PU11
 ITERATION 72 ------------- 
 T5 Level 3.952469 
 T7 Level 3.344156 
 Closing PU11
 ITERATION 73 ------------- 
-T5 Level 3.952469 
-T7 Level 3.344156 
+T5 Level 4.006584 
+T7 Level 3.408589 
 Closing PU11
 ITERATION 74 ------------- 
-T5 Level 3.952469 
+T5 Level 4.006584 
 T7 Level 3.408589 
 Closing PU11
 ITERATION 75 ------------- 
@@ -315,11 +316,11 @@ T5 Level 4.006584
 T7 Level 3.408589 
 Closing PU11
 ITERATION 76 ------------- 
-T5 Level 4.006584 
-T7 Level 3.408589 
+T5 Level 4.070224 
+T7 Level 3.486866 
 Closing PU11
 ITERATION 77 ------------- 
-T5 Level 4.006584 
+T5 Level 4.070224 
 T7 Level 3.486866 
 Closing PU11
 ITERATION 78 ------------- 
@@ -327,11 +328,11 @@ T5 Level 4.070224
 T7 Level 3.486866 
 Closing PU11
 ITERATION 79 ------------- 
-T5 Level 4.070224 
-T7 Level 3.486866 
+T5 Level 4.133836 
+T7 Level 3.565002 
 Closing PU11
 ITERATION 80 ------------- 
-T5 Level 4.070224 
+T5 Level 4.133836 
 T7 Level 3.565002 
 Closing PU11
 ITERATION 81 ------------- 
@@ -339,11 +340,11 @@ T5 Level 4.133836
 T7 Level 3.565002 
 Closing PU11
 ITERATION 82 ------------- 
-T5 Level 4.133836 
-T7 Level 3.565002 
+T5 Level 4.197420 
+T7 Level 3.642998 
 Closing PU11
 ITERATION 83 ------------- 
-T5 Level 4.133836 
+T5 Level 4.197420 
 T7 Level 3.642998 
 Closing PU11
 ITERATION 84 ------------- 
@@ -351,11 +352,11 @@ T5 Level 4.197420
 T7 Level 3.642998 
 Closing PU11
 ITERATION 85 ------------- 
-T5 Level 4.197420 
-T7 Level 3.642998 
+T5 Level 4.260976 
+T7 Level 3.720853 
 Closing PU11
 ITERATION 86 ------------- 
-T5 Level 4.197420 
+T5 Level 4.260976 
 T7 Level 3.720853 
 Closing PU11
 ITERATION 87 ------------- 
@@ -363,11 +364,11 @@ T5 Level 4.260976
 T7 Level 3.720853 
 Closing PU11
 ITERATION 88 ------------- 
-T5 Level 4.260976 
-T7 Level 3.720853 
+T5 Level 4.324504 
+T7 Level 3.798569 
 Closing PU11
 ITERATION 89 ------------- 
-T5 Level 4.260976 
+T5 Level 4.324504 
 T7 Level 3.798569 
 Closing PU11
 ITERATION 90 ------------- 
@@ -375,11 +376,11 @@ T5 Level 4.324504
 T7 Level 3.798569 
 Closing PU11
 ITERATION 91 ------------- 
-T5 Level 4.324504 
-T7 Level 3.798569 
+T5 Level 4.388005 
+T7 Level 3.876147 
 Closing PU11
 ITERATION 92 ------------- 
-T5 Level 4.324504 
+T5 Level 4.388005 
 T7 Level 3.876147 
 Closing PU11
 ITERATION 93 ------------- 
@@ -387,11 +388,11 @@ T5 Level 4.388005
 T7 Level 3.876147 
 Closing PU11
 ITERATION 94 ------------- 
-T5 Level 4.388005 
-T7 Level 3.876147 
+T5 Level 4.451477 
+T7 Level 3.953586 
 Closing PU11
 ITERATION 95 ------------- 
-T5 Level 4.388005 
+T5 Level 4.451477 
 T7 Level 3.953586 
 Closing PU11
 ITERATION 96 ------------- 
@@ -404,11 +405,12 @@ T7 Level 3.953586
 Closing PU11
 ITERATION 98 ------------- 
 T5 Level 4.451477 
-T7 Level 3.953586 
+T7 Level 4.012850 
 Closing PU11
 ITERATION 99 ------------- 
-T5 Level 4.451477 
-T7 Level 3.953586 
+T5 Level 4.500118 
+T7 Level 4.012850 
+Closing PU8
 Closing PU11
 ITERATION 100 ------------- 
 T5 Level 4.500118 
@@ -417,12 +419,12 @@ Closing PU8
 Closing PU11
 ITERATION 101 ------------- 
 T5 Level 4.500118 
-T7 Level 4.012850 
+T7 Level 4.032456 
 Closing PU8
 Closing PU11
 ITERATION 102 ------------- 
 T5 Level 4.500118 
-T7 Level 4.012850 
+T7 Level 4.032456 
 Closing PU8
 Closing PU11
 ITERATION 103 ------------- 
@@ -437,12 +439,12 @@ Closing PU8
 Closing PU11
 ITERATION 105 ------------- 
 T5 Level 4.500118 
-T7 Level 4.032456 
+T7 Level 4.116445 
 Closing PU8
 Closing PU11
 ITERATION 106 ------------- 
 T5 Level 4.500118 
-T7 Level 4.032456 
+T7 Level 4.116445 
 Closing PU8
 Closing PU11
 ITERATION 107 ------------- 
@@ -451,117 +453,118 @@ T7 Level 4.116445
 Closing PU8
 Closing PU11
 ITERATION 108 ------------- 
-T5 Level 4.500118 
-T7 Level 4.116445 
-Closing PU8
+T5 Level 4.470610 
+T7 Level 4.202741 
 Closing PU11
 ITERATION 109 ------------- 
-T5 Level 4.500118 
-T7 Level 4.116445 
-Closing PU8
+T5 Level 4.470610 
+T7 Level 4.202741 
 Closing PU11
 ITERATION 110 ------------- 
-T5 Level 4.500118 
+T5 Level 4.470610 
 T7 Level 4.202741 
-Closing PU8
 Closing PU11
 ITERATION 111 ------------- 
-T5 Level 4.470610 
-T7 Level 4.202741 
+T5 Level 4.441102 
+T7 Level 4.288894 
 Closing PU11
 ITERATION 112 ------------- 
-T5 Level 4.470610 
-T7 Level 4.202741 
+T5 Level 4.441102 
+T7 Level 4.288894 
 Closing PU11
 ITERATION 113 ------------- 
-T5 Level 4.470610 
+T5 Level 4.441102 
 T7 Level 4.288894 
 Closing PU11
 ITERATION 114 ------------- 
 T5 Level 4.441102 
-T7 Level 4.288894 
+T7 Level 4.374904 
 Closing PU11
 ITERATION 115 ------------- 
-T5 Level 4.441102 
-T7 Level 4.288894 
+T5 Level 4.411594 
+T7 Level 4.374904 
 Closing PU11
 ITERATION 116 ------------- 
-T5 Level 4.441102 
-T7 Level 4.288894 
+T5 Level 4.411594 
+T7 Level 4.374904 
 Closing PU11
 ITERATION 117 ------------- 
-T5 Level 4.411594 
-T7 Level 4.374904 
+T5 Level 4.379742 
+T7 Level 4.466780 
 Closing PU11
 ITERATION 118 ------------- 
-T5 Level 4.411594 
-T7 Level 4.374904 
+T5 Level 4.379742 
+T7 Level 4.466780 
 Closing PU11
 ITERATION 119 ------------- 
-T5 Level 4.411594 
-T7 Level 4.374904 
+T5 Level 4.379742 
+T7 Level 4.466780 
 Closing PU11
 ITERATION 120 ------------- 
-T5 Level 4.379742 
-T7 Level 4.466780 
+T5 Level 4.347890 
+T7 Level 4.558502 
 Closing PU11
 ITERATION 121 ------------- 
-T5 Level 4.379742 
-T7 Level 4.466780 
+T5 Level 4.347890 
+T7 Level 4.558502 
 Closing PU11
 ITERATION 122 ------------- 
-T5 Level 4.379742 
-T7 Level 4.466780 
+T5 Level 4.347890 
+T7 Level 4.650071 
 Closing PU11
 ITERATION 123 ------------- 
-T5 Level 4.347890 
-T7 Level 4.558502 
+T5 Level 4.316038 
+T7 Level 4.650071 
 Closing PU11
 ITERATION 124 ------------- 
-T5 Level 4.347890 
-T7 Level 4.558502 
+T5 Level 4.316038 
+T7 Level 4.650071 
 Closing PU11
 ITERATION 125 ------------- 
-T5 Level 4.347890 
-T7 Level 4.558502 
+T5 Level 4.316038 
+T7 Level 4.741487 
 Closing PU11
 ITERATION 126 ------------- 
-T5 Level 4.316038 
-T7 Level 4.650071 
+T5 Level 4.284186 
+T7 Level 4.741487 
 Closing PU11
 ITERATION 127 ------------- 
-T5 Level 4.316038 
-T7 Level 4.650071 
+T5 Level 4.284186 
+T7 Level 4.741487 
 Closing PU11
 ITERATION 128 ------------- 
-T5 Level 4.316038 
-T7 Level 4.650071 
-Closing PU11
-ITERATION 129 ------------- 
-T5 Level 4.284186 
-T7 Level 4.741487 
-Closing PU11
-ITERATION 130 ------------- 
-T5 Level 4.284186 
-T7 Level 4.741487 
-Closing PU11
-ITERATION 131 ------------- 
-T5 Level 4.284186 
-T7 Level 4.741487 
-Closing PU11
-ITERATION 132 ------------- 
 T5 Level 4.252334 
 T7 Level 4.832751 
+Closing PU10
+Closing PU11
+ITERATION 129 ------------- 
+T5 Level 4.252334 
+T7 Level 4.832751 
+Closing PU10
+Closing PU11
+ITERATION 130 ------------- 
+T5 Level 4.252334 
+T7 Level 4.832751 
+Closing PU10
+Closing PU11
+ITERATION 131 ------------- 
+T5 Level 4.252334 
+T7 Level 4.923862 
+Closing PU10
+Closing PU11
+ITERATION 132 ------------- 
+T5 Level 4.220482 
+T7 Level 4.923862 
 Closing PU10
 Closing PU11
 ITERATION 133 ------------- 
-T5 Level 4.252334 
-T7 Level 4.832751 
+T5 Level 4.220482 
+T7 Level 4.923862 
 Closing PU10
 Closing PU11
 ITERATION 134 ------------- 
-T5 Level 4.252334 
-T7 Level 4.832751 
+T5 Level 4.220482 
+T7 Level 4.923862 
 Closing PU10
 Closing PU11
 ITERATION 135 ------------- 
@@ -745,36 +748,6 @@ T7 Level 4.923862
 Closing PU10
 Closing PU11
 ITERATION 171 ------------- 
-T5 Level 4.220482 
-T7 Level 4.923862 
-Closing PU10
-Closing PU11
-ITERATION 172 ------------- 
-T5 Level 4.220482 
-T7 Level 4.923862 
-Closing PU10
-Closing PU11
-ITERATION 173 ------------- 
-T5 Level 4.220482 
-T7 Level 4.923862 
-Closing PU10
-Closing PU11
-ITERATION 174 ------------- 
-T5 Level 4.220482 
-T7 Level 4.923862 
-Closing PU10
-Closing PU11
-ITERATION 175 ------------- 
-T5 Level 4.220482 
-T7 Level 4.923862 
-Closing PU10
-Closing PU11
-ITERATION 176 ------------- 
-T5 Level 4.220482 
-T7 Level 4.923862 
-Closing PU10
-Closing PU11
-ITERATION 177 ------------- 
 T5 Level 4.220482 
 T7 Level 4.923862 
 Closing PU10
