@@ -9,7 +9,7 @@ import subprocess
 import signal
 from mininet.link import TCLink
 
-automatic = 1
+automatic = 0
 mitm_attack = 0
 
 class CTown(MiniCPS):
@@ -62,6 +62,8 @@ class CTown(MiniCPS):
 
         self.add_degault_gateway(net.get('scada'), '192.168.1.254')
         self.add_degault_gateway(net.get('attacker'), '192.168.1.254')
+        self.add_degault_gateway(net.get('client'), '192.168.1.254')
+        self.add_degault_gateway(net.get('server'), '192.168.1.254')
         self.do_forward(net.get('attacker'))
 
     def __init__(self, name, net):

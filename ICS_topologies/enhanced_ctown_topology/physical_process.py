@@ -10,6 +10,18 @@ import pandas as pd
 ################################ Weekly or Ten Days Simulation ###############################################
 WEEKLY =  True
 
+def initialize_tanks_and_actuators():
+    loaded_values = pd.read_csv('last_values.csv')
+
+    for tank in tank_list:
+        wn.get_node(tank).init_level = float(loaded_values.iloc[0][tank])
+
+    for pump in pump_list:
+        wn.get_link(pump).status = float(loaded_values.iloc[0][pump])
+
+    for valve in valve_list:
+        wn.get_link(valve).status = float(loaded_values.iloc[0][valve])
+
 def initialize_simulation():
 
     if WEEKLY:
@@ -150,6 +162,34 @@ def write_results(results):
         writer = csv.writer(f)
         writer.writerows(results)
 
+def save_last_results():
+    """ To run a year simulation in a week-by-week basis, we need to save the n-week results, so that n+1-week can use
+    this state to initialize the simulation
+    """
+    column_list = tank_list.copy()
+    column_list.extend(pump_list)
+    column_list.extend(valve_list)
+
+    values = []
+    for tank in tank_list:
+        values.append(wn.get_node(tank).level)
+
+    for pump in pump_list:
+        if type(wn.get_link(pump).status) is int:
+            values.append(wn.get_link(pump).status)
+        else:
+            values.append(wn.get_link(pump).status.value)
+
+    for valve in valve_list:
+        if type(wn.get_link(valve).status) is int:
+            values.append(wn.get_link(valve).status)
+        else:
+            values.append(wn.get_link(valve).status.value)
+
+    last_values = pd.DataFrame(data=values)
+    last_values = last_values.T
+    last_values.columns = column_list
+    last_values.to_csv('last_values.csv')
 
 # Week index to initialize the simulation
 week_index = int(sys.argv[4])
@@ -197,6 +237,9 @@ list_header.extend(["Attack#01", "Attack#02"])
 results_list = []
 results_list.append(list_header)
 
+# intialize the simulation with the random demand patterns and tank levels
+initialize_simulation()
+
 control_list = []
 for valve in valve_list:
     control_list.append(create_control_dict(valve))
@@ -204,15 +247,10 @@ for valve in valve_list:
 for pump in pump_list:
     control_list.append(create_control_dict(pump))
 
-
 for control in control_list:
-    #act1 = controls.ControlAction(pump1, 'status', int(pump1_status))
     an_action = controls.ControlAction(control['actuator'], control['parameter'], control['value'])
     a_control = controls.Control(control['condition'], an_action, name=control['name'])
     wn.add_control(control['name'], a_control)
-
-# intialize the simulation with the random demand patterns and tank levels
-initialize_simulation()
 
 if sys.argv[1] == 'pdd':
     print('Running simulation using PDD')
@@ -225,8 +263,9 @@ else:
     sys.exit(1)
 
 master_time = 0
-days = 7
-iteration_limit = (days*24*3600)/(wn.options.time.hydraulic_timestep)
+days = 1
+#iteration_limit = (days*24*3600)/(wn.options.time.hydraulic_timestep)
+iteration_limit = (days*24)/(wn.options.time.hydraulic_timestep)
 attack = 0
 
 print("Simulation will run for " + str(days) + " hydraulic timestep is " + str(wn.options.time.hydraulic_timestep) +
