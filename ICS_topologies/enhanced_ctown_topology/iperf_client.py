@@ -45,18 +45,18 @@ class IperfClient():
 
 
     def get_arguments(self):
-        parser = argparse.ArgumentParser(description='Script to launch an iperf client')
+        parser = argparse.ArgumentParser(description='Script to launch an iperf3 client')
         parser.add_argument("--connect", "-c",help="IP address of server to connect. Default is localhost")
         parser.add_argument("--parallel", "-P", help="Number of parallel connections. Default is 1")
         parser.add_argument("--time", "-t", help="Time of the iperf test in seconds. Default is 10 seconds")
-        parser.add_argument("--bandwidth", "-t", help="Max bandwidth to be used by the client in n bits/sec. Default is unlimited")
+        parser.add_argument("--bandwidth", "-b", help="Max bandwidth to be used by the client in n bits/sec. Default is unlimited")
         return parser.parse_args()
 
     def start_iperf_client(self):
         if self.bandwidth:
-            iperf = subprocess.Popen(['iperf', '-c', self.connect, '-P', self.parallel, '-t', self.time, '-b', self.bandwidth], shell=False)
+            iperf = subprocess.Popen(['iperf3', '-c', self.connect, '-P', self.parallel, '-t', self.time, '-b', self.bandwidth], shell=False)
         else:
-            iperf = subprocess.Popen(['iperf', '-c', self.connect, '-P', self.parallel, '-t', self.time], shell=False)
+            iperf = subprocess.Popen(['iperf3', '-c', self.connect, '-P', self.parallel, '-t', self.time], shell=False)
         return iperf
 
 if __name__ == "__main__":
