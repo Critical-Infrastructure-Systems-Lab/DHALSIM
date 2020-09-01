@@ -20,7 +20,7 @@ class IperfServer():
         sys.exit(0)
 
     def start_iperf_server(self):
-        iperf = subprocess.Popen(['iperf', '-s'], shell=False)
+        iperf = subprocess.Popen(['iperf3', '-s'], shell=False)
         return iperf
 
 if __name__=="__main__":

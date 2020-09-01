@@ -8,7 +8,7 @@ import sys
 import pandas as pd
 
 ################################ Weekly or Ten Days Simulation ###############################################
-WEEKLY =  True
+WEEKLY = True
 
 def initialize_tanks_and_actuators():
     loaded_values = pd.read_csv('last_values.csv')
