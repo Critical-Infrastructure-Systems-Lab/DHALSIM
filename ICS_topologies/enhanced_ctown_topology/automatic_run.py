@@ -9,8 +9,9 @@ import subprocess
 import signal
 from mininet.link import TCLink
 
-automatic = 0
+automatic = 1
 mitm_attack = 0
+iperf_test = 1
 
 class CTown(MiniCPS):
     """ Main script controlling an experiment
@@ -129,6 +130,24 @@ class CTown(MiniCPS):
             print("Launched plc" + str(self.receiver_plcs[index]))
             index += 1
 
+        # Launch an iperf server in LAN1 (same LAN as PLC1) and a client in LAN3 (same LAN as PLC3)
+        if iperf_test ==1:
+            self.iperf_server_node = net.get('server')
+            self.iperf_client_node = net.get('client')
+
+            iperf_server_file = open("output/server.log", "r+")
+            iperf_client_file = open("output/client.log", "r+")
+
+            iperf_server_cmd = shlex.split("python iperf_server.py")
+            self.iperf_server_process = self.iperf_server_node.popen(iperf_server_cmd, stderr=sys.stdout, stdout=iperf_server_file)
+            print "[*] Iperf Server launched"
+
+            #iperf_client_cmd = shlex.split("python iperf_client.py -c 10.0.1.1 -P 100 -t 690")
+
+            iperf_client_cmd = shlex.split("python iperf_client.py -c 10.0.1.1 -P 1 -t 690 -b 1000")
+            self.iperf_client_process = self.iperf_client_node.popen(iperf_client_cmd, stderr=sys.stdout, stdout=iperf_client_file)
+            print "[*] Iperf Client launched"
+
         # Launching automatically mitm attack
         if mitm_attack == 1 :
             attacker_file = open("output/attacker.log", 'r+')
@@ -194,6 +213,14 @@ class CTown(MiniCPS):
         if self.mitm_process:
             self.end_plc_process(self.mitm_process)
         print "[*] All processes terminated"
+
+        if self.iperf_client_process:
+            self.end_plc_process(self.iperf_client_process)
+            print "Iperf Client process terminated"
+
+        if self.iperf_server_process:
+            self.end_plc_process(self.iperf_server_process)
+            print "Iperf Server process terminated"
 
         if self.simulation:
             self.simulation.terminate()
