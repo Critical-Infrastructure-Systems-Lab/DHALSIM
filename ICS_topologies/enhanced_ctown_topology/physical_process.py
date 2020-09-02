@@ -263,7 +263,7 @@ else:
     sys.exit(1)
 
 master_time = 0
-days = 1
+days = 7
 iteration_limit = (days*24*3600)/(wn.options.time.hydraulic_timestep)
 #iteration_limit = (days*24)/(wn.options.time.hydraulic_timestep)
 attack = 0
