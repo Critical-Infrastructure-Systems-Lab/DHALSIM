@@ -144,7 +144,7 @@ class CTown(MiniCPS):
 
             #iperf_client_cmd = shlex.split("python iperf_client.py -c 10.0.1.1 -P 100 -t 690")
 
-            iperf_client_cmd = shlex.split("python iperf_client.py -c 10.0.1.1 -P 1 -t 690 -b 1M")
+            iperf_client_cmd = shlex.split("python iperf_client.py -c 10.0.1.1 -P 1 -t 2400 -b 1M")
             self.iperf_client_process = self.iperf_client_node.popen(iperf_client_cmd, stderr=sys.stdout, stdout=iperf_client_file)
             print "[*] Iperf Client launched"
 
