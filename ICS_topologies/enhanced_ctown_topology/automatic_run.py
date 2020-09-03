@@ -11,7 +11,7 @@ from mininet.link import TCLink
 
 automatic = 1
 mitm_attack = 0
-iperf_test = 0
+iperf_test = 1
 
 class CTown(MiniCPS):
     """ Main script controlling an experiment
@@ -144,7 +144,7 @@ class CTown(MiniCPS):
 
             #iperf_client_cmd = shlex.split("python iperf_client.py -c 10.0.1.1 -P 100 -t 690")
 
-            iperf_client_cmd = shlex.split("python iperf_client.py -c 10.0.1.1 -P 100 -t 2400")
+            iperf_client_cmd = shlex.split("python iperf_client.py -c 10.0.2.1 -P 100 -t 2400")
             self.iperf_client_process = self.iperf_client_node.popen(iperf_client_cmd, stderr=sys.stdout, stdout=iperf_client_file)
             print "[*] Iperf Client launched"
 

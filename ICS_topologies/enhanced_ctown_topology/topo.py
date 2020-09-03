@@ -71,5 +71,5 @@ class CTownTopo(Topo):
         client = self.addNode('client', ip='192.168.1.2/24', defaultRoute='via 192.168.1.254/24')
         server = self.addNode('server', ip='192.168.1.3/24', defaultRoute='via 192.168.1.254/24')
 
-        self.addLink(server, switches[0])
+        self.addLink(server, switches[1])
         self.addLink(client, switches[2])
