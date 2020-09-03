@@ -53,7 +53,7 @@ class CTownTopo(Topo):
             self.addLink(switches[i - 1], routers[i], intfName2='r' + str(i) + '-eth1',
                          params2={'ip': '192.168.1.254/24'})
             loss = network_losses.iloc[self.week_index]['r' + str(i)]
-            linkopts = dict(bw=1000, delay=str(network_delays.iloc[self.week_index]['r' + str(i)])+"ms", loss=loss, max_queue_size=1000,
+            linkopts = dict(bw=100, delay=str(network_delays.iloc[self.week_index]['r' + str(i)])+"ms", loss=loss, max_queue_size=1000,
                            use_htb=True)
             self.addLink(plcs[i-1], switches[i-1], **linkopts)
 

@@ -205,8 +205,6 @@ wn = wntr.network.WaterNetworkModel(inp_file)
 
 dummy_condition = controls.ValueCondition(wn.get_node('T1'), 'level', '>=', -1)
 
-# We define the simulation times in seconds
-wn.options.time.duration = 1
 
 list_header = []
 node_list = list(wn.node_name_list)
@@ -262,8 +260,10 @@ else:
     print('Invalid simulation mode, exiting...')
     sys.exit(1)
 
+# We want to simulate only 1 hydraulic timestep each time MiniCPS processes the simulation data
+wn.options.time.duration = wn.options.time.hydraulic_timestep
 master_time = 0
-days = 7
+days = 10
 iteration_limit = (days*24*3600)/(wn.options.time.hydraulic_timestep)
 #iteration_limit = (days*24)/(wn.options.time.hydraulic_timestep)
 attack = 0
