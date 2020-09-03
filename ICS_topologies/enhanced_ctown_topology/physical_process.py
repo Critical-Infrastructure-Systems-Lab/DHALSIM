@@ -8,7 +8,7 @@ import sys
 import pandas as pd
 
 ################################ Weekly or Ten Days Simulation ###############################################
-WEEKLY = True
+WEEKLY = False
 
 def initialize_tanks_and_actuators():
     loaded_values = pd.read_csv('last_values.csv')
@@ -263,7 +263,12 @@ else:
 # We want to simulate only 1 hydraulic timestep each time MiniCPS processes the simulation data
 wn.options.time.duration = wn.options.time.hydraulic_timestep
 master_time = 0
-days = 10
+
+if WEEKLY:
+    days = 7
+else:
+    days = 10
+
 iteration_limit = (days*24*3600)/(wn.options.time.hydraulic_timestep)
 attack = 0
 
