@@ -1149,11 +1149,11 @@
 
 [TIMES]
  Duration           	24
- Hydraulic Timestep 	0:05
- Quality Timestep   	0:05
+ Hydraulic Timestep 	0:01
+ Quality Timestep   	0:01
  Pattern Timestep   	1:00
  Pattern Start      	0:00
- Report Timestep    	0:05
+ Report Timestep    	0:01
  Report Start       	0:00
  Start ClockTime    	0:00:00
  Statistic          	NONE
