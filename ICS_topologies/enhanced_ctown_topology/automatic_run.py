@@ -11,7 +11,7 @@ from mininet.link import TCLink
 
 automatic = 1
 mitm_attack = 0
-iperf_test = 1
+iperf_test = 0
 
 class CTown(MiniCPS):
     """ Main script controlling an experiment

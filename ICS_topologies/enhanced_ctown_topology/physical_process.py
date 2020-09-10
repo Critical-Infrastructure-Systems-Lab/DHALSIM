@@ -253,6 +253,7 @@ for control in control_list:
 if sys.argv[1] == 'pdd':
     print('Running simulation using PDD')
     sim = wntr.sim.WNTRSimulator(wn, mode='PDD')
+    #sim = wntr.sim.EpanetSimulator(wn)
 elif sys.argv[1] == 'dd':
     print('Running simulation using DD')
     sim = wntr.sim.WNTRSimulator(wn)
@@ -280,6 +281,7 @@ while master_time <= iteration_limit:
     update_controls()
     print("ITERATION %d ------------- " % master_time)
     results = sim.run_sim(convergence_error=True)
+    #results = sim.run_sim()
     values_list = register_results(results)
 
     results_list.append(values_list)
