@@ -10,7 +10,7 @@ import time
 import sqlite3
 import signal
 import sys
-from utils import ATT_1
+from utils import ATT_1, ATT_2
 
 plc1_log_path = 'plc1.log'
 
@@ -34,13 +34,6 @@ class PLC1(PLC):
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
 
-        # We obtained this value empirically, running the simulation and checking which value is "200" iteration on simulation
-        self.initial_attack_time = 1527
-
-        # We obtained this value empirically, running the simulation and checking which value is "250" iteration on simulation
-        self.finish_attack_time= 1907
-
-
     def main_loop(self):
         while True:
             try:
@@ -51,8 +44,9 @@ class PLC1(PLC):
                 self.saved_tank_levels.append([self.local_time, datetime.now(), self.t1])
 
                 if flag_attack_plc1 == 1:
-                    #We Want to go around iteration 200, we have to check what self.local_time that's it
-                    if self.local_time > self.initial_attack_time and self.local_time < self.finish_attack_time:
+                    # Now ATT_2 is set in the physical_process. This in order to make more predictable the attack start and end time
+                    attack_on = int(self.get(ATT_2))
+                    if attack_on == 1:
                         self.set(ATT_1, 1)
                         self.set(PU1, 0)
                         self.set(PU2, 0)
