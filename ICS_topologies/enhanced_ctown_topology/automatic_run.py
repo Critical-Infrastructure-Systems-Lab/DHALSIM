@@ -94,6 +94,8 @@ class CTown(MiniCPS):
         self.attacker = None
         self.attacker_file = None
         self.mitm_process = None
+        self.iperf_server_process = None
+        self.iperf_client_process = None
 
         if automatic:
             self.automatic_start()

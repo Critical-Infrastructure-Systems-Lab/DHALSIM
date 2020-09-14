@@ -9,7 +9,7 @@ import pandas as pd
 from utils import flag_attack_plc1
 
 ################################ Weekly or Ten Days Simulation ###############################################
-WEEKLY = False
+WEEKLY = True
 
 def initialize_tanks_and_actuators():
     loaded_values = pd.read_csv('last_values.csv')
@@ -282,7 +282,6 @@ while master_time <= iteration_limit:
     update_controls()
     print("ITERATION %d ------------- " % master_time)
     results = sim.run_sim(convergence_error=True)
-    #results = sim.run_sim()
     values_list = register_results(results)
 
     results_list.append(values_list)

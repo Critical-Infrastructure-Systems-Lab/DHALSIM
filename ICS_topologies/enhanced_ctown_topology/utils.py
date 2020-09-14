@@ -6,17 +6,6 @@ utils files define the following:
 - network configuration: That section configures the ENIP devices in the simulation
 - database configuration, while the simulation is running, the system state is stored in a sqlite database
 """
-
-from minicps.utils import build_debug_logger
-
-ctown_log = build_debug_logger(
-    name=__name__,
-    bytes_per_file=10000,
-    rotating_files=2,
-    lformat='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    ldir='logs/',
-    suffix='')
-
 ################################ System State Variables ################################################################
 T1 = ('T1', 1)
 T2 = ('T2', 1)
@@ -47,7 +36,7 @@ V2 = ('V2', 1)
 ATT_1 = ('ATT_1', 1)
 ATT_2 = ('ATT_2', 1)
 
-flag_attack_plc1 = 0
+flag_attack_plc1 = 1
 flag_attack_plc2 = 0
 flag_attack_communication_plc1_scada = 0
 flag_attack_communication_plc1_plc2 = 0
