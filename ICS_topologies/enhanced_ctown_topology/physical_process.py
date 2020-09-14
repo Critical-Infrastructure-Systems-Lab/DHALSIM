@@ -6,7 +6,7 @@ import time
 from datetime import datetime
 import sys
 import pandas as pd
-from utils import flag_attack_plc1
+from utils import flag_attack_plc1, flag_attack_communication_plc1_plc2
 
 ################################ Weekly or Ten Days Simulation ###############################################
 WEEKLY = True
@@ -294,7 +294,7 @@ while master_time <= iteration_limit:
         c.execute(query)  # UPDATE TANKS IN THE DATABASE
         conn.commit()
 
-    if flag_attack_plc1 == 1:
+    if flag_attack_plc1 == 1 or flag_attack_communication_plc1_plc2 == 1:
         if master_time >= 648 and master_time < 1153:
             query = "UPDATE ctown SET value = " + str(1) + " WHERE name = 'ATT_2'"
             c.execute(query)  # UPDATE ATT_2 value for the plc1 to launch attack

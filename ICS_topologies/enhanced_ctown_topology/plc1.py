@@ -43,16 +43,6 @@ class PLC1(PLC):
                 print("Tank 1 Level %f " % self.t1)
                 self.saved_tank_levels.append([self.local_time, datetime.now(), self.t1])
 
-                if flag_attack_plc1 == 1:
-                    # Now ATT_2 is set in the physical_process. This in order to make more predictable the attack start and end time
-                    attack_on = int(self.get(ATT_2))
-                    if attack_on == 1:
-                        self.set(ATT_1, 1)
-                        self.set(PU1, 0)
-                        self.set(PU2, 0)
-                        time.sleep(0.1)
-                        continue
-
                 if self.t1 < 4.0:
                     print("Opening P1")
                     self.set(PU1, 1)
@@ -60,6 +50,17 @@ class PLC1(PLC):
                 if self.t1 > 6.3:
                     print("Closing P1")
                     self.set(PU1, 0)
+
+                # This attack keeps PU2 closed
+                if flag_attack_plc1 == 1:
+                    # Now ATT_2 is set in the physical_process. This in order to make more predictable the attack start and end time
+                    attack_on = int(self.get(ATT_2))
+                    if attack_on == 1:
+                        self.set(ATT_1, 1)
+                        self.set(PU2, 0)
+                        time.sleep(0.1)
+                        continue
+
 
                 if self.t1 < 1.0:
                     print("Opening P2")
