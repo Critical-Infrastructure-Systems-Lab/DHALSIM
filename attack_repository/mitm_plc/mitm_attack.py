@@ -30,7 +30,7 @@ spoof_counter = 0
 spoof_attack_counter = 0
 
 nfqueue = NetfilterQueue()
-spoof_offset = 2.9
+spoof_offset = 6.0
 
 attack_on = 0
 

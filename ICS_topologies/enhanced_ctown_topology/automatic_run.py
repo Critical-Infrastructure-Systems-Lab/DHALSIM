@@ -10,7 +10,7 @@ import signal
 from mininet.link import TCLink
 
 automatic = 1
-mitm_attack = 0
+mitm_attack = 1
 iperf_test = 0
 
 class CTown(MiniCPS):
