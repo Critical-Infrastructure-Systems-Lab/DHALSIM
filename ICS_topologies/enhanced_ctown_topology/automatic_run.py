@@ -154,8 +154,9 @@ class CTown(MiniCPS):
         if mitm_attack == 1 :
             attacker_file = open("output/attacker.log", 'r+')
             attacker = net.get('attacker')
+            # In the future, the type of attack sent to the script should be obtained from utils configuration. An ENUM should be better
             mitm_cmd = shlex.split("../../../attack-experiments/env/bin/python "
-                                   "../../attack_repository/mitm_plc/mitm_attack.py 192.168.1.1 192.168.1.254")
+                                   "../../attack_repository/mitm_plc/mitm_attack.py 192.168.1.1 192.168.1.254 exponential_offset")
             print 'Running MiTM attack with command ' + str(mitm_cmd)
             self.mitm_process = attacker.popen(mitm_cmd, stderr=sys.stdout, stdout=attacker_file )
             print "[] Attacking"
