@@ -61,7 +61,6 @@ class PLC1(PLC):
                         time.sleep(0.1)
                         continue
 
-
                 if self.t1 < 1.0:
                     print("Opening P2")
                     self.set(PU2, 1)
