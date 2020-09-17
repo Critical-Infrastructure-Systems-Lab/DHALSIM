@@ -69,7 +69,6 @@ class PLC1(PLC):
                     print("Closing P2")
                     self.set(PU2, 0)
 
-                self.set(ATT_1, 0)
                 time.sleep(0.1)
 
             except Exception:
