@@ -50,8 +50,7 @@ def exponential_spoof(raw):
     #k = 20
     t = 50
     float_value = translate_load_to_float(raw)
-
-    fake_value = float_value - float_value*(1-np.exp(-spoof_attack_counter/t))
+    fake_value = float_value - 4.5
 
     c.execute("UPDATE ctown SET value = 3 WHERE name = 'ATT_1'")
     conn.commit()
