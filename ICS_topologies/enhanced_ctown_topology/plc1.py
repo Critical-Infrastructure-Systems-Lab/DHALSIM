@@ -56,6 +56,7 @@ class PLC1(PLC):
                     # Now ATT_2 is set in the physical_process. This in order to make more predictable the attack start and end time
                     attack_on = int(self.get(ATT_2))
                     if attack_on == 1:
+                        print("Attack Closing PU2")
                         self.set(ATT_1, 1)
                         self.set(PU2, 0)
                         time.sleep(0.1)
