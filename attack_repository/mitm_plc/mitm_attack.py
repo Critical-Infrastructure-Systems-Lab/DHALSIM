@@ -49,7 +49,7 @@ def exponential_spoof(raw):
     k = 0
     t = 20
     float_value = translate_load_to_float(raw)
-    fake_value = 0.5
+    fake_value = 5.0
     print ("Spoofing with value" + str(fake_value))
 
     c.execute("UPDATE ctown SET value = 3 WHERE name = 'ATT_1'")
