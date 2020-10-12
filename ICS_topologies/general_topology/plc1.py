@@ -25,14 +25,26 @@ class PLC(BasePLC):
             - updates its enip server
         """
         fake_values = []
+
         while True:
             control = int(self.get(CONTROL))
-            if control == 0:
+            #if control == 0:
+            values = []
+            tags = []
+            if True:
                 self.local_time += 1
                 self.tank_level = Decimal(self.get(T_LVL))
                 self.saved_tank_levels.append([datetime.now(), self.tank_level])
-                print "DEBUG: T_LVL: " + str(self.tank_level)
-                self.send(T_LVL, self.tank_level, PLC1_ADDR)
+                print "DEBUG: Plc1 T_LVL: " + str(self.tank_level)
+                tags.append(T_LVL)
+                tags.append(ATT_1)
+
+                values.append(self.tank_level)
+                values.append(0)
+
+                #self.send(T_LVL, self.tank_level, PLC1_ADDR)
+                self.send_multiple(tags, values, PLC1_ADDR)
+                print "Sent multipled!"
 
                 if flag_attack_plc1:
                     if self.local_time in range(100, 200):
@@ -45,7 +57,6 @@ class PLC(BasePLC):
                     else:
                         if flag_attack_plc2 == 0 and flag_attack_communication_plc1_scada == 0 and flag_attack_communication_plc1_plc2 == 0 and flag_attack_dos_plc2 == 0:
                             self.set(ATT_1, 0)
-
 
 if __name__ == "__main__":
     plc1 = PLC(

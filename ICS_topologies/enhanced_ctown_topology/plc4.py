@@ -9,11 +9,24 @@ import time
 import signal
 import sys
 
+import thread
+import threading
+
 logging.basicConfig(filename='plc4_debug.log', level=logging.DEBUG)
 logging.debug("testing")
 plc4=_log_path = 'plc4.log'
 
 class PLC4(PLC):
+
+    def send_system_state(self, a, b):
+        """
+        This method sends the values to the SCADA server or any other client requesting the values
+        :param a:
+        :param b:
+        :return:
+        """
+        while self.reader:
+            self.send(T3, self.t3, ENIP_LISTEN_PLC_ADDR)
 
     def sigint_handler(self, sig, frame):
         self.write_output()
@@ -25,7 +38,6 @@ class PLC4(PLC):
             writer = csv.writer(f)
             writer.writerows(self.saved_tank_levels)
 
-
     def pre_loop(self):
         print 'DEBUG: plc4 enters pre_loop'
         self.local_time = 0
@@ -33,6 +45,12 @@ class PLC4(PLC):
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
 
+        # Flag used to stop the thread
+        self.reader = True
+        self.t3 = Decimal(self.get(T3))
+
+        self.lock = threading.Lock()
+        thread.start_new_thread(self.send_system_state,(0,0))
 
     def main_loop(self):
         get_error_counter = 0
@@ -40,8 +58,8 @@ class PLC4(PLC):
         print("Starting main loop")
         while True:
             try:
-                self.t3 = Decimal(self.get(T3))
-                print("Tank Level %f " % self.t3)
+                with self.lock:
+                    self.t3 = Decimal(self.get(T3))
             except Exception:
                 get_error_counter += 1
                 print("Exception!")
@@ -57,7 +75,6 @@ class PLC4(PLC):
 
             print("ITERATION %d ------------- " % self.local_time)
             get_error_counter = 0
-            self.send(T3, self.t3, ENIP_LISTEN_PLC_ADDR)
 
 if __name__ == "__main__":
     plc4 = PLC4(

@@ -11,7 +11,23 @@ import sys
 import subprocess
 import shlex
 
+import thread
+import threading
+
+
 class PLC5(PLC):
+
+    def send_system_state(self, a, b):
+        """
+        This method sends the values to the SCADA server or any other client requesting the values
+        :param a:
+        :param b:
+        :return:
+        """
+        while self.reader:
+            tags = [PU8, PU10, PU11]
+            values = [self.pu8, self.pu10, self.pu11]
+            self.send_multiple(tags, values, ENIP_LISTEN_PLC_ADDR)
 
     def sigint_handler(self, sig, frame):
         self.write_output()
@@ -30,6 +46,15 @@ class PLC5(PLC):
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
 
+        # Flag used to stop the thread
+        self.reader = True
+        self.pu8 = Decimal(self.get(PU8))
+        self.pu10 = Decimal(self.get(PU10))
+        self.pu11 = Decimal(self.get(PU11))
+
+        self.lock = threading.Lock()
+        thread.start_new_thread(self.send_system_state,(0,0))
+
     def main_loop(self):
 
         while True:
@@ -42,30 +67,34 @@ class PLC5(PLC):
                 print("T7 Level %f " % self.t7)
 
                 self.saved_tank_levels.append([self.local_time, datetime.now(), self.t5, self.t7])
+                with self.lock:
+                    if self.t5 < 1.5:
+                        print("Opening PU8")
+                        self.pu8 = 1
 
-                if self.t5 < 1.5:
-                    print("Opening PU8")
-                    self.set(PU8, 1)
+                    if self.t5 > 4.5:
+                        print("Closing PU8")
+                        self.pu8 = 0
 
-                if self.t5 > 4.5:
-                    print("Closing PU8")
-                    self.set(PU8, 0)
+                    if self.t7 < 2.5:
+                        print("Opening PU10")
+                        self.pu10 = 1
 
-                if self.t7 < 2.5:
-                    print("Opening PU10")
-                    self.set(PU10, 1)
+                    if self.t7 > 4.8:
+                        print("Closing PU10")
+                        self.pu10 = 0
 
-                if self.t7 > 4.8:
-                    print("Closing PU10")
-                    self.set(PU10, 0)
+                    if self.t7 < 1.0:
+                        print("Opening PU11")
+                        self.pu11 = 1
 
-                if self.t7 < 1.0:
-                    print("Opening PU11")
-                    self.set(PU11, 1)
+                    if self.t7 > 3.0:
+                        print("Closing PU11")
+                        self.pu11 = 0
 
-                if self.t7 > 3.0:
-                    print("Closing PU11")
-                    self.set(PU11, 0)
+                    self.set(PU8, self.pu8)
+                    self.set(PU10, self.pu10)
+                    self.set(PU11, self.pu11)
 
                 time.sleep(0.1)
 
