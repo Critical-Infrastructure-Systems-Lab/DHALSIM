@@ -1,4 +1,3 @@
-from utils import PLC1_DATA, STATE, PLC1_PROTOCOL
 from minicps.devices import PLC
 import csv
 import signal
@@ -24,4 +23,3 @@ class BasePLC(PLC):
     def startup(self):
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
-
