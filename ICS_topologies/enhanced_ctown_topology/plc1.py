@@ -1,4 +1,4 @@
-from minicps.devices import PLC
+from basePLC import BasePLC
 from utils import PLC1_DATA, STATE, PLC1_PROTOCOL, ENIP_LISTEN_PLC_ADDR
 from utils import T1, PU1, PU2, flag_attack_plc1, CTOWN_IPS
 
@@ -16,7 +16,7 @@ from utils import ATT_1, ATT_2
 plc1_log_path = 'plc1.log'
 
 
-class PLC1(PLC):
+class PLC1(BasePLC):
 
     def send_system_state(self, a, b):
         """
@@ -30,12 +30,6 @@ class PLC1(PLC):
             values = [self.pu1, self.pu2]
             self.send_multiple(tags, values, ENIP_LISTEN_PLC_ADDR)
 
-    def write_output(self):
-        print 'DEBUG plc1 shutdown'
-        with open('output/plc1_saved_tank_levels_received.csv', 'w') as f:
-            writer = csv.writer(f)
-            writer.writerows(self.saved_tank_levels)
-
     def sigint_handler(self, sig, frame):
         self.reader = False
         self.write_output()
@@ -43,9 +37,10 @@ class PLC1(PLC):
 
     def pre_loop(self):
         print 'DEBUG: plc1 enters pre_loop'
-        self.local_time = 0
 
+        self.local_time = 0
         # Flag used to stop the thread
+
         self.reader = True
 
         self.t1 = Decimal(self.get(T1))
@@ -54,9 +49,13 @@ class PLC1(PLC):
         self.pu2 = int(self.get(PU1))
 
         self.saved_tank_levels = [["iteration", "timestamp", "T1"]]
+        path = 'plc1_saved_tank_levels_received.csv'
 
-        signal.signal(signal.SIGINT, self.sigint_handler)
-        signal.signal(signal.SIGTERM, self.sigint_handler)
+        # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable values into a persistent file
+        BasePLC.set_parameters(self, path, self.saved_tank_levels)
+
+        # How to call startup, ensuring that we set self.reader?
+        #self.startup()
 
         self.lock = threading.Lock()
         thread.start_new_thread(self.send_system_state,(0,0))
