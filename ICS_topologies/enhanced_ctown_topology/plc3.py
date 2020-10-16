@@ -1,4 +1,4 @@
-from minicps.devices import PLC
+from basePLC import BasePLC
 from utils import PLC3_DATA, STATE, PLC3_PROTOCOL
 from utils import T2, T3, T4, V2, PU4, PU5, PU6, PU7, ENIP_LISTEN_PLC_ADDR, CTOWN_IPS
 
@@ -12,29 +12,7 @@ import sys
 import thread
 import threading
 
-class PLC3(PLC):
-
-    def send_system_state(self, a, b):
-        """
-        This method sends the values to the SCADA server or any other client requesting the values
-        :param a:
-        :param b:
-        :return:
-        """
-        while self.reader:
-            tags = [V2, PU4, PU5, PU6, PU7]
-            values = [self.v2, self.pu4, self.pu5, self.pu6, self.pu7]
-            self.send_multiple(tags, values, ENIP_LISTEN_PLC_ADDR)
-
-    def sigint_handler(self, sig, frame):
-        self.write_output()
-        sys.exit(0)
-
-    def write_output(self):
-        print 'DEBUG plc3 shutdown'
-        with open('output/plc3_saved_tank_levels_received.csv', 'w') as f:
-            writer = csv.writer(f)
-            writer.writerows(self.saved_tank_levels)
+class PLC3(BasePLC):
 
     def pre_loop(self):
         print 'DEBUG: plc3 enters pre_loop'
@@ -42,10 +20,7 @@ class PLC3(PLC):
 
         # Flag used to stop the thread
         self.reader = True
-
         self.saved_tank_levels = [["iteration", "timestamp", "T2", "T3", "T4"]]
-        signal.signal(signal.SIGINT, self.sigint_handler)
-        signal.signal(signal.SIGTERM, self.sigint_handler)
 
         self.t2 = Decimal(self.get(T2))
         self.v2 = int(self.get(V2))
@@ -55,7 +30,13 @@ class PLC3(PLC):
         self.pu7 = int(self.get(PU7))
 
         self.lock = threading.Lock()
-        thread.start_new_thread(self.send_system_state,(0,0))
+        path = 'plc3_saved_tank_levels_received.csv'
+        tags = [V2, PU4, PU5, PU6, PU7]
+        values = [self.v2, self.pu4, self.pu5, self.pu6, self.pu7]
+
+        # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable values into a persistent file
+        BasePLC.set_parameters(self, path, self.saved_tank_levels, tags, values, self.reader, self.lock, ENIP_LISTEN_PLC_ADDR)
+        self.startup()
 
     def main_loop(self):
         while True:

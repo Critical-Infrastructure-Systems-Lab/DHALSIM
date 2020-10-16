@@ -1,4 +1,4 @@
-from minicps.devices import PLC
+from basePLC import BasePLC
 from utils import PLC2_DATA, STATE, PLC2_PROTOCOL
 from utils import T1, ENIP_LISTEN_PLC_ADDR, CTOWN_IPS
 import csv
@@ -15,27 +15,7 @@ import threading
 plc2_log_path = 'plc2.log'
 
 
-class PLC2(PLC):
-
-    def send_system_state(self, a, b):
-        """
-        This method sends the values to the SCADA server or any other client requesting the values
-        :param a:
-        :param b:
-        :return:
-        """
-        while self.reader:
-            self.send(T1, self.t1, ENIP_LISTEN_PLC_ADDR)
-
-    def sigint_handler(self, sig, frame):
-        self.write_output()
-        sys.exit(0)
-
-    def write_output(self):
-        print 'DEBUG plc2 shutdown'
-        with open('output/plc2_saved_tank_levels_received.csv', 'w') as f:
-            writer = csv.writer(f)
-            writer.writerows(self.saved_tank_levels)
+class PLC2(BasePLC):
 
     def pre_loop(self):
         print 'DEBUG: plc2 enters pre_loop'
@@ -45,14 +25,14 @@ class PLC2(PLC):
         self.reader = True
 
         self.saved_tank_levels = [["iteration", "timestamp", "T1"]]
-
-        signal.signal(signal.SIGINT, self.sigint_handler)
-        signal.signal(signal.SIGTERM, self.sigint_handler)
-
         self.t1 = Decimal(self.get(T1))
-
         self.lock = threading.Lock()
-        thread.start_new_thread(self.send_system_state,(0,0))
+
+        path = 'plc2_saved_tank_levels_received.csv'
+
+        # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable values into a persistent file
+        BasePLC.set_parameters(self, path, self.saved_tank_levels, [T1], [self.t1], self.reader, self.lock, ENIP_LISTEN_PLC_ADDR)
+        self.startup()
 
     def main_loop(self):
         get_error_counter = 0
