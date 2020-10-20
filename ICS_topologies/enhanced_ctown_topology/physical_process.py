@@ -2,24 +2,24 @@ import wntr
 import wntr.network.controls as controls
 import sqlite3
 import csv
-import time
-from datetime import datetime
 import sys
 import pandas as pd
 import yaml
 from utils import flag_attack_plc1, flag_attack_communication_plc1_plc2, \
     flag_attack_communication_plc1_plc2_replay_empty
 
+
 class PhysicalPlant:
 
     def __init__(self):
 
         # toDo: This is were we change the parameters received by this script to create a generic physical process.
-        config_file_path = "c_town_config.yaml"
+        #config_file_path = "c_town_config.yaml"
+        config_file_path = sys.argv[1]
         config_options = self.load_config(config_file_path)
 
         # Week index to initialize the simulation
-        if config_options.has_dic('week_index'):
+        if "week_index" in config_options:
             self.week_index = int(config_options['week_index'])
         else:
             self.week_index = 0
@@ -80,6 +80,22 @@ class PhysicalPlant:
             a_control = controls.Control(control['condition'], an_action, name=control['name'])
             self.wn.add_control(control['name'], a_control)
 
+        simulator_string = config_options['simulator']
+
+        if simulator_string == 'pdd':
+            print('Running simulation using PDD')
+            self.sim = wntr.sim.WNTRSimulator(self.wn, mode='PDD')
+            # sim = wntr.sim.EpanetSimulator(wn)
+        elif simulator_string == 'dd':
+            print('Running simulation using DD')
+            self.sim = wntr.sim.WNTRSimulator(self.wn)
+        else:
+            print('Invalid simulation mode, exiting...')
+            sys.exit(1)
+
+        print("Starting simulation for " + str(config_options['inp_file']) + " topology ")
+
+
     def load_config(self, config_path):
         """
         Reads the YAML configuration file
@@ -97,9 +113,9 @@ class PhysicalPlant:
         else:
             limit = 239
 
-        if config_options.has_key('initial_custom_flag'):
-            custom_initial_conditions_flag = config_options['initial_custom_flag']
-            if custom_initial_conditions_flag == True:
+        if 'initial_custom_flag' in config_options:
+            custom_initial_conditions_flag =  bool(config_options['initial_custom_flag'])
+            if custom_initial_conditions_flag:
                 demand_patterns_path = config_options['demand_patterns_path']
                 starting_demand_path = config_options['starting_demand_path']
                 initial_tank_levels_path = config_options['initial_tank_levels_path']
@@ -115,12 +131,13 @@ class PhysicalPlant:
                     pat.multipliers = week_demands[name].values.tolist()
 
                 for i in range(1, 8):
-                    self.wn.get_node('T' + str(i)).init_level = float(initial_tank_levels.iloc[self.week_index]['T' + str(i)])
+                    self.wn.get_node('T' + str(i)).init_level = \
+                        float(initial_tank_levels.iloc[self.week_index]['T' + str(i)])
 
-    def get_node_list_by_type(self, a_list, type):
+    def get_node_list_by_type(self, a_list, a_type):
         result = []
         for node in a_list:
-            if self.wn.get_node(node).node_type == type:
+            if self.wn.get_node(node).node_type == a_type:
                 result.append(str(node))
         return result
 
@@ -226,22 +243,11 @@ class PhysicalPlant:
         self.wn.add_control(control['name'], new_control)
 
     def write_results(self, results):
-        with open('output/' + self.output_path, 'w', newline='\n') as f:
+        with open('output/' + self.output_path, 'w') as f:
             writer = csv.writer(f)
             writer.writerows(results)
 
     def main(self):
-        if sys.argv[1] == 'pdd':
-            print('Running simulation using PDD')
-            self.sim = wntr.sim.WNTRSimulator(self.wn, mode='PDD')
-            # sim = wntr.sim.EpanetSimulator(wn)
-        elif sys.argv[1] == 'dd':
-            print('Running simulation using DD')
-            self.sim = wntr.sim.WNTRSimulator(self.wn)
-        else:
-            print('Invalid simulation mode, exiting...')
-            sys.exit(1)
-
         # We want to simulate only 1 hydraulic timestep each time MiniCPS processes the simulation data
         self.wn.options.time.duration = self.wn.options.time.hydraulic_timestep
         master_time = 0
@@ -250,7 +256,7 @@ class PhysicalPlant:
 
         iteration_limit = (self.simulation_days * 24 * 3600) / self.wn.options.time.hydraulic_timestep
 
-        print("Simulation will run for " + str(self.simulation_days) + " hydraulic timestep is " + str(
+        print("Simulation will run for " + str(self.simulation_days) + " days. Hydraulic timestep is " + str(
             self.wn.options.time.hydraulic_timestep) +
               " for a total of " + str(iteration_limit) + " iterations ")
 
@@ -272,7 +278,7 @@ class PhysicalPlant:
                 self.conn.commit()
 
             if flag_attack_plc1 == 1 or flag_attack_communication_plc1_plc2 == 1:
-                if master_time >= 648 and master_time < 1153:
+                if 648 <= master_time < 1153:
                     query = "UPDATE ctown SET value = " + str(1) + " WHERE name = 'ATT_2'"
                     self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to launch attack
                     self.conn.commit()
@@ -282,7 +288,7 @@ class PhysicalPlant:
                     self.conn.commit()
 
             if flag_attack_communication_plc1_plc2_replay_empty == 1:
-                if master_time >= 648 and master_time < 1153:
+                if 648 <= master_time < 1153:
                     query = "UPDATE ctown SET value = " + str(1) + " WHERE name = 'ATT_2'"
                     self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to launch attack
                     self.conn.commit()
@@ -292,3 +298,7 @@ class PhysicalPlant:
                     self.conn.commit()
 
         self.write_results(self.results_list)
+
+if __name__=="__main__":
+    simulation = PhysicalPlant()
+    simulation.main()

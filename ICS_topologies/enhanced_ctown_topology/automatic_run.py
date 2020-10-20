@@ -171,7 +171,7 @@ class CTown(MiniCPS):
         print "[*] Launched the PLCs and SCADA process, launching simulation..."
         plant = net.get('plant')
 
-        simulation_cmd = shlex.split("python automatic_plant.py -s pdd -t ctown -o physical_process.csv -w" + self.week_index)
+        simulation_cmd = shlex.split("python automatic_plant.py c_town_config.yaml")
         self.simulation = plant.popen(simulation_cmd, stderr=sys.stdout, stdout=physical_output)
         print "[] Simulating..."
 
