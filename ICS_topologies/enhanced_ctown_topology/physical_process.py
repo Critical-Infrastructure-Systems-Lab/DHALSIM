@@ -261,10 +261,12 @@ class PhysicalPlant:
               " for a total of " + str(iteration_limit) + " iterations ")
 
         while master_time <= iteration_limit:
-
+            #tic
             self.update_controls()
+            #toc
             print("ITERATION %d ------------- " % master_time)
             results = self.sim.run_sim(convergence_error=True)
+            #toc
             values_list = self.register_results(results)
 
             self.results_list.append(values_list)
@@ -286,7 +288,7 @@ class PhysicalPlant:
                     query = "UPDATE ctown SET value = " + str(0) + " WHERE name = 'ATT_2'"
                     self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to stop attack
                     self.conn.commit()
-
+            #toc
             if flag_attack_communication_plc1_plc2_replay_empty == 1:
                 if 648 <= master_time < 1153:
                     query = "UPDATE ctown SET value = " + str(1) + " WHERE name = 'ATT_2'"

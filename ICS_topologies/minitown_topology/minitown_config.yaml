@@ -1,0 +1,7 @@
+---
+# General simulation parameters
+db_path: "minitown_db.sqlite"
+output_ground_truth_path: "physical_process.csv"
+duration_days: 7
+inp_file: "minitown_map.inp"
+simulator: "pdd"
