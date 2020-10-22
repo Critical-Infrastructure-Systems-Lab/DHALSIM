@@ -9,9 +9,9 @@ import subprocess
 import signal
 from utils import wadi_ip
 
-
 automatic = 1
 mitm_attack = 0
+
 
 class Minitown(MiniCPS):
     """ Main script controlling an experiment
@@ -77,7 +77,7 @@ class Minitown(MiniCPS):
         print "[*] Launched the PLCs and SCADA process, launching simulation..."
         plant = net.get('plant')
 
-        simulation_cmd = shlex.split("python automatic_plant.py -s pdd -t wadi -o physical_process.csv")
+        simulation_cmd = shlex.split("python automatic_plant.py wadi_config.yaml")
         self.simulation = plant.popen(simulation_cmd, stderr=sys.stdout, stdout=physical_output)
 
         print "[] Simulating..."

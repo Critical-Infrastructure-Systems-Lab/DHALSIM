@@ -58,6 +58,7 @@ class SCADAServer(BasePLC):
                 print (msg)
                 continue
 
+
 if __name__ == "__main__":
 
     scada = SCADAServer(
