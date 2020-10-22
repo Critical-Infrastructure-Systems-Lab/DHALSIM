@@ -1,4 +1,4 @@
-from minicps.devices import PLC
+from basePLC import BasePLC
 from utils import PLC2_DATA, STATE, PLC2_PROTOCOL
 from utils import T2, PLC2_ADDR, V_ER2i
 import csv
@@ -8,32 +8,35 @@ from decimal import Decimal
 import time
 import signal
 import sys
+import threading
 
 logging.basicConfig(filename='plc2_debug.log', level=logging.DEBUG)
 logging.debug("testing")
 plc2_log_path = 'plc2.log'
 
 
-class PLC2(PLC):
-
-    def sigint_handler(self, sig, frame):
-        self.write_output()
-        sys.exit(0)
-
-    def write_output(self):
-        print 'DEBUG plc2 shutdown'
-        with open('output/plc2_saved_tank_levels_received.csv', 'w') as f:
-            writer = csv.writer(f)
-            writer.writerows(self.saved_tank_levels)
-        exit(0)
+class PLC2(BasePLC):
 
     def pre_loop(self):
         print 'DEBUG: plc2 enters pre_loop'
         self.local_time = 0
-        signal.signal(signal.SIGINT, self.sigint_handler)
-        signal.signal(signal.SIGTERM, self.sigint_handler)
+
+        self.reader = True
+
+        self.t2 = Decimal(self.get(T2))
+        self.ver2i = self.get(V_ER2i)
+
         self.saved_tank_levels = [["iteration", "timestamp", "T2"]]
+        path = 'plc2_saved_tank_levels_received.csv'
+
+        self.p_raw_delay_timer = 0
         self.timeout_counter = 0
+
+        self.lock = threading.Lock()
+
+        BasePLC.set_parameters(self, path, self.saved_tank_levels, [T2, V_ER2i],
+                               [self.t2, self.ver2i],self.reader, self.lock, PLC2_ADDR)
+        self.startup()
 
     def main_loop(self):
         while True:
@@ -43,20 +46,21 @@ class PLC2(PLC):
 
                 if self.t2 > 0.36:
                     print("Close V_ER2i")
-                    self.set(V_ER2i, 0)
+                    self.ver2i = 0
 
                 if self.t2 < 0.08:
                     print("Open V_ER2i")
-                    self.set(V_ER2i, 1)
+                    self.ver2i = 1
 
+                self.set(V_ER2i, self.ver2i)
                 self.saved_tank_levels.append([self.local_time, datetime.now(), self.t2])
-
                 print("Tank Level 2 %f " % self.t2)
                 print("ITERATION %d ------------- " % self.local_time)
+                time.sleep(0.1)
 
-                self.send(T2, self.t2, PLC2_ADDR)
             except Exception:
                 continue
+
 
 if __name__ == "__main__":
     plc2 = PLC2(

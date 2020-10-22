@@ -14,8 +14,6 @@ class SimulationControl():
         All the automatic_plant.py scrpits follow the same pattern. They process the arguments, register the method interrupt() to handle SIGINT and SIGTERM signals.
         Later, they start the simulation, by calling the script physical_process.py
         """
-        args = self.get_arguments()
-        self.process_arguments(args)
         signal.signal(signal.SIGINT, self.interrupt)
         signal.signal(signal.SIGTERM, self.interrupt)
         self.simulation = self.start_simulation()
@@ -47,32 +45,8 @@ class SimulationControl():
         By default WNTR is run using the PDD model and the output file is a .csv file called "physical_process.csv"
         :return: An object representing the simulation process
         """
-        simulation = subprocess.Popen(["../../../wntr-experiments/bin/python", 'physical_process.py',
-                                       self.simulator, self.topology, self.output])
+        simulation = subprocess.Popen(["../../../wntr-experiments/bin/python", 'physical_process.py', sys.argv[1]])
         return simulation
-
-    def process_arguments(self,arg_parser):
-        if arg_parser.simulator:
-            self.simulator = arg_parser.simulator
-        else:
-            self.simulator = 'pdd'
-
-        if arg_parser.topology:
-            self.topology = arg_parser.topology
-        else:
-            self.topology = "wadi"
-
-        if arg_parser.output:
-            self.output = arg_parser.output
-        else:
-            self.output = 'default.csv'
-
-    def get_arguments(self):
-        parser = argparse.ArgumentParser(description='Master Script that launches the WNTR simulation')
-        parser.add_argument("--simulator", "-s",help="Type of simulation used, can be Pressure Driven (pdd) or Demand Driven (dd)")
-        parser.add_argument("--topology", "-t",help="Water network topology to simulate")
-        parser.add_argument("--output", "-o", help="Output file name")
-        return parser.parse_args()
 
 if __name__=="__main__":
     simulation_control = SimulationControl()
