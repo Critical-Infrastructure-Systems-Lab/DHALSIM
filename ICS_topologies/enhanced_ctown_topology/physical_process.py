@@ -66,7 +66,7 @@ class PhysicalPlant:
         # intialize the simulation with the random demand patterns and tank levels
         self.initialize_simulation(config_options)
 
-        dummy_condition = controls.ValueCondition(self.wn.get_node('T1'), 'level', '>=', -1)
+        dummy_condition = controls.ValueCondition(self.wn.get_node(self.tank_list[0]), 'level', '>=', -1)
 
         self.control_list = []
         for valve in self.valve_list:
