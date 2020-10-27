@@ -14,8 +14,8 @@ class SCADAServer(BasePLC):
         """scada pre loop.
             - sleep
         """
-        self.saved_tank_levels = ["timestamp", "T1", "T2", "T3", "T4", "T5", "T7", "PU1", "PU2", "V2", "PU4", "PU5",
-                                   "PU6", "PU7", "PU8", "PU10", "PU11"]
+        self.saved_tank_levels =  [["timestamp", "T1", "T2", "T3", "T4", "T5", "T7", "PU1", "PU2", "V2", "PU4", "PU5",
+                                   "PU6", "PU7", "PU8", "PU10", "PU11"]]
         self.plc1_tags = [PU1, PU2]
         self.plc3_tags = [V2, PU4, PU5, PU6, PU7]
         self.plc5_tags = [PU8, PU10, PU11]
