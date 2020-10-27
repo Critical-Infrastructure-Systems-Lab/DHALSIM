@@ -1,15 +1,9 @@
 from basePLC import BasePLC
 from utils import PLC1_DATA, STATE, PLC1_PROTOCOL, ENIP_LISTEN_PLC_ADDR
 from utils import T1, PU1, PU2, flag_attack_plc1, CTOWN_IPS
-
-import csv
 from datetime import datetime
 from decimal import Decimal
-
 import time
-import signal
-import sys
-import thread
 import threading
 from utils import ATT_1, ATT_2
 
