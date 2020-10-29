@@ -252,7 +252,7 @@ class PhysicalPlant:
         self.wn.options.time.duration = self.wn.options.time.hydraulic_timestep
         master_time = 0
 
-        self.simulation_days = 1
+        #self.simulation_days = 1
 
         iteration_limit = (self.simulation_days * 24 * 3600) / self.wn.options.time.hydraulic_timestep
 
