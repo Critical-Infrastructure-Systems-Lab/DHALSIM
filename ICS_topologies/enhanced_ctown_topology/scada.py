@@ -7,8 +7,22 @@ from utils import V2, PU4, PU5, PU6, PU7, PU8, PU10, PU11
 import time
 from datetime import datetime
 from decimal import Decimal
+import signal
+import sys
+import csv
 
 class SCADAServer(BasePLC):
+
+    def write_output(self):
+        with open('output/' + self.path, 'w') as f:
+            writer = csv.writer(f)
+            writer.writerows(self.result_list)
+
+    def sigint_handler(self, sig, frame):
+        print 'DEBUG plc shutdown'
+        self.reader = False
+        self.write_output()
+        sys.exit(0)
 
     def pre_loop(self, sleep=0.5):
         """scada pre loop.
@@ -26,7 +40,9 @@ class SCADAServer(BasePLC):
 
         # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable values into a persistent file
         BasePLC.set_parameters(self, path, self.saved_tank_levels, None, None, None, None, None, False, 0, isScada)
-        self.startup()
+
+        signal.signal(signal.SIGINT, self.sigint_handler)
+        signal.signal(signal.SIGTERM, self.sigint_handler)
 
 
     def main_loop(self):
