@@ -51,8 +51,6 @@ class PLC2(BasePLC):
             self.local_time += 1
             self.saved_tank_levels.append([self.local_time, datetime.now(), self.t1])
             get_error_counter = 0
-            #print("Tank Level 1 %f " % self.t1)
-            #print("ITERATION %d ------------- " % self.local_time)
 
 if __name__ == "__main__":
     plc2 = PLC2(

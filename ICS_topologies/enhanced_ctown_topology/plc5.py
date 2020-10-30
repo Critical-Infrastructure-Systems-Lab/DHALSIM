@@ -44,34 +44,25 @@ class PLC5(BasePLC):
                 self.local_time += 1
                 self.t5 = Decimal(self.receive( T5, CTOWN_IPS['plc7'] ))
                 self.t7 = Decimal(self.receive( T7, CTOWN_IPS['plc9'] ))
-                print("ITERATION %d ------------- " % self.local_time)
-                print("T5 Level %f " % self.t5)
-                print("T7 Level %f " % self.t7)
 
                 self.saved_tank_levels.append([self.local_time, datetime.now(), self.t5, self.t7])
                 with self.lock:
                     if self.t5 < 1.5:
-                        print("Opening PU8")
                         self.pu8 = 1
 
                     if self.t5 > 4.5:
-                        print("Closing PU8")
                         self.pu8 = 0
 
                     if self.t7 < 2.5:
-                        print("Opening PU10")
                         self.pu10 = 1
 
                     if self.t7 > 4.8:
-                        print("Closing PU10")
                         self.pu10 = 0
 
                     if self.t7 < 1.0:
-                        print("Opening PU11")
                         self.pu11 = 1
 
                     if self.t7 > 3.0:
-                        print("Closing PU11")
                         self.pu11 = 0
 
                     self.set(PU8, self.pu8)

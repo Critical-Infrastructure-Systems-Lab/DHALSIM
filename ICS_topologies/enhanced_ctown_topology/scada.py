@@ -16,11 +16,10 @@ class SCADAServer(BasePLC):
     def write_output(self):
         with open('output/' + self.path, 'w') as f:
             writer = csv.writer(f)
-            writer.writerows(self.result_list)
+            writer.writerows(self.saved_tank_levels)
 
     def sigint_handler(self, sig, frame):
-        print 'DEBUG plc shutdown'
-        self.reader = False
+        print 'DEBUG SCADA shutdown'
         self.write_output()
         sys.exit(0)
 
@@ -28,22 +27,15 @@ class SCADAServer(BasePLC):
         """scada pre loop.
             - sleep
         """
-        self.saved_tank_levels =  [["timestamp", "T1", "T2", "T3", "T4", "T5", "T7", "PU1", "PU2", "V2", "PU4", "PU5",
+        self.saved_tank_levels = [["timestamp", "T1", "T2", "T3", "T4", "T5", "T7", "PU1", "PU2", "V2", "PU4", "PU5",
                                    "PU6", "PU7", "PU8", "PU10", "PU11"]]
         self.plc1_tags = [PU1, PU2]
         self.plc3_tags = [V2, PU4, PU5, PU6, PU7]
         self.plc5_tags = [PU8, PU10, PU11]
 
-        path = 'scada_saved_tank_levels_received.csv'
-
-        isScada = True
-
-        # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable values into a persistent file
-        BasePLC.set_parameters(self, path, self.saved_tank_levels, None, None, None, None, None, False, 0, isScada)
-
+        self.path = 'scada_saved_tank_levels_received.csv'
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
-
 
     def main_loop(self):
         """scada main loop."""
@@ -61,7 +53,7 @@ class SCADAServer(BasePLC):
                 #plc1 is in the same LAN as SCADA!
                 plc1_values = self.receive_multiple(self.plc1_tags, ENIP_LISTEN_PLC_ADDR)
                 plc3_values = self.receive_multiple(self.plc3_tags, CTOWN_IPS['plc3'])
-                plc5_values = self.receive_multiple(self.plc5_tags, CTOWN_IPS['plc35'])
+                plc5_values = self.receive_multiple(self.plc5_tags, CTOWN_IPS['plc5'])
 
                 results = [datetime.now(), t1, t2, t3, t4, t5, t7]
                 results.extend(plc1_values)
@@ -71,7 +63,7 @@ class SCADAServer(BasePLC):
 
                 time.sleep(0.3)
             except Exception, msg:
-                print (msg)
+                print(msg)
                 continue
 
 

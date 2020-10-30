@@ -7,6 +7,7 @@ import thread
 import threading
 import shlex
 import subprocess
+import time
 
 class BasePLC(PLC):
 
@@ -21,8 +22,14 @@ class BasePLC(PLC):
             values = []
             for tag in self.tags:
                 with self.lock:
-                    values.append(self.get(tag))
+                    # noinspection PyBroadException
+                    try:
+                        values.append(self.get(tag))
+                    except Exception:
+                        time.sleep(0.05)
+                        continue
             self.send_multiple(self.tags, values, self.send_adddress)
+            time.sleep(0.05)
 
     def set_parameters(self, path, result_list, tags, values, reader, lock, send_address, lastPLC=False, week_index=0, isScada=False):
 
