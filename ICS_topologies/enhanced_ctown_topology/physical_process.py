@@ -231,6 +231,8 @@ class PhysicalPlant:
         self.conn.commit()
         new_status = int(rows_1[0][0])
 
+        #wn.get_node(act_name ).status = new_status
+
         control['value'] = new_status
 
         # act1 = controls.ControlAction(pump1, 'status', int(pump1_status))
