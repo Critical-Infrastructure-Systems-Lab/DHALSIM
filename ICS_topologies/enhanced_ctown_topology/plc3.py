@@ -46,7 +46,7 @@ class PLC3(BasePLC):
                 self.t3 = Decimal(self.receive( T3, CTOWN_IPS['plc4'] ))
                 self.t4 = Decimal(self.receive( T4, CTOWN_IPS['plc6'] ))
 
-                self.saved_tank_levels.append([self.local_time, datetime.now(), self.t2, self.t3, self.t4])
+                #self.saved_tank_levels.append([self.local_time, datetime.now(), self.t2, self.t3, self.t4])
                 with self.lock:
                     if self.t2 < 0.5:
                         self.v2 = 1

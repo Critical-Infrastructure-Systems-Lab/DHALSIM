@@ -22,16 +22,16 @@ class PLC2(BasePLC):
         self.local_time = 0
 
         # Flag used to stop the thread
-        self.reader = True
+        reader = True
 
         self.saved_tank_levels = [["iteration", "timestamp", "T1"]]
-        self.t1 = Decimal(self.get(T1))
+        t1 = Decimal(self.get(T1))
         self.lock = threading.Lock()
 
         path = 'plc2_saved_tank_levels_received.csv'
 
         # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable values into a persistent file
-        BasePLC.set_parameters(self, path, self.saved_tank_levels, [T1], [self.t1], self.reader, self.lock, ENIP_LISTEN_PLC_ADDR)
+        BasePLC.set_parameters(self, path, self.saved_tank_levels, [T1], [t1], reader, self.lock, ENIP_LISTEN_PLC_ADDR)
         self.startup()
 
     def main_loop(self):
@@ -49,7 +49,7 @@ class PLC2(BasePLC):
                     print("PLC process encountered errors, aborting process")
                     exit(0)
             self.local_time += 1
-            self.saved_tank_levels.append([self.local_time, datetime.now(), self.t1])
+            #self.saved_tank_levels.append([self.local_time, datetime.now(), self.t1])
             get_error_counter = 0
 
 if __name__ == "__main__":

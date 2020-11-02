@@ -52,7 +52,7 @@ class PLC6(BasePLC):
                     exit(0)
 
             self.local_time += 1
-            self.saved_tank_levels.append([self.local_time, datetime.now(), self.t4])
+            #self.saved_tank_levels.append([self.local_time, datetime.now(), self.t4])
 
             print("Tank Level %f " % self.t4)
             print("ITERATION %d ------------- " % self.local_time)

@@ -45,7 +45,7 @@ class PLC5(BasePLC):
                 self.t5 = Decimal(self.receive( T5, CTOWN_IPS['plc7'] ))
                 self.t7 = Decimal(self.receive( T7, CTOWN_IPS['plc9'] ))
 
-                self.saved_tank_levels.append([self.local_time, datetime.now(), self.t5, self.t7])
+                #self.saved_tank_levels.append([self.local_time, datetime.now(), self.t5, self.t7])
                 with self.lock:
                     if self.t5 < 1.5:
                         self.pu8 = 1
