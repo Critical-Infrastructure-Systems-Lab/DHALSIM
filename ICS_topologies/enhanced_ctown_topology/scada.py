@@ -39,7 +39,7 @@ class SCADAServer(BasePLC):
 
     def main_loop(self):
         """scada main loop."""
-        print("DEBUG: scada main loop")
+        print("DEBUG: scada main loop.")
         while True:
 
             try:

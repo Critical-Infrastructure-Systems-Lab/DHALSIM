@@ -22,7 +22,7 @@ class PLC1(BasePLC):
 
         self.t1 = Decimal(self.get(T1))
         self.pu1 = int(self.get(PU1))
-        self.pu2 = int(self.get(PU1))
+        self.pu2 = int(self.get(PU2))
 
         self.saved_tank_levels = [["iteration", "timestamp", "T1"]]
         path = 'plc1_saved_tank_levels_received.csv'
@@ -68,8 +68,8 @@ class PLC1(BasePLC):
                         self.pu2 = 0
 
                 with self.lock:
-                    self.set(PU1, self.pu1)
-                    self.set(PU2, self.pu2)
+                    self.set(PU1, int(self.pu1))
+                    self.set(PU2, int(self.pu2))
                 time.sleep(0.1)
 
             except Exception:
