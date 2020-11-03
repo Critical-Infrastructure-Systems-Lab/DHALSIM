@@ -19,10 +19,14 @@ class BasePLC(PLC):
             values = []
             for tag in self.tags:
                 with self.lock:
+                    # noinspection PyBroadException
                     try:
                         values.append(self.get(tag))
                     except Exception:
+                        print "Exception trying to get the tag"
+                        time.sleep(0.05)
                         continue
+                    values.append(self.get(tag))
             self.send_multiple(self.tags, values, self.send_adddress)
             time.sleep(0.05)
 

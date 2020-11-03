@@ -9,6 +9,6 @@ initial_tank_levels_path: "../../Demand_patterns/tank_initial_conditions.csv"
 # General simulation parameters
 db_path: "ctown_db.sqlite"
 output_ground_truth_path: "physical_process.csv"
-duration_days: 7
+duration_days: 10
 inp_file: "ctown_map.inp"
 simulator: "pdd"
