@@ -19,7 +19,10 @@ class BasePLC(PLC):
             values = []
             for tag in self.tags:
                 with self.lock:
-                     values.append(self.get(tag))
+                    try:
+                        values.append(self.get(tag))
+                    except Exception:
+                        continue
             self.send_multiple(self.tags, values, self.send_adddress)
             time.sleep(0.05)
 
