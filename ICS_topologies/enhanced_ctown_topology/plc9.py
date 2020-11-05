@@ -23,6 +23,7 @@ class PLC9(BasePLC):
         print 'DEBUG: plc9 enters pre_loop'
         self.local_time = 0
         self.week_index = sys.argv[1]
+        self.week_index = 19
         print "Week index in PLC9 is: " + str(self.week_index)
         self.saved_tank_levels = [["iteration", "timestamp", "T7"]]
 
@@ -35,11 +36,9 @@ class PLC9(BasePLC):
         tags = [T7]
         values = [self.t7]
         lastPLC = True
-        week_index = 0
-
 
         # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable values into a persistent file
-        BasePLC.set_parameters(self, path, self.saved_tank_levels, tags, values, self.reader, self.lock, ENIP_LISTEN_PLC_ADDR, lastPLC, week_index)
+        BasePLC.set_parameters(self, path, self.saved_tank_levels, tags, values, self.reader, self.lock, ENIP_LISTEN_PLC_ADDR, lastPLC, self.week_index)
         self.startup()
 
     def main_loop(self):
