@@ -65,7 +65,7 @@ class CTownTopo(Topo):
         attacker = self.addNode('attacker', ip='192.168.1.2/24', defaultRoute='via 192.168.1.254/24')
 
         self.addLink(scada, switches[0])
-        # Attack on Tank3 Switch4. PLC4 to PLC3
+        # Attack on Tank3 Switch4. PLC4 to PLC3. Stored in switches[3]
         self.addLink(attacker, switches[3])
 
         # For iperf tests we want the client/server to be in the possible most impactful LAN (LAN1 and LN3)

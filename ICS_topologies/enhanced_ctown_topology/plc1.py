@@ -37,7 +37,6 @@ class PLC1(BasePLC):
             try:
                 self.local_time += 1
                 self.t1 = Decimal(self.receive( T1, CTOWN_IPS['plc2'] ))
-                #self.saved_tank_levels.append([self.local_time, datetime.now(), self.t1])
 
                 if self.t1 < 4.0:
                     with self.lock:
@@ -52,10 +51,12 @@ class PLC1(BasePLC):
                     # Now ATT_2 is set in the physical_process. This in order to make more predictable the attack start and end time
                     attack_on = int(self.get(ATT_2))
                     if attack_on == 1:
-                        print("Attack Closing PU2")
                         self.set(ATT_1, 1)
                         with self.lock:
+                            self.pu1 = 0
                             self.pu2 = 0
+                            self.set(PU1, int(self.pu1))
+                            self.set(PU2, int(self.pu2))
                         time.sleep(0.1)
                         continue
 
