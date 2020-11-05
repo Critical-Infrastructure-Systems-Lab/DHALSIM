@@ -1,0 +1,11 @@
+DEBUG get_query: SELECT value FROM ctown WHERE name = ? AND pid = ?
+DEBUG set_query: UPDATE ctown SET value = ? WHERE name = ? AND pid = ?
+DEBUG EnipProtocol server addr:  192.168.1.1
+DEBUG: concatenating server address with default port.
+DEBUG enip server tags_string:  T7:1=REAL ATT_1:1=REAL ATT_2:1=REAL 
+DEBUG enip _start_server cmd:  ['/usr/bin/python', '-m', 'cpppo.server.enip', '--print', '--log', 'logs/protocols_tests_enip_server', '--address', '192.168.1.1:44818', 'T7:1=REAL', 'ATT_1:1=REAL', 'ATT_2:1=REAL']
+DEBUG: plc9 enters pre_loop
+Week index in PLC9 is: 0
+plc9
+Stopping Tcp dump process on PLC...
+Stopping PLC...
