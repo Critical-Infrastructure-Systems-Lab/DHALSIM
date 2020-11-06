@@ -36,41 +36,38 @@ class PLC1(BasePLC):
         while True:
             try:
                 self.local_time += 1
+                attack_on = int(self.get(ATT_2))
+                self.set(ATT_1, attack_on)
+
                 self.t1 = Decimal(self.receive( T1, CTOWN_IPS['plc2'] ))
 
-                if self.t1 < 4.0:
-                    with self.lock:
-                        self.pu1 = 1
-
-                if self.t1 > 6.3:
-                    with self.lock:
-                        self.pu1 = 0
-
-                # This attack keeps PU2 closed
-                if flag_attack_plc1 == 1:
-                    # Now ATT_2 is set in the physical_process. This in order to make more predictable the attack start and end time
-                    attack_on = int(self.get(ATT_2))
-                    if attack_on == 1:
-                        self.set(ATT_1, 1)
-                        with self.lock:
-                            self.pu1 = 0
-                            self.pu2 = 0
-                            self.set(PU1, int(self.pu1))
-                            self.set(PU2, int(self.pu2))
-                        time.sleep(0.1)
-                        continue
-
-                if self.t1 < 1.0:
-                    with self.lock:
-                        self.pu2 = 1
-
-                if self.t1 > 4.5:
-                    with self.lock:
-                        self.pu2 = 0
-
                 with self.lock:
+                    if self.t1 < 4.0:
+                            self.pu1 = 1
+
+                    elif self.t1 > 6.3:
+                            self.pu1 = 0
+
+                    if self.t1 < 1.0:
+                            self.pu2 = 1
+
+                    elif self.t1 > 4.5:
+                            self.pu2 = 0
+
+                    # This attack keeps PU1 - PU2 closed
+                    if flag_attack_plc1 == 1:
+                        # Now ATT_2 is set in the physical_process. This in order to make more predictable the attack start and end time
+                        if attack_on == 1:
+                            #self.pu1 = 0
+                            #self.pu2 = 0
+
+                            # just for testing the drop in the number of packets
+                            self.pu1 = self.pu1
+                            self.pu2 = self.pu2
+
                     self.set(PU1, int(self.pu1))
                     self.set(PU2, int(self.pu2))
+
                 time.sleep(0.1)
 
             except Exception:
