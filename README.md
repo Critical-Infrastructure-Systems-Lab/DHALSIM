@@ -74,8 +74,5 @@ The Makefile file has entries to run each of the simulations. For example, ctown
 
 ```make ctown```
 
-### Jupyter Notebooks
-This folder has visualization Jupyter notebooks
-
 ### Attack Repository
 This folder has files to run two network attacks into the plcs and scada. Man in the middle attacks and Denial of Service Attacks
