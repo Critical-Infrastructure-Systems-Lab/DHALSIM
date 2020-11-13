@@ -5,9 +5,7 @@ import csv
 import sys
 import pandas as pd
 import yaml
-from utils import flag_attack_plc1, flag_attack_communication_plc1_plc2, \
-    flag_attack_communication_plc1_plc2_replay_empty
-
+from utils import flag_attack_communication_plc1_plc2_replay_empty, flag_attack_plc1, flag_attack_communication_plc1_plc2
 
 class PhysicalPlant:
 

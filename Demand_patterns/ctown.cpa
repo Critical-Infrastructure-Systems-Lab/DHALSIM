@@ -1,0 +1,40 @@
+  
+[CYBERNODES]
+; Name, Sensors, Actuators
+ PLC1, , PU1 PU2 PU3
+ PLC2, T1,
+ PLC3, T2, PU4 PU5 PU6 PU7 V2
+ PLC4, T3,
+ PLC5, , PU8 PU9 PU10 PU11
+ PLC6, T4,
+ PLC7, T5,
+ PLC8, T6,
+ PLC9, T7,
+; SCADA
+
+
+[CYBERLINKS]
+; Source,Destination,Sensors
+PLC2, SCADA, T1
+PLC2, PLC1, T1
+PLC3, SCADA, T2
+PLC4, SCADA, T3
+PLC4, PLC3, T3
+PLC5, SCADA,
+PLC6, SCADA, T4
+PLC6, PLC3, T4
+PLC7, SCADA, T5
+PLC7, PLC5, T5
+PLC8, SCADA, T6
+PLC9, SCADA, T7
+PLC9, PLC5, T7
+
+
+[CYBERATTACKS]
+; Type,Target,Init_cond,End_cond,Arguments
+
+
+[CYBEROPTIONS]
+verbosity, 1
+initial_conditions, 4 3.75 3.25 3.75 3.5 3.5 3
+patterns_file, ./ctown_patterns.csv

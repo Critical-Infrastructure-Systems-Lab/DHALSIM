@@ -1,11 +1,11 @@
 from basePLC import BasePLC
 from utils import PLC1_DATA, STATE, PLC1_PROTOCOL, ENIP_LISTEN_PLC_ADDR
-from utils import T1, PU1, PU2, flag_attack_plc1, CTOWN_IPS
+from utils import T1, PU1, PU2, CTOWN_IPS
 from datetime import datetime
 from decimal import Decimal
 import time
 import threading
-from utils import ATT_1, ATT_2
+from utils import ATT_1, ATT_2, flag_attack_plc1
 
 plc1_log_path = 'plc1.log'
 
@@ -58,12 +58,12 @@ class PLC1(BasePLC):
                     if flag_attack_plc1 == 1:
                         # Now ATT_2 is set in the physical_process. This in order to make more predictable the attack start and end time
                         if attack_on == 1:
-                            #self.pu1 = 0
-                            #self.pu2 = 0
+                            self.pu1 = 0
+                            self.pu2 = 0
 
                             # just for testing the drop in the number of packets
-                            self.pu1 = self.pu1
-                            self.pu2 = self.pu2
+                            #self.pu1 = self.pu1
+                            #self.pu2 = self.pu2
 
                     self.set(PU1, int(self.pu1))
                     self.set(PU2, int(self.pu2))
