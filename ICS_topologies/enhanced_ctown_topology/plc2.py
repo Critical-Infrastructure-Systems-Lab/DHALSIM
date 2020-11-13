@@ -34,22 +34,8 @@ class PLC2(BasePLC):
         self.startup()
 
     def main_loop(self):
-        get_error_counter = 0
-        get_error_counter_limit = 100
         while True:
-            try:
-                with self.lock:
-                    self.t1 = Decimal(self.get(T1))
-            except Exception:
-                get_error_counter += 1
-                if get_error_counter < get_error_counter_limit:
-                    continue
-                else:
-                    print("PLC process encountered errors, aborting process")
-                    exit(0)
-            self.local_time += 1
-            #self.saved_tank_levels.append([self.local_time, datetime.now(), self.t1])
-            get_error_counter = 0
+            time.sleep(0.05)
 
 if __name__ == "__main__":
     plc2 = PLC2(
