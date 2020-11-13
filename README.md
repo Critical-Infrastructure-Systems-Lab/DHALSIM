@@ -1,5 +1,5 @@
-# WadiTwin
-Digital Twin for Water Distribution Systems. A work by the SUTD Resilient Water Systems Group and iTrust
+# Digital HydrAuLic SIMulator (DHALSIM)
+A Digital Twin for Water Distribution Systems. A work by the SUTD Resilient Water Systems Group and iTrust
 
 This digital twin uses Mininet and MiniCPS to emulate the behavior of water distribution systems and the industrial control system controlling them. WadiTwin uses the WNTR EPANET wrapper to simulate the behaviour of water distribution systems. In addition to physical data, the digital twin emulates the industrial network and also generates .pcap files with this network data.
  
