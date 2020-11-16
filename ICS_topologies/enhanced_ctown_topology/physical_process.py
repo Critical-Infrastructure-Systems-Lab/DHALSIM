@@ -225,6 +225,7 @@ class PhysicalPlant:
 
     def update_control(self, control):
         act_name = '\'' + control['name'] + '\''
+        print(act_name)
         rows_1 = self.c.execute('SELECT value FROM ctown WHERE name = ' + act_name).fetchall()
         self.conn.commit()
         new_status = int(rows_1[0][0])
