@@ -1,6 +1,6 @@
 from basePLC import BasePLC
 from utils import PLC3_DATA, STATE, PLC3_PROTOCOL
-from utils import T2, T3, T4, V2, PU4, PU5, PU6, PU7, ENIP_LISTEN_PLC_ADDR, CTOWN_IPS
+from utils import T2, T3, T4, V2, PU4, PU5, PU6, PU7, ENIP_LISTEN_PLC_ADDR, CTOWN_IPS, CONTROL
 
 import csv
 from datetime import datetime
@@ -17,6 +17,10 @@ class PLC3(BasePLC):
     def pre_loop(self):
         print 'DEBUG: plc3 enters pre_loop'
         self.local_time = 0
+
+        # Used to sync the actuators and the physical process
+        self.plc_mask = 2
+
 
         # Flag used to stop the thread
         self.reader = True
@@ -38,53 +42,65 @@ class PLC3(BasePLC):
         BasePLC.set_parameters(self, path, self.saved_tank_levels, tags, values, self.reader, self.lock, ENIP_LISTEN_PLC_ADDR)
         self.startup()
 
+    def check_control(self, mask):
+        control = int(self.get(CONTROL))
+        if control == 0 or not (mask & control):
+            return True
+        return False
+
     def main_loop(self):
         while True:
             try:
-                self.local_time += 1
-                self.t2 = Decimal( self.get( T2 ) )
-                self.t3 = Decimal(self.receive( T3, CTOWN_IPS['plc4'] ))
-                self.t4 = Decimal(self.receive( T4, CTOWN_IPS['plc6'] ))
+                if self.check_control(self.plc_mask):
+                    self.local_time += 1
+                    self.t2 = Decimal( self.get( T2 ) )
+                    self.t3 = Decimal(self.receive( T3, CTOWN_IPS['plc4'] ))
+                    self.t4 = Decimal(self.receive( T4, CTOWN_IPS['plc6'] ))
 
-                #self.saved_tank_levels.append([self.local_time, datetime.now(), self.t2, self.t3, self.t4])
-                with self.lock:
-                    if self.t2 < 0.5:
-                        self.v2 = 1
+                    #self.saved_tank_levels.append([self.local_time, datetime.now(), self.t2, self.t3, self.t4])
+                    with self.lock:
+                        if self.t2 < 0.5:
+                            self.v2 = 1
 
-                    if self.t2 > 5.5:
-                        self.v2 = 0
+                        if self.t2 > 5.5:
+                            self.v2 = 0
 
-                    if self.t3 < 3.0:
-                        self.pu4 = 1
+                        if self.t3 < 3.0:
+                            self.pu4 = 1
 
-                    if self.t3 > 5.3:
-                        self.pu4 = 0
+                        if self.t3 > 5.3:
+                            self.pu4 = 0
 
-                    if self.t3 < 1.0:
-                        self.pu5 = 1
+                        if self.t3 < 1.0:
+                            self.pu5 = 1
 
-                    if self.t3 > 3.5:
-                        self.pu5 = 0
+                        if self.t3 > 3.5:
+                            self.pu5 = 0
 
-                    if self.t4 < 2.0:
-                        self.pu6 = 1
+                        if self.t4 < 2.0:
+                            self.pu6 = 1
 
-                    if self.t4 > 3.5:
-                        self.pu6 = 0
+                        if self.t4 > 3.5:
+                            self.pu6 = 0
 
-                    if self.t4 < 3.0:
-                        self.pu7 = 1
+                        if self.t4 < 3.0:
+                            self.pu7 = 1
 
-                    if self.t4 > 4.5:
-                        self.pu7 = 0
+                        if self.t4 > 4.5:
+                            self.pu7 = 0
 
-                    self.set(V2, self.v2)
-                    self.set(PU4, self.pu4)
-                    self.set(PU5, self.pu5)
-                    self.set(PU6, self.pu6)
-                    self.set(PU7, self.pu7)
+                        self.set(V2, self.v2)
+                        self.set(PU4, self.pu4)
+                        self.set(PU5, self.pu5)
+                        self.set(PU6, self.pu6)
+                        self.set(PU7, self.pu7)
 
-                time.sleep(0.1)
+                    control = self.get(CONTROL)
+                    control += self.plc_mask
+                    self.set(CONTROL, control)
+                    time.sleep(0.05)
+                else:
+                    time.sleep(0.1)
 
             except Exception:
                 continue

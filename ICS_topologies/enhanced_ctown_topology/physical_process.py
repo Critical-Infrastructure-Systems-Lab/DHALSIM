@@ -5,6 +5,7 @@ import csv
 import sys
 import pandas as pd
 import yaml
+import time
 from utils import flag_attack_communication_plc1_plc2_replay_empty, flag_attack_plc1, flag_attack_communication_plc1_plc2
 
 class PhysicalPlant:
@@ -253,6 +254,7 @@ class PhysicalPlant:
         self.wn.options.time.duration = self.wn.options.time.hydraulic_timestep
         master_time = 0
 
+        mask_full_control = 7
         iteration_limit = (self.simulation_days * 24 * 3600) / self.wn.options.time.hydraulic_timestep
 
         print("Simulation will run for " + str(self.simulation_days) + " days. Hydraulic timestep is " + str(
@@ -260,44 +262,55 @@ class PhysicalPlant:
               " for a total of " + str(iteration_limit) + " iterations ")
 
         while master_time <= iteration_limit:
-            #tic
-            self.update_controls()
-            #toc
-            print("ITERATION %d ------------- " % master_time)
-            results = self.sim.run_sim(convergence_error=True)
-            #toc
-            values_list = self.register_results(results)
 
-            self.results_list.append(values_list)
-            master_time += 1
+            rows = self.c.execute("SELECT value FROM ctown WHERE name = 'CONTROL'").fetchall()
+            self.conn.commit()
+            control = int(rows[0][0])
 
-            for tank in self.tank_list:
-                tank_name = '\'' + tank + '\''
-                a_level = self.wn.get_node(tank).level
-                query = "UPDATE ctown SET value = " + str(a_level) + " WHERE name = " + tank_name
-                self.c.execute(query)  # UPDATE TANKS IN THE DATABASE
+            if control & mask_full_control:
+                #tic
+                self.update_controls()
+                #toc
+                print("ITERATION %d ------------- " % master_time)
+                results = self.sim.run_sim(convergence_error=True)
+                #toc
+                values_list = self.register_results(results)
+
+                self.results_list.append(values_list)
+                master_time += 1
+
+                for tank in self.tank_list:
+                    tank_name = '\'' + tank + '\''
+                    a_level = self.wn.get_node(tank).level
+                    query = "UPDATE ctown SET value = " + str(a_level) + " WHERE name = " + tank_name
+                    self.c.execute(query)  # UPDATE TANKS IN THE DATABASE
+                    self.conn.commit()
+
+                if flag_attack_plc1 == 1 or flag_attack_communication_plc1_plc2 == 1:
+                    if 648 <= master_time < 1153:
+                        query = "UPDATE ctown SET value = " + str(1) + " WHERE name = 'ATT_2'"
+                        self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to launch attack
+                        self.conn.commit()
+                    else:
+                        query = "UPDATE ctown SET value = " + str(0) + " WHERE name = 'ATT_2'"
+                        self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to stop attack
+                        self.conn.commit()
+                #toc
+                if flag_attack_communication_plc1_plc2_replay_empty == 1:
+                    if 648 <= master_time < 1153:
+                        query = "UPDATE ctown SET value = " + str(1) + " WHERE name = 'ATT_2'"
+                        self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to launch attack
+                        self.conn.commit()
+                    else:
+                        query = "UPDATE ctown SET value = " + str(0) + " WHERE name = 'ATT_2'"
+                        self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to stop attack
+                        self.conn.commit()
+
+                query = "UPDATE ctown SET value = 0 WHERE name = 'CONTROL'"
+                self.c.execute(query)  # UPDATE CONTROL value for the PLCs to apply control
                 self.conn.commit()
-
-            if flag_attack_plc1 == 1 or flag_attack_communication_plc1_plc2 == 1:
-                if 648 <= master_time < 1153:
-                    query = "UPDATE ctown SET value = " + str(1) + " WHERE name = 'ATT_2'"
-                    self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to launch attack
-                    self.conn.commit()
-                else:
-                    query = "UPDATE ctown SET value = " + str(0) + " WHERE name = 'ATT_2'"
-                    self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to stop attack
-                    self.conn.commit()
-            #toc
-            if flag_attack_communication_plc1_plc2_replay_empty == 1:
-                if 648 <= master_time < 1153:
-                    query = "UPDATE ctown SET value = " + str(1) + " WHERE name = 'ATT_2'"
-                    self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to launch attack
-                    self.conn.commit()
-                else:
-                    query = "UPDATE ctown SET value = " + str(0) + " WHERE name = 'ATT_2'"
-                    self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to stop attack
-                    self.conn.commit()
-
+            else:
+                time.sleep(0.05)
         self.write_results(self.results_list)
 
 if __name__=="__main__":
