@@ -44,7 +44,7 @@ class PLC3(BasePLC):
 
     def check_control(self, mask):
         control = int(self.get(CONTROL))
-        if control == 0 or not (mask & control):
+        if not (mask & control):
             return True
         return False
 
@@ -95,7 +95,7 @@ class PLC3(BasePLC):
                         self.set(PU6, self.pu6)
                         self.set(PU7, self.pu7)
 
-                    control = self.get(CONTROL)
+                    control = int(self.get(CONTROL))
                     control += self.plc_mask
                     self.set(CONTROL, control)
                     time.sleep(0.05)

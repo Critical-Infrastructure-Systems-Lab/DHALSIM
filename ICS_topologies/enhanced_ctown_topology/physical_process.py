@@ -267,7 +267,7 @@ class PhysicalPlant:
             self.conn.commit()
             control = int(rows[0][0])
 
-            if control & mask_full_control:
+            if control == mask_full_control:
                 #tic
                 self.update_controls()
                 #toc
@@ -310,7 +310,7 @@ class PhysicalPlant:
                 self.c.execute(query)  # UPDATE CONTROL value for the PLCs to apply control
                 self.conn.commit()
             else:
-                time.sleep(0.05)
+                time.sleep(0.03)
         self.write_results(self.results_list)
 
 if __name__=="__main__":
