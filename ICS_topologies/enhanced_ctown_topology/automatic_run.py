@@ -9,7 +9,7 @@ import subprocess
 import signal
 from mininet.link import TCLink
 
-automatic = 1
+automatic = 0
 mitm_attack = 0
 iperf_test = 0
 
@@ -79,7 +79,7 @@ class CTown(MiniCPS):
         net.start()
         self.setup_network()
 
-        self.sender_plcs =  [2, 4, 6, 7, 9]
+        self.sender_plcs = [2, 4, 6, 7, 9]
         self.receiver_plcs = [1, 3, 5]
 
         self.sender_plcs_nodes = []

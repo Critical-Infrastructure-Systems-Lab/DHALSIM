@@ -42,7 +42,7 @@ class PLC5(BasePLC):
 
     def check_control(self, mask):
         control = int(self.get(CONTROL))
-        if control == 0 or not (mask & control):
+        if not (mask & control):
             return True
         return False
 
@@ -79,7 +79,7 @@ class PLC5(BasePLC):
                         self.set(PU10, self.pu10)
                         self.set(PU11, self.pu11)
 
-                    control = self.get(CONTROL)
+                    control = int(self.get(CONTROL))
                     control += self.plc_mask
                     self.set(CONTROL, control)
                     time.sleep(0.05)

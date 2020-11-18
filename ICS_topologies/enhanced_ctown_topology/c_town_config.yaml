@@ -1,10 +1,14 @@
 ---
-# Simulation initialization parameters
+# Simulation initialization parameters.
 initial_custom_flag: "True"
 week_index: 0
 demand_patterns_path: "../../Demand_patterns/three_year_demands_ctown.csv"
 starting_demand_path: "../../Demand_patterns/starting_demand_points.csv"
 initial_tank_levels_path: "../../Demand_patterns/tank_initial_conditions.csv"
+
+# EPANET inp file that will be represented in DHALSIM
+epanet_topo_path: "../../Demand_patterns/ctown_map_with_controls.inp"
+epanet_cpa_path: "../../Demand_patterns/ctown.cpa"
 
 # General simulation parameters
 db_path: "ctown_db.sqlite"
