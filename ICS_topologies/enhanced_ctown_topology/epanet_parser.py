@@ -2,7 +2,7 @@ import wntr
 import wntr.network.controls as controls
 import re
 import argparse
-
+import yaml
 
 class EpanetParser:
 
@@ -23,7 +23,7 @@ class EpanetParser:
         self.plc_list = self.create_plc_list()
 
         # topology name
-        self.topology_name = "ctown.wn"
+        self.topology_name = "ctown"
 
         # Network information. Hardwired for now
         self.plc_netmask = "'/24'"
@@ -129,7 +129,7 @@ class EpanetParser:
 
         ################### DB creation strings
 
-        path_string = "PATH = 'ctown.wn_db.sqlite'"
+        path_string = "PATH = 'ctown_db.sqlite'"
         name_string = "NAME = '" + self.topology_name + "'"
 
         state_string = "STATE = {\n    'name': NAME,\n    'path': PATH\n}"
@@ -197,9 +197,12 @@ class EpanetParser:
 
         utils_file.close()
 
+        with open('plc_dicts.yaml', 'w') as outfile:
+            yaml.dump(self.plc_list, outfile, default_flow_style=True)
+
     def configure_plc_list(self):
         for i in range(len(self.plc_list)):
-            self.plc_list[i] = self.set_self.control_list_in_plc(self.plc_list[i], self.control_list)
+            self.plc_list[i] = self.set_control_list_in_plc(self.plc_list[i], self.control_list)
         self.set_dependencies_list_in_plc(self.plc_list)
 
     def get_control_rule_with_tag(self, a_tag):
@@ -301,3 +304,4 @@ if __name__=="__main__":
 
     args = parser.parse_args()
     parser = EpanetParser(args.inp, args.cpa)
+    parser.main()
