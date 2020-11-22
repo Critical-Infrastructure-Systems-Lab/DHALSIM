@@ -3,6 +3,7 @@ import time
 import sys
 import argparse
 import signal
+import yaml
 
 class NodeControl():
 
@@ -31,43 +32,43 @@ class NodeControl():
         if self.plc_process.poll() is None:
             self.plc_process.kill()
 
-    def main(self):
-        """
-        Main method of a device. The signal handler methods are define, the routing is configured (adding default gateways for the deviceS), a tcpdump process is started
-        and a plc_n.py or scada.py script is launched
-        :return:
-        """
+    def __init__(self):
+
+        self.week_index = 0
+
         args = self.get_arguments()
         self.process_arguments(args)
 
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
 
-        self.interface_name = self.name + '-eth0'
-        #self.configure_routing() # In enhanced ctown topology, this is handled by automatic_run.py
+
+    def get_plc_dict(self, plc_list):
+        for plc in plc_list:
+            if plc['PLC'] == self.name:
+                return plc
+
+    def main(self):
+        """
+        Main method of a device. The signal handler methods are define, the routing is configured (adding default gateways for the deviceS), a tcpdump process is started
+        and a plc_n.py or scada.py script is launched
+        :return:
+        """
+        self.interface_name = self.name.lower() + '-eth0'
         self.delete_log()
 
         self.process_tcp_dump = self.start_tcpdump_capture()
+
+        #with open(self.name, 'r') as plc_file:
+        #plc_dicts = yaml.full_load(plc_file)
+        #plc_dict = self.get_plc_dict(plc_dicts)
+
         self.plc_process = self.start_plc()
 
         while self.plc_process.poll() is None:
             pass
 
         self.terminate()
-
-    def process_arguments(self,arg_parser):
-        if arg_parser.name:
-            self.name = arg_parser.name
-            print self.name
-        else:
-            self.name = 'plc1'
-
-        if arg_parser.config:
-            config_path = arg_parser.config
-        else:
-            config_path = "c_town_config.yaml"
-
-
 
     def delete_log(self):
         """
@@ -82,15 +83,34 @@ class NodeControl():
         return tcp_dump
 
     def start_plc(self):
-        plc_process = subprocess.Popen(['python', self.name + '.py', str(self.week_index)], shell=False)
+        plc_process = subprocess.Popen(['python', self.name + '.py', str(self.week_index), self.config_path], shell=False)
         return plc_process
+
+    def process_arguments(self, arg_parser):
+        if arg_parser.config:
+            self.config_path = arg_parser.config
+        else:
+            self.config_path = "c_town_config.yaml"
+
+        if arg_parser.name:
+            self.name = arg_parser.name
+        else:
+            self.name = "PLC1"
+
+        if arg_parser.dict:
+            self.dict_path = arg_parser.dict
+        else:
+            self.dict_path = "data"
 
     def get_arguments(self):
         parser = argparse.ArgumentParser(description='Master Script of a node in Minicps')
-        parser.add_argument("--config", "-c",help="Path of the experiment config file")
+        parser.add_argument("--config", "-c", help="Path of the experiment config file")
         parser.add_argument("--name", "-n", help="Name of the PLC or SCADA to run")
+        parser.add_argument("--dict", "-d", help="Path of the PLCs dict file")
         return parser.parse_args()
 
 if __name__=="__main__":
+
     node_control = NodeControl()
     node_control.main()
+
