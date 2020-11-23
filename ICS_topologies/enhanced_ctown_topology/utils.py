@@ -26,6 +26,18 @@ plc_netmask = '/24'
 ENIP_LISTEN_PLC_ADDR = '192.168.1.1'
 SCADA_IP_ADDR = '192.168.1.2'
 
+SIMPLE_IP_OPTIONS = {
+    'plc1':'192.168.1.1',
+    'plc2':'192.168.1.2',
+    'plc3':'192.168.1.3',
+    'plc4':'192.168.1.4',
+    'plc5':'192.168.1.5',
+    'plc6':'192.168.1.6',
+    'plc7':'192.168.1.7',
+    'plc8':'192.168.1.8',
+    'plc9':'192.168.1.9',
+}
+
 CTOWN_IPS = {
     'plc1':'10.0.1.1',
     'plc2':'10.0.2.1',
@@ -100,7 +112,6 @@ PLC3_TAGS = (
     ('V2', 1, 'REAL'),
     ('T4', 1, 'REAL'),
     ('T3', 1, 'REAL'),
-    ('T2', 1, 'REAL'),
     ('CONTROL', 1, 'REAL'),
 )
 
@@ -272,12 +283,12 @@ STATE = {
     'path': PATH
 }
 
-SCHEMA = """
-CREATE TABLE ctown ( 
-    name              TEXT NOT NULL,
-    pid               INTEGER NOT NULL,
-    value             TEXT,
-    PRIMARY KEY (name, pid)
+SCHEMA = """        
+CREATE TABLE ctown (        
+    name              TEXT NOT NULL,        
+    pid               INTEGER NOT NULL,        
+    value             TEXT,        
+    PRIMARY KEY (name, pid)        
 );
 """
 

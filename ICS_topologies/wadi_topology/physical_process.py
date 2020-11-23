@@ -82,15 +82,15 @@ class PhysicalPlant:
 
         if simulator_string == 'pdd':
             print('Running simulation using PDD')
-            self.sim = wntr.sim.WNTRSimulator(self.wn, mode='PDD')
-            # sim = wntr.sim.EpanetSimulator(wn)
+            self.wn.options.hydraulic.demand_model = 'PDD'
+
         elif simulator_string == 'dd':
             print('Running simulation using DD')
-            self.sim = wntr.sim.WNTRSimulator(self.wn)
         else:
             print('Invalid simulation mode, exiting...')
             sys.exit(1)
 
+        self.sim = wntr.sim.WNTRSimulator(self.wn)
         print("Starting simulation for " + str(config_options['inp_file']) + " topology ")
 
 
