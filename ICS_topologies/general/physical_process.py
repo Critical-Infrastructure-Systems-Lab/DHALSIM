@@ -6,7 +6,6 @@ import sys
 import pandas as pd
 import yaml
 import time
-from utils import flag_attack_communication_plc1_plc2_replay_empty, flag_attack_plc1, flag_attack_communication_plc1_plc2
 
 class PhysicalPlant:
 
@@ -57,7 +56,6 @@ class PhysicalPlant:
         aux = self.create_link_header(self.valve_list)
         list_header.extend(aux)
 
-        list_header.extend(["Attack#01", "Attack#02"])
 
         self.results_list = []
         self.results_list.append(list_header)
@@ -83,14 +81,15 @@ class PhysicalPlant:
 
         if simulator_string == 'pdd':
             print('Running simulation using PDD')
-            self.sim = wntr.sim.WNTRSimulator(self.wn, mode='PDD')
-            # sim = wntr.sim.EpanetSimulator(wn)
+            self.wn.options.hydraulic.demand_model = 'PDD'
+
         elif simulator_string == 'dd':
             print('Running simulation using DD')
-            self.sim = wntr.sim.WNTRSimulator(self.wn)
         else:
             print('Invalid simulation mode, exiting...')
             sys.exit(1)
+
+        self.sim = wntr.sim.WNTRSimulator(self.wn)
 
         print("Starting simulation for " + str(config_options['inp_file']) + " topology ")
 
@@ -113,8 +112,7 @@ class PhysicalPlant:
             limit = 239
 
         if 'initial_custom_flag' in config_options:
-            custom_initial_conditions_flag =  bool(config_options['initial_custom_flag'])
-            if custom_initial_conditions_flag:
+            if config_options['initial_custom_flag'] == "True":
                 demand_patterns_path = config_options['demand_patterns_path']
                 starting_demand_path = config_options['starting_demand_path']
                 initial_tank_levels_path = config_options['initial_tank_levels_path']
@@ -210,14 +208,6 @@ class PhysicalPlant:
             else:
                 values_list.extend([self.wn.get_link(valve).status.value])
 
-        rows = self.c.execute("SELECT value FROM ctown WHERE name = 'ATT_1'").fetchall()
-        self.conn.commit()
-        attack1 = int(rows[0][0])
-        rows = self.c.execute("SELECT value FROM ctown WHERE name = 'ATT_2'").fetchall()
-        self.conn.commit()
-        attack2 = int(rows[0][0])
-
-        values_list.extend([attack1, attack2])
         return values_list
 
     def update_controls(self):
@@ -226,7 +216,6 @@ class PhysicalPlant:
 
     def update_control(self, control):
         act_name = '\'' + control['name'] + '\''
-        print(act_name)
         rows_1 = self.c.execute('SELECT value FROM ctown WHERE name = ' + act_name).fetchall()
         self.conn.commit()
         new_status = int(rows_1[0][0])
@@ -267,50 +256,30 @@ class PhysicalPlant:
             self.conn.commit()
             control = int(rows[0][0])
 
-            if control == mask_full_control:
-                #tic
-                self.update_controls()
-                #toc
-                print("ITERATION %d ------------- " % master_time)
-                results = self.sim.run_sim(convergence_error=True)
-                #toc
-                values_list = self.register_results(results)
+            #if control == mask_full_control:
+            #tic
+            self.update_controls()
+            #toc
+            print("ITERATION %d ------------- " % master_time)
+            results = self.sim.run_sim(convergence_error=True)
+            #toc
+            values_list = self.register_results(results)
 
-                self.results_list.append(values_list)
-                master_time += 1
+            self.results_list.append(values_list)
+            master_time += 1
 
-                for tank in self.tank_list:
-                    tank_name = '\'' + tank + '\''
-                    a_level = self.wn.get_node(tank).level
-                    query = "UPDATE ctown SET value = " + str(a_level) + " WHERE name = " + tank_name
-                    self.c.execute(query)  # UPDATE TANKS IN THE DATABASE
-                    self.conn.commit()
-
-                if flag_attack_plc1 == 1 or flag_attack_communication_plc1_plc2 == 1:
-                    if 648 <= master_time < 1153:
-                        query = "UPDATE ctown SET value = " + str(1) + " WHERE name = 'ATT_2'"
-                        self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to launch attack
-                        self.conn.commit()
-                    else:
-                        query = "UPDATE ctown SET value = " + str(0) + " WHERE name = 'ATT_2'"
-                        self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to stop attack
-                        self.conn.commit()
-                #toc
-                if flag_attack_communication_plc1_plc2_replay_empty == 1:
-                    if 648 <= master_time < 1153:
-                        query = "UPDATE ctown SET value = " + str(1) + " WHERE name = 'ATT_2'"
-                        self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to launch attack
-                        self.conn.commit()
-                    else:
-                        query = "UPDATE ctown SET value = " + str(0) + " WHERE name = 'ATT_2'"
-                        self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to stop attack
-                        self.conn.commit()
-
-                query = "UPDATE ctown SET value = 0 WHERE name = 'CONTROL'"
-                self.c.execute(query)  # UPDATE CONTROL value for the PLCs to apply control
+            for tank in self.tank_list:
+                tank_name = '\'' + tank + '\''
+                a_level = self.wn.get_node(tank).level
+                query = "UPDATE ctown SET value = " + str(a_level) + " WHERE name = " + tank_name
+                self.c.execute(query)  # UPDATE TANKS IN THE DATABASE
                 self.conn.commit()
-            else:
-                time.sleep(0.03)
+
+            query = "UPDATE ctown SET value = 0 WHERE name = 'CONTROL'"
+            self.c.execute(query)  # UPDATE CONTROL value for the PLCs to apply control
+            self.conn.commit()
+            #else:
+            #    time.sleep(0.03)
         self.write_results(self.results_list)
 
 if __name__=="__main__":

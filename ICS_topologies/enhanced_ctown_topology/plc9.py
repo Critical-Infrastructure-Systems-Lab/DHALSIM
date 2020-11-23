@@ -23,7 +23,7 @@ class PLC9(BasePLC):
         print 'DEBUG: plc9 enters pre_loop'
         self.local_time = 0
         self.week_index = sys.argv[1]
-        self.week_index = 19
+        self.week_index = 0
         print "Week index in PLC9 is: " + str(self.week_index)
         self.saved_tank_levels = [["iteration", "timestamp", "T7"]]
 

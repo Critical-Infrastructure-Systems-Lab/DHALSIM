@@ -1,19 +1,24 @@
 from mininet.net import Mininet
 from mininet.cli import CLI
 from minicps.mcps import MiniCPS
-from topo import CTownTopo
+from complex_topo import ComplexTopo
+from simple_topo import SimpleTopo
+from initialize_experiment import ExperimentInitializer
 import sys
 import time
 import shlex
-import subprocess
 import signal
+import argparse
+import yaml
 from mininet.link import TCLink
+import subprocess
 
-automatic = 0
+automatic = 1
 mitm_attack = 0
 iperf_test = 0
 
-class CTown(MiniCPS):
+
+class DHALSIM(MiniCPS):
     """ Main script controlling an experiment
     All the automatic_run.py follow roughly the same pattern by launching subprocesses representing each element in the simulation
     The flag automatic controls if this simulation is run automatically, in which case this process will only finish when the automatic_plant.py finishes.
@@ -51,45 +56,90 @@ class CTown(MiniCPS):
         router0 = net.get('r0')
         router0.cmd('ifconfig r0-eth' + str(index) + ' 10.0.' + str(index+1) + '.254 netmask 255.255.255.0' )
 
-    def setup_network(self):
-        for i in range(0, 9):
-            self.do_forward(net.get('r' + str(i)))
-            self.configure_routers_interface(str(i+1))
-            self.configure_r0_interfaces(i+1)
-            self.add_degault_gateway(net.get('plc' + str(i+1)), '192.168.1.254')
-            self.add_degault_gateway(net.get('r' + str(i+1)), '10.0.' + str(i+1) + '.254')
-        for i in range(1, 10):
-            self.setup_iptables('r' + str(i))
+    def setup_network(self, complex_topo):
+        index = 0
+        if complex_topo:
+            for plc in self.plc_dict:
+                self.do_forward(net.get('r' + str(index)))
+                self.configure_routers_interface(str(index+1))
+                self.configure_r0_interfaces(index+1)
+                self.add_degault_gateway(net.get('plc' + str(index+1)), '192.168.1.254')
+                self.add_degault_gateway(net.get('r' + str(index+1)), '10.0.' + str(index+1) + '.254')
+                index += 1
 
-        self.add_degault_gateway(net.get('scada'), '192.168.1.254')
-        self.add_degault_gateway(net.get('attacker'), '192.168.1.254')
-        self.add_degault_gateway(net.get('client'), '192.168.1.254')
-        self.add_degault_gateway(net.get('server'), '192.168.1.254')
-        self.do_forward(net.get('attacker'))
+            index_limit = len(self.plc_dict) + 1
+            for i in range(1, index_limit):
+                self.setup_iptables('r' + str(i))
 
-    def __init__(self, name, net):
+            self.add_degault_gateway(net.get('scada'), '192.168.1.254')
+            self.add_degault_gateway(net.get('attacker'), '192.168.1.254')
+            self.add_degault_gateway(net.get('client'), '192.168.1.254')
+            self.add_degault_gateway(net.get('server'), '192.168.1.254')
+            self.do_forward(net.get('attacker'))
+        else:
+            #toDo: Support simple network topology
+            for i in range(0,9):
+                self.add_degault_gateway(net.get('plc' + str(i + 1)), '192.168.1.254')
+
+    def get_plc_launch_order(self):
+        """
+        To launch the experiment more gracefully is nice to launch the processes that are ENIP servers in the network
+        topology. We can get this order by analyzing the dependencies. In essence, a PLC without dependencies is a server
+        WARNING: There could be situations where this method has deadlocks and we are not testing them
+        :return:
+        """
+        #toDo: Handle possible deadlocks because dependencies
+
+        plc_launch_order = []
+        pending_plcs = []
+        for plc in self.plc_dict:
+            # Add the ENIP servers
+            if not plc['Dependencies']:
+                plc_launch_order.append(plc['PLC'].lower())
+            # These are ENIP clients
+            else:
+                pending_plcs.append(plc)
+
+        self.last_plc = plc_launch_order[-1]
+
+        for plc in pending_plcs:
+            dependency_counter = 0
+            for dependency in plc['Dependencies']:
+                if dependency['PLC'].lower() in plc_launch_order:
+                    dependency_counter += 1
+
+            if dependency_counter == len(plc['Dependencies']):
+                plc_launch_order.append(plc['PLC'].lower())
+
+        return plc_launch_order
+
+    def load_plc_dict(self, dict_path):
+        with open(dict_path) as config_file:
+            options = yaml.load(config_file, Loader=yaml.FullLoader)
+        return options
+
+    def __init__(self, name, net, complex_topo, a_week_index, sim_type, a_plc_dict_path):
         signal.signal(signal.SIGINT, self.interrupt)
         signal.signal(signal.SIGTERM, self.interrupt)
 
-        if len(sys.argv) < 2:
-            self.week_index = str(0)
-        else:
-            self.week_index = sys.argv[1]
+        self.week_index = a_week_index
+        self.sim_type = sim_type
 
         net.start()
-        self.setup_network()
 
-        self.sender_plcs = [2, 4, 6, 7, 9]
-        self.receiver_plcs = [1, 3, 5]
+        self.last_plc = "plc1"
+        self.plc_dict_path = a_plc_dict_path
+        # We need the plc dicts to analyze the dependencies and define the PLC process launch order
+        # It shouldn't matter that much, because in case of no connections we simply retry, but we want to avoid
+        # the excessive number of error messages in log because of no connections
+        self.plc_dict = self.load_plc_dict(self.plc_dict_path)
+        self.plc_launch_order = self.get_plc_launch_order()
 
-        self.sender_plcs_nodes = []
-        self.receiver_plcs_nodes = []
+        self.setup_network(complex_topo)
 
-        self.sender_plcs_files = []
-        self.receiver_plcs_files = []
-
-        self.sender_plcs_processes = []
-        self.receiver_plcs_processes = []
+        self.plc_nodes = []
+        self.plc_files = []
+        self.plc_processes = []
 
         self.attacker = None
         self.attacker_file = None
@@ -112,25 +162,24 @@ class CTown(MiniCPS):
 
         # Because of our sockets, we gotta launch all the PLCs "sending" variables first
         index = 0
-        for plc in self.sender_plcs:
-            self.sender_plcs_nodes.append(net.get('plc' + str( self.sender_plcs[index] ) ) )
+        last_plc_flag = 0
 
-            self.sender_plcs_files.append( open("output/plc" + str( self.sender_plcs[index]) + ".log", 'r+' ) )
-            self.sender_plcs_processes.append( self.sender_plcs_nodes[index].popen(sys.executable, "automatic_plc.py", "-n", "plc" + str(self.sender_plcs[index]), "-w", self.week_index, stderr=sys.stdout,
-                                                         stdout=self.sender_plcs_files[index]) )
-            print("Launched plc" + str(self.sender_plcs[index]))
+        for plc in self.plc_launch_order:
+
+            if self.last_plc == plc:
+                last_plc_flag = 1
+
+            self.plc_nodes.append(net.get(str(self.plc_launch_order[index])))
+
+            self.plc_files.append(open("output/" + str(self.plc_launch_order[index]) + ".log", 'r+'))
+            self.plc_processes.append(self.plc_nodes[index].popen
+                                      (sys.executable, "generic_automatic_plc.py", "-c", "c_town_config.yaml", "-n",
+                                       str(self.plc_launch_order[index]), "-d", self.plc_dict_path, "-l",
+                                       str(last_plc_flag),
+                                       stderr=sys.stdout, stdout=self.plc_files[index]))
+            print("Launched " + str(self.plc_launch_order[index]))
             index += 1
             time.sleep(0.2)
-
-        # After the servers are done, we can launch the client PLCs
-        index = 0
-        for plc in self.receiver_plcs:
-            self.receiver_plcs_nodes.append(net.get('plc' + str( self.receiver_plcs[index] ) ) )
-            self.receiver_plcs_files.append( open("output/plc" + str(self.receiver_plcs[index]) + ".log", 'r+') )
-            self.receiver_plcs_processes.append( self.receiver_plcs_nodes[index].popen(sys.executable, "automatic_plc.py", "-n", "plc" + str(self.receiver_plcs[index]), "-w", self.week_index, stderr=sys.stdout,
-                                                         stdout=self.receiver_plcs_files[index]) )
-            print("Launched plc" + str(self.receiver_plcs[index]))
-            index += 1
 
         # Launch an iperf server in LAN1 (same LAN as PLC1) and a client in LAN3 (same LAN as PLC3)
         if iperf_test == 1:
@@ -144,8 +193,6 @@ class CTown(MiniCPS):
             self.iperf_server_process = self.iperf_server_node.popen(iperf_server_cmd, stderr=sys.stdout, stdout=iperf_server_file)
             print "[*] Iperf Server launched"
 
-            #iperf_client_cmd = shlex.split("python iperf_client.py -c 10.0.1.1 -P 100 -t 690")
-
             iperf_client_cmd = shlex.split("python iperf_client.py -c 10.0.2.1 -P 100 -t 2400")
             self.iperf_client_process = self.iperf_client_node.popen(iperf_client_cmd, stderr=sys.stdout, stdout=iperf_client_file)
             print "[*] Iperf Client launched"
@@ -154,7 +201,6 @@ class CTown(MiniCPS):
         if mitm_attack == 1 :
             attacker_file = open("output/attacker.log", 'r+')
             attacker = net.get('attacker')
-            # In the future, the type of attack sent to the script should be obtained from utils configuration. An ENUM should be better
             mitm_cmd = shlex.split("../../../attack-experiments/env/bin/python "
                                    "../../attack_repository/mitm_plc/mitm_attack.py 192.168.1.1 192.168.1.254 exponential_offset")
             print 'Running MiTM attack with command ' + str(mitm_cmd)
@@ -197,21 +243,13 @@ class CTown(MiniCPS):
         print "[*] Simulation finished"
         self.end_plc_process(self.scada_process)
 
-        index = 0
-        for plc in self.receiver_plcs_processes:
-            print "[] Terminating PLC" + str(self.receiver_plcs[index])
+        index = len(self.plc_launch_order) - 1
+        for plc in reversed(self.plc_processes):
+            print "[] Terminating " + str(self.plc_launch_order[index])
             if plc:
                 self.end_plc_process(plc)
-                print "[*] PLC" + str(self.receiver_plcs[index]) + " terminated"
-            index += 1
-
-        index = 0
-        for plc in self.sender_plcs_processes:
-            print "[] Terminating PLC" + str(self.sender_plcs[index])
-            if plc:
-                self.end_plc_process(plc)
-                print "[*] PLC" + str(self.sender_plcs[index]) + " terminated"
-            index += 1
+                print "[*] PLC" + str(self.plc_launch_order[index]) + " terminated"
+            index -= 1
 
         if self.mitm_process:
             self.end_plc_process(self.mitm_process)
@@ -236,12 +274,33 @@ class CTown(MiniCPS):
 
 if __name__ == "__main__":
 
-    if len(sys.argv) < 2:
-        week_index = str(0)
-    else:
-        week_index = sys.argv[1]
-    print week_index
+    parser = argparse.ArgumentParser(description='Script that runs a DHALSIM experiment, using MiniCPS and WNTR')
+    parser.add_argument("--config", "-c", help="YAML experiment configuration file")
+    parser.add_argument("--week", "-w", help="Week index, only used batch simulation mode")
+    args = parser.parse_args()
 
-    topo = CTownTopo(week_index)
+    # Global configuration file
+    if args.config:
+        config_file = args.config
+    else:
+        config_file = "c_town_config.yaml"
+
+    initializer = ExperimentInitializer(config_file, args.week)
+
+    # this creates plc_dicts.yaml and utils.py
+    initializer.run_parser()
+
+    complex_topology = initializer.get_complex_topology()
+    week_index = initializer.get_week_index()
+    simulation_type = initializer.get_simulation_type()
+    plc_dict_path = initializer.get_plc_dicT_path()
+
+    if complex_topology:
+        print "Launching complex network topology"
+        topo = ComplexTopo(week_index=week_index, sim_type=simulation_type, config_file=config_file, plc_dict_path=plc_dict_path)
+    else:
+        print "Launching simple network topology"
+        topo = SimpleTopo(week_index=week_index, sim_type=simulation_type, config_file=config_file, plc_dict_path=plc_dict_path)
+
     net = Mininet(topo=topo, autoSetMacs=True, link=TCLink)
-    minitown_cps = CTown(name='ctown', net=net)
+    experiment = DHALSIM(name='ctown', net=net, complex_topo=complex_topology, a_week_index=week_index, sim_type=simulation_type, a_plc_dict_path=plc_dict_path)

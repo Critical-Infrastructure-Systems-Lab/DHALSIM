@@ -49,7 +49,7 @@ class PLC1(BasePLC):
                     attack_on = int(self.get(ATT_2))
                     self.set(ATT_1, attack_on)
 
-                    self.t1 = Decimal(self.receive( T1, CTOWN_IPS['plc2'] ))
+                    self.t1 = Decimal(self.receive(T1, CTOWN_IPS['plc2'] ))
 
                     with self.lock:
                         if self.t1 < 4.0:

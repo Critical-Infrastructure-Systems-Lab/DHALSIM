@@ -6,7 +6,7 @@ import yaml
 
 class EpanetParser:
 
-    def __init__(self, inp_file_path, cpa_file_path):
+    def __init__(self, inp_file_path, cpa_file_path, out_path):
 
         if inp_file_path:
             self.inp_file_path = inp_file_path
@@ -18,6 +18,12 @@ class EpanetParser:
         else:
             self.cpa_file_path = "../../Demand_patterns/ctown.cpa"
 
+        if out_path:
+            self.out_path = out_path
+        else:
+            self.out_path = 'plc_dicts.yaml'
+
+        print("Creating water network model with " + str(self.inp_file_path) + " file")
         self.wn = wntr.network.WaterNetworkModel(self.inp_file_path)
         self.control_list = self.create_control_list()
         self.plc_list = self.create_plc_list()
@@ -29,7 +35,6 @@ class EpanetParser:
         self.plc_netmask = "'/24'"
         self.enip_listen_plc_addr = "'192.168.1.1'"
         self.scada_ip_addr = "'192.168.1.2'"
-
 
     def main(self):
 
@@ -50,6 +55,8 @@ class EpanetParser:
 
         # PLC protocols
         plc_protocols = ""
+
+
 
         # SCADA information
         scada_tags = "SCADA_TAGS = ("
@@ -111,7 +118,6 @@ class EpanetParser:
             tag_string += "\n    ('CONTROL', 1, 'REAL'),"
 
             a_plc_tag_string += tag_string + "\n)"
-            print(a_plc_tag_string)
             plc_tags.append(a_plc_tag_string)
 
             plc_servers += "PLC" + str(
@@ -120,6 +126,7 @@ class EpanetParser:
             plc_protocols += "PLC" + str(
                 plc_index) + "_PROTOCOL = {\n    'name': 'enip',\n    'mode': 1,\n    'server': PLC" + str(
                 plc_index) + "_SERVER\n}\n"
+
             plc_index += 1
 
         plc_data_string += "SCADA_DATA = {\n    'TODO': 'TODO',\n}\n"
@@ -197,7 +204,7 @@ class EpanetParser:
 
         utils_file.close()
 
-        with open('plc_dicts.yaml', 'w') as outfile:
+        with open(self.out_path, 'w') as outfile:
             yaml.dump(self.plc_list, outfile, default_flow_style=True)
 
     def configure_plc_list(self):
@@ -249,7 +256,6 @@ class EpanetParser:
         plc_controls = []
         for actuator in a_plc_dict['Actuators']:
             for control in a_control_list:
-                control['actuator_tag']
                 if actuator == control['actuator_tag']:
                     plc_controls.append(control)
         a_plc_dict['Controls'] = plc_controls
@@ -264,6 +270,8 @@ class EpanetParser:
             if tag_set:
                 for tag in tag_set:
                     for target_plc in a_plc_list:
+                        if plc == target_plc:
+                            continue
                         for sensor in target_plc['Sensors']:
                             if tag == sensor:
                                 dependency_dict = {}
@@ -301,7 +309,8 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(description='Script that parses an EPANET inp and epanetCPA file to build PLC behaviour')
     parser.add_argument("--inp", "-i",help="Path to the EPANET inp file")
     parser.add_argument("--cpa", "-a", help="Path to the epanetCPA file")
+    parser.add_argument("--out", "-o", help="Path of the output utils file")
 
     args = parser.parse_args()
-    parser = EpanetParser(args.inp, args.cpa)
+    parser = EpanetParser(args.inp, args.cpa, args.out)
     parser.main()
