@@ -273,7 +273,7 @@ STATE = {
 }
 
 SCHEMA = """
-CREATE TABLE ctown (
+CREATE TABLE ctown ( 
     name              TEXT NOT NULL,
     pid               INTEGER NOT NULL,
     value             TEXT,
