@@ -6,15 +6,15 @@ import time
 import threading
 import yaml
 import sys
-
+import argparse
 
 class PLC(BasePLC):
     def pre_loop(self):
 
         # toDO: We will handle initialization using argparse in __main__ and then pass these parameters to pre_loop
-        self.name = sys.argv[1]
-        self.week_index = sys.argv[2]
-        self.plc_dict_path = sys.argv[3]
+        self.name = sys.argv[2]
+        self.week_index = sys.argv[4]
+        self.plc_dict_path = sys.argv[6]
 
         print "Pre-loop"
         with open(self.plc_dict_path, 'r') as plc_file:
@@ -35,7 +35,6 @@ class PLC(BasePLC):
         # These values are obtained locally
         # Tags that are meant to be GET and SEND should be handled differently
         self.tags_to_get.extend(self.plc_dict['Sensors'])
-
 
         # These values need to be send using the thread
         self.tags_to_send.extend(self.plc_dict['Sensors'])
@@ -69,6 +68,8 @@ class PLC(BasePLC):
 
         self.lock = threading.Lock()
 
+        print self.reader
+
         #toDo: How to get the lastPLC?
         lastPLC = False
 
@@ -78,7 +79,6 @@ class PLC(BasePLC):
         # Here we could call BasePLC.setParameters()
         BasePLC.set_parameters(self, path, self.received_values, self.converted_tags_to_send, self.values_to_send, self.reader,
                                self.lock, ENIP_LISTEN_PLC_ADDR, lastPLC, self.week_index, isScada)
-        #sys.exit()
         self.startup()
 
     def convert_tag_to_enip_tag(self, tag):
@@ -96,16 +96,36 @@ class PLC(BasePLC):
 
     def get_plc_dict(self, plc_list):
         for plc in plc_list:
+            print plc['PLC']
             if plc['PLC'] == self.name.upper():
                 return plc
 
     def main_loop(self):
         print "Main loop"
+        while True:
+            try:
+                pass
+            except Exception:
+                continue
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description='Script that represents PLC/SCADA node in a DHALSIM topology')
+    parser.add_argument("--name", "-n", help="Name of the node")
+    parser.add_argument("--week", "-w", help="Week index in case demand customization flag is enabled")
+    parser.add_argument("--dict", "-d", help="Path of the dictionaries configuration file")
+
+    args = parser.parse_args()
+
+    plc_name = args.name
+    print plc_name
+    plc_protocol = eval(plc_name.upper()+ "_PROTOCOL")
+    print plc_protocol
+    plc_data = eval(plc_name.upper() + "_DATA")
+
     plc1 = PLC(
-        name='plc1',
+        name=plc_name,
         state=STATE,
-        protocol=PLC1_PROTOCOL,
-        memory=PLC1_DATA,
-        disk=PLC1_DATA)
+        protocol=plc_protocol,
+        memory=plc_data,
+        disk=plc_data)

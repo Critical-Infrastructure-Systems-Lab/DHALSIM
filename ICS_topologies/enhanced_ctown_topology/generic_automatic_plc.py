@@ -32,15 +32,6 @@ class NodeControl():
         if self.plc_process.poll() is None:
             self.plc_process.kill()
 
-    def __init__(self):
-
-        args = self.get_arguments()
-        self.process_arguments(args)
-
-        signal.signal(signal.SIGINT, self.sigint_handler)
-        signal.signal(signal.SIGTERM, self.sigint_handler)
-
-
     def get_plc_dict(self, plc_list):
         for plc in plc_list:
             if plc['PLC'] == self.name:
@@ -52,6 +43,12 @@ class NodeControl():
         and a plc_n.py or scada.py script is launched
         :return:
         """
+        args = self.get_arguments()
+        self.process_arguments(args)
+
+        signal.signal(signal.SIGINT, self.sigint_handler)
+        signal.signal(signal.SIGTERM, self.sigint_handler)
+
         with open(self.config_path, 'r') as config_file:
             config_data = yaml.full_load(config_file)
             if 'initial_custom_flag' in config_data:
@@ -64,9 +61,6 @@ class NodeControl():
         self.delete_log()
 
         self.process_tcp_dump = self.start_tcpdump_capture()
-
-        #plc_dict = self.get_plc_dict(plc_dicts)
-
         self.plc_process = self.start_plc()
 
         while self.plc_process.poll() is None:
@@ -87,7 +81,7 @@ class NodeControl():
         return tcp_dump
 
     def start_plc(self):
-        plc_process = subprocess.Popen(['python', self.name + '.py', str(self.week_index), self.config_path], shell=False)
+        plc_process = subprocess.Popen(['python', 'plc.py', '-n', self.name, '-w', str(self.week_index), '-d', self.dict_path], shell=False)
         return plc_process
 
     def process_arguments(self, arg_parser):
