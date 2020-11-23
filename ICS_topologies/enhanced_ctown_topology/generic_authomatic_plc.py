@@ -34,8 +34,6 @@ class NodeControl():
 
     def __init__(self):
 
-        self.week_index = 0
-
         args = self.get_arguments()
         self.process_arguments(args)
 
@@ -54,13 +52,19 @@ class NodeControl():
         and a plc_n.py or scada.py script is launched
         :return:
         """
+        with open(self.config_path, 'r') as config_file:
+            config_data = yaml.full_load(config_file)
+            if 'initial_custom_flag' in config_data:
+                if 'week_index' in config_data:
+                    self.week_index = config_data['week_index']
+                else:
+                    self.week_index = 0
+
         self.interface_name = self.name.lower() + '-eth0'
         self.delete_log()
 
         self.process_tcp_dump = self.start_tcpdump_capture()
 
-        #with open(self.name, 'r') as plc_file:
-        #plc_dicts = yaml.full_load(plc_file)
         #plc_dict = self.get_plc_dict(plc_dicts)
 
         self.plc_process = self.start_plc()
