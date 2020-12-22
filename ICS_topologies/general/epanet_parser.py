@@ -4,8 +4,13 @@ import re
 import argparse
 import yaml
 
+
 class EpanetParser:
 
+    """
+    This script reads an EPANET inp file and a epanetCPA file and builds a .yaml file with the PLC logic stored in
+    EPANET. In addition, the file writes an appropriate utils.py file for the MiniCPS devices and topology
+    """
     def __init__(self, inp_file_path, cpa_file_path, out_path):
 
         if inp_file_path:
@@ -63,8 +68,10 @@ class EpanetParser:
         scada_server = "SCADA_SERVER = {\n    'address': SCADA_IP_ADDR,\n    'tags': SCADA_TAGS\n}\n"
         scada_protocol = "SCADA_PROTOCOL = {\n    'name': 'enip',\n    'mode': 1,\n    'server': SCADA_SERVER\n}\n"
 
-        ####### For the DB tags, is better to refer to self.wnTR as epanet.INP and cpa files may not provide the full list of pumps and valves
-        # Creating the tags strings. We need to differentiate between sensor and actuator tags, because we get their initial values/status in different ways from WaterNetworkModel
+        # For the DB tags, is better to refer to self.wnTR as epanet.INP and cpa files may not provide the full
+        # list of pumps and valves
+        # Creating the tags strings. We need to differentiate between sensor and actuator tags, because we get their
+        # initial values/status in different ways from WaterNetworkModel
 
         # start create db_tags_method
         db_sensor_list = []
@@ -95,7 +102,7 @@ class EpanetParser:
         tag_dict['name'] = 'CONTROL'
         tag_dict['string'] = "('CONTROL', 1)"
         tags_strings.append(tag_dict)
-        ############## PLC ENIP address configuration
+        # ############# PLC ENIP address configuration
 
         for plc in self.plc_list:
             ip_string += "    '" + plc['PLC'].lower() + "':'10.0." + str(plc_index) + ".1',\n"
@@ -134,7 +141,7 @@ class EpanetParser:
         ctown_ips_prefix = "CTOWN_IPS = {\n"
         ctown_ips = ctown_ips_prefix + ip_string + "}"
 
-        ################### DB creation strings
+        # ################## DB creation strings
 
         path_string = "PATH = 'ctown_db.sqlite'"
         name_string = "NAME = '" + self.topology_name + "'"
@@ -164,7 +171,7 @@ class EpanetParser:
         db_tag_string += "    INSERT INTO " + self.topology_name + " VALUES ('CONTROL', 1, '0');\n"
         db_tag_string += comas
 
-        ########### Writing the utils file ########################################3
+        # ########## Writing the utils file ########################################3
         # Erase the file contents
         utils_file = open("utils.py", "w")
         utils_file.write("")
@@ -304,7 +311,7 @@ class EpanetParser:
         return result
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Script that parses an EPANET inp and epanetCPA file to build PLC behaviour')
     parser.add_argument("--inp", "-i",help="Path to the EPANET inp file")

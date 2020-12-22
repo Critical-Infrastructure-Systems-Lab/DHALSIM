@@ -1,7 +1,7 @@
 import subprocess
-import argparse
 import signal
 import sys
+
 
 class SimulationControl():
     """
@@ -47,6 +47,7 @@ class SimulationControl():
         """
         simulation = subprocess.Popen(["../../../wntr-experiments/bin/python", 'physical_process.py', sys.argv[1]])
         return simulation
+
 
 if __name__=="__main__":
     simulation_control = SimulationControl()

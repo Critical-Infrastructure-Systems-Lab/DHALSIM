@@ -1,20 +1,14 @@
 from basePLC import BasePLC
 from utils import PLC6_DATA, STATE, PLC6_PROTOCOL
-from utils import T4, ENIP_LISTEN_PLC_ADDR, CTOWN_IPS
-import csv
-from datetime import datetime
+from utils import T4, ENIP_LISTEN_PLC_ADDR
 import logging
 from decimal import Decimal
-import time
-import signal
-import sys
-
-import thread
 import threading
 
 logging.basicConfig(filename='plc6_debug.log', level=logging.DEBUG)
 logging.debug("testing")
-plc6=_log_path = 'plc6.log'
+plc6_log_path = 'plc6.log'
+
 
 class PLC6(BasePLC):
 
@@ -32,8 +26,10 @@ class PLC6(BasePLC):
         tags = [T4]
         values = [self.t4]
 
-        # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable values into a persistent file
-        BasePLC.set_parameters(self, path, self.saved_tank_levels, tags, values, self.reader, self.lock, ENIP_LISTEN_PLC_ADDR)
+        # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state
+        # variable values into a persistent file
+        BasePLC.set_parameters(self, path, self.saved_tank_levels, tags, values, self.reader, self.lock,
+                               ENIP_LISTEN_PLC_ADDR)
         self.startup()
 
     def main_loop(self):
@@ -52,6 +48,7 @@ class PLC6(BasePLC):
                     exit(0)
 
             self.local_time += 1
+
 
 if __name__ == "__main__":
     plc6 = PLC6(

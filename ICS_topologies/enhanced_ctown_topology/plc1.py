@@ -1,7 +1,6 @@
 from basePLC import BasePLC
 from utils import PLC1_DATA, STATE, PLC1_PROTOCOL, ENIP_LISTEN_PLC_ADDR, CONTROL
 from utils import T1, PU1, PU2, CTOWN_IPS
-from datetime import datetime
 from decimal import Decimal
 import time
 import threading
@@ -31,8 +30,10 @@ class PLC1(BasePLC):
         path = 'plc1_saved_tank_levels_received.csv'
         self.lock = threading.Lock()
 
-        # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable values into a persistent file
-        BasePLC.set_parameters(self, path, self.saved_tank_levels, [PU1, PU2], [self.pu1, self.pu2], self.reader, self.lock, ENIP_LISTEN_PLC_ADDR)
+        # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable
+        # values into a persistent file
+        BasePLC.set_parameters(self, path, self.saved_tank_levels, [PU1, PU2], [self.pu1, self.pu2], self.reader,
+                               self.lock, ENIP_LISTEN_PLC_ADDR)
         self.startup()
 
     def check_control(self, mask):
@@ -66,14 +67,11 @@ class PLC1(BasePLC):
 
                         # This attack keeps PU1 - PU2 closed
                         if flag_attack_plc1 == 1:
-                            # Now ATT_2 is set in the physical_process. This in order to make more predictable the attack start and end time
+                            # Now ATT_2 is set in the physical_process. This in order to make more predictable the
+                            # attack start and end time
                             if attack_on == 1:
                                 self.pu1 = 0
                                 self.pu2 = 0
-
-                                # just for testing the drop in the number of packets
-                                #self.pu1 = self.pu1
-                                #self.pu2 = self.pu2
 
                         self.set(PU1, int(self.pu1))
                         self.set(PU2, int(self.pu2))
@@ -86,6 +84,7 @@ class PLC1(BasePLC):
                     time.sleep(0.01)
             except Exception:
                 continue
+
 
 if __name__ == "__main__":
     plc1 = PLC1(

@@ -11,6 +11,7 @@ import signal
 import sys
 import csv
 
+
 class SCADAServer(BasePLC):
 
     def write_output(self):

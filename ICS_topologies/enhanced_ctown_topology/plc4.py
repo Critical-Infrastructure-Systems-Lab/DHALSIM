@@ -1,20 +1,14 @@
 from basePLC import BasePLC
 from utils import PLC4_DATA, STATE, PLC4_PROTOCOL
 from utils import T3, ENIP_LISTEN_PLC_ADDR
-import csv
-from datetime import datetime
 import logging
 from decimal import Decimal
-import time
-import signal
-import sys
-
-import thread
 import threading
 
 logging.basicConfig(filename='plc4_debug.log', level=logging.DEBUG)
 logging.debug("testing")
-plc4=_log_path = 'plc4.log'
+plc4_log_path = 'plc4.log'
+
 
 class PLC4(BasePLC):
 
@@ -32,8 +26,10 @@ class PLC4(BasePLC):
         tags = [T3]
         values = [self.t3]
 
-        # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable values into a persistent file
-        BasePLC.set_parameters(self, path, self.saved_tank_levels, tags, values, self.reader, self.lock, ENIP_LISTEN_PLC_ADDR)
+        # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state
+        # variable values into a persistent file
+        BasePLC.set_parameters(self, path, self.saved_tank_levels, tags, values, self.reader, self.lock,
+                               ENIP_LISTEN_PLC_ADDR)
         self.startup()
 
     def main_loop(self):

@@ -8,6 +8,7 @@ import shlex
 import subprocess
 import time
 
+
 class BasePLC(PLC):
 
     def send_system_state(self):

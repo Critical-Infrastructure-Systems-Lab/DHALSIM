@@ -4,6 +4,7 @@ import sys
 import argparse
 import signal
 
+
 class NodeControl():
 
     """
@@ -33,7 +34,8 @@ class NodeControl():
 
     def main(self):
         """
-        Main method of a device. The signal handler methods are define, the routing is configured (adding default gateways for the deviceS), a tcpdump process is started
+        Main method of a device. The signal handler methods are define, the routing is configured
+        (adding default gateways for the deviceS), a tcpdump process is started
         and a plc_n.py or scada.py script is launched
         :return:
         """
@@ -44,7 +46,6 @@ class NodeControl():
         signal.signal(signal.SIGTERM, self.sigint_handler)
 
         self.interface_name = self.name + '-eth0'
-        #self.configure_routing() # In enhanced ctown topology, this is handled by automatic_run.py
         self.delete_log()
 
         self.process_tcp_dump = self.start_tcpdump_capture()
@@ -85,7 +86,7 @@ class NodeControl():
         return tcp_dump
 
     def start_plc(self):
-        plc_process = subprocess.Popen(['python', self.name + '.py'], shell=False)
+        plc_process = subprocess.Popen(['python', self.name + '.py', '-w', str(self.week_index)], shell=False)
         return plc_process
 
     def get_arguments(self):
@@ -95,6 +96,7 @@ class NodeControl():
         parser.add_argument("--dict", "-d", help="Dictionary of the PLCs logic")
         return parser.parse_args()
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     node_control = NodeControl()
     node_control.main()

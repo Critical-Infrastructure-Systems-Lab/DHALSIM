@@ -1,19 +1,12 @@
 from basePLC import BasePLC
 from utils import PLC7_DATA, STATE, PLC7_PROTOCOL
-from utils import T5, ENIP_LISTEN_PLC_ADDR, CTOWN_IPS
-import csv
-from datetime import datetime
-import logging
+from utils import T5, ENIP_LISTEN_PLC_ADDR
 from decimal import Decimal
-import time
-import signal
-import sys
-
-import thread
 import threading
 
 
 plc7_log_path = 'plc7.log'
+
 
 class PLC7(BasePLC):
 
@@ -31,8 +24,10 @@ class PLC7(BasePLC):
         tags = [T5]
         values = [self.t5]
 
-        # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable values into a persistent file
-        BasePLC.set_parameters(self, path, self.saved_tank_levels, tags, values, self.reader, self.lock, ENIP_LISTEN_PLC_ADDR)
+        # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable
+        # values into a persistent file
+        BasePLC.set_parameters(self, path, self.saved_tank_levels, tags, values, self.reader, self.lock,
+                               ENIP_LISTEN_PLC_ADDR)
         self.startup()
 
     def main_loop(self):
@@ -51,6 +46,7 @@ class PLC7(BasePLC):
                     exit(0)
 
             self.local_time += 1
+
 
 if __name__ == "__main__":
     plc7 = PLC7(
