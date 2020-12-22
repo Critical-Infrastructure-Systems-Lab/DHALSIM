@@ -1,8 +1,8 @@
 import subprocess
-import time
 import sys
 import argparse
 import signal
+
 
 class NodeControl():
 
@@ -94,6 +94,7 @@ class NodeControl():
         parser.add_argument("--week", "-w", help="Week index of the simulation")
         parser.add_argument("--dict", "-d", help="Dictionary of the PLCs logic")
         return parser.parse_args()
+
 
 if __name__=="__main__":
     node_control = NodeControl()

@@ -81,7 +81,8 @@ class NodeControl():
         return tcp_dump
 
     def start_plc(self):
-        plc_process = subprocess.Popen(['python', 'plc.py', '-n', self.name, '-w', str(self.week_index), '-d', self.dict_path, '-l', self.last], shell=False)
+        plc_process = subprocess.Popen(['python', 'plc.py', '-n', self.name, '-w', str(self.week_index), '-d',
+                                        self.dict_path, '-l', self.last], shell=False)
         return plc_process
 
     def process_arguments(self, arg_parser):

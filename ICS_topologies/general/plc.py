@@ -8,6 +8,7 @@ import yaml
 import sys
 import argparse
 
+
 class PLC(BasePLC):
     def pre_loop(self):
 
@@ -66,10 +67,8 @@ class PLC(BasePLC):
         self.received_values = ["iteration", "timestamp"]
         self.received_values.extend(self.tags_to_send)
 
-        #print "Tags to be stored: " + str(self.received_values)
         self.lock = threading.Lock()
 
-        # Here we could call BasePLC.setParameters()
         BasePLC.set_parameters(self, path, self.received_values, self.converted_tags_to_send, self.values_to_send, self.reader,
                                self.lock, ENIP_LISTEN_PLC_ADDR, lastPLC, self.week_index, isScada)
         self.startup()
@@ -159,21 +158,11 @@ class PLC(BasePLC):
         :param a_rule:
         :return:
         """
-        #print(a_rule)
-        #print(str(self.tags_to_get))
         for tag in self.tags_to_get:
-            #print("Tags to get")
-            #print(tag)
             if tag['tag'] == a_rule['tank_tag']:
                 return tag['value']
 
-        #print(str(self.tags_to_receive))
         for tag in self.tags_to_receive:
-            #print("Tag to receive")
-            #print(tag)
-            #print(tag['value'])
-            #print(tag['tag'])
-            #print(a_rule['tank_tag'])
             if tag['tag'] == a_rule['tank_tag']:
                 #print(tag['value'])
                 return tag['value']
@@ -228,11 +217,9 @@ class PLC(BasePLC):
                 # 1) Get inputs
                 for tag in self.tags_to_get:
                     tag['value'] = Decimal(self.get(eval(tag['tag'])))
-                    #result_list.append(tag['value'])
 
                 for tag in self.tags_to_receive:
                     tag['value'] = Decimal(self.receive(eval(tag['tag']), CTOWN_IPS[tag['node']]))
-                    #result_list.append(tag['value'])
 
                 # 2) Apply control logic, using the current buffered system state
                 self.update_actuators()
@@ -243,6 +230,7 @@ class PLC(BasePLC):
                 print e
                 time.sleep(0.01)
                 continue
+
 
 if __name__ == "__main__":
 

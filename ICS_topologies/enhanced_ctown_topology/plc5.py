@@ -1,17 +1,8 @@
 from basePLC import BasePLC
 from utils import PLC5_DATA, STATE, PLC5_PROTOCOL, CONTROL
 from utils import T5, T7, PU8, PU10, PU11, ENIP_LISTEN_PLC_ADDR, CTOWN_IPS
-
-import csv
-from datetime import datetime
 from decimal import Decimal
 import time
-import signal
-import sys
-import subprocess
-import shlex
-
-import thread
 import threading
 
 
@@ -36,8 +27,10 @@ class PLC5(BasePLC):
         tags = [PU8, PU10, PU11]
         values = [self.pu8, self.pu10, self.pu11]
 
-        # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable values into a persistent file
-        BasePLC.set_parameters(self, path, self.saved_tank_levels, tags, values, self.reader, self.lock, ENIP_LISTEN_PLC_ADDR)
+        # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable
+        # values into a persistent file
+        BasePLC.set_parameters(self, path, self.saved_tank_levels, tags, values, self.reader, self.lock,
+                               ENIP_LISTEN_PLC_ADDR)
         self.startup()
 
     def check_control(self, mask):
@@ -50,12 +43,10 @@ class PLC5(BasePLC):
 
         while True:
             try:
-                #if self.check_control(self.plc_mask):
                 self.local_time += 1
                 self.t5 = Decimal(self.receive( T5, CTOWN_IPS['plc7'] ))
                 self.t7 = Decimal(self.receive( T7, CTOWN_IPS['plc9'] ))
 
-                #self.saved_tank_levels.append([self.local_time, datetime.now(), self.t5, self.t7])
                 with self.lock:
                     if self.t5 < 1.5:
                         self.pu8 = 1

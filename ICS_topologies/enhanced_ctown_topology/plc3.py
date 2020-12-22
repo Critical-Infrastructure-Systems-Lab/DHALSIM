@@ -1,16 +1,10 @@
 from basePLC import BasePLC
 from utils import PLC3_DATA, STATE, PLC3_PROTOCOL
 from utils import T2, T3, T4, V2, PU4, PU5, PU6, PU7, ENIP_LISTEN_PLC_ADDR, CTOWN_IPS, CONTROL
-
-import csv
-from datetime import datetime
 from decimal import Decimal
 import time
-import signal
-import sys
-
-import thread
 import threading
+
 
 class PLC3(BasePLC):
 
@@ -38,8 +32,10 @@ class PLC3(BasePLC):
         tags = [V2, PU4, PU5, PU6, PU7]
         values = [self.v2, self.pu4, self.pu5, self.pu6, self.pu7]
 
-        # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable values into a persistent file
-        BasePLC.set_parameters(self, path, self.saved_tank_levels, tags, values, self.reader, self.lock, ENIP_LISTEN_PLC_ADDR)
+        # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable
+        # values into a persistent file
+        BasePLC.set_parameters(self, path, self.saved_tank_levels, tags, values, self.reader, self.lock,
+                               ENIP_LISTEN_PLC_ADDR)
         self.startup()
 
     def check_control(self, mask):
@@ -104,6 +100,7 @@ class PLC3(BasePLC):
 
             except Exception:
                 continue
+
 
 if __name__ == "__main__":
     plc3 = PLC3(

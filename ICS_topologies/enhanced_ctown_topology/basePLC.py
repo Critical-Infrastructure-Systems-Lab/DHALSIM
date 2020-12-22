@@ -2,11 +2,11 @@ from minicps.devices import PLC
 import csv
 import signal
 import sys
-
 import threading
 import shlex
 import subprocess
 import time
+
 
 class BasePLC(PLC):
 

@@ -1,7 +1,7 @@
 import subprocess
-import argparse
 import signal
 import sys
+
 
 class SimulationControl():
     """

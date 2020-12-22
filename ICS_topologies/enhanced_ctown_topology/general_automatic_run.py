@@ -20,12 +20,14 @@ iperf_test = 0
 
 class DHALSIM(MiniCPS):
     """ Main script controlling an experiment
-    All the automatic_run.py follow roughly the same pattern by launching subprocesses representing each element in the simulation
-    The flag automatic controls if this simulation is run automatically, in which case this process will only finish when the automatic_plant.py finishes.
-    automatic_plant will only finish when physical_process.py and in turn that is controlled by the duration parameters configured in the .inp file
-    If automatic is 1 and automatic mitm_attack can also be simulated by giving the mitm_attack a flag value of 1
-    Every device outputs two files: a .csv file with the values it received during the simulation and a .pcap file with the network messages sent/received during simuilation.
-    Those files will be stored into the output/ folder. In addition, output/ will contain a file named by default "physical_process.py" which contains the physical state of the system
+    All the automatic_run.py follow roughly the same pattern by launching subprocesses representing each element in the
+    simulation. The flag automatic controls if this simulation is run automatically, in which case this process will
+    only finish when the automatic_plant.py finishes. automatic_plant will only finish when physical_process.py and in
+    turn that is controlled by the duration parameters configured in the .inp file. If automatic is 1 and automatic
+    mitm_attack can also be simulated by giving the mitm_attack a flag value of 1 Every device outputs two files: a
+    .csv file with the values it received during the simulation and a .pcap file with the network messages
+    sent/received during simuilation. Those files will be stored into the output/ folder. In addition, output/ will
+    contain a file named by default "physical_process.py" which contains the physical state of the system.
     This represents the "ground truth" values of the simulated plant
     """
     def setup_iptables(self, node_name):
@@ -45,13 +47,15 @@ class DHALSIM(MiniCPS):
         node.cmd('route add default gw ' + gw_ip)
         node.waitOutput()
 
-    # This method exists, because using TCLinks mininet ignores the ip parameter of some interfaces. We use TCLinks to support bw and delay configurations on interfaces
+    # This method exists, because using TCLinks mininet ignores the ip parameter of some interfaces. We use TCLinks to
+    # support bw and delay configurations on interfaces
     def configure_routers_interface(self, index):
         a_router = net.get('r' + index)
         a_router.cmd('ifconfig r' + index + '-eth1 192.168.1.254')
         a_router.waitOutput()
 
-    # This method exists, because using TCLinks mininet ignores the ip parameter of some interfaces. We use TCLinks to support bw and delay configurations on interfaces
+    # This method exists, because using TCLinks mininet ignores the ip parameter of some interfaces. We use TCLinks to
+    # support bw and delay configurations on interfaces
     def configure_r0_interfaces(self, index):
         router0 = net.get('r0')
         router0.cmd('ifconfig r0-eth' + str(index) + ' 10.0.' + str(index+1) + '.254 netmask 255.255.255.0' )
@@ -190,11 +194,13 @@ class DHALSIM(MiniCPS):
             iperf_client_file = open("output/client.log", "r+")
 
             iperf_server_cmd = shlex.split("python iperf_server.py")
-            self.iperf_server_process = self.iperf_server_node.popen(iperf_server_cmd, stderr=sys.stdout, stdout=iperf_server_file)
+            self.iperf_server_process = self.iperf_server_node.popen(iperf_server_cmd, stderr=sys.stdout,
+                                                                     stdout=iperf_server_file)
             print "[*] Iperf Server launched"
 
             iperf_client_cmd = shlex.split("python iperf_client.py -c 10.0.2.1 -P 100 -t 2400")
-            self.iperf_client_process = self.iperf_client_node.popen(iperf_client_cmd, stderr=sys.stdout, stdout=iperf_client_file)
+            self.iperf_client_process = self.iperf_client_node.popen(iperf_client_cmd, stderr=sys.stdout,
+                                                                     stdout=iperf_client_file)
             print "[*] Iperf Client launched"
 
         # Launching automatically mitm attack
