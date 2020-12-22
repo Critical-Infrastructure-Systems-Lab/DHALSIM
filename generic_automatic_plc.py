@@ -8,9 +8,9 @@ import yaml
 class NodeControl():
 
     """
-    This class represents a PLC or SCADA node. All of these devices have the same pattern of launching a tcpdump process in
-    the eth0 interface, launching a plc_n.py script or scada.py script and when receives a SIGINT or SIGTERM signal store the recevied values into a .csv file.
-    In addition, a pcap file is created with the tcpdump results
+    This class represents a PLC or SCADA node. All of these devices have the same pattern of launching a tcpdump process
+    in the eth0 interface, launching a plc_n.py script or scada.py script and when receives a SIGINT or SIGTERM signal
+    store the recevied values into a .csv file. In addition, a pcap file is created with the tcpdump results
     """
 
     def sigint_handler(self, sig, frame):
@@ -19,7 +19,8 @@ class NodeControl():
 
     def terminate(self):
         """
-        All the subprocesses launched in this Digital Twin follow the same pattern to ensure that they finish before continuing with the finishing of the parent process
+        All the subprocesses launched in this Digital Twin follow the same pattern to ensure that they finish before
+        continuing with the finishing of the parent process
         """
         print "Stopping Tcp dump process on PLC..."
         self.process_tcp_dump.kill()
@@ -39,7 +40,8 @@ class NodeControl():
 
     def main(self):
         """
-        Main method of a device. The signal handler methods are define, the routing is configured (adding default gateways for the deviceS), a tcpdump process is started
+        Main method of a device. The signal handler methods are define, the routing is configured (adding default
+        gateways for the deviceS), a tcpdump process is started
         and a plc_n.py or scada.py script is launched
         :return:
         """
@@ -114,8 +116,7 @@ class NodeControl():
                                                  "Acepted values are 1 or 0")
         return parser.parse_args()
 
-if __name__=="__main__":
 
+if __name__ == " __main__":
     node_control = NodeControl()
     node_control.main()
-

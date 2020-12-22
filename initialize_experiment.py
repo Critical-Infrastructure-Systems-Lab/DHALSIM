@@ -2,6 +2,7 @@ import yaml
 import sys
 import subprocess
 
+
 class ExperimentInitializer:
 
     def __init__(self, config_file_path, week_index):

@@ -1,8 +1,8 @@
 from mininet.node import Node
 from mininet.topo import Topo
 from utils import plc_netmask
-import subprocess
 import yaml
+
 
 class LinuxRouter(Node):
     """

@@ -1,12 +1,11 @@
 from basePLC import BasePLC
 from utils import *
-
 import time
 from datetime import datetime
-from decimal import Decimal
 import signal
 import sys
 import csv
+
 
 class SCADAServer(BasePLC):
 

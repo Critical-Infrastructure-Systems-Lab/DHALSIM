@@ -17,6 +17,7 @@ class LinuxRouter(Node):
     def terminate(self):
         self.cmd('sysctl net.ipv4.ip_foward=0')
 
+
 class ComplexTopo(Topo):
     """
     Enhanced C-Town topology
@@ -86,19 +87,5 @@ class ComplexTopo(Topo):
             index += 1
 
         plant = self.addHost('plant')
-        # SCADA wil be on the same LAN as the PLC3
         scada = self.addNode('scada', ip='192.168.1.2/24', defaultRoute='via 192.168.1.254/24')
-
-        # Attacker will be on the same LAN as the PLC5
-        #attacker = self.addNode('attacker', ip='192.168.1.2/24', defaultRoute='via 192.168.1.254/24')
-
         self.addLink(scada, switches[0])
-        # Attack on Tank3 Switch4. PLC4 to PLC3. Stored in switches[3]
-        #self.addLink(attacker, switches[3])
-
-        # For iperf tests we want the client/server to be in the possible most impactful LAN (LAN1 and LN3)
-        #client = self.addNode('client', ip='192.168.1.2/24', defaultRoute='via 192.168.1.254/24')
-        #server = self.addNode('server', ip='192.168.1.3/24', defaultRoute='via 192.168.1.254/24')
-
-        #self.addLink(server, switches[0])
-        #self.addLink(client, switches[2])

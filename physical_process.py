@@ -5,14 +5,12 @@ import csv
 import sys
 import pandas as pd
 import yaml
-import time
+
 
 class PhysicalPlant:
 
     def __init__(self):
 
-        # toDo: This is were we change the parameters received by this script to create a generic physical process.
-        #config_file_path = "wadi_config.yaml"
         config_file_path = sys.argv[1]
         config_options = self.load_config(config_file_path)
 
@@ -56,7 +54,6 @@ class PhysicalPlant:
         aux = self.create_link_header(self.valve_list)
         list_header.extend(aux)
 
-
         self.results_list = []
         self.results_list.append(list_header)
 
@@ -92,7 +89,6 @@ class PhysicalPlant:
         self.sim = wntr.sim.WNTRSimulator(self.wn)
 
         print("Starting simulation for " + str(config_options['inp_file']) + " topology ")
-
 
     def load_config(self, config_path):
         """
@@ -220,14 +216,9 @@ class PhysicalPlant:
         self.conn.commit()
         new_status = int(rows_1[0][0])
 
-        #wn.get_node(act_name ).status = new_status
-
         control['value'] = new_status
 
-        # act1 = controls.ControlAction(pump1, 'status', int(pump1_status))
         new_action = controls.ControlAction(control['actuator'], control['parameter'], control['value'])
-
-        # pump1_control = controls.Control(condition, act1, name='pump1control')
         new_control = controls.Control(control['condition'], new_action, name=control['name'])
 
         self.wn.remove_control(control['name'])
@@ -252,17 +243,9 @@ class PhysicalPlant:
 
         while master_time <= iteration_limit:
 
-            rows = self.c.execute("SELECT value FROM ctown WHERE name = 'CONTROL'").fetchall()
-            self.conn.commit()
-            control = int(rows[0][0])
-
-            #if control == mask_full_control:
-            #tic
             self.update_controls()
-            #toc
             print("ITERATION %d ------------- " % master_time)
             results = self.sim.run_sim(convergence_error=True)
-            #toc
             values_list = self.register_results(results)
 
             self.results_list.append(values_list)
@@ -278,10 +261,9 @@ class PhysicalPlant:
             query = "UPDATE ctown SET value = 0 WHERE name = 'CONTROL'"
             self.c.execute(query)  # UPDATE CONTROL value for the PLCs to apply control
             self.conn.commit()
-            #else:
-            #    time.sleep(0.03)
         self.write_results(self.results_list)
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     simulation = PhysicalPlant()
     simulation.main()
