@@ -7,7 +7,7 @@ epanet_topo_path: "ky3.inp"
 epanet_cpa_path: "ky3.cpa"
 
 # General simulation parameters
-db_path: "ctown_db.sqlite"
+db_path: "plant.sqlite"
 output_ground_truth_path: "physical_process.csv"
 duration_days: 1
 inp_file: "ky3.inp"

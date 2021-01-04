@@ -212,7 +212,7 @@ class PhysicalPlant:
 
     def update_control(self, control):
         act_name = '\'' + control['name'] + '\''
-        rows_1 = self.c.execute('SELECT value FROM ctown WHERE name = ' + act_name).fetchall()
+        rows_1 = self.c.execute('SELECT value FROM plant WHERE name = ' + act_name).fetchall()
         self.conn.commit()
         new_status = int(rows_1[0][0])
 
@@ -254,11 +254,11 @@ class PhysicalPlant:
             for tank in self.tank_list:
                 tank_name = '\'' + tank + '\''
                 a_level = self.wn.get_node(tank).level
-                query = "UPDATE ctown SET value = " + str(a_level) + " WHERE name = " + tank_name
+                query = "UPDATE plant SET value = " + str(a_level) + " WHERE name = " + tank_name
                 self.c.execute(query)  # UPDATE TANKS IN THE DATABASE
                 self.conn.commit()
 
-            query = "UPDATE ctown SET value = 0 WHERE name = 'CONTROL'"
+            query = "UPDATE plant SET value = 0 WHERE name = 'CONTROL'"
             self.c.execute(query)  # UPDATE CONTROL value for the PLCs to apply control
             self.conn.commit()
         self.write_results(self.results_list)

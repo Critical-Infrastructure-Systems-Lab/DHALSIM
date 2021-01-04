@@ -12,6 +12,7 @@ import argparse
 import yaml
 from mininet.link import TCLink
 import subprocess
+from os.path import expanduser
 
 automatic = 1
 iperf_test = 0
@@ -58,9 +59,9 @@ class DHALSIM(MiniCPS):
         router0.cmd('ifconfig r0-eth' + str(index) + ' 10.0.' + str(index+1) + '.254 netmask 255.255.255.0' )
 
     def setup_network(self, complex_topo):
-        index = 0
+        plc_number = len(self.plc_dict)
         if complex_topo:
-            for plc in self.plc_dict:
+            for index in range(0, plc_number):
                 self.do_forward(net.get('r' + str(index)))
                 self.configure_routers_interface(str(index+1))
                 self.configure_r0_interfaces(index+1)
@@ -68,7 +69,7 @@ class DHALSIM(MiniCPS):
                 self.add_degault_gateway(net.get('r' + str(index+1)), '10.0.' + str(index+1) + '.254')
                 index += 1
 
-            index_limit = len(self.plc_dict) + 1
+            index_limit = plc_number + 1
             for i in range(1, index_limit):
                 self.setup_iptables('r' + str(i))
 
@@ -125,7 +126,7 @@ class DHALSIM(MiniCPS):
 
         net.start()
 
-        self.last_plc = "plc1"
+        self.last_plc = None
         self.plc_dict_path = a_plc_dict_path
         # We need the plc dicts to analyze the dependencies and define the PLC process launch order
         # It shouldn't matter that much, because in case of no connections we simply retry, but we want to avoid
@@ -188,17 +189,19 @@ class DHALSIM(MiniCPS):
             iperf_client_file = open("output/client.log", "r+")
 
             iperf_server_cmd = shlex.split("python iperf_server.py")
-            self.iperf_server_process = self.iperf_server_node.popen(iperf_server_cmd, stderr=sys.stdout, stdout=iperf_server_file)
+            self.iperf_server_process = self.iperf_server_node.popen(iperf_server_cmd, stderr=sys.stdout,
+                                                                     stdout=iperf_server_file)
             print "[*] Iperf Server launched"
 
             iperf_client_cmd = shlex.split("python iperf_client.py -c 10.0.2.1 -P 100 -t 2400")
-            self.iperf_client_process = self.iperf_client_node.popen(iperf_client_cmd, stderr=sys.stdout, stdout=iperf_client_file)
+            self.iperf_client_process = self.iperf_client_node.popen(iperf_client_cmd, stderr=sys.stdout,
+                                                                     stdout=iperf_client_file)
             print "[*] Iperf Client launched"
 
         print "[] Launching SCADA"
-        self.scada_node = net.get('scada')
-        self.scada_file = open("output/scada.log", "r+")
-        self.scada_process = self.scada_node.popen(sys.executable, "automatic_plc.py", "-n", "scada", stderr=sys.stdout,stdout=self.scada_file)
+        #self.scada_node = net.get('scada')
+        #self.scada_file = open("output/scada.log", "r+")
+        #self.scada_process = self.scada_node.popen(sys.executable, "automatic_plc.py", "-n", "scada", "-w", str(self.week_index), "-d", self.plc_dict_path, stderr=sys.stdout,stdout=self.scada_file)
         print "[*] SCADA Successfully launched"
 
         physical_output = open("output/physical.log", 'r+')
@@ -232,10 +235,10 @@ class DHALSIM(MiniCPS):
     def finish(self):
         print "[*] Simulation finished"
 
-        if self.scada_process:
-            print "[] Finishing SCADA process"
-            self.end_plc_process(self.scada_process)
-            print "[*] Finished SCADA process"
+        #if self.scada_process:
+        #    print "[] Finishing SCADA process"
+        #    self.end_plc_process(self.scada_process)
+        #    print "[*] Finished SCADA process"
 
         index = len(self.plc_launch_order) - 1
         for plc in reversed(self.plc_processes):
@@ -288,7 +291,7 @@ if __name__ == "__main__":
     complex_topology = initializer.get_complex_topology()
     week_index = initializer.get_week_index()
     simulation_type = initializer.get_simulation_type()
-    plc_dict_path = initializer.get_plc_dicT_path()
+    plc_dict_path = initializer.get_plc_dict_path()
 
     if complex_topology:
         print "Launching complex network topology"

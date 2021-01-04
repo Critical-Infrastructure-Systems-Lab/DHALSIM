@@ -1,7 +1,7 @@
 import subprocess
 import signal
 import sys
-
+from os.path import expanduser
 
 class SimulationControl():
     """
@@ -45,7 +45,9 @@ class SimulationControl():
         By default WNTR is run using the PDD model and the output file is a .csv file called "physical_process.csv"
         :return: An object representing the simulation process
         """
-        simulation = subprocess.Popen(["../../../wntr-experiments/bin/python", 'physical_process.py', sys.argv[1]])
+        home_path = expanduser("~")
+        wntr_environment_path = home_path + str("/wntr-experiments/bin/python")
+        simulation = subprocess.Popen([wntr_environment_path, 'physical_process.py', sys.argv[1]])
         return simulation
 
 

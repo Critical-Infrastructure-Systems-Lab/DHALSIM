@@ -16,7 +16,7 @@ if [ ! -d "output" ]; then\
    mkdir "output";\
 fi
 
-rm -rf ctown_db.sqlite; sudo python init.py; sudo chown mininet:mininet ctown_db.sqlite
+rm -rf plant.sqlite; sudo python init.py; sudo chown mininet:mininet plant.sqlite
 sudo pkill  -f -u root "python -m cpppo.server.enip"
 chmod +x *.sh
 sudo mn -c
