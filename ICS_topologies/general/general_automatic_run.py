@@ -14,7 +14,7 @@ from mininet.link import TCLink
 import subprocess
 from os.path import expanduser
 
-automatic = 1
+automatic = 0
 iperf_test = 0
 
 
