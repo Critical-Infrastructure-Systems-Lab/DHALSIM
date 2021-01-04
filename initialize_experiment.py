@@ -1,7 +1,7 @@
 import yaml
 import sys
 import subprocess
-
+from os.path import expanduser
 
 class ExperimentInitializer:
 
@@ -60,7 +60,7 @@ class ExperimentInitializer:
         else:
             self.plc_dict_path = "plc_dicts.yaml"
 
-    def get_plc_dicT_path(self):
+    def get_plc_dict_path(self):
         return self.plc_dict_path
 
     def get_week_index(self):
@@ -83,4 +83,6 @@ class ExperimentInitializer:
         Parse the files to build plc_dicts.yaml and utils.py
         :return:
         """
-        parse_process = subprocess.call(["../../../wntr-experiments/bin/python", 'epanet_parser.py', '-i', self.epanet_file_path, '-a', self.cpa_file_path, '-o', 'plc_dicts.yaml'])
+        home_path = expanduser("~")
+        wntr_environment_path = home_path + str("/wntr-experiments/bin/python")
+        parse_process = subprocess.call([wntr_environment_path, 'epanet_parser.py', '-i', self.epanet_file_path, '-a', self.cpa_file_path, '-o', 'plc_dicts.yaml'])

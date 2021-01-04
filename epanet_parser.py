@@ -34,7 +34,7 @@ class EpanetParser:
         self.plc_list = self.create_plc_list()
 
         # topology name
-        self.topology_name = "ctown"
+        self.topology_name = "plant"
 
         # Network information. Hardwired for now
         self.plc_netmask = "'/24'"
@@ -143,7 +143,7 @@ class EpanetParser:
 
         # ################## DB creation strings
 
-        path_string = "PATH = 'ctown_db.sqlite'"
+        path_string = "PATH = 'plant.sqlite'"
         name_string = "NAME = '" + self.topology_name + "'"
 
         state_string = "STATE = {\n    'name': NAME,\n    'path': PATH\n}"
