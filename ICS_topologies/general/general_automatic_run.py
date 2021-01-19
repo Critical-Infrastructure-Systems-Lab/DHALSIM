@@ -12,9 +12,9 @@ import argparse
 import yaml
 from mininet.link import TCLink
 import subprocess
-from os.path import expanduser
 
-automatic = 0
+automatic = 1
+mitm_attack = 0
 iperf_test = 0
 
 
@@ -45,23 +45,21 @@ class DHALSIM(MiniCPS):
         node.cmd('route add default gw ' + gw_ip)
         node.waitOutput()
 
-    # This method exists, because using TCLinks mininet ignores the ip parameter of some interfaces. We use TCLinks to
-    # support bw and delay configurations on interfaces
+    # This method exists, because using TCLinks mininet ignores the ip parameter of some interfaces. We use TCLinks to support bw and delay configurations on interfaces
     def configure_routers_interface(self, index):
         a_router = net.get('r' + index)
         a_router.cmd('ifconfig r' + index + '-eth1 192.168.1.254')
         a_router.waitOutput()
 
-    # This method exists, because using TCLinks mininet ignores the ip parameter of some interfaces. We use TCLinks
-    # to support bw and delay configurations on interfaces
+    # This method exists, because using TCLinks mininet ignores the ip parameter of some interfaces. We use TCLinks to support bw and delay configurations on interfaces
     def configure_r0_interfaces(self, index):
         router0 = net.get('r0')
         router0.cmd('ifconfig r0-eth' + str(index) + ' 10.0.' + str(index+1) + '.254 netmask 255.255.255.0' )
 
     def setup_network(self, complex_topo):
-        plc_number = len(self.plc_dict)
+        index = 0
         if complex_topo:
-            for index in range(0, plc_number):
+            for plc in self.plc_dict:
                 self.do_forward(net.get('r' + str(index)))
                 self.configure_routers_interface(str(index+1))
                 self.configure_r0_interfaces(index+1)
@@ -69,13 +67,17 @@ class DHALSIM(MiniCPS):
                 self.add_degault_gateway(net.get('r' + str(index+1)), '10.0.' + str(index+1) + '.254')
                 index += 1
 
-            index_limit = plc_number + 1
+            index_limit = len(self.plc_dict) + 1
             for i in range(1, index_limit):
                 self.setup_iptables('r' + str(i))
 
             self.add_degault_gateway(net.get('scada'), '192.168.1.254')
+            #self.add_degault_gateway(net.get('attacker'), '192.168.1.254')
+            #self.add_degault_gateway(net.get('client'), '192.168.1.254')
+            #self.add_degault_gateway(net.get('server'), '192.168.1.254')
+            #self.do_forward(net.get('attacker'))
         else:
-            # toDo: Support simple network topology
+            #toDo: Support simple network topology
             for i in range(0,9):
                 self.add_degault_gateway(net.get('plc' + str(i + 1)), '192.168.1.254')
 
@@ -86,7 +88,7 @@ class DHALSIM(MiniCPS):
         WARNING: There could be situations where this method has deadlocks and we are not testing them
         :return:
         """
-        # toDo: Handle possible deadlocks because dependencies
+        #toDo: Handle possible deadlocks because dependencies
 
         plc_launch_order = []
         pending_plcs = []
@@ -189,20 +191,28 @@ class DHALSIM(MiniCPS):
             iperf_client_file = open("output/client.log", "r+")
 
             iperf_server_cmd = shlex.split("python iperf_server.py")
-            self.iperf_server_process = self.iperf_server_node.popen(iperf_server_cmd, stderr=sys.stdout,
-                                                                     stdout=iperf_server_file)
+            self.iperf_server_process = self.iperf_server_node.popen(iperf_server_cmd, stderr=sys.stdout, stdout=iperf_server_file)
             print "[*] Iperf Server launched"
 
             iperf_client_cmd = shlex.split("python iperf_client.py -c 10.0.2.1 -P 100 -t 2400")
-            self.iperf_client_process = self.iperf_client_node.popen(iperf_client_cmd, stderr=sys.stdout,
-                                                                     stdout=iperf_client_file)
+            self.iperf_client_process = self.iperf_client_node.popen(iperf_client_cmd, stderr=sys.stdout, stdout=iperf_client_file)
             print "[*] Iperf Client launched"
 
-        print "[] Launching SCADA"
+        # Launching automatically mitm attack
+        if mitm_attack == 1 :
+            #attacker_file = open("output/attacker.log", 'r+')
+            #attacker = net.get('attacker')
+            #mitm_cmd = shlex.split("../../../attack-experiments/env/bin/python "
+            #                       "../../attack_repository/mitm_plc/mitm_attack.py 192.168.1.1 192.168.1.254 exponential_offset")
+            #print 'Running MiTM attack with command ' + str(mitm_cmd)
+            #self.mitm_process = attacker.popen(mitm_cmd, stderr=sys.stdout, stdout=attacker_file )
+            print "[] Attacking"
+
+        #print "[] Launching SCADA"
         #self.scada_node = net.get('scada')
         #self.scada_file = open("output/scada.log", "r+")
-        #self.scada_process = self.scada_node.popen(sys.executable, "automatic_plc.py", "-n", "scada", "-w", str(self.week_index), "-d", self.plc_dict_path, stderr=sys.stdout,stdout=self.scada_file)
-        print "[*] SCADA Successfully launched"
+        #self.scada_process = self.scada_node.popen(sys.executable, "automatic_plc.py", "-n", "scada", stderr=sys.stdout,stdout=self.scada_file)
+        #print "[*] SCADA Successfully launched"
 
         physical_output = open("output/physical.log", 'r+')
         print "[*] Launched the PLCs and SCADA process, launching simulation..."

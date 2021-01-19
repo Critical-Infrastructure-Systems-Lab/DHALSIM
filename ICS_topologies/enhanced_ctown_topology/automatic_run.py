@@ -175,9 +175,8 @@ class CTown(MiniCPS):
         self.scada_process = self.scada_node.popen(sys.executable, "automatic_plc.py", "-n", "scada", stderr=sys.stdout,
                                                    stdout=self.scada_file)
         print "[*] SCADA Successfully launched"
-
-        physical_output = open("output/physical.log", 'r+')
         print "[*] Launched the PLCs and SCADA process, launching simulation..."
+        physical_output = open("output/physical.log", 'r+')
         plant = net.get('plant')
 
         simulation_cmd = shlex.split("python automatic_plant.py c_town_config.yaml")

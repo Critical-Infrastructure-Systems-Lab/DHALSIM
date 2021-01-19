@@ -7,4 +7,4 @@ rm -rf output/*
 for file in "${files[@]}"
   do
       touch output/$file".log"
-done
+  done

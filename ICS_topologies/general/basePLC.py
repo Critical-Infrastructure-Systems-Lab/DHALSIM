@@ -32,6 +32,7 @@ class BasePLC(PLC):
             time.sleep(0.05)
 
     def set_parameters(self, path, result_list, tags, values, reader, lock, send_address, lastPLC=False, week_index=0, isScada=False):
+
         self.result_list = result_list
         self.path = path
         self.tags = tags
