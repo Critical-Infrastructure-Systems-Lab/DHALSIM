@@ -16,7 +16,7 @@ epanet_cpa_path: "../../Demand_patterns/ctown.cpa"
 # General simulation parameters
 db_path: "ctown_db.sqlite"
 output_ground_truth_path: "physical_process.csv"
-duration_days: 1
+duration_days: 10
 inp_file: "ctown_map.inp"
 simulator: "pdd"
 
