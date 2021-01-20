@@ -13,6 +13,18 @@ PU8 = ('PU8', 1)
 PU9 = ('PU9', 1)
 PU10 = ('PU10', 1)
 PU11 = ('PU11', 1)
+PU1F = ('PU1F', 1)
+PU2F = ('PU2F', 1)
+PU3F = ('PU3F', 1)
+PU4F = ('PU4F', 1)
+PU5F = ('PU5F', 1)
+PU6F = ('PU6F', 1)
+PU7F = ('PU7F', 1)
+PU8F = ('PU8F', 1)
+PU9F = ('PU9F', 1)
+PU10F = ('PU10F', 1)
+PU11F = ('PU11F', 1)
+
 T1 = ('T1', 1)
 T2 = ('T2', 1)
 T3 = ('T3', 1)
@@ -21,6 +33,20 @@ T5 = ('T5', 1)
 T6 = ('T6', 1)
 T7 = ('T7', 1)
 CONTROL = ('CONTROL', 1)
+
+# Junction nodes for SCADA
+J280 = ('J280', 1)
+J269 = ('J269', 1)
+J300 = ('J300', 1)
+J256 = ('J256', 1)
+J289 = ('J289', 1)
+J415 = ('J415', 1)
+J302 = ('J302', 1)
+J306 = ('J306', 1)
+J307 = ('J307', 1)
+J317 = ('J317', 1)
+J14 = ('J14', 1)
+J422 = ('J422', 1)
 
 plc_netmask = '/24'
 ENIP_LISTEN_PLC_ADDR = '192.168.1.1'
@@ -94,7 +120,12 @@ PLC1_TAGS = (
     ('PU1', 1, 'REAL'),
     ('PU2', 1, 'REAL'),
     ('PU3', 1, 'REAL'),
+    ('PU1F', 1, 'REAL'),
+    ('PU2F', 1, 'REAL'),
+    ('PU3F', 1, 'REAL'),
     ('T1', 1, 'REAL'),
+    ('J280', 1, 'REAL'),
+    ('J269', 1, 'REAL'),
     ('CONTROL', 1, 'REAL'),
 )
 
@@ -109,9 +140,18 @@ PLC3_TAGS = (
     ('PU5', 1, 'REAL'),
     ('PU6', 1, 'REAL'),
     ('PU7', 1, 'REAL'),
+    ('PU4F', 1, 'REAL'),
+    ('PU5F', 1, 'REAL'),
+    ('PU6F', 1, 'REAL'),
+    ('PU7F', 1, 'REAL'),
     ('V2', 1, 'REAL'),
     ('T4', 1, 'REAL'),
-    ('T3', 1, 'REAL'),
+    ('J300', 1, 'REAL'),
+    ('J256', 1, 'REAL'),
+    ('J289', 1, 'REAL'),
+    ('J415', 1, 'REAL'),
+    ('J14', 1, 'REAL'),
+    ('J422', 1, 'REAL'),
     ('CONTROL', 1, 'REAL'),
 )
 
@@ -125,8 +165,16 @@ PLC5_TAGS = (
     ('PU9', 1, 'REAL'),
     ('PU10', 1, 'REAL'),
     ('PU11', 1, 'REAL'),
+    ('PU8F', 1, 'REAL'),
+    ('PU9F', 1, 'REAL'),
+    ('PU10F', 1, 'REAL'),
+    ('PU11F', 1, 'REAL'),
     ('T7', 1, 'REAL'),
     ('T5', 1, 'REAL'),
+    ('J302', 1, 'REAL'),
+    ('J306', 1, 'REAL'),
+    ('J307', 1, 'REAL'),
+    ('J317', 1, 'REAL'),
     ('CONTROL', 1, 'REAL'),
 )
 
@@ -166,6 +214,17 @@ SCADA_TAGS = (
     ('PU9', 1, 'REAL'),
     ('PU10', 1, 'REAL'),
     ('PU11', 1, 'REAL'),
+    ('PU1F', 1, 'REAL'),
+    ('PU2F', 1, 'REAL'),
+    ('PU3F', 1, 'REAL'),
+    ('PU4F', 1, 'REAL'),
+    ('PU5F', 1, 'REAL'),
+    ('PU6F', 1, 'REAL'),
+    ('PU7F', 1, 'REAL'),
+    ('PU8F', 1, 'REAL'),
+    ('PU9F', 1, 'REAL'),
+    ('PU10F', 1, 'REAL'),
+    ('PU11F', 1, 'REAL'),
     ('T1', 1, 'REAL'),
     ('T2', 1, 'REAL'),
     ('T3', 1, 'REAL'),
@@ -173,6 +232,18 @@ SCADA_TAGS = (
     ('T5', 1, 'REAL'),
     ('T6', 1, 'REAL'),
     ('T7', 1, 'REAL'),
+    ('J280', 1, 'REAL'),
+    ('J269', 1, 'REAL'),
+    ('J300', 1, 'REAL'),
+    ('J256', 1, 'REAL'),
+    ('J289', 1, 'REAL'),
+    ('J415', 1, 'REAL'),
+    ('J302', 1, 'REAL'),
+    ('J306', 1, 'REAL'),
+    ('J307', 1, 'REAL'),
+    ('J317', 1, 'REAL'),
+    ('J14', 1, 'REAL'),
+    ('J422', 1, 'REAL'),
 )
 
 flag_attack_communication_plc1_plc2_replay_empty = 0
@@ -315,7 +386,30 @@ SCHEMA_INIT = """
     INSERT INTO ctown VALUES ('PU9', 1, '0');
     INSERT INTO ctown VALUES ('PU10', 1, '0');
     INSERT INTO ctown VALUES ('PU11', 1, '0');
+    INSERT INTO ctown VALUES ('PU1F', 1, '0');
+    INSERT INTO ctown VALUES ('PU2F', 1, '1');
+    INSERT INTO ctown VALUES ('PU3F', 1, '0');
+    INSERT INTO ctown VALUES ('PU4F', 1, '0');
+    INSERT INTO ctown VALUES ('PU5F', 1, '0');
+    INSERT INTO ctown VALUES ('PU6F', 1, '0');
+    INSERT INTO ctown VALUES ('PU7F', 1, '0');
+    INSERT INTO ctown VALUES ('PU8F', 1, '0');
+    INSERT INTO ctown VALUES ('PU9F', 1, '0');
+    INSERT INTO ctown VALUES ('PU10F', 1, '0');
+    INSERT INTO ctown VALUES ('PU11F', 1, '0');    
+    INSERT INTO ctown VALUES ('J280', 1, '0');
+    INSERT INTO ctown VALUES ('J269', 1, '0');
+    INSERT INTO ctown VALUES ('J300', 1, '0');
+    INSERT INTO ctown VALUES ('J256', 1, '0');
+    INSERT INTO ctown VALUES ('J289', 1, '0');
+    INSERT INTO ctown VALUES ('J415', 1, '0');
+    INSERT INTO ctown VALUES ('J302', 1, '0');
+    INSERT INTO ctown VALUES ('J306', 1, '0');
+    INSERT INTO ctown VALUES ('J307', 1, '0');
+    INSERT INTO ctown VALUES ('J317', 1, '0');
+    INSERT INTO ctown VALUES ('J14', 1, '0');
+    INSERT INTO ctown VALUES ('J422', 1, '0');
     INSERT INTO ctown VALUES ('ATT_1', 1, '0');
     INSERT INTO ctown VALUES ('ATT_2', 1, '0');
-    INSERT INTO ctown VALUES ('CONTROL', 1, '0');
+    INSERT INTO ctown VALUES ('CONTROL', 1, '0');    
 """

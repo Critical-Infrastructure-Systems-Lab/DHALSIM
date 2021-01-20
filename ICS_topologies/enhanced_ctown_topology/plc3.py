@@ -1,6 +1,7 @@
 from basePLC import BasePLC
 from utils import PLC3_DATA, STATE, PLC3_PROTOCOL
-from utils import T2, T3, T4, V2, PU4, PU5, PU6, PU7, ENIP_LISTEN_PLC_ADDR, CTOWN_IPS, CONTROL
+from utils import T2, T3, T4, V2, PU4, PU5, PU6, PU7, PU4F, PU5F, PU6F, PU7F, ENIP_LISTEN_PLC_ADDR, CTOWN_IPS, CONTROL
+from utils import J300, J256, J289, J415, J14, J422
 from decimal import Decimal
 import time
 import threading
@@ -22,15 +23,28 @@ class PLC3(BasePLC):
 
         self.t2 = Decimal(self.get(T2))
         self.v2 = int(self.get(V2))
+
+        self.j300 = Decimal(self.get(J300))
+        self.j256 = Decimal(self.get(J256))
+        self.j289 = Decimal(self.get(J289))
+        self.j415 = Decimal(self.get(J415))
+        self.j14 = Decimal(self.get(J14))
+        self.j422 = Decimal(self.get(J422))
+
         self.pu4 = int(self.get(PU4))
         self.pu5 = int(self.get(PU5))
         self.pu6 = int(self.get(PU6))
         self.pu7 = int(self.get(PU7))
 
+        self.pu4f = Decimal(self.get(PU4F))
+        self.pu5f = Decimal(self.get(PU5F))
+        self.pu6f = Decimal(self.get(PU6F))
+        self.pu7f = Decimal(self.get(PU7F))
+
         self.lock = threading.Lock()
         path = 'plc3_saved_tank_levels_received.csv'
-        tags = [V2, PU4, PU5, PU6, PU7]
-        values = [self.v2, self.pu4, self.pu5, self.pu6, self.pu7]
+        tags = [T2, V2, J300, J256, J289, J415, J14, J422, PU4, PU5, PU6, PU7, PU4F, PU5F, PU6F, PU7F]
+        values = [self.t2, self.v2, self.j300, self.j256, self.j289, self.j415, self.j14, self.j422, self.pu4, self.pu5, self.pu6, self.pu7, self.pu4f, self.pu5f, self.pu6f, self.pu7f]
 
         # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable
         # values into a persistent file

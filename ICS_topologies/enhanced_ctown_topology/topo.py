@@ -1,7 +1,7 @@
 from mininet.node import Node
 from mininet.topo import Topo
 import pandas as pd
-
+import yaml
 
 class LinuxRouter(Node):
     """
@@ -23,11 +23,22 @@ class CTownTopo(Topo):
     Each PLC is now in a local area network called "substation"
     Substation 1 includes the SCADA server
     """
-    def __init__( self, week_index ):
+    def __init__(self, week_index, sim_type, config_file, plc_dict_path):
+        "Create custom topo."
+
         "Create custom topo."
         self.week_index = int(week_index)
+        self.options = self.load_options(config_file)
+
         # Initialize topology
-        Topo.__init__( self )
+        Topo.__init__(self)
+
+
+    def load_options(self, config_file):
+        with open(config_file) as config_file:
+            options = yaml.load(config_file, Loader=yaml.FullLoader)
+        return options
+
 
     def build(self):
 
@@ -35,7 +46,7 @@ class CTownTopo(Topo):
         plcs = []
         switches = []
 
-        print("Week index is: " + str(self.week_index))
+        custom_links = self.options['initial_custom_flag']
 
         network_delays = pd.read_csv('../../Demand_patterns/network_links_delay_small.csv', index_col=0)
         network_losses = pd.read_csv('../../Demand_patterns/network_loss_small.csv', index_col=0)
@@ -44,19 +55,24 @@ class CTownTopo(Topo):
         r0 = self.addNode('r0', cls=LinuxRouter, ip=r0_ip)
         routers.append(r0)
 
-        for i in range(1,10):
+        for i in range(1, 10):
             routers.append(self.addNode('r' + str(i), cls=LinuxRouter, ip='10.0.' + str(i) + '.1/24'))
-            switches.append((self.addSwitch('s'+ str(i))))
+            switches.append((self.addSwitch('s' + str(i))))
             plcs.append(self.addNode('plc' + str(i), ip='192.168.1.1/24', defaultRoute='via 192.168.1.254/24'))
 
+            loss = network_losses.iloc[self.week_index]['r' + str(i)]
             self.addLink(routers[i], r0, intfName2='r0-eth' + str(i - 1), params2={'ip': '10.0.' + str(i) + '.254/24'})
-            print("Link " + str(i) + " delay: " + str(network_delays.iloc[self.week_index]['r' + str(i)])+"ms" + " loss: " + str(network_losses.iloc[self.week_index]['r' + str(i)]) )
             self.addLink(switches[i - 1], routers[i], intfName2='r' + str(i) + '-eth1',
                          params2={'ip': '192.168.1.254/24'})
-            loss = network_losses.iloc[self.week_index]['r' + str(i)]
-            linkopts = dict(bw=1000, delay=str(network_delays.iloc[self.week_index]['r' + str(i)])+"ms", loss=loss, max_queue_size=1000,
-                           use_htb=True)
-            self.addLink(plcs[i-1], switches[i-1], **linkopts)
+            if custom_links == "True":
+                print("Link " + str(i) + " delay: " + str(
+                    network_delays.iloc[self.week_index]['r' + str(i)]) + "ms" + " loss: " + str(
+                    network_losses.iloc[self.week_index]['r' + str(i)]))
+                linkopts = dict(bw=1000, delay=str(network_delays.iloc[self.week_index]['r' + str(i)])+"ms",
+                                loss=loss, max_queue_size=1000, use_htb=True)
+                self.addLink(plcs[i-1], switches[i-1], **linkopts)
+            else:
+                self.addLink(plcs[i - 1], switches[i - 1])
 
         plant = self.addHost('plant')
         # SCADA wil be on the same LAN as the PLC3

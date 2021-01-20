@@ -31,6 +31,7 @@ class BasePLC(PLC):
             time.sleep(0.05)
 
     def set_parameters(self, path, result_list, tags, values, reader, lock, send_address, lastPLC=False, week_index=0, isScada=False):
+        #toDo: Remove the lastPLC parameter
         self.result_list = result_list
         self.path = path
         self.tags = tags
@@ -52,13 +53,7 @@ class BasePLC(PLC):
         print 'IF WE PRINT THIS, IT MEANS THE GENERIC PLC CODE WORKS! YASSSS!!!'
         self.reader = False
         self.write_output()
-        if self.lastPLC:
-            self.move_files()
         sys.exit(0)
-
-    def move_files(self):
-        cmd = shlex.split("./copy_output.sh " + str(self.week_index))
-        subprocess.call(cmd)
 
     def startup(self):
         signal.signal(signal.SIGINT, self.sigint_handler)

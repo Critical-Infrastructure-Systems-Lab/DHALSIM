@@ -2,12 +2,14 @@ from mininet.net import Mininet
 from mininet.cli import CLI
 from minicps.mcps import MiniCPS
 from topo import CTownTopo
+from initialize_experiment import ExperimentInitializer
 import sys
 import time
 import shlex
 import subprocess
 import signal
 from mininet.link import TCLink
+import glob
 
 automatic = 1
 mitm_attack = 0
@@ -27,7 +29,6 @@ class CTown(MiniCPS):
         a_node = net.get(node_name)
         a_node.cmd('bash ./ctown_nat.sh ' + node_name)
         a_node.waitOutput()
-
         a_node.cmd('bash ./port_forward.sh ' + node_name)
         a_node.waitOutput()
 
@@ -67,19 +68,17 @@ class CTown(MiniCPS):
         self.add_degault_gateway(net.get('server'), '192.168.1.254')
         self.do_forward(net.get('attacker'))
 
-    def __init__(self, name, net):
+    def __init__(self, name, net, week_index):
         signal.signal(signal.SIGINT, self.interrupt)
         signal.signal(signal.SIGTERM, self.interrupt)
 
-        if len(sys.argv) < 2:
-            self.week_index = str(0)
-        else:
-            self.week_index = sys.argv[1]
+        print "Running for week: " + str(week_index)
+        self.week_index = week_index
 
         net.start()
         self.setup_network()
 
-        self.sender_plcs = [2, 4, 6, 7, 9]
+        self.sender_plcs = [2, 4, 6, 7, 8, 9]
         self.receiver_plcs = [1, 3, 5]
 
         self.sender_plcs_nodes = []
@@ -114,29 +113,29 @@ class CTown(MiniCPS):
         index = 0
         for plc in self.sender_plcs:
             self.sender_plcs_nodes.append(net.get('plc' + str(self.sender_plcs[index])))
-
             self.sender_plcs_files.append(open("output/plc" + str(self.sender_plcs[index]) + ".log", 'r+'))
-            self.sender_plcs_processes.append(
-                self.sender_plcs_nodes[index].popen(sys.executable, "automatic_plc.py", "-n",
-                                                    "plc" + str(self.sender_plcs[index]), "-w", self.week_index,
-                                                    stderr=sys.stdout,
-                                                    stdout=self.sender_plcs_files[index]))
+            cmd_string = "python automatic_plc.py -n plc" + str(self.sender_plcs[index]) + " -w " + str(self.week_index)
+            print "Launching PLC with command: " + cmd_string
+            cmd = shlex.split(cmd_string)
+            self.sender_plcs_processes.append(self.sender_plcs_nodes[index].popen(cmd,stderr=sys.stdout,
+                                                                                  stdout=self.sender_plcs_files[index]))
             print("Launched plc" + str(self.sender_plcs[index]))
             index += 1
-            time.sleep(0.2)
+            time.sleep(0.1)
 
         # After the servers are done, we can launch the client PLCs
         index = 0
         for plc in self.receiver_plcs:
             self.receiver_plcs_nodes.append(net.get('plc' + str(self.receiver_plcs[index])))
             self.receiver_plcs_files.append(open("output/plc" + str(self.receiver_plcs[index]) + ".log", 'r+'))
-            self.receiver_plcs_processes.append(
-                self.receiver_plcs_nodes[index].popen(sys.executable, "automatic_plc.py", "-n",
-                                                      "plc" + str(self.receiver_plcs[index]), "-w", self.week_index,
-                                                      stderr=sys.stdout,
-                                                      stdout=self.receiver_plcs_files[index]))
+            cmd_string = "python automatic_plc.py -n plc" + str(self.receiver_plcs[index]) + " -w " + str(self.week_index)
+            print "Launching PLC with command: " + cmd_string
+            cmd = shlex.split(cmd_string)
+            self.receiver_plcs_processes.append(self.receiver_plcs_nodes[index].popen(cmd,stderr=sys.stdout,
+                                                                                      stdout=self.receiver_plcs_files[index]))
             print("Launched plc" + str(self.receiver_plcs[index]))
             index += 1
+            time.sleep(0.1)
 
         # Launch an iperf server in LAN1 (same LAN as PLC1) and a client in LAN3 (same LAN as PLC3)
         if iperf_test == 1:
@@ -172,14 +171,15 @@ class CTown(MiniCPS):
         print "[] Launching SCADA"
         self.scada_node = net.get('scada')
         self.scada_file = open("output/scada.log", "r+")
-        self.scada_process = self.scada_node.popen(sys.executable, "automatic_plc.py", "-n", "scada", stderr=sys.stdout,
-                                                   stdout=self.scada_file)
+        cmd_string = "python automatic_plc.py -n scada -w " + str(self.week_index)
+        cmd = shlex.split(cmd_string)
+        self.scada_process = self.scada_node.popen(cmd, stderr=sys.stdout, stdout=self.scada_file)
         print "[*] SCADA Successfully launched"
         print "[*] Launched the PLCs and SCADA process, launching simulation..."
         physical_output = open("output/physical.log", 'r+')
         plant = net.get('plant')
 
-        simulation_cmd = shlex.split("python automatic_plant.py c_town_config.yaml")
+        simulation_cmd = shlex.split("python automatic_plant.py c_town_config.yaml " + str(self.week_index))
         self.simulation = plant.popen(simulation_cmd, stderr=sys.stdout, stdout=physical_output)
         print "[] Simulating..."
 
@@ -187,29 +187,39 @@ class CTown(MiniCPS):
         while self.simulation.poll() is None:
             pass
         self.finish()
-        
+
     def create_log_files(self):
         cmd = shlex.split("bash ./create_log_files.sh")
         subprocess.call(cmd)
 
-    def end_plc_process(self, plc_process):
+    def end_process(self, process):
+        process.send_signal(signal.SIGINT)
+        process.wait()
+        if process.poll() is None:
+            process.terminate()
+        if process.poll() is None:
+            process.kill()
 
-        plc_process.send_signal(signal.SIGINT)
-        plc_process.wait()
-        if plc_process.poll() is None:
-            plc_process.terminate()
-        if plc_process.poll() is None:
-            plc_process.kill()
+    def move_output_files(self, week_index):
+        cmd = shlex.split("./copy_output.sh " + str(week_index))
+        subprocess.call(cmd)
+
+    def merge_pcap_files(self):
+        print "Merging pcap files"
+        pcap_files = glob.glob("output/*.pcap")
+        separator = ' '
+        a_cmd = shlex.split("mergecap -w output/devices.pcap " + separator.join(pcap_files))
+        subprocess.call(a_cmd)
 
     def finish(self):
         print "[*] Simulation finished"
-        self.end_plc_process(self.scada_process)
+        self.end_process(self.scada_process)
 
         index = 0
         for plc in self.receiver_plcs_processes:
             print "[] Terminating PLC" + str(self.receiver_plcs[index])
             if plc:
-                self.end_plc_process(plc)
+                self.end_process(plc)
                 print "[*] PLC" + str(self.receiver_plcs[index]) + " terminated"
             index += 1
 
@@ -217,24 +227,28 @@ class CTown(MiniCPS):
         for plc in self.sender_plcs_processes:
             print "[] Terminating PLC" + str(self.sender_plcs[index])
             if plc:
-                self.end_plc_process(plc)
+                self.end_process(plc)
                 print "[*] PLC" + str(self.sender_plcs[index]) + " terminated"
             index += 1
 
         if self.mitm_process:
-            self.end_plc_process(self.mitm_process)
+            self.end_process(self.mitm_process)
         print "[*] All processes terminated"
 
         if self.iperf_client_process:
-            self.end_plc_process(self.iperf_client_process)
+            self.end_process(self.iperf_client_process)
             print "Iperf Client process terminated"
 
         if self.iperf_server_process:
-            self.end_plc_process(self.iperf_server_process)
+            self.end_process(self.iperf_server_process)
             print "Iperf Server process terminated"
 
-        if self.simulation:
-            self.simulation.terminate()
+        if self.simulation.poll() is None:
+            self.end_process(self.simulation)
+            print "Physical Simulation process terminated"
+
+        self.merge_pcap_files()
+        self.move_output_files(self.week_index)
 
         cmd = shlex.split("./kill_cppo.sh")
         subprocess.call(cmd)
@@ -248,8 +262,20 @@ if __name__ == "__main__":
         week_index = str(0)
     else:
         week_index = sys.argv[1]
-    print week_index
 
-    topo = CTownTopo(week_index)
+    config_file = "c_town_config.yaml"
+    print "Initializing experiment with config file: " + str(config_file)
+    initializer = ExperimentInitializer(config_file, week_index)
+
+    # this creates plc_dicts.yaml and utils.py
+    #initializer.run_parser()
+
+    complex_topology = initializer.get_complex_topology()
+    week_index = initializer.get_week_index()
+    simulation_type = initializer.get_simulation_type()
+    plc_dict_path = initializer.get_plc_dict_path()
+
+    #week_index, sim_type, config_file, plc_dict_path
+    topo = CTownTopo(week_index, simulation_type, config_file, plc_dict_path)
     net = Mininet(topo=topo, autoSetMacs=True, link=TCLink)
-    minitown_cps = CTown(name='ctown', net=net)
+    minitown_cps = CTown(name='ctown', net=net, week_index=week_index)

@@ -23,14 +23,12 @@ class ScadaTopo(Topo):
 
     def build(self):
         # Add router
-        # toDo: Make this nicer and in convertions.py
         fieldIP = '192.168.1.254/24'  # IP Address for r0-eth1
 
         # ---------------- FIELD NETWORK ----------------------  #
         router = self.addNode('r0', cls=LinuxRouter, ip=fieldIP)
 
         # Add switch of supervisory network
-        # toDo: Check this!
         s1 = self.addSwitch('s1')
         self.addLink(s1, router, intfName2='r0-eth1', params2={'ip': fieldIP})
 
@@ -46,7 +44,6 @@ class ScadaTopo(Topo):
         self.addLink(s1, attacker)
 
         # ---------------- SUPERVISORY NETWORK --------------  #
-        # toDo: Check this!
         supervisoryIP = '192.168.2.254/24'
         s2 = self.addSwitch('s2')
         self.addLink(s2, router, intfName2='r0-eth2', params2={'ip': supervisoryIP})
