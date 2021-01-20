@@ -11,7 +11,6 @@ class PhysicalPlant:
 
     def __init__(self):
 
-        # toDo: This is were we change the parameters received by this script to create a generic physical process.
         #config_file_path = "wadi_config.yaml"
         config_file_path = sys.argv[1]
         config_options = self.load_config(config_file_path)

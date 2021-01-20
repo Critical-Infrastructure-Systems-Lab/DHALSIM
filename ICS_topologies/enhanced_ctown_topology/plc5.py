@@ -1,6 +1,7 @@
 from basePLC import BasePLC
 from utils import PLC5_DATA, STATE, PLC5_PROTOCOL, CONTROL
-from utils import T5, T7, PU8, PU10, PU11, ENIP_LISTEN_PLC_ADDR, CTOWN_IPS
+from utils import T5, T7, PU8, PU10, PU11, PU8F, PU10F, PU11F, ENIP_LISTEN_PLC_ADDR, CTOWN_IPS
+from utils import J302, J306, J307, J317
 from decimal import Decimal
 import time
 import threading
@@ -22,10 +23,20 @@ class PLC5(BasePLC):
         self.pu10 = int(self.get(PU10))
         self.pu11 = int(self.get(PU11))
 
+        self.pu8f = Decimal(self.get(PU8F))
+        self.pu10f = Decimal(self.get(PU10F))
+        self.pu11f = Decimal(self.get(PU11F))
+
+        self.j302 = Decimal(self.get(J302))
+        self.j306 = Decimal(self.get(J306))
+        self.j307 = Decimal(self.get(J307))
+        self.j317 = Decimal(self.get(J317))
+
         self.lock = threading.Lock()
         path = 'plc5_saved_tank_levels_received.csv'
-        tags = [PU8, PU10, PU11]
-        values = [self.pu8, self.pu10, self.pu11]
+        tags = [PU8, PU10, PU11, PU8F, PU10F, PU11F, J302, J306, J307, J317]
+        values = [self.pu8, self.pu10, self.pu11, self.pu8f, self.pu10f, self.pu11f, self.j302, self.j306, self.j307,
+                  self.j317]
 
         # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable
         # values into a persistent file

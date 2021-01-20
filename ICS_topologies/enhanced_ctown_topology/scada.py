@@ -1,8 +1,10 @@
 from basePLC import BasePLC
 from utils import SCADA_PROTOCOL, STATE
 from utils import CTOWN_IPS
-from utils import T1, T2, T3, T4, T5, T7, PU1, PU2, ENIP_LISTEN_PLC_ADDR
+from utils import T1, T2, T3, T4, T5, T6, T7, PU1, PU2, PU1F, PU2F, ENIP_LISTEN_PLC_ADDR
 from utils import V2, PU4, PU5, PU6, PU7, PU8, PU10, PU11
+from utils import PU4F, PU5F, PU6F, PU7F, PU8F, PU10F, PU11F
+from utils import J280, J269, J300, J256, J289, J415, J14, J422, J302, J306, J307, J317
 
 import time
 from datetime import datetime
@@ -28,11 +30,19 @@ class SCADAServer(BasePLC):
         """scada pre loop.
             - sleep
         """
-        self.saved_tank_levels = [["timestamp", "T1", "T2", "T3", "T4", "T5", "T7", "PU1", "PU2", "V2", "PU4", "PU5",
-                                   "PU6", "PU7", "PU8", "PU10", "PU11"]]
-        self.plc1_tags = [PU1, PU2]
-        self.plc3_tags = [V2, PU4, PU5, PU6, PU7]
-        self.plc5_tags = [PU8, PU10, PU11]
+        self.saved_tank_levels = [["timestamp", "PU1", "PU2", "PU1F", "PU2F", "J280", "J269", "T1", "T2", "V2", "J300",
+                                   "J256", "J289", "J415", "J14", "J422", "PU4", "PU5", "PU6", "PU7", "PU4F", "PU5F",
+                                   "PU6F", "PU7F", "T3", "PU8", "PU10", "PU11", "PU8F", "PU10F", "PU11F", "J302",
+                                   "J306", "J307", "J317", "T4", "T5", "T6", "T7"]]
+        self.plc1_tags = [PU1, PU2, PU1F, PU2F, J280, J269]
+        self.plc2_tags = [T1]
+        self.plc3_tags = [T2, V2, J300, J256, J289, J415, J14, J422, PU4, PU5, PU6, PU7, PU4F, PU5F, PU6F, PU7F]
+        self.plc4_tags = [T3]
+        self.plc5_tags = [PU8, PU10, PU11, PU8F, PU10F, PU11F, J302, J306, J307, J317]
+        self.plc6_tags = [T4]
+        self.plc7_tags = [T5]
+        self.plc8_tags = [T6]
+        self.plc9_tags = [T7]
 
         self.path = 'scada_saved_tank_levels_received.csv'
         signal.signal(signal.SIGINT, self.sigint_handler)
@@ -44,25 +54,30 @@ class SCADAServer(BasePLC):
         while True:
 
             try:
-                t1 = Decimal(self.receive(T1, CTOWN_IPS['plc2']))
-                t2 = Decimal(self.receive(T2, CTOWN_IPS['plc3']))
-                t3 = Decimal(self.receive(T3, CTOWN_IPS['plc4']))
-                t4 = Decimal(self.receive(T4, CTOWN_IPS['plc6']))
-                t5 = Decimal(self.receive(T5, CTOWN_IPS['plc7']))
-                t7 = Decimal(self.receive(T7, CTOWN_IPS['plc9']))
-
                 #plc1 is in the same LAN as SCADA!
                 plc1_values = self.receive_multiple(self.plc1_tags, ENIP_LISTEN_PLC_ADDR)
+                plc2_values = self.receive_multiple(self.plc2_tags, CTOWN_IPS['plc2'])
                 plc3_values = self.receive_multiple(self.plc3_tags, CTOWN_IPS['plc3'])
+                plc4_values = self.receive_multiple(self.plc4_tags, CTOWN_IPS['plc4'])
                 plc5_values = self.receive_multiple(self.plc5_tags, CTOWN_IPS['plc5'])
+                plc6_values = self.receive_multiple(self.plc6_tags, CTOWN_IPS['plc6'])
+                plc7_values = self.receive_multiple(self.plc7_tags, CTOWN_IPS['plc7'])
+                plc8_values = self.receive_multiple(self.plc8_tags, CTOWN_IPS['plc8'])
+                plc9_values = self.receive_multiple(self.plc9_tags, CTOWN_IPS['plc9'])
 
-                results = [datetime.now(), t1, t2, t3, t4, t5, t7]
+                results = [datetime.now()]
                 results.extend(plc1_values)
+                results.extend(plc2_values)
                 results.extend(plc3_values)
+                results.extend(plc4_values)
                 results.extend(plc5_values)
+                results.extend(plc6_values)
+                results.extend(plc7_values)
+                results.extend(plc8_values)
+                results.extend(plc9_values)
                 self.saved_tank_levels.append(results)
 
-                time.sleep(0.3)
+                time.sleep(2)
             except Exception, msg:
                 print(msg)
                 continue

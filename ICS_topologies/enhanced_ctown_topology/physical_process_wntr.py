@@ -71,8 +71,7 @@ class PhysicalPlant:
 
         for control in self.control_list:
             an_action = controls.ControlAction(control['actuator'], control['parameter'], control['value'])
-            #a_control = controls.Control(control['condition'], an_action, name=control['name'])
-            a_control = controls.Control(control['condition'], an_action)
+            a_control = controls.Control(control['condition'], an_action, name=control['name'])
             self.wn.add_control(control['name'], a_control)
 
         simulator_string = config_options['simulator']
@@ -87,8 +86,7 @@ class PhysicalPlant:
             print('Invalid simulation mode, exiting...')
             sys.exit(1)
 
-        #self.sim = wntr.sim.WNTRSimulator(self.wn)
-        self.sim = wntr.sim.EpanetSimulator(self.wn)
+        self.sim = wntr.sim.WNTRSimulator(self.wn)
 
         print("Starting simulation for " + str(config_options['inp_file']) + " topology ")
 
@@ -104,7 +102,11 @@ class PhysicalPlant:
 
     def initialize_simulation(self, config_options):
 
-        limit = (self.simulation_days * 24) - 1
+        if self.simulation_days == 7:
+            limit = 167
+        else:
+            limit = 239
+
         if 'initial_custom_flag' in config_options:
             if config_options['initial_custom_flag'] == "True":
                 demand_patterns_path = config_options['demand_patterns_path']
@@ -170,30 +172,6 @@ class PhysicalPlant:
             act_dict['value'] = act_dict['actuator'].status.value
         return act_dict
 
-    def register_epanet_results(self, pressure_results, flowrate_results, status_results, timestamp):
-        some_values_list = []
-        some_values_list.extend([timestamp])
-
-        # Results are divided into: nodes: reservoir and tanks, links: flows and status
-        # Get tanks levels
-        for tank in self.tank_list:
-            some_values_list.extend([pressure_results[tank]])
-
-        for junction in self.junction_list:
-            some_values_list.extend([pressure_results[junction]])
-
-        # Get pumps flows and status
-        for pump in self.pump_list:
-            some_values_list.extend([flowrate_results[pump]])
-            some_values_list.extend([status_results[pump]])
-
-        # Get valves flows and status
-        for valve in self.valve_list:
-            some_values_list.extend([flowrate_results[valve]])
-            some_values_list.extend([status_results[valve]])
-
-        return some_values_list
-
     def register_results(self, results):
         values_list = []
         values_list.extend([results.timestamp])
@@ -241,8 +219,7 @@ class PhysicalPlant:
         control['value'] = new_status
 
         new_action = controls.ControlAction(control['actuator'], control['parameter'], control['value'])
-        #new_control = controls.Control(control['condition'], new_action, name=control['name'])
-        new_control = controls.Control(control['condition'], new_action)
+        new_control = controls.Control(control['condition'], new_action, name=control['name'])
 
         self.wn.remove_control(control['name'])
         self.wn.add_control(control['name'], new_control)
@@ -259,36 +236,24 @@ class PhysicalPlant:
 
         mask_full_control = 7
         iteration_limit = (self.simulation_days * 24 * 3600) / self.wn.options.time.hydraulic_timestep
+
         print("Simulation will run for " + str(self.simulation_days) + " days. Hydraulic timestep is " + str(
             self.wn.options.time.hydraulic_timestep) +
               " for a total of " + str(iteration_limit) + " iterations ")
 
-        print("Initial controls")
-        for control in self.wn.controls():
-            print(control)
-
         while master_time <= iteration_limit:
+
             self.update_controls()
             print("ITERATION %d ------------- " % master_time)
-            print("Controls")
-            for control in self.wn.controls():
-                print(control)
-            #results = self.sim.run_sim(convergence_error=True)
-            results = self.sim.run_sim()
-            these_pressure_results = results.node['pressure'].iloc[-1]
-            these_flowrate_results = results.link['flowrate'].iloc[-1]
-            these_status_results = results.link['status'].iloc[-1]
-            values_list = self.register_epanet_results(these_pressure_results, these_flowrate_results,
-                                                       these_status_results, results.timestamp)
-            self.results_list.append(values_list)
+            results = self.sim.run_sim(convergence_error=True)
+            values_list = self.register_results(results)
 
-            # EPANET simulator requires this to advance the simulation
-            self.wn.options.time.duration += self.wn.options.time.hydraulic_timestep
+            self.results_list.append(values_list)
             master_time += 1
 
             for tank in self.tank_list:
                 tank_name = '\'' + tank + '\''
-                a_level = these_pressure_results[tank]
+                a_level = self.wn.get_node(tank).level
                 query = "UPDATE ctown SET value = " + str(a_level) + " WHERE name = " + tank_name
                 self.c.execute(query)  # UPDATE TANKS IN THE DATABASE
                 self.conn.commit()
@@ -297,6 +262,7 @@ class PhysicalPlant:
             self.c.execute(query)  # UPDATE CONTROL value for the PLCs to apply control
             self.conn.commit()
         self.write_results(self.results_list)
+
 
 if __name__ == "__main__":
     simulation = PhysicalPlant()

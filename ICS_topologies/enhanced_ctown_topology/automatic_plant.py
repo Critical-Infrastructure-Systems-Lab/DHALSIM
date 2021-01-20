@@ -47,7 +47,8 @@ class SimulationControl():
         """
         home_path = expanduser("~")
         wntr_environment_path = home_path + str("/wntr-experiments/bin/python")
-        simulation = subprocess.Popen([wntr_environment_path, 'physical_process.py', sys.argv[1]])
+        print "Launching simulation for week index: " + str(sys.argv[2])
+        simulation = subprocess.Popen([wntr_environment_path, 'physical_process.py', sys.argv[1], sys.argv[2]])
         return simulation
 
 if __name__=="__main__":

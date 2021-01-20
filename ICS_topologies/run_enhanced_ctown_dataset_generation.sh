@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for i in {19..19}
+for i in {0..30}
 do
 	if [ ! -d enhanced_ctown_topology/logs ]; then\
 	   mkdir logs;\
