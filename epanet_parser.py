@@ -49,7 +49,6 @@ class EpanetParser:
         plc_index = 1
         ip_string = ""
 
-        # PLC DATA TODO section
         plc_data_string = ""
 
         # PLC Tags

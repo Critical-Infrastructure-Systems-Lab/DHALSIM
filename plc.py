@@ -12,7 +12,6 @@ import argparse
 class PLC(BasePLC):
     def pre_loop(self):
 
-        # toDO: We will handle initialization using argparse in __main__ and then pass these parameters to pre_loop
         self.name = sys.argv[2]
         self.week_index = sys.argv[4]
         self.plc_dict_path = sys.argv[6]
