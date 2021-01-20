@@ -44,8 +44,8 @@ class PLC5(BasePLC):
         while True:
             try:
                 self.local_time += 1
-                self.t5 = Decimal(self.receive( T5, CTOWN_IPS['plc7'] ))
-                self.t7 = Decimal(self.receive( T7, CTOWN_IPS['plc9'] ))
+                self.t5 = Decimal(self.receive(T5, CTOWN_IPS['plc7']))
+                self.t7 = Decimal(self.receive(T7, CTOWN_IPS['plc9']))
 
                 with self.lock:
                     if self.t5 < 1.5:
