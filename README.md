@@ -31,7 +31,7 @@ The Digital Twin code requires ptyhon virtual environments set up in order to pr
 - A puython2 environment to launch the man in the middle attacks
 
 #### Python3.6 environment
-Unfortunately, current WNTR version (0.2.2.1) requires at least a python3.6 environment. Instruction on setting a python3.6 environment in Ubuntu 16.04 can be found here: https://gist.github.com/plembo/c5bf7c4154910ac3693e14bb42b32ebf
+Unfortunately, current WNTR version (0.3.0) requires at least a python3.6 environment. Instruction on setting a python3.6 environment in Ubuntu 16.04 can be found here: https://gist.github.com/plembo/c5bf7c4154910ac3693e14bb42b32ebf
 
 #### Python3.6 virtual environment
 The python3 venv can be installed using:
