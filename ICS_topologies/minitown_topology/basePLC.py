@@ -2,27 +2,32 @@ from minicps.devices import PLC
 import csv
 import signal
 import sys
-
-import thread
 import threading
 import shlex
 import subprocess
+import time
 
 class BasePLC(PLC):
 
-    def send_system_state(self, a, b):
+    def send_system_state(self):
         """
         This method sends the values to the SCADA server or any other client requesting the values
-        :param a:
-        :param b:
         :return:
         """
         while self.reader:
             values = []
             for tag in self.tags:
                 with self.lock:
+                    # noinspection PyBroadException
+                    try:
+                        values.append(self.get(tag))
+                    except Exception:
+                        print "Exception trying to get the tag"
+                        time.sleep(0.05)
+                        continue
                     values.append(self.get(tag))
             self.send_multiple(self.tags, values, self.send_adddress)
+            time.sleep(0.05)
 
     def set_parameters(self, path, result_list, tags, values, reader, lock, send_address, lastPLC=False, week_index=0, isScada=False):
 
@@ -59,4 +64,4 @@ class BasePLC(PLC):
         signal.signal(signal.SIGTERM, self.sigint_handler)
 
         if not self.isScada:
-            thread.start_new_thread(self.send_system_state,(0,0))
+            threading.Thread(target=self.send_system_state).start()
