@@ -48,7 +48,7 @@ class BasePLC(PLC):
             writer.writerows(self.result_list)
 
     def sigint_handler(self, sig, frame):
-        print 'DEBUG plc shutdown'
+        print 'DEBUG PLC shutdown'
         self.reader = False
         self.write_output()
         if self.lastPLC:
