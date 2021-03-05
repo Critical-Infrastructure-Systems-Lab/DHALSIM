@@ -13,6 +13,8 @@ PU8 = ('PU8', 1)
 PU9 = ('PU9', 1)
 PU10 = ('PU10', 1)
 PU11 = ('PU11', 1)
+
+# Pump flows
 PU1F = ('PU1F', 1)
 PU2F = ('PU2F', 1)
 PU3F = ('PU3F', 1)
@@ -119,10 +121,8 @@ SCADA_DATA = {
 PLC1_TAGS = (
     ('PU1', 1, 'REAL'),
     ('PU2', 1, 'REAL'),
-    ('PU3', 1, 'REAL'),
     ('PU1F', 1, 'REAL'),
     ('PU2F', 1, 'REAL'),
-    ('PU3F', 1, 'REAL'),
     ('T1', 1, 'REAL'),
     ('J280', 1, 'REAL'),
     ('J269', 1, 'REAL'),
@@ -386,29 +386,29 @@ SCHEMA_INIT = """
     INSERT INTO ctown VALUES ('PU9', 1, '0');
     INSERT INTO ctown VALUES ('PU10', 1, '0');
     INSERT INTO ctown VALUES ('PU11', 1, '0');
-    INSERT INTO ctown VALUES ('PU1F', 1, '0');
-    INSERT INTO ctown VALUES ('PU2F', 1, '1');
-    INSERT INTO ctown VALUES ('PU3F', 1, '0');
-    INSERT INTO ctown VALUES ('PU4F', 1, '0');
-    INSERT INTO ctown VALUES ('PU5F', 1, '0');
-    INSERT INTO ctown VALUES ('PU6F', 1, '0');
-    INSERT INTO ctown VALUES ('PU7F', 1, '0');
-    INSERT INTO ctown VALUES ('PU8F', 1, '0');
-    INSERT INTO ctown VALUES ('PU9F', 1, '0');
+    INSERT INTO ctown VALUES ('PU1F', 1, '0.0');
+    INSERT INTO ctown VALUES ('PU2F', 1, '0.0');
+    INSERT INTO ctown VALUES ('PU3F', 1, '0.0');
+    INSERT INTO ctown VALUES ('PU4F', 1, '0.0');
+    INSERT INTO ctown VALUES ('PU5F', 1, '0.0');
+    INSERT INTO ctown VALUES ('PU6F', 1, '0.0');
+    INSERT INTO ctown VALUES ('PU7F', 1, '0.0');
+    INSERT INTO ctown VALUES ('PU8F', 1, '0.0');
+    INSERT INTO ctown VALUES ('PU9F', 1, '0.0');
     INSERT INTO ctown VALUES ('PU10F', 1, '0');
-    INSERT INTO ctown VALUES ('PU11F', 1, '0');    
-    INSERT INTO ctown VALUES ('J280', 1, '0');
-    INSERT INTO ctown VALUES ('J269', 1, '0');
-    INSERT INTO ctown VALUES ('J300', 1, '0');
-    INSERT INTO ctown VALUES ('J256', 1, '0');
-    INSERT INTO ctown VALUES ('J289', 1, '0');
-    INSERT INTO ctown VALUES ('J415', 1, '0');
-    INSERT INTO ctown VALUES ('J302', 1, '0');
-    INSERT INTO ctown VALUES ('J306', 1, '0');
-    INSERT INTO ctown VALUES ('J307', 1, '0');
-    INSERT INTO ctown VALUES ('J317', 1, '0');
-    INSERT INTO ctown VALUES ('J14', 1, '0');
-    INSERT INTO ctown VALUES ('J422', 1, '0');
+    INSERT INTO ctown VALUES ('PU11F', 1, '0.0');    
+    INSERT INTO ctown VALUES ('J280', 1, '0.0');
+    INSERT INTO ctown VALUES ('J269', 1, '0.0');
+    INSERT INTO ctown VALUES ('J300', 1, '0.0');
+    INSERT INTO ctown VALUES ('J256', 1, '0.0');
+    INSERT INTO ctown VALUES ('J289', 1, '0.0');
+    INSERT INTO ctown VALUES ('J415', 1, '0.0');
+    INSERT INTO ctown VALUES ('J302', 1, '0.0');
+    INSERT INTO ctown VALUES ('J306', 1, '0.0');
+    INSERT INTO ctown VALUES ('J307', 1, '0.0');
+    INSERT INTO ctown VALUES ('J317', 1, '0.0');
+    INSERT INTO ctown VALUES ('J14', 1, '0.0');
+    INSERT INTO ctown VALUES ('J422', 1, '0.0');
     INSERT INTO ctown VALUES ('ATT_1', 1, '0');
     INSERT INTO ctown VALUES ('ATT_2', 1, '0');
     INSERT INTO ctown VALUES ('CONTROL', 1, '0');    

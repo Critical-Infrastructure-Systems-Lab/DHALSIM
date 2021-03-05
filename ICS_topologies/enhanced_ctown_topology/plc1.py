@@ -37,7 +37,8 @@ class PLC1(BasePLC):
 
         # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable
         # values into a persistent file
-        BasePLC.set_parameters(self, path, self.saved_tank_levels, [PU1, PU2, PU1F, PU2F, J280, J269], [self.pu1, self.pu2, self.pu1f, self.pu2f, self.j280, self.j269], self.reader,
+        BasePLC.set_parameters(self, path, self.saved_tank_levels, [PU1, PU2, PU1F, PU2F, J280, J269],
+                               [self.pu1, self.pu2, self.pu1f, self.pu2f, self.j280, self.j269], self.reader,
                                self.lock, ENIP_LISTEN_PLC_ADDR)
         self.startup()
 
@@ -56,7 +57,7 @@ class PLC1(BasePLC):
                     self.set(ATT_1, attack_on)
 
                     self.t1 = Decimal(self.receive(T1, CTOWN_IPS['plc2']))
-
+                    print "PU1F: " + str(Decimal(self.get(PU1F)))
                     with self.lock:
                         if self.t1 < 4.0:
                             self.pu1 = 1

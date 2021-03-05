@@ -17,6 +17,7 @@ class BasePLC(PLC):
         """
         while self.reader:
             values = []
+            print "Tags to get: " + str(self.tags)
             for tag in self.tags:
                 with self.lock:
                     # noinspection PyBroadException
@@ -26,7 +27,7 @@ class BasePLC(PLC):
                         print "Exception trying to get the tag"
                         time.sleep(0.05)
                         continue
-                    values.append(self.get(tag))
+            print "Values to get: " + str(values)
             self.send_multiple(self.tags, values, self.send_adddress)
             time.sleep(0.05)
 

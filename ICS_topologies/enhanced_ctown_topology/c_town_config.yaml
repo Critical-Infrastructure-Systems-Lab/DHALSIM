@@ -43,4 +43,4 @@ complex_topology: "True"
 # A Batch simulation runs consecutive weeks. Batch simulation requires that the initial_custom_flag is set to true
 # and that the demand paths are correctly set. Batch simulations takes the week_index parameter for sys.argv. Hence,
 # the responsibility of passing this parameter to general_automatic_run.py is on the calling script
-simulation_tpye: "Batch"
+simulation_tpye: "Single"

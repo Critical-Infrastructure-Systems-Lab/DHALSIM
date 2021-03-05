@@ -44,7 +44,8 @@ class PLC3(BasePLC):
         self.lock = threading.Lock()
         path = 'plc3_saved_tank_levels_received.csv'
         tags = [T2, V2, J300, J256, J289, J415, J14, J422, PU4, PU5, PU6, PU7, PU4F, PU5F, PU6F, PU7F]
-        values = [self.t2, self.v2, self.j300, self.j256, self.j289, self.j415, self.j14, self.j422, self.pu4, self.pu5, self.pu6, self.pu7, self.pu4f, self.pu5f, self.pu6f, self.pu7f]
+        values = [self.t2, self.v2, self.j300, self.j256, self.j289, self.j415, self.j14, self.j422, self.pu4, self.pu5,
+                  self.pu6, self.pu7, self.pu4f, self.pu5f, self.pu6f, self.pu7f]
 
         # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable
         # values into a persistent file

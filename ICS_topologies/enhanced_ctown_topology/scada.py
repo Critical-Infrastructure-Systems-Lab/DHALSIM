@@ -34,6 +34,7 @@ class SCADAServer(BasePLC):
                                    "J256", "J289", "J415", "J14", "J422", "PU4", "PU5", "PU6", "PU7", "PU4F", "PU5F",
                                    "PU6F", "PU7F", "T3", "PU8", "PU10", "PU11", "PU8F", "PU10F", "PU11F", "J302",
                                    "J306", "J307", "J317", "T4", "T5", "T6", "T7"]]
+
         self.plc1_tags = [PU1, PU2, PU1F, PU2F, J280, J269]
         self.plc2_tags = [T1]
         self.plc3_tags = [T2, V2, J300, J256, J289, J415, J14, J422, PU4, PU5, PU6, PU7, PU4F, PU5F, PU6F, PU7F]
@@ -44,7 +45,7 @@ class SCADAServer(BasePLC):
         self.plc8_tags = [T6]
         self.plc9_tags = [T7]
 
-        self.path = 'scada_saved_tank_levels_received.csv'
+        self.path = 'scada_values.csv'
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
 
