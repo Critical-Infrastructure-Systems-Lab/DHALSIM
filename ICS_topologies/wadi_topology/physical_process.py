@@ -248,9 +248,6 @@ class PhysicalPlant:
         # We want to simulate only 1 hydraulic timestep each time MiniCPS processes the simulation data
         self.wn.options.time.duration = self.wn.options.time.hydraulic_timestep
         master_time = 0
-
-        self.simulation_days = 1
-
         iteration_limit = (self.simulation_days * 24 * 3600) / self.wn.options.time.hydraulic_timestep
 
         print("Simulation will run for " + str(self.simulation_days) + " days. Hydraulic timestep is " + str(

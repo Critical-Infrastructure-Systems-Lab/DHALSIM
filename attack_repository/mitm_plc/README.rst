@@ -45,7 +45,7 @@ We need to launch: The ICS topology, xterm consoles in the nodes, and launch the
 
 i)   cd ~/thesis; make auto-mitm
 ii)  in the mininet console: mininet> xterm plc1 plc2 attacker plant
-     in plc1: plc1# python autuomatic_plc.py -n plc1
-     in plc1: plc2# python autuomatic_plc.py -n plc2
+     in plc1: plc1# python automatic_plc.py -n plc1
+     in plc1: plc2# python automatic_plc.py -n plc2
      in plant: plant# automatic_plant.py
 iii) in attacker: automatic_mitm_attack.py
