@@ -64,11 +64,11 @@ class Minitown(MiniCPS):
         self.plc1_process = plc1.popen(sys.executable, "automatic_plc.py", "-n", "plc1", stderr=sys.stdout, stdout=plc1_output )
 
         # Launching automatically mitm attack
-        if mitm_attack == 1 :
+        if mitm_attack == 1:
             attacker_file = open("output/attacker.log", 'r+')
             attacker = net.get('attacker')
             mitm_cmd = shlex.split("../../../attack-experiments/env/bin/python "
-                                   "../../attack_repository/mitm_attacks/wadi_mitm_plc1.py " + wadi_ip['plc2'] + " " + wadi_ip['plc1'])
+                                   "../../attack_repository/mitm_plc/wadi_mitm_plc1.py " + wadi_ip['plc2'] + " " + wadi_ip['plc1'])
             print 'Running MiTM attack with command ' + str(mitm_cmd)
             self.mitm_process = attacker.popen(mitm_cmd, stderr=sys.stdout, stdout=attacker_file )
             print "[] Attacking"
@@ -89,23 +89,22 @@ class Minitown(MiniCPS):
         cmd = shlex.split("./create_log_files.sh")
         subprocess.call(cmd)
 
-    def end_plc_process(self, plc_process):
-
-        plc_process.send_signal(signal.SIGINT)
-        plc_process.wait()
-        if plc_process.poll() is None:
-            plc_process.terminate()
-        if plc_process.poll() is None:
-            plc_process.kill()
+    def end_process(self, process):
+        process.send_signal(signal.SIGINT)
+        process.wait()
+        if process.poll() is None:
+            process.terminate()
+        if process.poll() is None:
+            process.kill()
 
     def finish(self):
         print "[*] Simulation finished"
-        self.end_plc_process(self.scada_process)
-        self.end_plc_process(self.plc1_process)
-        self.end_plc_process(self.plc2_process)
+        self.end_process(self.scada_process)
+        self.end_process(self.plc1_process)
+        self.end_process(self.plc2_process)
 
-        if self.simulation:
-            self.simulation.terminate()
+        if self.simulation.poll() is None:
+            self.end_process(self.simulation)
 
         cmd = shlex.split("./kill_cppo.sh")
         subprocess.call(cmd)

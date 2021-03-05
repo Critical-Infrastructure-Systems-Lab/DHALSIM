@@ -1,0 +1,31 @@
+attacks:
+  - name: "plc_empty_tank_1"
+    type: "device_attack"
+    target: "plc1"
+    actuators:
+      - pu1
+      - pu2
+    command: "Close"
+    start: 2
+    end: 10
+
+  - name : "network_empty_tank_1"
+    type: "network_attack"
+    source_plc: "plc2"
+    destination_plc: "plc1"
+    values:
+      - 7.0
+    tags:
+      - T1
+    start: 2
+    end: 10
+
+  - name: "plc_overflow_tank_3"
+    type: "device_attack"
+    target: "plc3"
+    actuators:
+      - pu4
+      - pu5
+    command: "Open"
+    start: 2
+    end: 10
