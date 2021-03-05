@@ -5,7 +5,7 @@ import csv
 import sys
 import pandas as pd
 import yaml
-
+from decimal import Decimal
 
 class PhysicalPlant:
 
@@ -36,6 +36,9 @@ class PhysicalPlant:
 
         self.tank_list = self.get_node_list_by_type(self.node_list, 'Tank')
         self.junction_list = self.get_node_list_by_type(self.node_list, 'Junction')
+        self.scada_junction_list = ['J280', 'J269', 'J300', 'J256', 'J289', 'J415', 'J14', 'J422', 'J302', 'J306',
+                                    'J307', 'J317']
+
         self.pump_list = self.get_link_list_by_type(self.link_list, 'Pump')
         self.valve_list = self.get_link_list_by_type(self.link_list, 'Valve')
 
@@ -274,6 +277,7 @@ class PhysicalPlant:
 
     def write_results(self, results):
         with open('output/' + self.output_path, 'w') as f:
+            print("Saving output to: " + 'output/' + self.output_path)
             writer = csv.writer(f)
             writer.writerows(results)
 
@@ -282,24 +286,24 @@ class PhysicalPlant:
         self.wn.options.time.duration = self.wn.options.time.hydraulic_timestep
         master_time = 0
 
-        mask_full_control = 7
         iteration_limit = (self.simulation_days * 24 * 3600) / self.wn.options.time.hydraulic_timestep
         print("Simulation will run for " + str(self.simulation_days) + " days. Hydraulic timestep is " + str(
             self.wn.options.time.hydraulic_timestep) +
               " for a total of " + str(iteration_limit) + " iterations ")
 
-        self.wn.write_inpfile('temp_test.inp')
+        print("Output path will be: " + str(self.output_path))
 
         while master_time <= iteration_limit:
             self.update_controls()
             #self.update_actuators()
 
-            actuators_state = self.get_actuators_state()
+            #actuators_state = self.get_actuators_state()
 
             print("ITERATION %d ------------- " % master_time)
             results = self.sim.run_sim(convergence_error=True)
             values_list = self.register_results(results)
             #results = self.sim.run_sim()
+
             #results = self.sim.run_sim_with_custom_actuators(actuators_state)
 
             #these_pressure_results = results.node['pressure'].iloc[-1]
@@ -313,17 +317,34 @@ class PhysicalPlant:
             # self.wn.options.time.duration += self.wn.options.time.hydraulic_timestep
             master_time += 1
 
+            # Update tank pressure
             for tank in self.tank_list:
                 tank_name = '\'' + tank + '\''
-                #a_level = these_pressure_results[tank]
                 a_level = self.wn.get_node(tank).level
                 query = "UPDATE ctown SET value = " + str(a_level) + " WHERE name = " + tank_name
                 self.c.execute(query)  # UPDATE TANKS IN THE DATABASE
                 self.conn.commit()
 
+            # Update pump flow
+            for pump in self.pump_list:
+                a_flowrate = Decimal(self.wn.get_link(pump).flow)
+                pump_name ='\'' + pump + 'F' + '\''
+                query = "UPDATE ctown SET value = " + str(a_flowrate) + " WHERE name = " + pump_name
+                self.c.execute(query)  # UPDATE PUMP FLOWS IN THE DATABASE
+                self.conn.commit()
+
+            # Update the SCADA junctions
+            for junction in self.scada_junction_list:
+                junction_name = '\'' + junction + '\''
+                a_level = Decimal(self.wn.get_node(junction).head - self.wn.get_node(junction).elevation)
+                query = "UPDATE ctown SET value = " + str(a_level) + " WHERE name = " + junction_name
+                self.c.execute(query)  # UPDATE JUNCTION PRESSURE DATABASE
+                self.conn.commit()
+
             query = "UPDATE ctown SET value = 0 WHERE name = 'CONTROL'"
             self.c.execute(query)  # UPDATE CONTROL value for the PLCs to apply control
             self.conn.commit()
+
         self.write_results(self.results_list)
 
 if __name__ == "__main__":
