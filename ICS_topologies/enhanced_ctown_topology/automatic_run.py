@@ -260,8 +260,10 @@ if __name__ == "__main__":
 
     if len(sys.argv) < 2:
         week_index = str(0)
+        print "No week index given, using 0"
     else:
         week_index = sys.argv[1]
+        print "Week index is: " + str(week_index)
 
     config_file = "c_town_config.yaml"
     print "Initializing experiment with config file: " + str(config_file)

@@ -12,11 +12,12 @@ class ExperimentInitializer:
 
         # Simulation type is needed to handle week_index.
         if 'simulation_type' in self.options:
-            self.simulation_type = self.options['simulation_tpye']
+            self.simulation_type = self.options['simulation_type']
         else:
             self.simulation_type = "Single"
 
         if self.simulation_type == "Batch":
+            print "Running Batch simulation"
             if 'initial_custom_flag' in self.options and 'demand_patterns_path' in self.options and 'starting_demand_path' \
                     and 'initial_tank_levels_path' in self.options:
                 self.week_index = week_index
@@ -24,6 +25,7 @@ class ExperimentInitializer:
                 print 'Batch mode configured, but no initial customization options are set, aborting.'
                 sys.exit(1)
         elif self.simulation_type == "Single":
+            print "Running Single simulation"
             self.week_index = int(self.options['week_index'])
         else:
             print 'Invalid simulation mode, supported values are "Single" and "Batch", aborting'

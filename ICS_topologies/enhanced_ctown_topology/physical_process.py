@@ -14,7 +14,7 @@ class PhysicalPlant:
         config_file_path = sys.argv[1]
         config_options = self.load_config(config_file_path)
 
-        if config_options['simulation_tpye'] == "Batch":
+        if config_options['simulation_type'] == "Batch":
             self.week_index = int(sys.argv[2])
         else:
             self.week_index = int(config_options['week_index'])
