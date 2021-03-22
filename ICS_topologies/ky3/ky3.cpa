@@ -1,0 +1,6 @@
+[CYBERNODES]
+; Name, Sensors, Actuators
+ PLC1, , X_Pump_2
+ PLC2, , X_Pump_4
+ PLC3, T_2,
+; SCADA

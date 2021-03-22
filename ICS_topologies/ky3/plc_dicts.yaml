@@ -1,0 +1,3 @@
+[{Actuators: [X_Pump_2], Controls: [], Dependencies: [], PLC: PLC1, Sensors: ['']},
+  {Actuators: [X_Pump_4], Controls: [], Dependencies: [], PLC: PLC2, Sensors: ['']},
+  {Actuators: [''], Controls: [], Dependencies: [], PLC: PLC3, Sensors: [T_2]}]
