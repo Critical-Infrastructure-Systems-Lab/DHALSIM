@@ -16,7 +16,7 @@ from os.path import expanduser
 
 automatic = 1
 iperf_test = 0
-ddos_attack = 1
+ddos_attack = 0
 
 class DHALSIM(MiniCPS):
     """ Main script controlling an experiment
@@ -204,7 +204,7 @@ class DHALSIM(MiniCPS):
             attacker_file = open("output/attacker.log", 'r+')
             attacker = net.get('attacker')
             # In the future, the type of attack sent to the script should be obtained from utils configuration. An ENUM should be better
-            ddos_cmd = shlex.split("ky3_ddos_plc1.py 192.168.1.1 192.168.1.254 exponential_offset")
+            ddos_cmd = shlex.split("python ky3_ddos_plc1.py")
             print 'Running ddos attack with command ' + str(ddos_cmd)
             self.ddos_process = attacker.popen(ddos_cmd, stderr=sys.stdout, stdout=attacker_file)
             print "[] Attacking"

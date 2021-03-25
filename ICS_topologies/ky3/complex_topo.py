@@ -87,6 +87,7 @@ class ComplexTopo(Topo):
             index += 1
 
         plant = self.addHost('plant')
-	attacker = self.addHost('attacker')
+        attacker = self.addHost('attacker', ip='192.168.1.10/24', defaultRoute='via 192.168.1.254/24')
         scada = self.addNode('scada', ip='192.168.1.2/24', defaultRoute='via 192.168.1.254/24')
         self.addLink(scada, switches[0])
+        self.addLink(attacker, switches[0])
