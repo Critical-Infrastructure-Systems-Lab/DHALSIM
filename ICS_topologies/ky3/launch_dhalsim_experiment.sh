@@ -3,7 +3,7 @@
 # There should be a DHALSIM configuration file with .yaml extension in the same folder. Also a .inp and .cpa files
 # with the same name in this folder
 topology_name=$1
-
+week_index=$2
 folder_name=$topology_name"_topology"
 
 # Create log folder
@@ -20,4 +20,4 @@ rm -rf plant.sqlite; sudo python init.py; sudo chown mininet:mininet plant.sqlit
 sudo pkill  -f -u root "python -m cpppo.server.enip"
 chmod +x *.sh
 sudo mn -c
-sudo python general_automatic_run.py -c $topology_name".yaml"
+sudo python automatic_run.py -c $topology_name".yaml" $week_index

@@ -11,6 +11,7 @@ CONTROL = ('CONTROL', 1)
 plc_netmask = '/24'
 ENIP_LISTEN_PLC_ADDR = '192.168.1.1'
 SCADA_IP_ADDR = '192.168.1.2'
+ddos_attack = 1
 
 CTOWN_IPS = {
     'plc1':'10.0.1.1',
@@ -36,17 +37,15 @@ SCADA_DATA = {
 
 PLC1_TAGS = (
     ('X_Pump_2', 1, 'REAL'),
-    ('CONTROL', 1, 'REAL'),
 )
 
 PLC2_TAGS = (
     ('X_Pump_4', 1, 'REAL'),
-    ('CONTROL', 1, 'REAL'),
+    ('T_2', 1, 'REAL'),
 )
 
 PLC3_TAGS = (
     ('T_2', 1, 'REAL'),
-    ('CONTROL', 1, 'REAL'),
 )
 
 SCADA_TAGS = (
