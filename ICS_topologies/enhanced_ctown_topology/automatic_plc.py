@@ -3,7 +3,7 @@ import time
 import sys
 import argparse
 import signal
-import shlex
+
 
 class NodeControl():
 
@@ -80,22 +80,6 @@ class NodeControl():
         else:
             self.dict_path = 'plc_dicts.yaml'
 
-        if arg_parser.attack_flag:
-            self.attack_flag = True
-            if arg_parser.attack_path:
-                self.attack_path = arg_parser.attack_path
-            else:
-                self.attack_path = "../../attack_repository/attack_description.yaml"
-
-            if arg_parser.attack_name:
-                self.attack_name = arg_parser.attack_name
-            else:
-                self.attack_name = "plc_empty_tank_1"
-        else:
-            self.attack_flag = False
-            self.attack_path = None
-            self.attack_name = None
-
     def delete_log(self):
         """
         We delete the log of previous experiments
@@ -109,16 +93,7 @@ class NodeControl():
         return tcp_dump
 
     def start_plc(self):
-
-        cmd_string = 'python ' + self.name + '.py' + ' -w ' + str(self.week_index)
-
-        if self.attack_flag:
-            # Pass the path to the PLC so it can parse the attack information and run it
-            cmd_string = 'python ' + self.name + '.py' + ' -w ' + str(self.week_index) + ' -f True -p ' + \
-                         str(self.attack_path) + ' -a ' + str(self.attack_name)
-
-        cmd = shlex.split(cmd_string)
-        plc_process = subprocess.Popen(cmd, shell=False)
+        plc_process = subprocess.Popen(['python', self.name + '.py', '-w', str(self.week_index)], shell=False)
         return plc_process
 
     def get_arguments(self):
@@ -126,9 +101,6 @@ class NodeControl():
         parser.add_argument("--name", "-n", help="Name of the Mininet node and script to run")
         parser.add_argument("--week", "-w", help="Week index of the simulation")
         parser.add_argument("--dict", "-d", help="Dictionary of the PLCs logic")
-        parser.add_argument("--attack_flag", "-f", help="Flag to indicate if this PLC needs to run an attack")
-        parser.add_argument("--attack_path", "-p", help="Path to the attack repository")
-        parser.add_argument("--attack_name", "-a", help="Name of the attack to be run by this PLC")
         return parser.parse_args()
 
 
