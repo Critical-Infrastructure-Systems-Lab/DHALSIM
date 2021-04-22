@@ -72,7 +72,7 @@ class NodeControl():
         if self.name == 'scada':
             routing = subprocess.call(['route', 'add', 'default', 'gw', '192.168.2.254', self.interface_name],shell=False)
         else:
-            routing = subprocess.call(['route', 'add', 'default', 'gw', '192.168.1.254', self.interface_name], shell=False)
+            routing = subprocess.call(['route','add','default', 'gw' ,'192.168.1.254', self.interface_name], shell=False)
         return routing
 
     def start_tcpdump_capture(self):

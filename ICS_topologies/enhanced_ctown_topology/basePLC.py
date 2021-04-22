@@ -10,7 +10,6 @@ import time
 
 class BasePLC(PLC):
 
-
     def send_system_state(self):
         """
         This method sends the values to the SCADA server or any other client requesting the values

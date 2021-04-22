@@ -379,12 +379,13 @@
 ;Tank            	Model
 
 [TIMES]
- Duration           	14:00
- Hydraulic Timestep 	0:15
- Quality Timestep   	0:15
- Pattern Timestep   	0:15
+ ;Duration           	14:00
+ Duration           	00:01
+ Hydraulic Timestep 	0:01
+ Quality Timestep   	0:05 
+ Pattern Timestep   	0:01
  Pattern Start      	0:00
- Report Timestep    	0:15
+ Report Timestep    	0:01 
  Report Start       	0:00 
  Start ClockTime    	0:00
  Statistic          	NONE

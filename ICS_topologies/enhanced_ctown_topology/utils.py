@@ -15,6 +15,7 @@ PU10 = ('PU10', 1)
 PU11 = ('PU11', 1)
 
 # Pump flows
+V2F = ('V2F', 1)
 PU1F = ('PU1F', 1)
 PU2F = ('PU2F', 1)
 PU3F = ('PU3F', 1)
@@ -145,6 +146,7 @@ PLC3_TAGS = (
     ('PU6F', 1, 'REAL'),
     ('PU7F', 1, 'REAL'),
     ('V2', 1, 'REAL'),
+    ('V2F', 1, 'REAL'),
     ('T4', 1, 'REAL'),
     ('J300', 1, 'REAL'),
     ('J256', 1, 'REAL'),
@@ -214,6 +216,7 @@ SCADA_TAGS = (
     ('PU9', 1, 'REAL'),
     ('PU10', 1, 'REAL'),
     ('PU11', 1, 'REAL'),
+    ('V2F', 1, 'REAL'),
     ('PU1F', 1, 'REAL'),
     ('PU2F', 1, 'REAL'),
     ('PU3F', 1, 'REAL'),
@@ -386,6 +389,7 @@ SCHEMA_INIT = """
     INSERT INTO ctown VALUES ('PU9', 1, '0');
     INSERT INTO ctown VALUES ('PU10', 1, '0');
     INSERT INTO ctown VALUES ('PU11', 1, '0');
+    INSERT INTO ctown VALUES ('V2F', 1, '0.0');    
     INSERT INTO ctown VALUES ('PU1F', 1, '0.0');
     INSERT INTO ctown VALUES ('PU2F', 1, '0.0');
     INSERT INTO ctown VALUES ('PU3F', 1, '0.0');

@@ -4,7 +4,10 @@ from utils import T1, PU1, PU2, PU1F, PU2F, CTOWN_IPS, J280, J269
 from decimal import Decimal
 import time
 import threading
-from utils import ATT_1, ATT_2, flag_attack_plc1
+from utils import ATT_1, ATT_2
+import argparse
+import sys
+import yaml
 
 plc1_log_path = 'plc1.log'
 
@@ -13,6 +16,20 @@ class PLC1(BasePLC):
 
     def pre_loop(self):
         print 'DEBUG: plc1 enters pre_loop'
+
+        # We wish we could implement this as arg_parse, but we cannot overwrite the constructor
+        self.week_index = sys.argv[2]
+        self.attack_flag = False
+        self.attack_dict = None
+
+        if len(sys.argv) >= 4:
+            self.attack_flag = sys.argv[4]
+            self.attack_path = sys.argv[6]
+            self.attack_name = sys.argv[8]
+
+        if self.attack_flag:
+            self.attack_dict = self.get_attack_dict(self.attack_path, self.attack_name)
+            print "PLC1 running attack: " + str(self.attack_dict)
 
         self.local_time = 0
 
@@ -42,6 +59,14 @@ class PLC1(BasePLC):
                                self.lock, ENIP_LISTEN_PLC_ADDR)
         self.startup()
 
+    def get_attack_dict(self, path, name):
+        with open(path) as config_file:
+            attack_file = yaml.load(config_file, Loader=yaml.FullLoader)
+
+        for attack in attack_file['attacks']:
+            if name == attack['name']:
+                return attack
+
     def check_control(self, mask):
         control = int(self.get(CONTROL))
         if not (mask & control):
@@ -57,7 +82,6 @@ class PLC1(BasePLC):
                     self.set(ATT_1, attack_on)
 
                     self.t1 = Decimal(self.receive(T1, CTOWN_IPS['plc2']))
-                    print "PU1F: " + str(Decimal(self.get(PU1F)))
                     with self.lock:
                         if self.t1 < 4.0:
                             self.pu1 = 1
@@ -71,13 +95,33 @@ class PLC1(BasePLC):
                         elif self.t1 > 4.5:
                             self.pu2 = 0
 
-                        # This attack keeps PU1 - PU2 closed
-                        if flag_attack_plc1 == 1:
+                        if self.attack_flag:
                             # Now ATT_2 is set in the physical_process. This in order to make more predictable the
                             # attack start and end time
                             if attack_on == 1:
-                                self.pu1 = 0
-                                self.pu2 = 0
+                                if self.attack_dict['command'] == 'Close':
+                                    # toDo: Implement this dynamically.
+                                    # There's a horrible way of doing it with the current code. This would be much
+                                    # easier (and less horrible) if we use the general topology
+                                    self.pu1 = 0
+                                    self.pu2 = 0
+                                elif self.attack_dict['command'] == 'Open':
+                                    self.pu1 = 1
+                                    self.pu2 = 1
+                                elif self.attack_dict['command'] == 'Maintain':
+                                    continue
+                                elif self.attack_dict['command'] == 'Toggle':
+                                    if self.pu1 == 1:
+                                        self.pu1 = 0
+                                    else:
+                                        self.pu1 = 1
+
+                                    if self.pu2 == 1:
+                                        self.pu2 = 0
+                                    else:
+                                        self.pu2 = 1
+                                else:
+                                    print "Warning. Attack not implemented yet"
 
                         self.set(PU1, int(self.pu1))
                         self.set(PU2, int(self.pu2))
@@ -93,6 +137,15 @@ class PLC1(BasePLC):
 
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description='Script that represents PLC/SCADA node in a DHALSIM topology')
+    parser.add_argument("--week", "-w", help="Week index in case demand customization flag is enabled")
+    parser.add_argument("--attack_flag", "-f", help="Flag to indicate if this PLC needs to run an attack")
+    parser.add_argument("--attack_path", "-p", help="Path to the attack repository")
+    parser.add_argument("--attack_name", "-a", help="Name of the attack to be run by this PLC")
+
+    args = parser.parse_args()
+
     plc1 = PLC1(
         name='plc1',
         state=STATE,
