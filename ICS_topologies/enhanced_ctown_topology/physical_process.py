@@ -19,6 +19,18 @@ class PhysicalPlant:
         else:
             self.week_index = int(config_options['week_index'])
 
+        # Some users may not configure the parameter
+        # Sets the attack_flag to load attack_start and attack_end before main loop
+        if config_options['run_attack']:
+                if config_options['run_attack'] == "True":
+                    self.attack_flag = True
+                    self.attack_path = sys.argv[3]
+                    self.attack_name = config_options['attack_name']
+                else:
+                    self.attack_flag = False
+        else:
+            self.attack_flag = False
+
         # connection to the database
         self.db_path = config_options['db_path']
         self.conn = sqlite3.connect(self.db_path)
@@ -51,10 +63,11 @@ class PhysicalPlant:
 
         aux = self.create_link_header(self.pump_list)
         list_header.extend(aux)
-        list_header.extend(aux)
 
         aux = self.create_link_header(self.valve_list)
         list_header.extend(aux)
+
+        list_header.extend(["Attack#01", "Attack#02"])
 
         self.results_list = []
         self.results_list.append(list_header)
@@ -232,6 +245,20 @@ class PhysicalPlant:
             else:
                 values_list.extend([self.wn.get_link(valve).status.value])
 
+        try:
+            rows = self.c.execute("SELECT value FROM ctown WHERE name = 'ATT_1'").fetchall()
+            self.conn.commit()
+            attack1 = int(rows[0][0])
+            rows = self.c.execute("SELECT value FROM ctown WHERE name = 'ATT_2'").fetchall()
+            self.conn.commit()
+            attack2 = int(rows[0][0])
+        except Exception:
+            print("Warning DB locked")
+            attack1 = 0
+            attack2 = 0
+
+        values_list.extend([attack1, attack2])
+
         return values_list
 
     def get_actuators_state(self):
@@ -281,12 +308,35 @@ class PhysicalPlant:
             writer = csv.writer(f)
             writer.writerows(results)
 
+    def load_attack_options(self):
+        with open(self.attack_path) as config_file:
+            attack_file = yaml.load(config_file, Loader=yaml.FullLoader)
+
+        for attack in attack_file['attacks']:
+            if self.attack_name == attack['name']:
+                self.attack_start = int(attack['start'])
+                self.attack_end = int(attack['end'])
+                self.attack_type = attack['type']
+
     def main(self):
         # We want to simulate only 1 hydraulic timestep each time MiniCPS processes the simulation data
         self.wn.options.time.duration = self.wn.options.time.hydraulic_timestep
         master_time = 0
 
         iteration_limit = (self.simulation_days * 24 * 3600) / self.wn.options.time.hydraulic_timestep
+
+        # check attack duration
+        if self.attack_flag:
+            self.load_attack_options()
+            print("Launching attack " + str(self.attack_name) + " with start in iteration " + str(self.attack_start)
+                  + " and finish at iteration " + str(self.attack_end))
+        else:
+            self.attack_start = 0
+            self.attack_end = 0
+
+        if iteration_limit >= self.attack_start:
+            print("Warning. Attack starts at or after iteration limit")
+
         print("Simulation will run for " + str(self.simulation_days) + " days. Hydraulic timestep is " + str(
             self.wn.options.time.hydraulic_timestep) +
               " for a total of " + str(iteration_limit) + " iterations ")
@@ -300,7 +350,7 @@ class PhysicalPlant:
             #actuators_state = self.get_actuators_state()
 
             print("ITERATION %d ------------- " % master_time)
-            results = self.sim.run_sim(convergence_error=True)
+            results = self.sim.run_sim()
             values_list = self.register_results(results)
             #results = self.sim.run_sim()
 
@@ -316,42 +366,57 @@ class PhysicalPlant:
             # EPANET simulator requires this to advance the simulation
             # self.wn.options.time.duration += self.wn.options.time.hydraulic_timestep
             master_time += 1
+            try:
+                # Update tank pressure
+                for tank in self.tank_list:
+                    tank_name = '\'' + tank + '\''
+                    a_level = self.wn.get_node(tank).level
+                    query = "UPDATE ctown SET value = " + str(a_level) + " WHERE name = " + tank_name
+                    self.c.execute(query)  # UPDATE TANKS IN THE DATABASE
+                    self.conn.commit()
 
-<<<<<<< HEAD
-=======
+                # Update pump flow
+                for pump in self.pump_list:
+                    a_flowrate = Decimal(self.wn.get_link(pump).flow)
+                    pump_name ='\'' + pump + 'F' + '\''
+                    query = "UPDATE ctown SET value = " + str(a_flowrate) + " WHERE name = " + pump_name
+                    self.c.execute(query)  # UPDATE PUMP FLOWS IN THE DATABASE
+                    self.conn.commit()
 
->>>>>>> 0fe5b04... Finishing the merge into master.
-            # Update tank pressure
-            for tank in self.tank_list:
-                tank_name = '\'' + tank + '\''
-                a_level = self.wn.get_node(tank).level
-                query = "UPDATE ctown SET value = " + str(a_level) + " WHERE name = " + tank_name
-                self.c.execute(query)  # UPDATE TANKS IN THE DATABASE
+                # Update valve flow
+                for valve in self.valve_list:
+                    a_flowrate = Decimal(self.wn.get_link(valve).flow)
+                    valve_name ='\'' + valve + 'F' + '\''
+                    query = "UPDATE ctown SET value = " + str(a_flowrate) + " WHERE name = " + valve_name
+                    self.c.execute(query)  # UPDATE VALVE FLOWS IN THE DATABASE
+                    self.conn.commit()
+
+                # Update the SCADA junctions
+                for junction in self.scada_junction_list:
+                    junction_name = '\'' + junction + '\''
+                    a_level = Decimal(self.wn.get_node(junction).head - self.wn.get_node(junction).elevation)
+                    query = "UPDATE ctown SET value = " + str(a_level) + " WHERE name = " + junction_name
+                    self.c.execute(query)  # UPDATE JUNCTION PRESSURE DATABASE
+                    self.conn.commit()
+
+                query = "UPDATE ctown SET value = 0 WHERE name = 'CONTROL'"
+                self.c.execute(query)  # UPDATE CONTROL value for the PLCs to apply control
                 self.conn.commit()
 
-            # Update pump flow
-<<<<<<< HEAD
-            for pump in self.pump_list:
-                a_flowrate = Decimal(self.wn.get_link(pump).flow)
-                pump_name ='\'' + pump + 'F' + '\''
-                query = "UPDATE ctown SET value = " + str(a_flowrate) + " WHERE name = " + pump_name
-                self.c.execute(query)  # UPDATE PUMP FLOWS IN THE DATABASE
-                self.conn.commit()
+                # For concealment attacks, we need more stages in the attack
+                if self.attack_flag and (self.attack_type == "device_attack" or self.attack_type == "network_attack"):
+                    if self.attack_start <= master_time < self.attack_end:
+                        query = "UPDATE ctown SET value = " + str(1) + " WHERE name = 'ATT_2'"
+                        self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to launch attack
+                        self.conn.commit()
+                    else:
+                        query = "UPDATE ctown SET value = " + str(0) + " WHERE name = 'ATT_2'"
+                        self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to stop attack
+                        self.conn.commit()
 
-            # Update the SCADA junctions
-            for junction in self.scada_junction_list:
-                junction_name = '\'' + junction + '\''
-                a_level = Decimal(self.wn.get_node(junction).head - self.wn.get_node(junction).elevation)
-                query = "UPDATE ctown SET value = " + str(a_level) + " WHERE name = " + junction_name
-                self.c.execute(query)  # UPDATE JUNCTION PRESSURE DATABASE
-                self.conn.commit()
-=======
-
->>>>>>> 0fe5b04... Finishing the merge into master.
-
-            query = "UPDATE ctown SET value = 0 WHERE name = 'CONTROL'"
-            self.c.execute(query)  # UPDATE CONTROL value for the PLCs to apply control
-            self.conn.commit()
+            except Exception:
+                print("Warning, skipping an iteration")
+                continue
 
         self.write_results(self.results_list)
 

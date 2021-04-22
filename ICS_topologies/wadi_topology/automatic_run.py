@@ -89,22 +89,23 @@ class Minitown(MiniCPS):
         cmd = shlex.split("./create_log_files.sh")
         subprocess.call(cmd)
 
-    def end_process(self, process):
-        process.send_signal(signal.SIGINT)
-        process.wait()
-        if process.poll() is None:
-            process.terminate()
-        if process.poll() is None:
-            process.kill()
+    def end_plc_process(self, plc_process):
+
+        plc_process.send_signal(signal.SIGINT)
+        plc_process.wait()
+        if plc_process.poll() is None:
+            plc_process.terminate()
+        if plc_process.poll() is None:
+            plc_process.kill()
 
     def finish(self):
         print "[*] Simulation finished"
-        self.end_process(self.scada_process)
-        self.end_process(self.plc1_process)
-        self.end_process(self.plc2_process)
+        self.end_plc_process(self.scada_process)
+        self.end_plc_process(self.plc1_process)
+        self.end_plc_process(self.plc2_process)
 
-        if self.simulation.poll() is None:
-            self.end_process(self.simulation)
+        if self.simulation:
+            self.simulation.terminate()
 
         cmd = shlex.split("./kill_cppo.sh")
         subprocess.call(cmd)
