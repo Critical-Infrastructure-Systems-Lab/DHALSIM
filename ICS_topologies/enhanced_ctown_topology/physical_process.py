@@ -302,6 +302,7 @@ class PhysicalPlant:
         self.wn.remove_control(control['name'])
         self.wn.add_control(control['name'], new_control)
 
+    # We call these results "ground truth"
     def write_results(self, results):
         with open('output/' + self.output_path, 'w') as f:
             print("Saving output to: " + 'output/' + self.output_path)
@@ -320,10 +321,17 @@ class PhysicalPlant:
 
     def main(self):
         # We want to simulate only 1 hydraulic timestep each time MiniCPS processes the simulation data
+        # Ignore this, this is a trick for the water simulation
         self.wn.options.time.duration = self.wn.options.time.hydraulic_timestep
+
+        # Controls when the simulation ends and is the master time for the whole experiment
         master_time = 0
 
+        # simulation is configured in the yaml file
+        # hydraulic timestep is in the inp file
         iteration_limit = (self.simulation_days * 24 * 3600) / self.wn.options.time.hydraulic_timestep
+
+        #iteration_limit = 10
 
         # check attack duration
         if self.attack_flag:
@@ -344,27 +352,19 @@ class PhysicalPlant:
         print("Output path will be: " + str(self.output_path))
 
         while master_time <= iteration_limit:
-            self.update_controls()
-            #self.update_actuators()
 
-            #actuators_state = self.get_actuators_state()
+            # Reads from the DB the actuators status (PUMP status and VALVE status)
+            self.update_controls()
 
             print("ITERATION %d ------------- " % master_time)
+
+            # Simulates one timestemp
             results = self.sim.run_sim()
             values_list = self.register_results(results)
-            #results = self.sim.run_sim()
 
-            #results = self.sim.run_sim_with_custom_actuators(actuators_state)
-
-            #these_pressure_results = results.node['pressure'].iloc[-1]
-            #these_flowrate_results = results.link['flowrate'].iloc[-1]
-            #these_status_results = results.link['status'].iloc[-1]
-            #values_list = self.register_epanet_results(these_pressure_results, these_flowrate_results,
-            #                                           these_status_results, results.timestamp)
             self.results_list.append(values_list)
 
-            # EPANET simulator requires this to advance the simulation
-            # self.wn.options.time.duration += self.wn.options.time.hydraulic_timestep
+            # Updates the DB with the new system state
             master_time += 1
             try:
                 # Update tank pressure

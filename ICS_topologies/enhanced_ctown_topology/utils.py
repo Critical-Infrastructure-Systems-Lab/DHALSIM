@@ -1,3 +1,6 @@
+####################### Section 1 ###########################3
+############ Descrubes all the tags present in the Database
+
 v1 = ('v1', 1)
 V45 = ('V45', 1)
 V47 = ('V47', 1)
@@ -51,6 +54,9 @@ J317 = ('J317', 1)
 J14 = ('J14', 1)
 J422 = ('J422', 1)
 
+####################### Section 2 ###########################3
+############ Describes the network parameters
+
 plc_netmask = '/24'
 ENIP_LISTEN_PLC_ADDR = '192.168.1.1'
 SCADA_IP_ADDR = '192.168.1.2'
@@ -78,6 +84,15 @@ CTOWN_IPS = {
     'plc8':'10.0.8.1',
     'plc9':'10.0.9.1',
 }
+
+####################### Section 3 ###########################3
+############ Describes the MiniCPS servers
+############ A MiniCPS server is a process that sends/receives a tag
+
+# A server is controlled in 3 steps
+# Step 1: Define which tags the server (PLC - SCADA) can control
+# Step 2: Configure the address and the tags
+# Step 3: Configure the protocol
 
 PLC1_DATA = {
     'TODO': 'TODO',
@@ -118,7 +133,7 @@ SCADA_DATA = {
     'TODO': 'TODO',
 }
 
-
+# This is telling which tags can be controlled by PLC1
 PLC1_TAGS = (
     ('PU1', 1, 'REAL'),
     ('PU2', 1, 'REAL'),
@@ -255,6 +270,7 @@ flag_attack_communication_plc1_plc2 = 0
 ATT_1 = ('ATT_1', 1)
 ATT_2 = ('ATT_2', 1)
 
+# Configures the MiniCPS servers
 PLC1_SERVER = {
     'address': ENIP_LISTEN_PLC_ADDR,
     'tags': PLC1_TAGS
@@ -297,6 +313,9 @@ SCADA_SERVER = {
     'tags': SCADA_TAGS
 }
 
+
+# This configures the protocol
+# The name and mode of the protocol will always be the same
 PLC1_PROTOCOL = {
     'name': 'enip',
     'mode': 1,
@@ -357,6 +376,9 @@ STATE = {
     'path': PATH
 }
 
+
+# This creates the DB in SQlite
+
 SCHEMA = """        
 CREATE TABLE ctown (        
     name              TEXT NOT NULL,        
@@ -366,6 +388,8 @@ CREATE TABLE ctown (
 );
 """
 
+# The initial conditions of the system are written in the DB.
+# These files are either in the csv file or the EPANET inp
 SCHEMA_INIT = """
     INSERT INTO ctown VALUES ('T1', 1, '3.0');
     INSERT INTO ctown VALUES ('T2', 1, '0.5');

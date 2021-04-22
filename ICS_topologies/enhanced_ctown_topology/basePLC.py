@@ -49,7 +49,6 @@ class BasePLC(PLC):
 
     def sigint_handler(self, sig, frame):
         print 'DEBUG plc shutdown'
-        print 'IF WE PRINT THIS, IT MEANS THE GENERIC PLC CODE WORKS! YASSSS!!!'
         self.reader = False
         self.write_output()
         sys.exit(0)

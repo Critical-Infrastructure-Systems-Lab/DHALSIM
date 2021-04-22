@@ -55,7 +55,10 @@ class NodeControl():
         self.interface_name = self.name + '-eth0'
         self.delete_log()
 
+        # Starts a linux tcpdump process
         self.process_tcp_dump = self.start_tcpdump_capture()
+
+        # Starts the process running the specific PLC code
         self.plc_process = self.start_plc()
 
         while self.plc_process.poll() is None:
