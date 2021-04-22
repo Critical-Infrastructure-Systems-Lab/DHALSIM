@@ -83,6 +83,7 @@ class CTown(MiniCPS):
         net.start()
         self.setup_network()
 
+        # Here I am hardcoding manually how many PLCs we have. This is different in general topology
         self.sender_plcs = [2, 4, 6, 7, 8, 9]
         self.receiver_plcs = [1, 3, 5]
 
@@ -220,6 +221,8 @@ class CTown(MiniCPS):
         self.simulation = plant.popen(simulation_cmd, stderr=sys.stdout, stdout=physical_output)
 
         print "[] Simulating..."
+
+        # We wait until the simulation ends
         while self.simulation.poll() is None:
             pass
         self.finish()
@@ -287,19 +290,32 @@ class CTown(MiniCPS):
         # toDo: This method is not working
         #self.parse_pcap_files()
         self.merge_pcap_files()
+
+        # moves all the results to a folder named week_<week_index>
         self.move_output_files(self.week_index)
 
+        # This is just something required for MiniCPS
         cmd = shlex.split("./kill_cppo.sh")
         subprocess.call(cmd)
+
+        # This stops the mininet simulation
         net.stop()
+
+        # Exit
         sys.exit(0)
 
 
 if __name__ == "__main__":
 
+    # Here we are deciding if this should be run as Batch or Single mode.
+    #
     if len(sys.argv) < 2:
+
+        # This is single mode
         week_index = str(0)
     else:
+
+        # This is batch mode
         week_index = sys.argv[1]
 
     config_file = "c_town_config.yaml"

@@ -36,6 +36,7 @@ class SCADAServer(BasePLC):
                                    "J302", "J306", "J307", "J317", "T4", "T5", "T6", "T7", "PU3", "PU3F", "PU9",
                                    "PU9F",  "Attack#01", "Attack#02"]]
 
+        # The SCADA needs to know which PLC has which tag
         self.plc1_tags = [PU1, PU2, PU1F, PU2F, J280, J269]
         self.plc2_tags = [T1]
         self.plc3_tags = [T2, V2, V2F, J300, J256, J289, J415, J14, J422, PU4, PU5, PU6, PU7, PU4F, PU5F, PU6F, PU7F]
@@ -85,6 +86,7 @@ class SCADAServer(BasePLC):
                 results.extend([att_1, att_2])
                 self.saved_tank_levels.append(results)
 
+                # The scada polls for information every 2 seconds
                 time.sleep(2)
             except Exception, msg:
                 print(msg)

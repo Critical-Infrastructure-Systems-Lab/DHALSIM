@@ -78,6 +78,8 @@ class PLC1(BasePLC):
             try:
                 if self.check_control(self.plc_mask):
                     self.local_time += 1
+
+                    # Reads from the DB
                     attack_on = int(self.get(ATT_2))
                     self.set(ATT_1, attack_on)
 
@@ -95,14 +97,18 @@ class PLC1(BasePLC):
                         elif self.t1 > 4.5:
                             self.pu2 = 0
 
+                        # This is configured in the yaml file
                         if self.attack_flag:
                             # Now ATT_2 is set in the physical_process. This in order to make more predictable the
-                            # attack start and end time
+                            # attack start and end time. This ATT_2 is read from the DB
                             if attack_on == 1:
                                 if self.attack_dict['command'] == 'Close':
                                     # toDo: Implement this dynamically.
                                     # There's a horrible way of doing it with the current code. This would be much
                                     # easier (and less horrible) if we use the general topology
+
+                                    # pu1 and pu2 should not be hardcoded
+                                    # This object should have a list of actuators
                                     self.pu1 = 0
                                     self.pu2 = 0
                                 elif self.attack_dict['command'] == 'Open':
@@ -123,6 +129,7 @@ class PLC1(BasePLC):
                                 else:
                                     print "Warning. Attack not implemented yet"
 
+                        # Writes into the DB
                         self.set(PU1, int(self.pu1))
                         self.set(PU2, int(self.pu2))
 

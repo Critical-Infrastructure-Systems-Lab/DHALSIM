@@ -83,6 +83,7 @@ def capture(packet):
                 del pkt[TCP].chksum  # Needed to recalculate the checksum
                 packet.set_payload(str(pkt))
 
+                # This value is written by physical_process.py
                 rows = c.execute("SELECT value FROM ctown WHERE name = 'ATT_2'").fetchall()
                 conn.commit()
                 attack_on = int(rows[0][0])
