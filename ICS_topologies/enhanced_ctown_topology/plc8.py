@@ -20,15 +20,13 @@ class PLC8(BasePLC):
         self.t6 = Decimal(self.get(T6))
 
         self.lock = threading.Lock()
-        self.saved_tank_levels = [["iteration", "timestamp", "T6"]]
-        path = 'plc8_saved_tank_levels_received.csv'
         tags = [T6]
         values = [self.t6]
         lastPLC = True
 
         # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable
         # values into a persistent file
-        BasePLC.set_parameters(self, path, self.saved_tank_levels, tags, values, self.reader, self.lock,
+        BasePLC.set_parameters(self, tags, values, self.reader, self.lock,
                                ENIP_LISTEN_PLC_ADDR, lastPLC, self.week_index)
         self.startup()
 

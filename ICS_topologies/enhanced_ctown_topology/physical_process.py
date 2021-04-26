@@ -269,7 +269,6 @@ class PhysicalPlant:
         control['value'] = new_status
 
         new_action = controls.ControlAction(control['actuator'], control['parameter'], control['value'])
-        #new_control = controls.Control(control['condition'], new_action, name=control['name'])
         new_control = controls.Control(control['condition'], new_action)
 
         self.wn.remove_control(control['name'])
@@ -287,6 +286,8 @@ class PhysicalPlant:
         master_time = 0
 
         iteration_limit = (self.simulation_days * 24 * 3600) / self.wn.options.time.hydraulic_timestep
+
+        iteration_limit = 10
         print("Simulation will run for " + str(self.simulation_days) + " days. Hydraulic timestep is " + str(
             self.wn.options.time.hydraulic_timestep) +
               " for a total of " + str(iteration_limit) + " iterations ")
@@ -295,26 +296,11 @@ class PhysicalPlant:
 
         while master_time <= iteration_limit:
             self.update_controls()
-            #self.update_actuators()
-
-            #actuators_state = self.get_actuators_state()
-
             print("ITERATION %d ------------- " % master_time)
             results = self.sim.run_sim(convergence_error=True)
             values_list = self.register_results(results)
-            #results = self.sim.run_sim()
 
-            #results = self.sim.run_sim_with_custom_actuators(actuators_state)
-
-            #these_pressure_results = results.node['pressure'].iloc[-1]
-            #these_flowrate_results = results.link['flowrate'].iloc[-1]
-            #these_status_results = results.link['status'].iloc[-1]
-            #values_list = self.register_epanet_results(these_pressure_results, these_flowrate_results,
-            #                                           these_status_results, results.timestamp)
             self.results_list.append(values_list)
-
-            # EPANET simulator requires this to advance the simulation
-            # self.wn.options.time.duration += self.wn.options.time.hydraulic_timestep
             master_time += 1
 
             # Update tank pressure

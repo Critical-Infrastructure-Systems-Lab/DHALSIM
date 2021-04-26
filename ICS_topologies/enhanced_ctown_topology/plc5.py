@@ -12,7 +12,6 @@ class PLC5(BasePLC):
     def pre_loop(self):
         print 'DEBUG: plc5 enters pre_loop'
         self.local_time = 0
-        self.saved_tank_levels = [["iteration", "timestamp", "T5", "T7"]]
 
         # Used to sync the actuators and the physical process
         self.plc_mask = 4
@@ -33,14 +32,13 @@ class PLC5(BasePLC):
         self.j317 = Decimal(self.get(J317))
 
         self.lock = threading.Lock()
-        path = 'plc5_saved_tank_levels_received.csv'
         tags = [PU8, PU10, PU11, PU8F, PU10F, PU11F, J302, J306, J307, J317]
         values = [self.pu8, self.pu10, self.pu11, self.pu8f, self.pu10f, self.pu11f, self.j302, self.j306, self.j307,
                   self.j317]
 
         # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable
         # values into a persistent file
-        BasePLC.set_parameters(self, path, self.saved_tank_levels, tags, values, self.reader, self.lock,
+        BasePLC.set_parameters(self, tags, values, self.reader, self.lock,
                                ENIP_LISTEN_PLC_ADDR)
         self.startup()
 

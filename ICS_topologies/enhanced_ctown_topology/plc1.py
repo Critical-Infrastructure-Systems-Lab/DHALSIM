@@ -32,12 +32,11 @@ class PLC1(BasePLC):
         self.j269 = Decimal(self.get(J269))
 
         self.saved_tank_levels = [["iteration", "timestamp", "T1"]]
-        path = 'plc1_saved_tank_levels_received.csv'
         self.lock = threading.Lock()
 
         # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable
         # values into a persistent file
-        BasePLC.set_parameters(self, path, self.saved_tank_levels, [PU1, PU2, PU1F, PU2F, J280, J269],
+        BasePLC.set_parameters(self, [PU1, PU2, PU1F, PU2F, J280, J269],
                                [self.pu1, self.pu2, self.pu1f, self.pu2f, self.j280, self.j269], self.reader,
                                self.lock, ENIP_LISTEN_PLC_ADDR)
         self.startup()
