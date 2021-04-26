@@ -1,0 +1,65 @@
+attacks:
+  - name: "plc_empty_tank_1"
+    type: "device_attack"
+    target: "plc1"
+    actuators:
+      - pu1
+      - pu2
+    command: "Close"
+    start: 148
+    end: 244
+
+  - name : "network_empty_tank_1"
+    type: "network_attack"
+    source_plc: "plc2"
+    destination_plc: "plc1"
+    values:
+      - 7.0
+    tags:
+      - T1
+    start: 50
+    end: 150
+
+# Not supported
+  - name: "concealment_empty_tank_1"
+    type: "concealment_attack"
+    source_plc: "plc2"
+    destination_plc: "plc1"
+    values:
+      - 5.5
+    tags:
+      - T1
+    start: 257
+    end: 689
+
+# Not supported
+  - name: "plc_empty_tank_2"
+    type: "device_attack"
+    target: "plc3"
+    actuators:
+      - v2
+    command: "Close"
+    start: 670
+    end: 862
+
+  - name: "plc_overflow_tank_3"
+    type: "device_attack"
+    target: "plc3"
+    actuators:
+      - pu4
+      - pu5
+    command: "Open"
+    start: 1258
+    end: 1450
+
+# Not supported
+  - name : "network_overflow_tank_3"
+    type: "network_attack"
+    source_plc: "plc4"
+    destination_plc: "plc3"
+    values:
+      - 0.5
+    tags:
+      - T3
+    start: 1625
+    end: 1721

@@ -64,11 +64,11 @@ class Minitown(MiniCPS):
         self.plc1_process = plc1.popen(sys.executable, "automatic_plc.py", "-n", "plc1", stderr=sys.stdout, stdout=plc1_output )
 
         # Launching automatically mitm attack
-        if mitm_attack == 1 :
+        if mitm_attack == 1:
             attacker_file = open("output/attacker.log", 'r+')
             attacker = net.get('attacker')
             mitm_cmd = shlex.split("../../../attack-experiments/env/bin/python "
-                                   "../../attack_repository/mitm_attacks/wadi_mitm_plc1.py " + wadi_ip['plc2'] + " " + wadi_ip['plc1'])
+                                   "../../attack_repository/mitm_plc/wadi_mitm_plc1.py " + wadi_ip['plc2'] + " " + wadi_ip['plc1'])
             print 'Running MiTM attack with command ' + str(mitm_cmd)
             self.mitm_process = attacker.popen(mitm_cmd, stderr=sys.stdout, stdout=attacker_file )
             print "[] Attacking"

