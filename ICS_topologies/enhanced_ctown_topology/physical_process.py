@@ -286,8 +286,6 @@ class PhysicalPlant:
         master_time = 0
 
         iteration_limit = (self.simulation_days * 24 * 3600) / self.wn.options.time.hydraulic_timestep
-
-        iteration_limit = 10
         print("Simulation will run for " + str(self.simulation_days) + " days. Hydraulic timestep is " + str(
             self.wn.options.time.hydraulic_timestep) +
               " for a total of " + str(iteration_limit) + " iterations ")
