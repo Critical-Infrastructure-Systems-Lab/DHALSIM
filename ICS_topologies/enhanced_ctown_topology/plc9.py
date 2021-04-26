@@ -16,22 +16,19 @@ class PLC9(BasePLC):
         self.week_index = sys.argv[2]
         self.week_index = 0
         print "Week index in PLC9 is: " + str(self.week_index)
-        self.saved_tank_levels = [["iteration", "timestamp", "T7"]]
 
         # Flag used to stop the thread
         self.reader = True
         self.t7 = Decimal(self.get(T7))
 
         self.lock = threading.Lock()
-        path = 'plc9_saved_tank_levels_received.csv'
         tags = [T7]
         values = [self.t7]
-        lastPLC = True
 
         # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable
         # values into a persistent file
-        BasePLC.set_parameters(self, path, self.saved_tank_levels, tags, values, self.reader, self.lock,
-                               ENIP_LISTEN_PLC_ADDR, lastPLC, self.week_index)
+        BasePLC.set_parameters(self, tags, values, self.reader, self.lock,
+                               ENIP_LISTEN_PLC_ADDR, self.week_index)
         self.startup()
 
     def main_loop(self):

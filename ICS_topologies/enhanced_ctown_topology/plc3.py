@@ -19,7 +19,6 @@ class PLC3(BasePLC):
 
         # Flag used to stop the thread
         self.reader = True
-        self.saved_tank_levels = [["iteration", "timestamp", "T2", "T3", "T4"]]
 
         self.t2 = Decimal(self.get(T2))
         self.v2 = int(self.get(V2))
@@ -42,14 +41,13 @@ class PLC3(BasePLC):
         self.pu7f = Decimal(self.get(PU7F))
 
         self.lock = threading.Lock()
-        path = 'plc3_saved_tank_levels_received.csv'
         tags = [T2, V2, J300, J256, J289, J415, J14, J422, PU4, PU5, PU6, PU7, PU4F, PU5F, PU6F, PU7F]
         values = [self.t2, self.v2, self.j300, self.j256, self.j289, self.j415, self.j14, self.j422, self.pu4, self.pu5,
                   self.pu6, self.pu7, self.pu4f, self.pu5f, self.pu6f, self.pu7f]
 
         # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable
         # values into a persistent file
-        BasePLC.set_parameters(self, path, self.saved_tank_levels, tags, values, self.reader, self.lock,
+        BasePLC.set_parameters(self, tags, values, self.reader, self.lock,
                                ENIP_LISTEN_PLC_ADDR)
         self.startup()
 
