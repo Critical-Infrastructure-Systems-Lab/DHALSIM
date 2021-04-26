@@ -24,14 +24,14 @@ This Digital Twin requies an Ubuntu 16.04 distribution, mininet, and MiniCPS ins
 The installation instructions for MiniCPS are found [here](https://github.com/scy-phy/minicps/blob/master/docs/userguide.rst)
 
 ### Virtual environment setup
-The Digital Twin code requires ptyhon virtual environments set up in order to properly run with all the dependencies. Three environments will be used:
+The Digital Twin code requires python virtual environments set up in order to properly run with all the dependencies. Three environments will be used:
 
 - A python 2.7 environment. The main environment in which Mininet and the topologies will be launched (Python 2.7)
 - A python3.6 environment to launch the WNTR simulation and the water distribution simulations
-- A puython2 environment to launch the man in the middle attacks
+- A python2 environment to launch the man in the middle attacks
 
 #### Python3.6 environment
-Unfortunately, current WNTR version (0.3.0) requires at least a python3.6 environment. Instruction on setting a python3.6 environment in Ubuntu 16.04 can be found here: https://gist.github.com/plembo/c5bf7c4154910ac3693e14bb42b32ebf
+Current WNTR version (0.3.0) requires at least a python3.6 environment. Instruction on setting a python3.6 environment in Ubuntu 16.04 can be found here: https://gist.github.com/plembo/c5bf7c4154910ac3693e14bb42b32ebf
 
 #### Python3.6 virtual environment
 The python3 venv can be installed using:
@@ -51,7 +51,7 @@ In addition the minitown 30 week simulation uses the sklearn package
 
 This finishes the configuration of the python3 virtual environment
 
-#### Python2 attack evnrionment
+#### Python2 attack environment
 Some of the attacks use the python netfilterqueue and scapy to run properly. In addition, this modules should be installed for the sudo user. For this reason, we will set up an additional python2 environment. The python2 virtualenv package can be installed using: 
 ```:$ pip2 install virtualenv``
 
@@ -74,7 +74,8 @@ DHALSIM can be used in two ways: i) an automatic mode, ii) as an API to build an
 The automatic mode code is stored in the ICS_Topologies/general folder and uses the script "launch_dhalsim_experiment.sh" to launch a DHALSIM experiment. This script takes as a parameter the name of the topology to be used in the experiment. A topology is defined by the following files: i) an EPANET inp file, an epanetCPA file (only the cybernodes section is required), and a .yaml experiment configuration file. 
 The EPANET file describes the hydraulic mode; the epanetCPA file describes which PLC handles what sensor or actuator; the experiment .yaml configuration is used to configure the experiment, "ICS_topologies/enhanced_ctown_topology/c_town_config.yaml" and "ICS_topologies/general/ky3.yaml" are examples of these files. 
 When the script is launched, DHALSIM will read the EPANET and epanetCPA files and automatically build and launch a Mininet topology, using the experiment configuration defined in the .yaml file. After the exerpiment finishes, the results of the experiment will be stored in an "output" folder or "week_x" folder; this depends on the configurations defined in the .yaml file. 
-
+This is an experimental feature. For now, only the example topologies implemented in the subfolder ICS_topologies are tested.
+ 
 ### DHALSIM API
 The DHALSIM API can be used to build customized ICS topologies for a water distribution system. To create a custom topology, the following process should be realized:
 i) Create a different folder into ICS_Topologies
@@ -85,7 +86,7 @@ v) Launch the experiment
 
 ## Repository Structure
 This repository is mainly composed of three folders:
-- Demand Patterns: This folder contains auxiliary files to create and use cusotmized demand patterns for hydraulic topologies
+- Demand Patterns: This folder contains auxiliary files to create and use customized demand patterns for hydraulic topologies
 - ICS Topologies. This is the main folder, each subfolder represents a specific experiment using three topologies: minitown, c-town, and SUTD WADI
 - Jupyter Notebooks. This subfolder has visualization jupyter notebooks
 - Attack repository. This folder has scripts to launch mitm attacks
@@ -94,7 +95,7 @@ This repository is mainly composed of three folders:
 This folder includes various subfolders. Each of this subfolders is an independent mininet and experiment topology. For all these folders, physical_process.py represents the physical process and each of the plcsX.py the behaviour of the PLCs. In addition the automatic_run.py file is used by mininet to launch the topologies and in some cases run the experiments automatically. At the end of the experiments and output folder will be created with both the physical and network data. 
 The Makefile file has entries to run each of the simulations. For example, ctown can be launched using:
 
-```make ctown```
+```make enhanced-ctown```
 
 ### Attack Repository
 This folder has files to run two network attacks into the plcs and scada. Man in the middle attacks and Denial of Service Attacks
