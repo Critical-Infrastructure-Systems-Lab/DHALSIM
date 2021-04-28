@@ -28,6 +28,7 @@ class ExperimentInitializer:
                 self.week_index = int(self.options['week_index'])
             except KeyError:
                 print 'Missing week index parameter in yaml configuration file'
+
         else:
             print 'Invalid simulation mode, supported values are "Single" and "Batch", aborting'
             sys.exit(1)

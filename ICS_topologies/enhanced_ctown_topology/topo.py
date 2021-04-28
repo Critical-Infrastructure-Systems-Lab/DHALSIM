@@ -33,12 +33,10 @@ class CTownTopo(Topo):
         # Initialize topology
         Topo.__init__(self)
 
-
     def load_options(self, config_file):
         with open(config_file) as config_file:
             options = yaml.load(config_file, Loader=yaml.FullLoader)
         return options
-
 
     def build(self):
 

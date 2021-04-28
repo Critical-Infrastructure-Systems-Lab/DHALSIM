@@ -3,6 +3,7 @@ import argparse
 import signal
 import sys
 from os.path import expanduser
+import shlex
 
 class SimulationControl():
     """
@@ -48,7 +49,16 @@ class SimulationControl():
         """
         home_path = expanduser("~")
         wntr_environment_path = home_path + str("/wntr-experiments/bin/python")
-        simulation = subprocess.Popen([wntr_environment_path, 'physical_process.py', sys.argv[1]])
+        print "Launching simulation for week index: " + str(sys.argv[2])
+
+        cmd_string = wntr_environment_path + " physical_process.py " + sys.argv[1] + " " + sys.argv[2]
+        #argv[3] is the attack repository path
+        if len(sys.argv) >= 4:
+            cmd_string = wntr_environment_path + " physical_process.py " + sys.argv[1] + " " + sys.argv[2] + \
+                         " " + sys.argv[3]
+
+        cmd = shlex.split(cmd_string)
+        simulation = subprocess.Popen(cmd)
         return simulation
 
 if __name__=="__main__":

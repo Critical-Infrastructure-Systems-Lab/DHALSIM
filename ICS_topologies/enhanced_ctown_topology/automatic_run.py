@@ -318,6 +318,7 @@ if __name__ == "__main__":
         # This is batch mode
         week_index = sys.argv[1]
 
+    # todo: This should not be hardcoded
     config_file = "c_town_config.yaml"
     print "Initializing experiment with config file: " + str(config_file)
     initializer = ExperimentInitializer(config_file, week_index)

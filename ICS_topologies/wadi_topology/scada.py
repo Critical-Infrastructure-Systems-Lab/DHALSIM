@@ -3,24 +3,34 @@ from utils import SCADA_PROTOCOL, STATE
 from utils import PLC1_ADDR, PLC2_ADDR
 from utils import T0, T2, P_RAW1, V_PUB, V_ER2i
 from datetime import datetime
-
+import signal
+import csv
+import sys
 
 class SCADAServer(BasePLC):
+
+    def write_output(self):
+        with open('output/' + self.path, 'w') as f:
+            writer = csv.writer(f)
+            writer.writerows(self.saved_tank_levels)
+
+    def sigint_handler(self, sig, frame):
+        print 'DEBUG SCADA shutdown'
+        self.write_output()
+        sys.exit(0)
 
     def pre_loop(self, sleep=0.5):
         """scada pre loop.
             - sleep
         """
         self.saved_tank_levels = [["timestamp", "T0", "P_RAW1", "V_PUB", "T2", "V_ER2i"]]
+        self.path = 'scada_values.csv'
+
         self.plc1_tags = [T0, P_RAW1, V_PUB]
         self.plc2_tags = [T2, V_ER2i]
 
-        path = 'scada_saved_tank_levels_received.csv'
-
-        isScada = True
-        BasePLC.set_parameters(self, path, self.saved_tank_levels, None, None, None, None, None, False, 0, isScada)
-        self.startup()
-
+        signal.signal(signal.SIGINT, self.sigint_handler)
+        signal.signal(signal.SIGTERM, self.sigint_handler)
 
     def main_loop(self):
         """scada main loop."""
@@ -35,7 +45,7 @@ class SCADAServer(BasePLC):
                 results.extend(plc2_values)
                 self.saved_tank_levels.append(results)
             except Exception, msg:
-                print (msg)
+                print(msg)
                 continue
 
 

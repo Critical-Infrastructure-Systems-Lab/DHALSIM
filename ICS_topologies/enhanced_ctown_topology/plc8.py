@@ -27,7 +27,7 @@ class PLC8(BasePLC):
         # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable
         # values into a persistent file
         BasePLC.set_parameters(self, tags, values, self.reader, self.lock,
-                               ENIP_LISTEN_PLC_ADDR, lastPLC, self.week_index)
+                               ENIP_LISTEN_PLC_ADDR, self.week_index)
         self.startup()
 
     def main_loop(self):
