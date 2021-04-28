@@ -1,0 +1,30 @@
+attacks:
+  - name: "plc_empty_tank_1"
+    type: "device_attack"
+    target: "plc1"
+    actuators:
+      - praw1
+    command: "Close"
+    start: 50
+    end: 150
+
+  - name : "wadi_network_empty_tank_1"
+    type: "network_attack"
+    source_plc: "plc2"
+    destination_plc: "plc1"
+    values:
+      - 7.0
+    tags:
+      - T1
+    start: 50
+    end: 150
+
+  - name: "plc_overflow_tank_3"
+    type: "device_attack"
+    target: "plc3"
+    actuators:
+      - pu4
+      - pu5
+    command: "Open"
+    start: 1258
+    end: 1450

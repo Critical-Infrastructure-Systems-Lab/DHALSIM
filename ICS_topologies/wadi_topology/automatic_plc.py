@@ -3,6 +3,7 @@ import time
 import sys
 import argparse
 import signal
+import shlex
 
 class NodeControl():
 
@@ -17,10 +18,17 @@ class NodeControl():
 
     def terminate(self):
         """
-         All the subprocesses launched in this Digital Twin follow the same pattern to ensure that they finish before continuing with the finishing of the parent process
-         """
+        All the subprocesses launched in this Digital Twin follow the same pattern to ensure that they finish before continuing with the finishing of the parent process
+        """
         print "Stopping Tcp dump process on PLC..."
-        self.process_tcp_dump.kill()
+        #self.process_tcp_dump.kill()
+
+        self.process_tcp_dump.send_signal(signal.SIGINT)
+        self.process_tcp_dump.wait()
+        if self.process_tcp_dump.poll() is None:
+            self.process_tcp_dump.terminate()
+        if self.process_tcp_dump.poll() is None:
+            self.process_tcp_dump.kill()
 
         print "Stopping PLC..."
         self.plc_process.send_signal(signal.SIGINT)
@@ -42,7 +50,7 @@ class NodeControl():
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
 
-        self.configure_routing()
+        self.interface_name = self.name + '-eth0'
         self.delete_log()
         self.process_tcp_dump = self.start_tcpdump_capture()
 
@@ -59,6 +67,33 @@ class NodeControl():
             print self.name
         else:
             self.name = 'plc1'
+
+        if arg_parser.week:
+            self.week_index = arg_parser.week
+        else:
+            self.week_index = 0
+
+        if arg_parser.dict:
+            self.dict_path = arg_parser.dict
+        else:
+            self.dict_path = 'plc_dicts.yaml'
+
+        if arg_parser.attack_flag:
+            self.attack_flag = True
+            if arg_parser.attack_path:
+                self.attack_path = arg_parser.attack_path
+            else:
+                self.attack_path = "../../attack_repository/wadi_attack_description.yaml"
+
+            if arg_parser.attack_name:
+                self.attack_name = arg_parser.attack_name
+            else:
+                self.attack_name = "plc_empty_tank_1"
+        else:
+            self.attack_flag = False
+            self.attack_path = None
+            self.attack_name = None
+
 
     def delete_log(self):
         """
@@ -81,12 +116,25 @@ class NodeControl():
         return tcp_dump
 
     def start_plc(self):
-        plc_process = subprocess.Popen(['python', self.name + '.py'], shell=False)
+        cmd_string = 'python ' + self.name + '.py' + ' -w ' + str(self.week_index)
+
+        if self.attack_flag:
+            # Pass the path to the PLC so it can parse the attack information and run it
+            cmd_string = 'python ' + self.name + '.py' + ' -w ' + str(self.week_index) + ' -f True -p ' + \
+                         str(self.attack_path) + ' -a ' + str(self.attack_name)
+
+        cmd = shlex.split(cmd_string)
+        plc_process = subprocess.Popen(cmd, shell=False)
         return plc_process
 
     def get_arguments(self):
         parser = argparse.ArgumentParser(description='Master Script of a node in Minicps')
-        parser.add_argument("--name", "-n",help="Name of the mininet node and script to run")
+        parser.add_argument("--name", "-n", help="Name of the Mininet node and script to run")
+        parser.add_argument("--week", "-w", help="Week index of the simulation")
+        parser.add_argument("--dict", "-d", help="Dictionary of the PLCs logic")
+        parser.add_argument("--attack_flag", "-f", help="Flag to indicate if this PLC needs to run an attack")
+        parser.add_argument("--attack_path", "-p", help="Path to the attack repository")
+        parser.add_argument("--attack_name", "-a", help="Name of the attack to be run by this PLC")
         return parser.parse_args()
 
 if __name__=="__main__":

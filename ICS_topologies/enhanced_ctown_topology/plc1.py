@@ -48,7 +48,6 @@ class PLC1(BasePLC):
         self.j280 = Decimal(self.get(J280))
         self.j269 = Decimal(self.get(J269))
 
-        self.saved_tank_levels = [["iteration", "timestamp", "T1"]]
         self.lock = threading.Lock()
 
         # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable

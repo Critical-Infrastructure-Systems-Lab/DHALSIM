@@ -26,16 +26,12 @@ class PLC2(BasePLC):
         self.t2 = Decimal(self.get(T2))
         self.ver2i = self.get(V_ER2i)
 
-        self.saved_tank_levels = [["iteration", "timestamp", "T2"]]
-        path = 'plc2_saved_tank_levels_received.csv'
-
         self.p_raw_delay_timer = 0
         self.timeout_counter = 0
 
         self.lock = threading.Lock()
 
-        BasePLC.set_parameters(self, path, self.saved_tank_levels, [T2, V_ER2i],
-                               [self.t2, self.ver2i],self.reader, self.lock, PLC2_ADDR)
+        BasePLC.set_parameters(self,  [T2, V_ER2i], [self.t2, self.ver2i], self.reader, self.lock, PLC2_ADDR)
         self.startup()
 
     def main_loop(self):
@@ -53,7 +49,6 @@ class PLC2(BasePLC):
                     self.ver2i = 1
 
                 self.set(V_ER2i, self.ver2i)
-                self.saved_tank_levels.append([self.local_time, datetime.now(), self.t2])
                 print("Tank Level 2 %f " % self.t2)
                 print("ITERATION %d ------------- " % self.local_time)
                 time.sleep(0.1)
