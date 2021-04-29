@@ -1,0 +1,3 @@
+test:
+  script:
+    - python3 -m unittest Basic_Test.Testing
