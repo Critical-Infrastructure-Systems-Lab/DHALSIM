@@ -178,7 +178,7 @@ class DHALSIM(MiniCPS):
                                        str(self.plc_launch_order[index]), "-d", self.plc_dict_path, "-l",
                                        str(last_plc_flag),
                                        stderr=sys.stdout, stdout=self.plc_files[index]))
-            print("Launched " + str(self.plc_launch_order[index]))
+            print(("Launched " + str(self.plc_launch_order[index])))
             index += 1
             time.sleep(0.2)
 
@@ -192,11 +192,11 @@ class DHALSIM(MiniCPS):
 
             iperf_server_cmd = shlex.split("python iperf_server.py")
             self.iperf_server_process = self.iperf_server_node.popen(iperf_server_cmd, stderr=sys.stdout, stdout=iperf_server_file)
-            print "[*] Iperf Server launched"
+            print("[*] Iperf Server launched")
 
             iperf_client_cmd = shlex.split("python iperf_client.py -c 10.0.2.1 -P 100 -t 2400")
             self.iperf_client_process = self.iperf_client_node.popen(iperf_client_cmd, stderr=sys.stdout, stdout=iperf_client_file)
-            print "[*] Iperf Client launched"
+            print("[*] Iperf Client launched")
 
         # Launching automatically mitm attack
         if mitm_attack == 1 :
@@ -206,7 +206,7 @@ class DHALSIM(MiniCPS):
             #                       "../../attack_repository/mitm_plc/mitm_attack.py 192.168.1.1 192.168.1.254 exponential_offset")
             #print 'Running MiTM attack with command ' + str(mitm_cmd)
             #self.mitm_process = attacker.popen(mitm_cmd, stderr=sys.stdout, stdout=attacker_file )
-            print "[] Attacking"
+            print("[] Attacking")
 
         #print "[] Launching SCADA"
         #self.scada_node = net.get('scada')
@@ -215,14 +215,14 @@ class DHALSIM(MiniCPS):
         #print "[*] SCADA Successfully launched"
 
         physical_output = open("output/physical.log", 'r+')
-        print "[*] Launched the PLCs and SCADA process, launching simulation..."
+        print("[*] Launched the PLCs and SCADA process, launching simulation...")
         plant = net.get('plant')
 
         simulation_cmd = shlex.split("python automatic_plant.py " + str(self.config_file))
         self.simulation = plant.popen(simulation_cmd, stderr=sys.stdout, stdout=physical_output)
-        print "[] Simulating..."
+        print("[] Simulating...")
 
-        print "[] Simulating..."
+        print("[] Simulating...")
         while self.simulation.poll() is None:
             pass
         self.finish()
@@ -243,7 +243,7 @@ class DHALSIM(MiniCPS):
                 plc_process.kill()
 
     def finish(self):
-        print "[*] Simulation finished"
+        print("[*] Simulation finished")
 
         #if self.scada_process:
         #    print "[] Finishing SCADA process"
@@ -252,23 +252,23 @@ class DHALSIM(MiniCPS):
 
         index = len(self.plc_launch_order) - 1
         for plc in reversed(self.plc_processes):
-            print "[] Terminating " + str(self.plc_launch_order[index])
+            print("[] Terminating " + str(self.plc_launch_order[index]))
             if plc:
                 self.end_plc_process(plc)
-                print "[*] PLC" + str(self.plc_launch_order[index]) + " terminated"
+                print("[*] PLC" + str(self.plc_launch_order[index]) + " terminated")
             index -= 1
 
         if self.mitm_process:
             self.end_plc_process(self.mitm_process)
-        print "[*] All processes terminated"
+        print("[*] All processes terminated")
 
         if self.iperf_client_process:
             self.end_plc_process(self.iperf_client_process)
-            print "Iperf Client process terminated"
+            print("Iperf Client process terminated")
 
         if self.iperf_server_process:
             self.end_plc_process(self.iperf_server_process)
-            print "Iperf Server process terminated"
+            print("Iperf Server process terminated")
 
         if self.simulation:
             self.simulation.terminate()
@@ -292,7 +292,7 @@ if __name__ == "__main__":
     else:
         config_file = "c_town_config.yaml"
 
-    print "Initializing experiment with config file: " + str(config_file)
+    print("Initializing experiment with config file: " + str(config_file))
     initializer = ExperimentInitializer(config_file, args.week)
 
     # this creates plc_dicts.yaml and utils.py
@@ -304,10 +304,10 @@ if __name__ == "__main__":
     plc_dict_path = initializer.get_plc_dict_path()
 
     if complex_topology:
-        print "Launching complex network topology"
+        print("Launching complex network topology")
         topo = ComplexTopo(week_index=week_index, sim_type=simulation_type, config_file=config_file, plc_dict_path=plc_dict_path)
     else:
-        print "Launching simple network topology"
+        print("Launching simple network topology")
         topo = SimpleTopo(week_index=week_index, sim_type=simulation_type, config_file=config_file, plc_dict_path=plc_dict_path)
 
     net = Mininet(topo=topo, autoSetMacs=True, link=TCLink)

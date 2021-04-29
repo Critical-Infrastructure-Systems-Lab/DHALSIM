@@ -24,7 +24,7 @@ class BasePLC(PLC):
                     try:
                         values.append(self.get(tag))
                     except Exception:
-                        print "Exception trying to get the tag"
+                        print("Exception trying to get the tag")
                         time.sleep(0.05)
                         continue
                     values.append(self.get(tag))
@@ -50,7 +50,7 @@ class BasePLC(PLC):
             writer.writerows(self.result_list)
 
     def sigint_handler(self, sig, frame):
-        print 'DEBUG plc shutdown'
+        print('DEBUG plc shutdown')
         self.reader = False
         self.write_output()
         if self.lastPLC:

@@ -46,7 +46,7 @@ class SCADAServer(BasePLC):
                 self.saved_tank_levels.append(results)
 
                 time.sleep(0.3)
-            except Exception, msg:
+            except Exception as msg:
                 print(msg)
                 continue
 

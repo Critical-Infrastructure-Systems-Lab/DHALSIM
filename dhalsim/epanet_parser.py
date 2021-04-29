@@ -28,7 +28,7 @@ class EpanetParser:
         else:
             self.out_path = 'plc_dicts.yaml'
 
-        print("Creating water network model with " + str(self.inp_file_path) + " file")
+        print(("Creating water network model with " + str(self.inp_file_path) + " file"))
         self.wn = wntr.network.WaterNetworkModel(self.inp_file_path)
         self.control_list = self.create_control_list()
         self.plc_list = self.create_plc_list()
