@@ -49,7 +49,7 @@ class ComplexTopo(Topo):
         plcs = []
         switches = []
 
-        print("Week index is: " + str(self.week_index))
+        print(("Week index is: " + str(self.week_index)))
 
         if 'network_delay_path' in self.options:
             network_delay_path = self.options['network_delay_path']
@@ -77,7 +77,7 @@ class ComplexTopo(Topo):
             plcs.append(self.addNode(plc_name, ip='192.168.1.1/24', defaultRoute='via 192.168.1.254/24'))
 
             self.addLink(routers[index], r0, intfName2='r0-eth' + str(index - 1), params2={'ip': '10.0.' + str(index) + '.254/24'})
-            print("Link " + str(index) + " delay: " + str(network_delays.iloc[self.week_index]['r' + str(index)])+"ms" + " loss: " + str(network_losses.iloc[self.week_index]['r' + str(index)]) )
+            print(("Link " + str(index) + " delay: " + str(network_delays.iloc[self.week_index]['r' + str(index)])+"ms" + " loss: " + str(network_losses.iloc[self.week_index]['r' + str(index)]) ))
             self.addLink(switches[index - 1], routers[index], intfName2='r' + str(index) + '-eth1',
                          params2={'ip': '192.168.1.254/24'})
             loss = network_losses.iloc[self.week_index]['r' + str(index)]

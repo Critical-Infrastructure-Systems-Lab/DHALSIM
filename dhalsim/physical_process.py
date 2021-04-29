@@ -88,7 +88,7 @@ class PhysicalPlant:
 
         self.sim = wntr.sim.WNTRSimulator(self.wn)
 
-        print("Starting simulation for " + str(config_options['inp_file']) + " topology ")
+        print(("Starting simulation for " + str(config_options['inp_file']) + " topology "))
 
     def load_config(self, config_path):
         """
@@ -113,7 +113,7 @@ class PhysicalPlant:
                 starting_demand_path = config_options['starting_demand_path']
                 initial_tank_levels_path = config_options['initial_tank_levels_path']
 
-                print("Running simulation with week index: " + str(self.week_index))
+                print(("Running simulation with week index: " + str(self.week_index)))
                 total_demands = pd.read_csv(demand_patterns_path, index_col=0)
                 demand_starting_points = pd.read_csv(starting_demand_path, index_col=0)
                 initial_tank_levels = pd.read_csv(initial_tank_levels_path, index_col=0)
@@ -237,14 +237,14 @@ class PhysicalPlant:
         mask_full_control = 7
         iteration_limit = (self.simulation_days * 24 * 3600) / self.wn.options.time.hydraulic_timestep
 
-        print("Simulation will run for " + str(self.simulation_days) + " days. Hydraulic timestep is " + str(
+        print(("Simulation will run for " + str(self.simulation_days) + " days. Hydraulic timestep is " + str(
             self.wn.options.time.hydraulic_timestep) +
-              " for a total of " + str(iteration_limit) + " iterations ")
+              " for a total of " + str(iteration_limit) + " iterations "))
 
         while master_time <= iteration_limit:
 
             self.update_controls()
-            print("ITERATION %d ------------- " % master_time)
+            print(("ITERATION %d ------------- " % master_time))
             results = self.sim.run_sim(convergence_error=True)
             values_list = self.register_results(results)
 

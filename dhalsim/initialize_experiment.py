@@ -21,12 +21,12 @@ class ExperimentInitializer:
                     and 'initial_tank_levels_path' in self.options:
                 self.week_index = week_index
             else:
-                print 'Batch mode configured, but no initial customization options are set, aborting.'
+                print('Batch mode configured, but no initial customization options are set, aborting.')
                 sys.exit(1)
         elif self.simulation_type == "Single":
             self.week_index = int(self.options['week_index'])
         else:
-            print 'Invalid simulation mode, supported values are "Single" and "Batch", aborting'
+            print('Invalid simulation mode, supported values are "Single" and "Batch", aborting')
             sys.exit(1)
 
         # complex_topology flag is going to define which topo instance we create
@@ -36,7 +36,7 @@ class ExperimentInitializer:
             elif self.options['complex_topology'] == "False":
                 self.complex_topology = False
             else:
-                print 'complex_topology parameter has to bee a bolean, aborting'
+                print('complex_topology parameter has to bee a bolean, aborting')
                 sys.exit(1)
         else:
             self.complex_topology = False

@@ -29,10 +29,10 @@ class PLC(BasePLC):
 
         self.local_time = 0
 
-        print "Pre-loop"
+        print("Pre-loop")
         self.plc_dict = self.get_plc_dict()
         if self.plc_dict == None:
-            print "No valid PLC found, aborting"
+            print("No valid PLC found, aborting")
             sys.exit(1)
 
         self.verify_list()
@@ -205,7 +205,7 @@ class PLC(BasePLC):
         Actuators are always local
         Sending actuator/sensor information is already handled by pre_loop configuration and BasePLC
         """
-        print "Main loop"
+        print("Main loop")
         while True:
             try:
                 #toDo Implement control flag
@@ -225,8 +225,8 @@ class PLC(BasePLC):
 
                 time.sleep(0.05)
             except Exception as e:
-                print "Exception!"
-                print e
+                print("Exception!")
+                print(e)
                 time.sleep(0.01)
                 continue
 
