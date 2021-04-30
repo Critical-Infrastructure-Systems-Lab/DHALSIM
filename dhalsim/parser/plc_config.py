@@ -2,7 +2,7 @@ from typing import List
 
 
 class PlcConfig:
-    def __init__(self, name: str, mac: str, sensors: List[str], actuators: List[str]):
+    def __init__(self, name: str, sensors: List[str], actuators: List[str], mac: str = None, ip: str = None):
         """
         Initializes a PlcConfig.
 
@@ -11,8 +11,7 @@ class PlcConfig:
         :param sensors: the sensors the PLC can read
         :param actuators: the actuators the PLC can control
         """
-        if type(name) != str:
-            raise TypeError
+
         self.name = name
 
         if type(mac) != str:
