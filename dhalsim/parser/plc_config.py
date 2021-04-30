@@ -13,15 +13,7 @@ class PlcConfig:
         """
 
         self.name = name
-
-        if type(mac) != str:
-            raise TypeError
-        self.mac = mac
-
-        if type(sensors) != list:
-            raise TypeError
         self.sensors = sensors
-
-        if type(actuators) != list:
-            raise TypeError
         self.actuators = actuators
+        self.mac = mac
+        self.ip = ip

@@ -14,28 +14,29 @@ class Error(Exception):
 
 
 class EmptyConfigError(Error):
-    """Raised when the input value is too small"""
+    """Raised when the configuration file is empty"""
     pass
 
 
 class MissingValueError(Error):
-    """Raised when the input value is too small"""
+    """Raised when there is a value missing in a configuration file"""
     pass
 
 
-class ConfigParser():
+class ConfigParser:
     def __init__(self, config_path):
-
+        #Set path to the configuration file
         self.config_path = os.path.abspath(config_path)
 
         logger.debug("config file: %s", config_path)
-
+        #Load yaml data from config file
         with open(config_path) as f:
             self.config_data = yaml.load(f, Loader=yaml.FullLoader)
-
+        #Assert config data is not empty
         if not self.config_data:
             raise EmptyConfigError
 
+    #Property for the path to the inp file
     @property
     def inp_path(self):
         path = self.config_data.get("inp_file")
@@ -47,6 +48,7 @@ class ConfigParser():
             raise FileNotFoundError("%s is not a file", path)
         return path
 
+    #Property for the path to the cpa file
     @property
     def cpa_path(self):
         path = self.config_data.get("cpa_file")
@@ -58,6 +60,7 @@ class ConfigParser():
             raise FileNotFoundError(path + " is not a file")
         return path
 
+    #Property to load the yaml data from the cpa file
     @property
     def cpa_data(self):
         with open(self.cpa_path) as f:
