@@ -5,7 +5,7 @@
 ;ID              	Elev        	Demand      	Pattern         
  J_CT3           	1.5         	0           	                	;
  J_CT6           	1.5         	0           	                	;
- J_CT5           	1.5         	0           	                	;
+ J_CT5           	1.5         	1           	                	;
  J2a_15          	0.22        	0           	                	;
  J1_70           	1           	0           	                	;
  J1_40           	0.27        	0           	                	;

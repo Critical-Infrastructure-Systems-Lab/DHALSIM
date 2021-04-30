@@ -74,22 +74,18 @@ class PLC1(BasePLC):
                 print("Tank 0 Level %f " % self.t0)
                 print("Tank 2 Level %f " % self.t2)
 
-                if self.t0 < 0.3008:
-                    print("Close P_RAW1")
+                if self.t0 < 0.256:
+                    self.vpub = 1
                     self.praw1 = 0
 
-                    print("Open V_PUB")
-                    self.vpub = 1
-
-                if self.t0 > 0.576:
-                    print("Closing V_PUB")
+                if self.t0 > 0.448:
                     self.vpub = 0
 
-                if self.t2 < 0.08:
+                if self.t2 < 0.16:
                     print("Opening P_RAW1")
                     self.praw1 = 1
 
-                if self.t2 > 0.36:
+                if self.t2 > 0.32:
                     print("Closing P_RAW1")
                     self.praw1 = 0
 

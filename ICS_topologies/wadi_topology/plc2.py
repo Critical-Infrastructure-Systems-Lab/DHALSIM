@@ -40,11 +40,11 @@ class PLC2(BasePLC):
                 self.local_time += 1
                 self.t2 = Decimal(self.get(T2))
 
-                if self.t2 > 0.36:
+                if self.t2 > 0.32:
                     print("Close V_ER2i")
                     self.ver2i = 0
 
-                if self.t2 < 0.08:
+                if self.t2 < 0.16:
                     print("Open V_ER2i")
                     self.ver2i = 1
 
