@@ -30,10 +30,10 @@ class DHALSIM(MiniCPS):
     """
     def setup_iptables(self, node_name):
         a_node = net.get(node_name)
-        a_node.cmd('bash ./ctown_nat.sh ' + node_name)
+        a_node.cmd('bash ./scripts/ctown_nat.sh ' + node_name)
         a_node.waitOutput()
 
-        a_node.cmd('bash ./port_forward.sh ' + node_name)
+        a_node.cmd('bash ./scripts/port_forward.sh ' + node_name)
         a_node.waitOutput()
 
     def do_forward(self, node):
@@ -228,7 +228,7 @@ class DHALSIM(MiniCPS):
         self.finish()
 
     def create_log_files(self):
-        cmd = shlex.split("bash ./create_log_files.sh")
+        cmd = shlex.split("bash ./scripts/create_log_files.sh")
         subprocess.call(cmd)
 
     def end_plc_process(self, plc_process):
@@ -273,7 +273,7 @@ class DHALSIM(MiniCPS):
         if self.simulation:
             self.simulation.terminate()
 
-        cmd = shlex.split("./kill_cppo.sh")
+        cmd = shlex.split("./scripts/kill_cppo.sh")
         subprocess.call(cmd)
         net.stop()
         sys.exit(0)

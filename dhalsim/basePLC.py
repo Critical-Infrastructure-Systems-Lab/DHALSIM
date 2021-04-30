@@ -58,7 +58,7 @@ class BasePLC(PLC):
         sys.exit(0)
 
     def move_files(self):
-        cmd = shlex.split("./copy_output.sh " + str(self.week_index))
+        cmd = shlex.split("./scripts/copy_output.sh " + str(self.week_index))
         subprocess.call(cmd)
 
     def startup(self):
