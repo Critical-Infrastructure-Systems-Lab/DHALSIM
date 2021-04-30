@@ -288,40 +288,35 @@ class PhysicalPlant:
 
         while master_time <= iteration_limit:
 
-            try:
-                self.update_controls()
-                #toc
-                print("ITERATION %d ------------- " % master_time)
-                results = self.sim.run_sim(convergence_error=True)
-                #toc
-                values_list = self.register_results(results)
+            self.update_controls()
+            #toc
+            print("ITERATION %d ------------- " % master_time)
+            results = self.sim.run_sim(convergence_error=True)
+            #toc
+            values_list = self.register_results(results)
 
-                self.results_list.append(values_list)
-                master_time += 1
+            self.results_list.append(values_list)
+            master_time += 1
 
-                for tank in self.tank_list:
-                    tank_name = '\'' + tank + '\''
-                    a_level = self.wn.get_node(tank).level
-                    query = "UPDATE wadi SET value = " + str(a_level) + " WHERE name = " + tank_name
-                    self.c.execute(query)  # UPDATE TANKS IN THE DATABASE
+            for tank in self.tank_list:
+                tank_name = '\'' + tank + '\''
+                a_level = self.wn.get_node(tank).level
+                query = "UPDATE wadi SET value = " + str(a_level) + " WHERE name = " + tank_name
+                self.c.execute(query)  # UPDATE TANKS IN THE DATABASE
+                self.conn.commit()
+
+            # For concealment attacks, we need more stages in the attack
+            if self.attack_flag and (self.attack_type == "device_attack" or self.attack_type == "network_attack"):
+                if self.attack_start <= master_time < self.attack_end:
+                    query = "UPDATE wadi SET value = " + str(1) + " WHERE name = 'ATT_2'"
+                    self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to launch attack
+                    self.conn.commit()
+                else:
+                    query = "UPDATE wadi SET value = " + str(0) + " WHERE name = 'ATT_2'"
+                    self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to stop attack
                     self.conn.commit()
 
-                # For concealment attacks, we need more stages in the attack
-                if self.attack_flag and (self.attack_type == "device_attack" or self.attack_type == "network_attack"):
-                    if self.attack_start <= master_time < self.attack_end:
-                        query = "UPDATE wadi SET value = " + str(1) + " WHERE name = 'ATT_2'"
-                        self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to launch attack
-                        self.conn.commit()
-                    else:
-                        query = "UPDATE wadi SET value = " + str(0) + " WHERE name = 'ATT_2'"
-                        self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to stop attack
-                        self.conn.commit()
-
-                time.sleep(0.03)
-            except Exception:
-                print("Warning, skipping an iteration")
-                continue
-
+            time.sleep(0.03)
         self.write_results(self.results_list)
 
 if __name__=="__main__":
