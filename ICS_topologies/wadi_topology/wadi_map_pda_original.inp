@@ -167,18 +167,18 @@
  V_ER1o          	J2a_22          	J2a_23          	12          	TCV 	0           	0           	;
  FCV_ER          	J2a_10          	J2a_11          	25.4        	FCV 	2.25        	0           	;
  FCV_RWin        	J1_31           	J1_32           	25.4        	FCV 	2.028394    	0           	;
- V1               	J_CT1           	CT1_CV          	25.4        	PRV 	0           	0           	;
- V2               	J_CT2           	CT2_CV          	25.4        	PRV 	0           	0           	;
- V3               	J_CT3           	CT3_CV          	25.4        	PRV 	0           	0           	;
- V4               	J_CT4           	CT4_CV          	25.4        	PRV 	0           	0           	;
- V5               	J_CT5           	CT5_CV          	25.4        	PRV 	0           	0           	;
- V6               	J_CT6           	CT6_CV          	25.4        	PRV 	0           	0           	;
- V7               	CT1_CV          	CT1_FV          	25.4        	FCV 	0           	0           	;
- V8               	CT2_CV          	CT2_FV          	25.4        	FCV 	0           	0           	;
- V9               	CT3_CV          	CT3_FV          	25.4        	FCV 	0           	0           	;
- V10              	CT4_CV          	CT4_FV          	25.4        	FCV 	0           	0           	;
- V11              	CT5_CV          	CT5_FV          	25.4        	FCV 	0           	0           	;
- V12              	CT6_CV          	CT6_FV          	25.4        	FCV 	0           	0           	;
+ 1               	J_CT1           	CT1_CV          	25.4        	PRV 	0           	0           	;
+ 2               	J_CT2           	CT2_CV          	25.4        	PRV 	0           	0           	;
+ 3               	J_CT3           	CT3_CV          	25.4        	PRV 	0           	0           	;
+ 4               	J_CT4           	CT4_CV          	25.4        	PRV 	0           	0           	;
+ 5               	J_CT5           	CT5_CV          	25.4        	PRV 	0           	0           	;
+ 6               	J_CT6           	CT6_CV          	25.4        	PRV 	0           	0           	;
+ 7               	CT1_CV          	CT1_FV          	25.4        	FCV 	0           	0           	;
+ 8               	CT2_CV          	CT2_FV          	25.4        	FCV 	0           	0           	;
+ 9               	CT3_CV          	CT3_FV          	25.4        	FCV 	0           	0           	;
+ 10              	CT4_CV          	CT4_FV          	25.4        	FCV 	0           	0           	;
+ 11              	CT5_CV          	CT5_FV          	25.4        	FCV 	0           	0           	;
+ 12              	CT6_CV          	CT6_FV          	25.4        	FCV 	0           	0           	;
 
 [TAGS]
  NODE 	J2b_10          	.22
@@ -1677,6 +1677,21 @@
  MXH204_33       	2.5         	5.6         
 
 [CONTROLS]
+LINK V_PUB  OPEN   IF NODE T0 BELOW 0.256
+LINK V_PUB  CLOSED IF NODE T0 ABOVE 0.448
+
+
+LINK P_RAW1 CLOSED IF NODE T0  BELOW 0.256
+LINK P_RAW1 OPEN   IF NODE T2  BELOW 0.16
+LINK P_RAW1 CLOSED IF NODE T2  ABOVE 0.32
+
+LINK V_ER2i CLOSED IF NODE T2  ABOVE 0.32
+LINK V_ER2i OPEN   IF NODE T2  BELOW 0.16
+
+LINK V_PUB  OPEN AT TIME 0
+LINK P_RAW1 CLOSED AT TIME 0
+LINK V_ER2i CLOSED AT TIME 0
+
 
 
 [RULES]
@@ -1714,12 +1729,12 @@
 ;Tank            	Model
 
 [TIMES]
- ;Duration           	144:00
+ Duration           	144:00
  Hydraulic Timestep 	0:01
- Quality Timestep   	0:05
+ Quality Timestep   	0:05 
  Pattern Timestep   	0:01
- Pattern Start      	0:00
- Report Timestep    	0:01
+ Pattern Start      	0:00 
+ Report Timestep    	0:01 
  Report Start       	0:00 
  Start ClockTime    	0:00
  Statistic          	NONE

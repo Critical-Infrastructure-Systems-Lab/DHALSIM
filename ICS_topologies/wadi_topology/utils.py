@@ -39,6 +39,18 @@ V_ER1i = ('V_ER1i', 1)
 V_ER1o = ('V_ER1o', 1)
 FCV_ER = ('FCV_ER', 1)
 FCV_RWin = ('FCV_RWin', 1)
+V1 = ('V1', 1)
+V2 = ('V2', 1)
+V3 = ('V3', 1)
+V4 = ('V4', 1)
+V5 = ('V5', 1)
+V6 = ('V6', 1)
+V7 = ('V7', 1)
+V8 = ('V8', 1)
+V9 = ('V9', 1)
+V10 = ('V10', 1)
+V11 = ('V11', 1)
+V12 = ('V12', 1)
 
 ################################ Attack Flags ################################################################
 ATT_1 = ('ATT_1', 1)
@@ -244,11 +256,23 @@ SCHEMA_INIT = """
     INSERT INTO wadi VALUES ('V_ER2o', 1, '1' );       
     INSERT INTO wadi VALUES ('P_B1', 1, '0');  
     INSERT INTO wadi VALUES ('P_B2', 1, '0');  
-    INSERT INTO wadi VALUES ('V_Gi_G', 1,'1');
-    INSERT INTO wadi VALUES ('V_Gi_B', 1, '0');  
+    INSERT INTO wadi VALUES ('V_Gi_G', 1,'0');
+    INSERT INTO wadi VALUES ('V_Gi_B', 1, '1');  
     INSERT INTO wadi VALUES ('V_SWaT', 1, '0');    
     INSERT INTO wadi VALUES ('FCV_ER', 1, '1');  
     INSERT INTO wadi VALUES ('FCV_RWin', 1, '1');    
+    INSERT INTO wadi VALUES ('V1', 1, '0');
+    INSERT INTO wadi VALUES ('V2', 1, '0');
+    INSERT INTO wadi VALUES ('V3', 1, '0');
+    INSERT INTO wadi VALUES ('V4', 1, '0');
+    INSERT INTO wadi VALUES ('V5', 1, '0');
+    INSERT INTO wadi VALUES ('V6', 1, '0');
+    INSERT INTO wadi VALUES ('V7', 1, '0');
+    INSERT INTO wadi VALUES ('V8', 1, '0');
+    INSERT INTO wadi VALUES ('V9', 1, '0');
+    INSERT INTO wadi VALUES ('V10', 1, '0');
+    INSERT INTO wadi VALUES ('V11', 1, '0');
+    INSERT INTO wadi VALUES ('V12', 1, '0');
     INSERT INTO wadi VALUES ('ATT_1', 1, '0' );  
     INSERT INTO wadi VALUES ('ATT_2', 1, '0' );            
 """
