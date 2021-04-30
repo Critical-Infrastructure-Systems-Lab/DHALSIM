@@ -21,6 +21,12 @@ class MissingValueError(Error):
 
 
 class ConfigParser:
+    """
+    Class handling the parsing of the input config data.
+
+    :param config_path: The path to the config file of the experiment in yaml format
+    :type config_path: str
+    """
     def __init__(self, config_path):
         """Constructor method
         """
@@ -34,9 +40,13 @@ class ConfigParser:
         if not self.config_data:
             raise EmptyConfigError
 
-    #Property for the path to the inp file
     @property
     def inp_path(self):
+        """Property for the path to the inp file
+
+        :return: absolute path to the inp file
+        :rtype: str
+        """
         path = self.config_data.get("inp_file")
         if not path:
             raise MissingValueError("inp_file not in config file")
@@ -46,9 +56,13 @@ class ConfigParser:
             raise FileNotFoundError(path+" is not a file")
         return path
 
-    #Property for the path to the cpa file
     @property
     def cpa_path(self):
+        """Property for the path to the cpa file
+
+        :return: absolute path to the cpa file
+        :rtype: str
+        """
         path = self.config_data.get("cpa_file")
         if not path:
             raise MissingValueError("cpa_file not in config file")
@@ -58,14 +72,21 @@ class ConfigParser:
             raise FileNotFoundError(path + " is not a file")
         return path
 
-    #Property to load the yaml data from the cpa file
     @property
     def cpa_data(self):
-        with open(self.cpa_path) as f:
-            return yaml.load(f, Loader=yaml.FullLoader)
+        """Property to load the yaml data from the cpa file
 
-    #Returns a list of plc configs
+        :return: data from cpa file
+        """
+        with open(self.cpa_path) as file:
+            return yaml.load(file, Loader=yaml.FullLoader)
+
     def generate_plc_configs(self):
+        """Returns a list of plc configs
+
+        :return: list containing parsed PlcConfig objects
+        :rtype: List[PlcConfig]
+        """
         plcs = self.cpa_data.get("plcs")
 
         plc_config_list = []
