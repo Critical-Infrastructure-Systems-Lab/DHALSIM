@@ -1,6 +1,8 @@
 import argparse
 import os.path
 
+import yaml
+
 
 def is_valid_file(parser, arg):
     if not os.path.exists(arg):
@@ -21,6 +23,8 @@ def main():
 
     config_file = os.path.abspath(args.config_file)
     output_folder =  os.path.abspath(args.output_folder if args.output_folder else "output")
+
+    print(yaml.dump(config_file))
 
     print(config_file, output_folder)
 

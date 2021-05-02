@@ -20,8 +20,14 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         # "Operating System :: OS Independent",
     ],
+    license='MIT',
     # package_dir={"": "src"},
-    packages=setuptools.find_packages(),
+    packages=['dhalsim'],
+    install_requires=[
+        'PyYAML',
+    ],
+    setup_requires=['pytest-runner'],
+    tests_require=['pytest'],
     python_requires=">=3.8",
     entry_points={
         'console_scripts': [

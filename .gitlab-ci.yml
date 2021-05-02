@@ -24,7 +24,8 @@ before_script:
   - source venv/bin/activate
   # Put here whatever needs to be installed into the venv (caching)
   # - pip install -r requirements-dev.txt
-  - pip install -e .
+  #  - pip install -e .
+  - python3 setup.py test
 
 test:
   script:
