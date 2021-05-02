@@ -112,10 +112,3 @@ class ConfigParser:
                 plc_config_list.append(PlcConfig(name, sensor_list, actuator_list))
 
         return plc_config_list
-
-
-
-if __name__ == '__main__':
-    logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
-    parser = ConfigParser(sys.argv[1])
-    parser.generate_plc_configs()
