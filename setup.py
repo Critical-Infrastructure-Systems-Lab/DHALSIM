@@ -26,8 +26,9 @@ setuptools.setup(
     install_requires=[
         'PyYAML',
     ],
-    setup_requires=['pytest-runner'],
-    tests_require=['pytest'],
+    extras_require={
+        'test': ['pytest'],
+    },
     python_requires=">=3.8",
     entry_points={
         'console_scripts': [
