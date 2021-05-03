@@ -23,6 +23,9 @@ class GenericPlc(PLC):
         super().__init__(self.plc_configs[self.index].name,
                          self.plc_configs[self.index].protocol, self.plc_configs[self.index].state)
 
+    def pre_loop(self, sleep=0.5):
+        print("entered pre-loop for " + self.plc_configs[self.index].name)
+
     def send_system_state(self):
         """
         This method sends the values to the SCADA server or any other client requesting the values
