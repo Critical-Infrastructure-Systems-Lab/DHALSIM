@@ -1,0 +1,11 @@
+plcs:
+  - name: PLC1
+    sensors: []
+    actuators:
+      - P_RAW1
+      - V_PUB
+  - name: PLC2
+    sensors:
+      - T2
+    actuators:
+      - V_ER2i
