@@ -1,30 +1,38 @@
 import argparse
 import pickle
+# import csv
+# import signal
+# import sys
+# import threading
+# import shlex
+# import subprocess
+import time
 from typing import List
 
 from minicps.devices import PLC
-import csv
-import signal
-import sys
-
-import threading
-import shlex
-import subprocess
-import time
 
 from dhalsim.static.plc_config import PlcConfig
 
 
 class GenericPlc(PLC):
+    """
+    This code is run when a PLC is started. It will use the plc_config to know what to do.
+
+    :param plc_configs: A list of all the PLC configs
+    :type plc_configs: List[class:`dhalsim.static.plc_config.PlcConfig`]
+    :param index: This will tell the GenericPlc which of the PLC configs is about this PLC
+    :type index: int
+    """
 
     def __init__(self, plc_configs: List[PlcConfig], index: int):
         self.plc_configs = plc_configs
         self.index = index
-        super().__init__(self.plc_configs[self.index].name,
-                         self.plc_configs[self.index].protocol, self.plc_configs[self.index].state)
+        self.my_config = self.plc_configs[self.index]
+        super().__init__(self.my_config.name,
+                         self.my_config.protocol, self.my_config.state)
 
     def pre_loop(self, sleep=0.5):
-        print("entered pre-loop for " + self.plc_configs[self.index].name)
+        print("entered pre-loop for " + self.my_config.name)
 
     def send_system_state(self):
         """
@@ -32,7 +40,7 @@ class GenericPlc(PLC):
         :return:
         """
         values = []
-        for tag in self.plc_configs[self.index].tags:
+        for tag in self.my_config.tags:
             try:
                 values.append(self.get(tag))
             except Exception:
@@ -40,7 +48,7 @@ class GenericPlc(PLC):
                 time.sleep(0.05)
                 continue
             values.append(self.get(tag))
-        self.send_multiple(self.plc_configs[self.index].tags, values, self.plc_configs[self.index].ip)
+        self.send_multiple(self.my_config.tags, values, self.my_config.ip)
         time.sleep(0.05)
     #
     # def write_output(self):
@@ -69,12 +77,15 @@ class GenericPlc(PLC):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Script that represents PLC node in a DHALSIM topology')
-    parser.add_argument("--index", "-i", help="Index of the PLC", dest="index", metavar="I", required=True)
-    parser.add_argument("--plcconfigs", "-c", help="A pickled list of PlcConfigs", dest="plc_configs", metavar="FILE",
+    parser = argparse.ArgumentParser(
+        description='Script that represents PLC node in a DHALSIM topology')
+    parser.add_argument("--index", "-i", help="Index of the PLC", dest="index", metavar="I",
+                        required=True)
+    parser.add_argument("--plcconfigs", "-c", help="A pickled list of PlcConfigs", dest="configs",
+                        metavar="FILE",
                         required=True)
     args = parser.parse_args()
 
-    plc_configs = pickle.load(open(args.plc_configs, "rb"))
+    configs = pickle.load(open(args.configs, "rb"))
 
-    plc = GenericPlc(plc_configs, args.index)
+    plc = GenericPlc(configs, args.index)

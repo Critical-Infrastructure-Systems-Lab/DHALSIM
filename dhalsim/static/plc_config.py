@@ -22,7 +22,7 @@ class PlcConfig:
     """
 
     def __init__(self, name: str, sensors: List[str], actuators: List[str],
-                 mac: str = None, ip: str = None, db_path = None, db_name = None):
+                 mac: str = None, ip: str = None, db_path=None, db_name=None):
         """Constructor method
         """
         self.db_path = db_path
@@ -47,7 +47,6 @@ class PlcConfig:
         for actuator in self.actuators:
             tags.append((actuator, 1, "REAL"))
         return tags
-
 
     @property
     def server(self):
