@@ -1,4 +1,4 @@
-from dhalsim.parser.plc_config import PlcConfig
+from dhalsim.static.plc_config import PlcConfig
 from dhalsim.topo.simple_topo import SimpleTopo
 import pytest
 
@@ -6,8 +6,8 @@ import pytest
 @pytest.fixture
 def topo_fixture():
     return SimpleTopo([
-        PlcConfig('TestPLC1', 'xx‑xx‑xx‑xx‑xx‑xx', ['testSensor1', 'testSensor2'], ['testActuator1', 'testActuator2']),
-        PlcConfig('TestPLC2', 'xx‑xx‑xx‑xx‑xx‑xx', ['testSensor3'], ['testActuator3'])
+        PlcConfig('TestPLC1', ['testSensor1', 'testSensor2'], ['testActuator1', 'testActuator2']),
+        PlcConfig('TestPLC2', ['testSensor3'], ['testActuator3'])
     ])
 
 
