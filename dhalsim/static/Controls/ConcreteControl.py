@@ -34,6 +34,6 @@ class TimeControl(Control):
     """
 
     def apply(self, generic_plc):
-        dep_val = generic_plc.getSensorState(self.dependant)
-        if dep_val == self.value:
+        curr_time = generic_plc.getMasterClock
+        if curr_time == self.value:
             generic_plc.setActuatorState(self.action, self.actuator)
