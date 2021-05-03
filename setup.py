@@ -27,7 +27,7 @@ setuptools.setup(
         'PyYAML',
     ],
     extras_require={
-        'test': ['pytest'],
+        'test': ['pytest', 'pytest-mock'],
     },
     python_requires=">=3.8",
     entry_points={
