@@ -1,14 +1,6 @@
 from abc import ABC, abstractmethod
 
 
-class Error(Exception):
-    """Base class for exceptions in this module."""
-
-
-class InvalidControlActionError(Error):
-    """Raised when the requested control action is invalid"""
-
-
 class Control(ABC):
     """Defines a control for a PLC to enforce
 
@@ -17,6 +9,7 @@ class Control(ABC):
     :param dependant: value that the condition depends on (such as value of tank T0)
     :param value: value that is checked (t0 > value, time == value) etc
     """
+
     def __init__(self, actuator: str, action: str, dependant: str, value):
         """Constructor method
         """
@@ -33,5 +26,3 @@ class Control(ABC):
         :param generic_plc: the PLC that will apply the control actions
         """
         pass
-
-
