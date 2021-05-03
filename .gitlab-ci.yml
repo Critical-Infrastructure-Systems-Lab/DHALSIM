@@ -23,7 +23,8 @@ before_script:
   - virtualenv venv
   - source venv/bin/activate
   # Put here whatever needs to be installed into the venv (caching)
-  - pip install -r requirements-dev.txt
+  # - pip install -r requirements-dev.txt
+  - pip install -e .[test]
 
 test:
   script:
