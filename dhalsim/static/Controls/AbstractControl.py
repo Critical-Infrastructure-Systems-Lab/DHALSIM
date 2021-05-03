@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 
 
+# todo import genericPLC once completed
+
 class Control(ABC):
     """Defines a control for a PLC to enforce
 

@@ -39,6 +39,8 @@ def test_time_properties(time_fixture):
     assert time_fixture.dependant == "testTank3"
     assert time_fixture.value == 43
 
+# todo add mock tests for apply using genericPLC methods once implemented
+
 # def test_apply_BelowControl(mocker, below_fixture):
 #     def mockSensorState(self, sensor):
 #         return 1
