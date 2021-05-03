@@ -25,6 +25,7 @@ setuptools.setup(
     packages=['dhalsim'],
     install_requires=[
         'PyYAML',
+        'antlr4-python3-runtime',
     ],
     extras_require={
         'test': ['pytest', 'pytest-mock'],
