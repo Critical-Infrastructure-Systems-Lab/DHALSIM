@@ -8,7 +8,8 @@ CLOSED      :   'CLOSED';
 CONDITION   :   (BELOW | ABOVE) ;
 BELOW       :   'BELOW';
 ABOVE       :   'ABOVE';
-ID          :   [a-zA-Z0-9]+ ;
 VALUE       :   [0-9]+'.'*[0-9]* ;
+ID          :   [a-zA-Z0-9]+ ;
 
 nodeControl :   'LINK' ID STATE 'IF NODE' ID CONDITION VALUE ;
+timeControl :   'LINK' ID STATE 'AT TIME' VALUE ;
