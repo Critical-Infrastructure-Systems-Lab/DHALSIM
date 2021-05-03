@@ -1,6 +1,7 @@
 plcs:
   - name: PLC1
-    sensors: []
+    sensors:
+      - T0
     actuators:
       - P_RAW1
       - V_PUB
