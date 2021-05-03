@@ -25,6 +25,7 @@ setuptools.setup(
     packages=['dhalsim'],
     install_requires=[
         'PyYAML',
+        'mininet',
     ],
     extras_require={
         'test': ['pytest'],
