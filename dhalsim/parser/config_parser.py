@@ -1,9 +1,8 @@
 import logging
 import os
-import sys
 import yaml
 
-from dhalsim.parser.plc_config import PlcConfig
+from dhalsim.static.plc_config import PlcConfig
 
 logger = logging.getLogger(__name__)
 

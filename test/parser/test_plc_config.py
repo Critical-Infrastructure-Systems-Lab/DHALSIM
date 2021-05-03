@@ -1,4 +1,4 @@
-from dhalsim.parser.plc_config import PlcConfig
+from dhalsim.static.plc_config import PlcConfig
 import pytest
 
 
