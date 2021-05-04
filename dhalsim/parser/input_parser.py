@@ -3,7 +3,7 @@ import logging
 from antlr4 import *
 from dhalsim.parser.antlr.controlsParser import controlsParser
 from dhalsim.parser.antlr.controlsLexer import controlsLexer
-from dhalsim.static.Controls.ConcreteControl import *
+from dhalsim.static.controls.ConcreteControl import *
 
 logger = logging.getLogger(__name__)
 

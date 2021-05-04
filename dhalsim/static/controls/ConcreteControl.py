@@ -1,4 +1,4 @@
-from dhalsim.static.Controls.AbstractControl import Control
+from dhalsim.static.controls.AbstractControl import Control
 
 
 # todo import genericPLC once completed

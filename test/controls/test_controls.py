@@ -1,7 +1,7 @@
 import pytest
 import pytest_mock
 
-from dhalsim.static.Controls.ConcreteControl import BelowControl, AboveControl, TimeControl
+from dhalsim.static.controls.ConcreteControl import BelowControl, AboveControl, TimeControl
 
 
 @pytest.fixture
