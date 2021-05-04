@@ -40,7 +40,7 @@ class InputParser:
                 # This is an AT NODE control
                 # Get other common control values
                 dependant = str(child.getChild(4))
-                value = str(child.getChild(6))
+                value = float(str(child.getChild(6)))
                 if str(child.getChild(5)) == "BELOW":
                     # This is a BelowControl
                     controls.append(BelowControl(actuator, action, dependant, value))
@@ -48,7 +48,7 @@ class InputParser:
                     # This is a BelowControl
                     controls.append(AboveControl(actuator, action, dependant, value))
             if child.getChildCount() == 5:
-                value = str(child.getChild(4))
+                value = float(str(child.getChild(4)))
                 controls.append(TimeControl(actuator, action, "TIME", value))
 
         return controls

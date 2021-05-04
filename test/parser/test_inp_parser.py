@@ -19,7 +19,7 @@ def test_single_node_control(tmpdir):
     assert control.actuator == "V_PUB"
     assert control.action == "OPEN"
     assert control.dependant == "T0"
-    assert control.value == "0.256"
+    assert control.value == 0.256
 
 
 def test_single_node_and_time_control(tmpdir):
@@ -32,9 +32,9 @@ def test_single_node_and_time_control(tmpdir):
     assert node_control.actuator == "V_PUB"
     assert node_control.action == "OPEN"
     assert node_control.dependant == "T0"
-    assert node_control.value == "0.256"
+    assert node_control.value == 0.256
     time_control = controls[1]
     assert time_control.actuator == "P_RAW1"
     assert time_control.action == "CLOSED"
     assert time_control.dependant == "TIME"
-    assert time_control.value == "0"
+    assert time_control.value == 0
