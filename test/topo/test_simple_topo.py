@@ -24,8 +24,8 @@ def test_host_names(topo_fixture):
 
 
 def test_host_ips(topo_fixture):
-    assert topo_fixture.nodeInfo('TestPLC1')['ip'] == '192.168.1.1/24'
-    assert topo_fixture.nodeInfo('TestPLC2')['ip'] == '192.168.1.2/24'
+    assert topo_fixture.nodeInfo('TestPLC1')['ip'] == '192.168.1.0/24'
+    assert topo_fixture.nodeInfo('TestPLC2')['ip'] == '192.168.1.1/24'
     assert topo_fixture.nodeInfo('r0')['ip'] == '192.168.1.254/24'
     assert topo_fixture.nodeInfo('scada')['ip'] == '192.168.2.1/24'
 
