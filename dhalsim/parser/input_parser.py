@@ -49,6 +49,6 @@ class InputParser:
                     controls.append(AboveControl(actuator, action, dependant, value))
             if child.getChildCount() == 5:
                 value = float(str(child.getChild(4)))
-                controls.append(TimeControl(actuator, action, "TIME", value))
+                controls.append(TimeControl(actuator, action, value))
 
         return controls
