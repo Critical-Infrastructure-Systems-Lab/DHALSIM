@@ -102,6 +102,7 @@ class ConfigParser:
                 if not name:
                     raise MissingValueError("plc is missing a name")
 
+                # Assign sensors to the plc
                 sensor_list = []
                 sensors = plc.get("sensors")
                 if sensors:
