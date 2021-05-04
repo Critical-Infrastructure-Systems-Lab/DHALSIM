@@ -1,4 +1,5 @@
 from dhalsim.static.plc_config import PlcConfig
+from dhalsim.static.controls.ConcreteControl import *
 import pytest
 
 
@@ -11,7 +12,8 @@ def control_list_fixture():
 def config_fixture(control_list_fixture):
     return PlcConfig(name="TestPLC1", sensors=["testSensor1", "testSensor2"],
                      actuators=["testActuator1", "testActuator2"], mac="12:34:56:78:9A:BC",
-                     ip="123.456.789.123", db_path="./the_path.sqlite", db_name="plc1")
+                     controls=control_list_fixture, ip="123.456.789.123",
+                     db_path="./the_path.sqlite", db_name="plc1")
 
 
 def test_name(config_fixture):

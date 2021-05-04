@@ -117,7 +117,7 @@ class ConfigParser:
                     for actuator in actuators:
                         actuator_list.append(actuator)
                         for control in global_plc_controls:
-                            if control.actuator.name == actuator:
+                            if control.actuator == actuator:
                                 plc_controls.append(control)
 
                 plc_config_list.append(PlcConfig(name, sensor_list, actuator_list, plc_controls))
