@@ -1,6 +1,6 @@
 from typing import List
 
-from dhalsim.static.controls import ConcreteControl
+from dhalsim.static.controls import AbstractControl
 
 
 class PlcConfig:
@@ -26,7 +26,7 @@ class PlcConfig:
     """
 
     def __init__(self, name: str, sensors: List[str], actuators: List[str],
-                 controls: List[ConcreteControl], mac: str = None, ip: str = None, db_path=None, db_name=None):
+                 controls: list, mac: str = None, ip: str = None, db_path=None, db_name=None):
         """Constructor method
         """
         self.db_path = db_path
