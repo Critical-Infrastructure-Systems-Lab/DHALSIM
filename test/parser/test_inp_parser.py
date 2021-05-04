@@ -36,5 +36,4 @@ def test_single_node_and_time_control(tmpdir):
     time_control = controls[1]
     assert time_control.actuator == "P_RAW1"
     assert time_control.action == "CLOSED"
-    assert time_control.dependant == "TIME"
     assert time_control.value == 0
