@@ -16,7 +16,7 @@ def above_fixture():
 
 @pytest.fixture
 def time_fixture():
-    return TimeControl("testActuator3", "action3", "testTank3", 43)
+    return TimeControl("testActuator3", "action3", 43)
 
 
 def test_below_properties(below_fixture):
@@ -36,7 +36,6 @@ def test_above_properties(above_fixture):
 def test_time_properties(time_fixture):
     assert time_fixture.actuator == "testActuator3"
     assert time_fixture.action == "action3"
-    assert time_fixture.dependant == "testTank3"
     assert time_fixture.value == 43
 
 # todo add mock tests for apply using genericPLC methods once implemented
