@@ -63,10 +63,10 @@ def test_time_properties(time_fixture):
 
 @pytest.mark.skip(reason="miniCPS not installed on runner")
 def test_apply_true_BelowControl(mocker, below_fixture, mock_plc1):
-    mocker.patch(
-        'dhalsim.entities.generic_plc.GenericPlc',
-        mock_plc1
-    )
+    # mocker.patch(
+    #     'dhalsim.entities.generic_plc.GenericPlc',
+    #     mock_plc1
+    # )
 
     assert below_fixture.apply(mock_plc1) is None
     # Assert call.get tag called, and below value was true
@@ -76,10 +76,10 @@ def test_apply_true_BelowControl(mocker, below_fixture, mock_plc1):
 
 @pytest.mark.skip(reason="miniCPS not installed on runner")
 def test_apply_false_BelowControl(mocker, below_fixture, mock_plc2):
-    mocker.patch(
-        'dhalsim.entities.generic_plc.GenericPlc',
-        mock_plc2
-    )
+    # mocker.patch(
+    #     'dhalsim.entities.generic_plc.GenericPlc',
+    #     mock_plc2
+    # )
 
     assert below_fixture.apply(mock_plc2) is None
     # Assert call.get tag called, and below value was false
@@ -89,10 +89,10 @@ def test_apply_false_BelowControl(mocker, below_fixture, mock_plc2):
 
 @pytest.mark.skip(reason="miniCPS not installed on runner")
 def test_apply_true_AboveControl(mocker, above_fixture, mock_plc2):
-    mocker.patch(
-        'dhalsim.entities.generic_plc.GenericPlc',
-        mock_plc2
-    )
+    # mocker.patch(
+    #     'dhalsim.entities.generic_plc.GenericPlc',
+    #     mock_plc2
+    # )
 
     assert above_fixture.apply(mock_plc2) is None
     # Assert call.get tag called, and above value was true
@@ -102,10 +102,10 @@ def test_apply_true_AboveControl(mocker, above_fixture, mock_plc2):
 
 @pytest.mark.skip(reason="miniCPS not installed on runner")
 def test_apply_false_AboveControl(mocker, above_fixture, mock_plc1):
-    mocker.patch(
-        'dhalsim.entities.generic_plc.GenericPlc',
-        mock_plc1
-    )
+    # mocker.patch(
+    #     'dhalsim.entities.generic_plc.GenericPlc',
+    #     mock_plc1
+    # )
 
     assert above_fixture.apply(mock_plc1) is None
     # Assert call.get tag called, and above value was false
@@ -115,10 +115,10 @@ def test_apply_false_AboveControl(mocker, above_fixture, mock_plc1):
 
 @pytest.mark.skip(reason="miniCPS not installed on runner")
 def test_apply_true_TimeControl(mocker, time_fixture, mock_plc1):
-    mocker.patch(
-        'dhalsim.entities.generic_plc.GenericPlc',
-        mock_plc1
-    )
+    # mocker.patch(
+    #     'dhalsim.entities.generic_plc.GenericPlc',
+    #     mock_plc1
+    # )
 
     assert time_fixture.apply(mock_plc1) is None
     # Assert call.get tag called, and time == is true
@@ -128,10 +128,10 @@ def test_apply_true_TimeControl(mocker, time_fixture, mock_plc1):
 
 @pytest.mark.skip(reason="miniCPS not installed on runner")
 def test_apply_false_TimeControl(mocker, time_fixture, mock_plc2):
-    mocker.patch(
-        'dhalsim.entities.generic_plc.GenericPlc',
-        mock_plc2
-    )
+    # mocker.patch(
+    #     'dhalsim.entities.generic_plc.GenericPlc',
+    #     mock_plc2
+    # )
 
     assert time_fixture.apply(mock_plc2) is None
     # Assert call.get tag called, and above value was true
