@@ -9,12 +9,14 @@ import pickle
 import time
 from typing import List
 
-from minicps.devices import PLC
+# from minicps.devices import PLC
 
 from dhalsim.static.plc_config import PlcConfig
 
 
-class GenericPlc(PLC):
+# todo add minicps import back in (requires adding minicps to gitlab runner for pipeline)
+
+class GenericPlc:
     """
     This code is run when a PLC is started. It will use the plc_config to know what to do.
 
