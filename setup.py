@@ -29,6 +29,7 @@ setuptools.setup(
     ],
     extras_require={
         'test': ['pytest'],
+        'doc': ['sphinx', 'sphinx-rtd-theme'],
     },
     python_requires=">=3.8",
     entry_points={
