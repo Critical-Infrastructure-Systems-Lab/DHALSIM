@@ -1,5 +1,7 @@
 from typing import List
 
+from dhalsim.static.controls import AbstractControl
+
 
 class PlcConfig:
     """This houses all the properties a PLC can have.
@@ -11,6 +13,8 @@ class PlcConfig:
     :type sensors: List[str]
     :param actuators: The actuators the PLC can control
     :type actuators: List[str]
+    :param controls: The list of controls that the PLC will enforce
+    :type controls: List[ConcreteControl]
     :param mac: The MAC address of the PLC
     :type mac: str, optional
     :param ip: The ip address of the PLC
@@ -22,7 +26,7 @@ class PlcConfig:
     """
 
     def __init__(self, name: str, sensors: List[str], actuators: List[str],
-                 mac: str = None, ip: str = None, db_path=None, db_name=None):
+                 controls: list, mac: str = None, ip: str = None, db_path=None, db_name=None):
         """Constructor method
         """
         self.db_path = db_path
@@ -30,6 +34,7 @@ class PlcConfig:
         self.name = name
         self.sensors = sensors
         self.actuators = actuators
+        self.controls = controls
         self.mac = mac
         self.ip = ip
 

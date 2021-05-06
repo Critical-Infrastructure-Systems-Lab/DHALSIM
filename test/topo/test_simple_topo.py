@@ -1,13 +1,18 @@
 from dhalsim.static.plc_config import PlcConfig
 from dhalsim.topo.simple_topo import SimpleTopo
+from dhalsim.static.controls.ConcreteControl import *
 import pytest
+
+@pytest.fixture
+def control_list_fixture():
+    return [TimeControl("testActuator1", "CLOSED", 5), BelowControl("testActuator1", "CLOSED", "testSensor2", 5)]
 
 
 @pytest.fixture
-def topo_fixture():
+def topo_fixture(control_list_fixture):
     return SimpleTopo([
-        PlcConfig('TestPLC1', ['testSensor1', 'testSensor2'], ['testActuator1', 'testActuator2']),
-        PlcConfig('TestPLC2', ['testSensor3'], ['testActuator3'])
+        PlcConfig('TestPLC1', ['testSensor1', 'testSensor2'], ['testActuator1', 'testActuator2'], control_list_fixture),
+        PlcConfig('TestPLC2', ['testSensor3'], ['testActuator3'], control_list_fixture)
     ])
 
 

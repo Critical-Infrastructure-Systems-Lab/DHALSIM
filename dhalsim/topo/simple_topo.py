@@ -48,7 +48,9 @@ class SimpleTopo(Topo):
         gateway = 'via ' + router_ip
 
         for index, plc_config in enumerate(self.plc_configs):
-            # TODO What if we have >254 PLCs?
+            if len(self.plc_configs) > 253:
+                raise Exception("The simple network topology only supports up to 253 PLCs.")
+
             plc_config.ip = "192.168.1." + str(index + 1) + "/24"
             # Add the PLC to the network (and the array)
             plc = self.addHost(plc_config.name, ip=plc_config.ip, defaultRoute=gateway)

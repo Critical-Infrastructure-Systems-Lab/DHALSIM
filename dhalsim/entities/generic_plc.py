@@ -9,12 +9,14 @@ import pickle
 import time
 from typing import List
 
-from minicps.devices import PLC
+# from minicps.devices import PLC
 
 from dhalsim.static.plc_config import PlcConfig
 
 
-class GenericPlc(PLC):
+# todo add minicps import back in (requires adding minicps to gitlab runner for pipeline)
+
+class GenericPlc:
     """
     This code is run when a PLC is started. It will use the plc_config to know what to do.
 
@@ -50,6 +52,31 @@ class GenericPlc(PLC):
             values.append(self.get(tag))
         self.send_multiple(self.my_config.tags, values, self.my_config.ip)
         time.sleep(0.05)
+
+    def get_tag(self, tag: str):
+        """Placeholder function to get value of sensor
+
+        :param tag: sensor to poll
+        :return: value from sensor
+        """
+        pass
+
+    def set_tag(self, tag: str, action: str):
+        """Placeholder function to set value of actuator
+
+        :param tag: actuator to target
+        :param action: action to perform
+        :return: ???
+        """
+        pass
+
+    def get_master_clock(self):
+        """Gets value of master time (from db?)
+
+        :return:
+        """
+        pass
+
     #
     # def write_output(self):
     #     with open('output/' + self.path, 'w') as f:

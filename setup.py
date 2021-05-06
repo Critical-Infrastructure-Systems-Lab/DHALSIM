@@ -25,10 +25,11 @@ setuptools.setup(
     packages=['dhalsim'],
     install_requires=[
         'PyYAML',
+        'antlr4-python3-runtime',
         'mininet',
     ],
     extras_require={
-        'test': ['pytest'],
+        'test': ['pytest', 'pytest-mock'],
         'doc': ['sphinx', 'sphinx-rtd-theme'],
     },
     python_requires=">=3.8",

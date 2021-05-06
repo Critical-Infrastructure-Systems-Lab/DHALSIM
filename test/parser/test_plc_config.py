@@ -1,12 +1,19 @@
 from dhalsim.static.plc_config import PlcConfig
+from dhalsim.static.controls.ConcreteControl import *
 import pytest
 
 
 @pytest.fixture
-def config_fixture():
+def control_list_fixture():
+    return [TimeControl("testActuator1", "CLOSED", 5), BelowControl("testActuator1", "CLOSED", "testSensor2", 5)]
+
+
+@pytest.fixture
+def config_fixture(control_list_fixture):
     return PlcConfig(name="TestPLC1", sensors=["testSensor1", "testSensor2"],
                      actuators=["testActuator1", "testActuator2"], mac="12:34:56:78:9A:BC",
-                     ip="123.456.789.123", db_path="./the_path.sqlite", db_name="plc1")
+                     controls=control_list_fixture, ip="123.456.789.123",
+                     db_path="./the_path.sqlite", db_name="plc1")
 
 
 def test_name(config_fixture):
@@ -23,6 +30,10 @@ def test_actuator(config_fixture):
 
 def test_mac(config_fixture):
     assert config_fixture.mac is "12:34:56:78:9A:BC"
+
+
+def test_controls(config_fixture, control_list_fixture):
+    assert config_fixture.controls == control_list_fixture
 
 
 def test_ip(config_fixture):
