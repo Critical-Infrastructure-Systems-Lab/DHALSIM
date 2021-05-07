@@ -1,4 +1,4 @@
-from basePLC import BasePLC
+from dhalsim.python2.basePLC import BasePLC
 from utils import *
 from datetime import datetime
 from decimal import Decimal

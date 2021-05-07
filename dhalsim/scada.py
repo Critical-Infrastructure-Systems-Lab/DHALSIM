@@ -1,9 +1,8 @@
-from basePLC import BasePLC
+from dhalsim.python2.basePLC import BasePLC
 from utils import *
 
 import time
 from datetime import datetime
-from decimal import Decimal
 import signal
 import sys
 import csv
