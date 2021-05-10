@@ -3,7 +3,7 @@
 #db_path: "wadi_db.sqlite"
 #output_ground_truth_path: "physical_process.csv"
 #duration_days: 1
-inp_file: "wadi_map.inp"
+inp_file: "wadi_map_pda_original.inp"
 cpa_file: "wadi_cpa.yaml"
 #simulator: "pdd"
 #week_index: 0
