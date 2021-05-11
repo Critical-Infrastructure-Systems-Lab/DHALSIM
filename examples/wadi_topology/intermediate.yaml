@@ -84,7 +84,7 @@ valves:
   - name: V_ER2o
     initial_state: Open
   - name: V_ER1i
-    initial_stat`e: Open
+    initial_state: Open
   - name: V_ER1o
     initial_state: Closed
   - name: FCV_ER
