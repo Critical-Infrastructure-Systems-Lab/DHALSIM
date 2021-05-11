@@ -91,29 +91,29 @@ valves:
     initial_state: Open
   - name: FCV_RWin
     initial_state: Open
-  - name: 1
+  - name: V1
     initial_state: Open
-  - name: 2
+  - name: V2
     initial_state: Open
-  - name: 3
+  - name: V3
     initial_state: Open
-  - name: 4
+  - name: V4
     initial_state: Open
-  - name: 5
+  - name: V5
     initial_state: Open
-  - name: 6
+  - name: V6
     initial_state: Open
-  - name: 7
+  - name: V7
     initial_state: Open
-  - name: 8
+  - name: V8
     initial_state: Open
-  - name: 9
+  - name: V9
     initial_state: Open
-  - name: 10
+  - name: V10
     initial_state: Open
-  - name: 11
+  - name: V11
     initial_state: Open
-  - name: 12
+  - name: V12
     initial_state: Open
 
 tanks:

@@ -151,12 +151,12 @@ class WADI(MiniCPS):
 
         cmd_string = "python2 automatic_plant.py wadi_config.yaml " + str(self.week_index)
 
-        if self.attack_flag:
-            cmd_string = "python automatic_plant.py wadi_config.yaml " + str(self.week_index) + " " + \
-                         str(self.attack_path)
+        # if self.attack_flag:
+        #     cmd_string = "python automatic_plant.py wadi_config.yaml " + str(self.week_index) + " " + \
+        #                  str(self.attack_path)
 
         simulation_cmd = shlex.split(cmd_string)
-        self.simulation = plant.popen(simulation_cmd, stderr=sys.stdout, stdout=physical_output)
+        self.simulation = plant.popen(simulation_cmd, stderr=sys.stderr, stdout=sys.stdout)
 
         print "[] Simulating..."
         # We wait until the simulation ends
