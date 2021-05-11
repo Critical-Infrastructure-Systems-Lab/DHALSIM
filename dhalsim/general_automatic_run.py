@@ -273,7 +273,7 @@ class DHALSIM(MiniCPS):
         if self.simulation:
             self.simulation.terminate()
 
-        cmd = shlex.split("./scripts/kill_cppo.sh")
+        cmd = shlex.split("../scripts/kill_cppo.sh")
         subprocess.call(cmd)
         net.stop()
         sys.exit(0)
