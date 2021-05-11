@@ -34,7 +34,7 @@ plcs:
         value: 0.16
         actuator: P_RAW1
         action: OPEN
-     - type: Above
+      - type: Above
         dependant: T2
         value: 0.32
         actuator: P_RAW1
@@ -127,13 +127,13 @@ tanks:
 
 pumps:
   - name: P_RAW1
-    initial_state: closed
+    initial_state: Closed
   - name: P_RAW2
-    initial_state: closed
+    initial_state: Closed
   - name: P_B1
-    initial_state: closed
+    initial_state: Closed
   - name: P_B2
-    initial_state: closed
+    initial_state: Closed
 
 time:
   - hydraulic_timestep: 0:01
