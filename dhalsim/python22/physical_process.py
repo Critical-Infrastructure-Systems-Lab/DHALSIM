@@ -221,14 +221,14 @@ class PhysicalPlant:
             else:
                 values_list.extend([self.wn.get_link(valve).status.value])
 
-        rows = self.c.execute("SELECT value FROM wadi WHERE name = 'ATT_1'").fetchall()
-        self.conn.commit()
-        attack1 = int(rows[0][0])
-        rows = self.c.execute("SELECT value FROM wadi WHERE name = 'ATT_2'").fetchall()
-        self.conn.commit()
-        attack2 = int(rows[0][0])
+        # rows = self.c.execute("SELECT value FROM wadi WHERE name = 'ATT_1'").fetchall()
+        # self.conn.commit()
+        # attack1 = int(rows[0][0])
+        # rows = self.c.execute("SELECT value FROM wadi WHERE name = 'ATT_2'").fetchall()
+        # self.conn.commit()
+        # attack2 = int(rows[0][0])
 
-        values_list.extend([attack1, attack2])
+        # values_list.extend([attack1, attack2])
         return values_list
 
     def update_controls(self):
@@ -239,6 +239,7 @@ class PhysicalPlant:
         act_name = '\'' + control['name'] + '\''
         rows_1 = self.c.execute('SELECT value FROM wadi WHERE name = ' + act_name).fetchall()
         self.conn.commit()
+        print(act_name, rows_1)
         new_status = int(rows_1[0][0])
 
         control['value'] = new_status
