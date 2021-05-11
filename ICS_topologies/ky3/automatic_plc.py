@@ -21,7 +21,12 @@ class NodeControl():
         All the subprocesses launched in this Digital Twin follow the same pattern to ensure that they finish before continuing with the finishing of the parent process
         """
         print "Stopping Tcp dump process on PLC..."
-        self.process_tcp_dump.kill()
+        self.process_tcp_dump.send_signal(signal.SIGINT)
+        self.process_tcp_dump.wait()
+        if self.process_tcp_dump.poll() is None:
+            self.process_tcp_dump.terminate()
+        if self.process_tcp_dump.poll() is None:
+            self.process_tcp_dump.kill()
 
         print "Stopping PLC..."
         self.plc_process.send_signal(signal.SIGINT)

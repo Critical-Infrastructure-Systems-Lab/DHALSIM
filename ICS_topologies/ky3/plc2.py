@@ -4,7 +4,7 @@ from utils import X_Pump_4, T_2, CTOWN_IPS
 from decimal import Decimal
 import time
 import threading
-
+from utils import ATT_1, ATT_2, ddos_attack
 
 
 class PLC2(BasePLC):
@@ -37,6 +37,13 @@ class PLC2(BasePLC):
                         self.pu4 = 1
                     if self.t2 > 167.244:
                         self.pu4 = 0
+
+                attack_on = int(self.get(ATT_2))
+                if ddos_attack == 1:
+                    if attack_on == 1:
+                        self.set(ATT_1, attack_on)
+                        self.pu4 = 0
+                        print("Closing pump4")
 
                     self.set(X_Pump_4, int(self.pu4))
 

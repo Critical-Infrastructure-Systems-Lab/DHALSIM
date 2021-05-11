@@ -35,10 +35,9 @@ class PLC1(BasePLC):
             try:
                 self.local_time += 1
                 attack_on = int(self.get(ATT_2))
-                self.set(ATT_1, attack_on)
-
                 if ddos_attack == 1:
                     if attack_on == 1:
+                        self.set(ATT_1, attack_on)
                         self.pu2 = 0
                         print("Closing pump2")
 

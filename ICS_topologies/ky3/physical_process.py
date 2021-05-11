@@ -111,26 +111,27 @@ class PhysicalPlant:
         else:
             limit = 239
 
-        if 'initial_custom_flag' in config_options == True:
-            custom_initial_conditions_flag =  bool(config_options['initial_custom_flag'])
-            if custom_initial_conditions_flag:
-                demand_patterns_path = config_options['demand_patterns_path']
-                starting_demand_path = config_options['starting_demand_path']
-                initial_tank_levels_path = config_options['initial_tank_levels_path']
+        if 'initial_custom_flag' in config_options:
+            if config_options['initial_custom_flag'] == "True":
+                custom_initial_conditions_flag =  bool(config_options['initial_custom_flag'])
+                if custom_initial_conditions_flag:
+                    demand_patterns_path = config_options['demand_patterns_path']
+                    starting_demand_path = config_options['starting_demand_path']
+                    initial_tank_levels_path = config_options['initial_tank_levels_path']
 
-                print("Running simulation with week index: " + str(self.week_index))
-                total_demands = pd.read_csv(demand_patterns_path, index_col=0)
-                demand_starting_points = pd.read_csv(starting_demand_path, index_col=0)
-                initial_tank_levels = pd.read_csv(initial_tank_levels_path, index_col=0)
-                week_start = demand_starting_points.iloc[self.week_index][0]
-                week_demands = total_demands.loc[week_start:week_start + limit, :]
+                    print("Running simulation with week index: " + str(self.week_index))
+                    total_demands = pd.read_csv(demand_patterns_path, index_col=0)
+                    demand_starting_points = pd.read_csv(starting_demand_path, index_col=0)
+                    initial_tank_levels = pd.read_csv(initial_tank_levels_path, index_col=0)
+                    week_start = demand_starting_points.iloc[self.week_index][0]
+                    week_demands = total_demands.loc[week_start:week_start + limit, :]
 
-                for name, pat in self.wn.patterns():
-                    pat.multipliers = week_demands[name].values.tolist()
+                    for name, pat in self.wn.patterns():
+                        pat.multipliers = week_demands[name].values.tolist()
 
-                for i in range(1, 4):
-                    self.wn.get_node('T_' + str(i)).init_level = \
-                        float(initial_tank_levels.iloc[self.week_index]['T_' + str(i)])
+                    for i in range(1, 4):
+                        self.wn.get_node('T_' + str(i)).init_level = \
+                            float(initial_tank_levels.iloc[self.week_index]['T_' + str(i)])
 
     def get_node_list_by_type(self, a_list, a_type):
         result = []
