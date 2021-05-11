@@ -48,9 +48,9 @@ class SimulationControl():
         :return: An object representing the simulation process
         """
         home_path = expanduser("~")
-        # wntr_environment_path = home_path + str("/wntr-experiments/bin/python")
+        wntr_environment_path = home_path + str("/wntr-experiments/bin/python")
         wntr_environment_path = "python3"
-        print("Launching simulation for week index: " + str(sys.argv[2]))
+        print "Launching simulation for week index: " + str(sys.argv[2])
 
         cmd_string = wntr_environment_path + " physical_process.py " + sys.argv[1] + " " + sys.argv[2]
         #argv[3] is the attack repository path

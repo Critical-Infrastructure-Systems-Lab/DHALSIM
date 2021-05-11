@@ -34,7 +34,7 @@ class BasePLC(PLC):
         self.week_index = week_index
 
     def sigint_handler(self, sig, frame):
-        print('DEBUG plc shutdown')
+        print 'DEBUG plc shutdown'
         self.reader = False
         sys.exit(0)
 

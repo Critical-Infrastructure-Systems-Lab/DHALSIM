@@ -20,7 +20,7 @@ class NodeControl():
         """
         All the subprocesses launched in this Digital Twin follow the same pattern to ensure that they finish before continuing with the finishing of the parent process
         """
-        print("Stopping Tcp dump process on PLC...")
+        print "Stopping Tcp dump process on PLC..."
         #self.process_tcp_dump.kill()
 
         self.process_tcp_dump.send_signal(signal.SIGINT)
@@ -30,7 +30,7 @@ class NodeControl():
         if self.process_tcp_dump.poll() is None:
             self.process_tcp_dump.kill()
 
-        print("Stopping PLC...")
+        print "Stopping PLC..."
         self.plc_process.send_signal(signal.SIGINT)
         self.plc_process.wait()
         if self.plc_process.poll() is None:
@@ -64,7 +64,7 @@ class NodeControl():
     def process_arguments(self,arg_parser):
         if arg_parser.name:
             self.name = arg_parser.name
-            print(self.name)
+            print self.name
         else:
             self.name = 'plc1'
 
@@ -120,7 +120,7 @@ class NodeControl():
 
         # if self.attack_flag:
         #     # Pass the path to the PLC so it can parse the attack information and run it
-        #     cmd_string = 'python2 ' + self.name + '.py' + ' -w ' + str(self.week_index) + ' -f True -p ' + \
+        #     cmd_string = 'python ' + self.name + '.py' + ' -w ' + str(self.week_index) + ' -f True -p ' + \
         #                  str(self.attack_path) + ' -a ' + str(self.attack_name)
 
         cmd = shlex.split(cmd_string)

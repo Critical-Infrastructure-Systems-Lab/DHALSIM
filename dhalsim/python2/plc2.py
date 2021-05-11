@@ -1,9 +1,13 @@
 from basePLC import BasePLC
 from utils import PLC2_DATA, STATE, PLC2_PROTOCOL
 from utils import T2, PLC2_ADDR, V_ER2i
+import csv
+from datetime import datetime
 import logging
 from decimal import Decimal
 import time
+import signal
+import sys
 import threading
 
 logging.basicConfig(filename='plc2_debug.log', level=logging.DEBUG)
@@ -14,7 +18,7 @@ plc2_log_path = 'plc2.log'
 class PLC2(BasePLC):
 
     def pre_loop(self):
-        print('DEBUG: plc2 enters pre_loop')
+        print 'DEBUG: plc2 enters pre_loop'
         self.local_time = 0
 
         self.reader = True

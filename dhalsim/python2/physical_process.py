@@ -24,19 +24,18 @@ class PhysicalPlant:
 
         # Some users may not configure the parameter
         # Sets the attack_flag to load attack_start and attack_end before main loop
-        # if config_options['run_attack']:
-        #         if config_options['run_attack'] == "True":
-        #             self.attack_flag = True
-        #             self.attack_path = sys.argv[3]
-        #             self.attack_name = config_options['attack_name']
-        #         else:
-        #             self.attack_flag = False
-        # else:
-        self.attack_flag = False
+        if config_options['run_attack']:
+                if config_options['run_attack'] == "True":
+                    self.attack_flag = True
+                    self.attack_path = sys.argv[3]
+                    self.attack_name = config_options['attack_name']
+                else:
+                    self.attack_flag = False
+        else:
+            self.attack_flag = False
 
         # connection to the database
         self.db_path = config_options['db_path']
-        self.db_path = "/tmp/dhalsim.sqlite"
         self.conn = sqlite3.connect(self.db_path)
         self.c = self.conn.cursor()
 
@@ -222,14 +221,14 @@ class PhysicalPlant:
             else:
                 values_list.extend([self.wn.get_link(valve).status.value])
 
-        rows = self.c.execute("SELECT value FROM wadi WHERE name = 'ATT_1'").fetchall()
-        self.conn.commit()
-        attack1 = int(rows[0][0])
-        rows = self.c.execute("SELECT value FROM wadi WHERE name = 'ATT_2'").fetchall()
-        self.conn.commit()
-        attack2 = int(rows[0][0])
+        # rows = self.c.execute("SELECT value FROM wadi WHERE name = 'ATT_1'").fetchall()
+        # self.conn.commit()
+        # attack1 = int(rows[0][0])
+        # rows = self.c.execute("SELECT value FROM wadi WHERE name = 'ATT_2'").fetchall()
+        # self.conn.commit()
+        # attack2 = int(rows[0][0])
 
-        values_list.extend([attack1, attack2])
+        # values_list.extend([attack1, attack2])
         return values_list
 
     def update_controls(self):
@@ -240,6 +239,7 @@ class PhysicalPlant:
         act_name = '\'' + control['name'] + '\''
         rows_1 = self.c.execute('SELECT value FROM wadi WHERE name = ' + act_name).fetchall()
         self.conn.commit()
+        print(act_name, rows_1)
         new_status = int(rows_1[0][0])
 
         control['value'] = new_status

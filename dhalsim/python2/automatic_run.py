@@ -1,15 +1,14 @@
-import os.path
-
 from mininet.net import Mininet
 from mininet.cli import CLI
 from minicps.mcps import MiniCPS
-from topo.simple_topo import SimpleTopo
-# from initialize_experiment import ExperimentInitializer
+from topo import SimpleTopo
+from initialize_experiment import ExperimentInitializer
 import sys
 import time
 import shlex
 import subprocess
 import signal
+from utils import wadi_ip
 from mininet.link import TCLink
 import yaml
 import glob
@@ -40,18 +39,11 @@ class WADI(MiniCPS):
     def setup_network(self):
         r0 = net.get('r0')
         self.do_forward(r0)
-
-        # with open(os.path.abspath(self.intermediate_yaml_path)) as intermediate_yaml:
-        #     intermediate = yaml.load(intermediate_yaml)
-        #     for plc in intermediate["plcs"]:
-        #         self.add_degault_gateway(net.get(plc["name"]), '192.168.1.254')
-
         self.add_degault_gateway(net.get('plc1'), '192.168.1.254')
         self.add_degault_gateway(net.get('plc2'), '192.168.1.254')
-        # self.add_degault_gateway(net.get('attacker_1'), '192.168.1.254')
-        # self.add_degault_gateway(net.get('attacker_2'), '192.168.2.254')
-        self.add_degault_gateway(net.get('scada'), '192.168.178.254')
-
+        self.add_degault_gateway(net.get('attacker_1'), '192.168.1.254')
+        self.add_degault_gateway(net.get('scada'), '192.168.2.254')
+        self.add_degault_gateway(net.get('attacker_2'), '192.168.2.254')
         r0.cmd('ifconfig r0-eth2 192.168.2.254')
         r0.waitOutput()
 
@@ -60,7 +52,7 @@ class WADI(MiniCPS):
         signal.signal(signal.SIGINT, self.interrupt)
         signal.signal(signal.SIGTERM, self.interrupt)
 
-        print("Running for week: " + str(week_index))
+        print "Running for week: " + str(week_index)
         self.week_index = week_index
 
         net.start()
@@ -76,8 +68,6 @@ class WADI(MiniCPS):
         self.attack_options = None
         self.attack_type = None
         self.attack_target = None
-
-        # self.intermediate_yaml_path = intermediate_yaml_path
 
         if self.attack_flag:
             self.attack_options = self.get_attack_dict(attack_path, attack_name)
@@ -109,8 +99,6 @@ class WADI(MiniCPS):
         plc2 = net.get('plc2')
         scada = net.get('scada')
 
-        # CLI(net)
-
         self.create_log_files()
         plc1_output = open("output/plc1.log", 'r+')
         plc2_output = open("output/plc2.log", 'r+')
@@ -124,7 +112,7 @@ class WADI(MiniCPS):
         #         cmd_string = "python automatic_plc.py -n plc2 -w " \
         #                      + str(self.week_index) + " -f " + str(self.attack_flag) + " -p " \
         #                      + str(self.attack_path) + " -a " + str(self.attack_name)
-        print("Launching PLC with command: " + cmd_string)
+        # print "Launching PLC with command: " + cmd_string
         cmd = shlex.split(cmd_string)
         self.plc2_process = plc2.popen(cmd, stderr=sys.stdout, stdout=plc2_output)
         time.sleep(0.2)
@@ -135,13 +123,13 @@ class WADI(MiniCPS):
         #         cmd_string = "python automatic_plc.py -n plc1 -w " \
         #                      + str(self.week_index) + " -f " + str(self.attack_flag) + " -p " \
         #                      + str(self.attack_path) + " -a " + str(self.attack_name)
-        print("Launching PLC with command: " + cmd_string)
+        # print "Launching PLC with command: " + cmd_string
         cmd = shlex.split(cmd_string)
         self.plc1_process = plc1.popen(cmd, stderr=sys.stdout, stdout=plc1_output)
         time.sleep(0.2)
 
-        self.scada_process = scada.popen(sys.executable, "automatic_plc.py", "-n", "scada", stderr=sys.stderr, stdout=sys.stdout )
-        print("[*] Launched the PLCs and SCADA processes")
+        self.scada_process = scada.popen(sys.executable, "automatic_plc.py", "-n", "scada", stderr=sys.stdout, stdout=scada_output )
+        print "[*] Launched the PLCs and SCADA processes"
 
         # Check and launch network attacks
         # if self.attack_flag and self.attack_type == "network_attack":
@@ -153,15 +141,15 @@ class WADI(MiniCPS):
         #                  + str(self.attack_options['name']) + " "\
         #                  + str(self.attack_options['values'][0])
         #     mitm_cmd = shlex.split(cmd_string)
-        #     print('Running MiTM attack with command ' + str(mitm_cmd))
+        #     print 'Running MiTM attack with command ' + str(mitm_cmd)
         #     self.mitm_process = attacker.popen(mitm_cmd, stderr=sys.stdout, stdout=attacker_file)
-        #     print("[] Attacking")
+        #     print "[] Attacking"
 
         # Physical process - WNTR Simulation
         physical_output = open("output/physical.log", 'r+')
         plant = net.get('plant')
 
-        cmd_string = "python3 automatic_plant.py wadi_config.yaml " + str(self.week_index)
+        cmd_string = "python2 automatic_plant.py wadi_config.yaml " + str(self.week_index)
 
         # if self.attack_flag:
         #     cmd_string = "python automatic_plant.py wadi_config.yaml " + str(self.week_index) + " " + \
@@ -170,14 +158,14 @@ class WADI(MiniCPS):
         simulation_cmd = shlex.split(cmd_string)
         self.simulation = plant.popen(simulation_cmd, stderr=sys.stderr, stdout=sys.stdout)
 
-        print("[] Simulating...")
+        print "[] Simulating..."
         # We wait until the simulation ends
         while self.simulation.poll() is None:
             pass
         self.finish()
 
     def create_log_files(self):
-        cmd = shlex.split("../scripts/create_log_files.sh")
+        cmd = shlex.split("./create_log_files.sh")
         subprocess.call(cmd)
 
     def end_process(self, process):
@@ -189,18 +177,18 @@ class WADI(MiniCPS):
             process.kill()
 
     def move_output_files(self, week_index):
-        cmd = shlex.split("../scripts/copy_output.sh " + str(week_index))
+        cmd = shlex.split("./copy_output.sh " + str(week_index))
         subprocess.call(cmd)
 
     def merge_pcap_files(self):
-        print("Merging pcap files")
+        print "Merging pcap files"
         pcap_files = glob.glob("output/*.pcap")
         separator = ' '
         a_cmd = shlex.split("mergecap -w output/devices.pcap " + separator.join(pcap_files))
         subprocess.call(a_cmd)
 
     def finish(self):
-        print("[*] Simulation finished")
+        print "[*] Simulation finished"
 
         if self.scada_process:
             self.end_process(self.scada_process)
@@ -211,12 +199,12 @@ class WADI(MiniCPS):
 
         if self.simulation.poll() is None:
             self.end_process(self.simulation)
-            print("Physical Simulation process terminated")
+            print "Physical Simulation process terminated"
 
         self.merge_pcap_files()
         self.move_output_files(self.week_index)
 
-        cmd = shlex.split("../scripts/kill_cppo.sh")
+        cmd = shlex.split("./kill_cppo.sh")
         subprocess.call(cmd)
 
         net.stop()
@@ -236,24 +224,24 @@ if __name__ == "__main__":
         week_index = sys.argv[1]
 
     config_file = "wadi_config.yaml"
-    print("Initializing experiment with config file: " + str(config_file))
-    # initializer = ExperimentInitializer(config_file, week_index)
-    #
-    # complex_topology = initializer.get_complex_topology()
-    # week_index = initializer.get_week_index()
-    # simulation_type = initializer.get_simulation_type()
-    # plc_dict_path = initializer.get_plc_dict_path()
-    #
-    # # check if there is an attack to be run in the experiment
-    # a_flag = initializer.get_attack_flag()
-    # if a_flag:
-    #     a_name = initializer.get_attack_name()
-    #     a_path = initializer.get_attack_path()
-    # else:
-    #     a_name = None
-    #     a_path = None
+    print "Initializing experiment with config file: " + str(config_file)
+    initializer = ExperimentInitializer(config_file, week_index)
 
-    topo = SimpleTopo(week_index, "single", config_file, None)
+    complex_topology = initializer.get_complex_topology()
+    week_index = initializer.get_week_index()
+    simulation_type = initializer.get_simulation_type()
+    plc_dict_path = initializer.get_plc_dict_path()
+
+    # check if there is an attack to be run in the experiment
+    a_flag = initializer.get_attack_flag()
+    if a_flag:
+        a_name = initializer.get_attack_name()
+        a_path = initializer.get_attack_path()
+    else:
+        a_name = None
+        a_path = None
+
+    topo = SimpleTopo(week_index, simulation_type, config_file, plc_dict_path)
     net = Mininet(topo=topo, autoSetMacs=True, link=TCLink)
-    minitown_cps = WADI(name='WADI', net=net, week_index=week_index, attack_flag=False,
-                         attack_name=None, attack_path=None)
+    minitown_cps = WADI(name='WADI', net=net, week_index=week_index, attack_flag=a_flag,
+                         attack_name=a_name, attack_path=a_path)

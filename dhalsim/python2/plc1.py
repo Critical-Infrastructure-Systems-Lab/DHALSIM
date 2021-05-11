@@ -15,7 +15,7 @@ plc1_log_path = 'plc1.log'
 class PLC1(BasePLC):
 
     def pre_loop(self):
-        print('DEBUG: plc1 enters pre_loop')
+        print 'DEBUG: plc1 enters pre_loop'
 
         # We wish we could implement this as arg_parse, but we cannot overwrite the constructor
         self.week_index = sys.argv[2]
@@ -30,7 +30,7 @@ class PLC1(BasePLC):
 
         if self.attack_flag:
             self.attack_dict = self.get_attack_dict(self.attack_path, self.attack_name)
-            print("PLC1 running attack: " + str(self.attack_dict))
+            print "PLC1 running attack: " + str(self.attack_dict)
 
 
         self.local_time = 0
@@ -119,7 +119,7 @@ class PLC1(BasePLC):
                             else:
                                 self.vpub = 1
                         else:
-                            print("Warning. Attack not implemented yet")
+                            print "Warning. Attack not implemented yet"
 
                 self.set(P_RAW1, self.praw1)
                 self.set(V_PUB, self.vpub)
