@@ -89,6 +89,7 @@ class PhysicalPlant:
             a_control = controls.Control(control['condition'], an_action)
             self.wn.add_control(control['name'], a_control)
 
+        print('controls: ' + str(self.control_list))
         simulator_string = config_options['simulator']
 
         if simulator_string == 'pdd':

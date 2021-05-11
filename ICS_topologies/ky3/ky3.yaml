@@ -1,6 +1,6 @@
 # Simulation initialization parameters.
 initial_custom_flag: "False"
-week_index: 1
+week_index: 0
 demand_patterns_path: "../../Demand_patterns/ky3_3weeks.csv" #matt:added
 starting_demand_path: "../../Demand_patterns/ky3_starting_demand_points.csv" #matt:added
 initial_tank_levels_path: "../../Demand_patterns/ky3_tank_initial_conditions.csv" #matt:added
@@ -38,4 +38,4 @@ complex_topology: "True"
 # A Batch simulation runs consecutive weeks. Batch simulation requires that the initial_custom_flag is set to true
 # and that the demand paths are correctly set. Batch simulations takes the week_index parameter for sys.argv. Hence,
 # the responsibility of passing this parameter to general_automatic_run.py is on the calling script
-simulation_tpye: "Single"
+simulation_type: "Single"
