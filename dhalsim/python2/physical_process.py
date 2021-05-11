@@ -12,7 +12,6 @@ class PhysicalPlant:
 
     def __init__(self):
 
-        #config_file_path = "wadi_config.yaml"
         config_file_path = sys.argv[1]
         config_options = self.load_config(config_file_path)
 
@@ -55,25 +54,19 @@ class PhysicalPlant:
         self.valve_list = self.get_link_list_by_type(self.link_list, 'Valve')
 
         list_header = ["Timestamps"]
-        aux = self.create_node_header(self.tank_list)
-        list_header.extend(aux)
 
-        aux = self.create_node_header(self.junction_list)
-        list_header.extend(aux)
-
-        aux = self.create_link_header(self.pump_list)
-        list_header.extend(aux)
-        list_header.extend(aux)
-
-        aux = self.create_link_header(self.valve_list)
-        list_header.extend(aux)
-
+        list_header.extend(self.create_node_header(self.tank_list))
+        list_header.extend(self.create_node_header(self.junction_list))
+        list_header.extend(self.create_link_header(self.pump_list))
+        # TODO: Why twice?
+        list_header.extend(self.create_link_header(self.pump_list))
+        list_header.extend(self.create_link_header(self.valve_list))
         list_header.extend(["Attack#01", "Attack#02"])
 
         self.results_list = []
         self.results_list.append(list_header)
 
-        # intialize the simulation with the random demand patterns and tank levels
+        # Initialize the simulation with the random demand patterns and tank levels
         self.initialize_simulation(config_options)
 
         dummy_condition = controls.ValueCondition(self.wn.get_node(self.tank_list[0]), 'level', '>=', -1)
@@ -105,7 +98,7 @@ class PhysicalPlant:
         self.sim = wntr.sim.WNTRSimulator(self.wn)
         print("Starting simulation for " + str(config_options['inp_file']) + " topology ")
 
-
+    # TODO: Static?
     def load_config(self, config_path):
         """
         Reads the YAML configuration file
@@ -117,7 +110,8 @@ class PhysicalPlant:
         return options
 
     def initialize_simulation(self, config_options):
-
+        # TODO: Add doc
+        # TODO: Why below?
         if self.simulation_days == 7:
             limit = 167
         else:
@@ -158,12 +152,14 @@ class PhysicalPlant:
                 result.append(str(link))
         return result
 
+    # TODO: Static?
     def create_node_header(self, a_list):
         result = []
         for node in a_list:
             result.append(node + "_LEVEL")
         return result
 
+    # TODO: Static?
     def create_link_header(self, a_list):
         result = []
         for link in a_list:
@@ -221,6 +217,7 @@ class PhysicalPlant:
             else:
                 values_list.extend([self.wn.get_link(valve).status.value])
 
+        # TODO: Check commented code
         # rows = self.c.execute("SELECT value FROM wadi WHERE name = 'ATT_1'").fetchall()
         # self.conn.commit()
         # attack1 = int(rows[0][0])
@@ -271,7 +268,11 @@ class PhysicalPlant:
     def main(self):
         # We want to simulate only 1 hydraulic timestep each time MiniCPS processes the simulation data
         self.wn.options.time.duration = self.wn.options.time.hydraulic_timestep
+
+        # TODO: Master time from database..
         master_time = 0
+
+        # TODO: Simulation days, want to move to other unit
         iteration_limit = (self.simulation_days * 24 * 3600) / self.wn.options.time.hydraulic_timestep
 
         # check attack duration
@@ -280,6 +281,7 @@ class PhysicalPlant:
             print("Launching attack " + str(self.attack_name) + " with start in iteration " + str(self.attack_start)
                   + " and finish at iteration " + str(self.attack_end))
         else:
+            # TODO: Placement of initialization below, could be automatically set
             self.attack_start = 0
             self.attack_end = 0
 
@@ -297,6 +299,8 @@ class PhysicalPlant:
             values_list = self.register_results(results)
 
             self.results_list.append(values_list)
+
+            # TODO: DB?
             master_time += 1
 
             for tank in self.tank_list:
@@ -317,8 +321,11 @@ class PhysicalPlant:
                     self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to stop attack
                     self.conn.commit()
 
+            # TODO: This seems arbitrary and inefficient
             time.sleep(0.03)
+
         self.write_results(self.results_list)
+
 
 if __name__=="__main__":
     simulation = PhysicalPlant()
