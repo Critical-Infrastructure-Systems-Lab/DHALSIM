@@ -12,7 +12,7 @@ class ExperimentInitializer:
 
         # Simulation type is needed to handle week_index.
         if 'simulation_type' in self.options:
-            self.simulation_type = self.options['simulation_tpye']
+            self.simulation_type = self.options['simulation_type']
         else:
             self.simulation_type = "Single"
 

@@ -672,11 +672,17 @@
 
 [STATUS]
 ;ID              	Status/Setting
- X_Pump_1        	Closed
- X_Pump_2        	Closed
- X_Pump_3         	Closed
- X_Pump_4        	Closed
- X_Pump_5        	Closed
+; X_Pump_1        	Closed
+; X_Pump_2        	Closed
+; X_Pump_3         	Closed
+; X_Pump_4        	Closed
+; X_Pump_5        	Closed
+
+ X_Pump_1        	Open
+ X_Pump_2        	Open
+ X_Pump_3         	Open
+ X_Pump_4        	Open
+ X_Pump_5        	Open
 
 [PATTERNS]
 ;ID              	Multipliers

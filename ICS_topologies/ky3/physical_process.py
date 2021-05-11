@@ -16,13 +16,14 @@ class PhysicalPlant:
         # toDo: This is were we change the parameters received by this script to create a generic physical process.
         #config_file_path = "wadi_config.yaml"
         config_file_path = sys.argv[1]
+
+        print("Running physical process with config file " + str(config_file_path))
         config_options = self.load_config(config_file_path)
 
-        # Week index to initialize the simulation
-        if "week_index" in config_options:
-            self.week_index = int(config_options['week_index'])
+        if config_options['simulation_type'] == "Batch":
+            self.week_index = int(sys.argv[2])
         else:
-            self.week_index = 0
+            self.week_index = int(config_options['week_index'])
 
         # connection to the database
         self.db_path = config_options['db_path']
@@ -219,12 +220,13 @@ class PhysicalPlant:
         return values_list
 
     def update_controls(self):
+        #print('Updating controls')
         for control in self.control_list:
             self.update_control(control)
 
     def update_control(self, control):
         act_name = '\'' + control['name'] + '\''
-        print(act_name)
+        #print('updating control: ' + str(act_name))
         rows_1 = self.c.execute('SELECT value FROM plant WHERE name = ' + act_name).fetchall()
         self.conn.commit()
         new_status = int(rows_1[0][0])
@@ -260,6 +262,7 @@ class PhysicalPlant:
 
         while master_time <= iteration_limit:
 
+            self.update_controls()
             print("ITERATION %d ------------- " % master_time)
             results = self.sim.run_sim(convergence_error=True)
             #toc
@@ -278,7 +281,7 @@ class PhysicalPlant:
             #Ddos Attack on PLC1
             if ddos_attack == 1:
                 print("Simulation with attack")
-                if 50 <= master_time < 100:
+                if 2 <= master_time < 8:
                     print("Attack on")
                     query = "UPDATE plant SET value = " + str(1) + " WHERE name = 'ATT_2'"
                     self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to launch attack

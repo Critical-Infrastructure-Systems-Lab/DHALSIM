@@ -233,21 +233,17 @@ if __name__ == "__main__":
         print "No week index given, using 0"
     else:
         week_index = sys.argv[3]
-        print "Week index is: " + str(week_index)
+        print "Week index parameter is: " + str(week_index)
 
     config_file = sys.argv[2]
     print "Initializing experiment with config file: " + str(config_file)
     initializer = ExperimentInitializer(config_file, week_index)
-
-    # this creates plc_dicts.yaml and utils.py
-    #initializer.run_parser()
 
     complex_topology = initializer.get_complex_topology()
     week_index = initializer.get_week_index()
     simulation_type = initializer.get_simulation_type()
     plc_dict_path = initializer.get_plc_dict_path()
 
-    #week_index, sim_type, config_file, plc_dict_path
     topo = ComplexTopo(week_index, simulation_type, config_file, plc_dict_path)
     net = Mininet(topo=topo, autoSetMacs=True, link=TCLink)
     minitown_cps = CTown(name='ctown', net=net, a_week_index=week_index, a_config_file=config_file)
