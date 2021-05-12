@@ -58,6 +58,9 @@ class GeneralCPS(MiniCPS):
         with self.intermediate_yaml.open(mode='r') as file:
             self.data = yaml.safe_load(file)
 
+        if self.data["mininet_cli"]:
+            CLI(self.net)
+
         self.plc_processes = None
         self.scada_process = None
         self.plant_process = None
