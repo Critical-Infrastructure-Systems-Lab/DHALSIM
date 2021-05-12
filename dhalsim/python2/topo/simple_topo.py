@@ -1,8 +1,10 @@
 import os.path
-
 from mininet.topo import Topo
 from mininet.node import Node
+from mininet.link import Intf
+from pathlib import Path
 import yaml
+import random
 
 
 class LinuxRouter(Node):
@@ -33,10 +35,30 @@ class SimpleTopo(Topo):
 
         self.intermediate_yaml_path = intermediate_yaml_path
 
-        with open(os.path.abspath(intermediate_yaml_path)) as intermediate_yaml:
+        with self.intermediate_yaml_path.open(mode='r') as intermediate_yaml:
             self.data = yaml.safe_load(intermediate_yaml)
 
+        self.generate_plc_data(self.data['plcs'])
+
+        print(self.data)
+
+        with self.intermediate_yaml_path.open(mode='w') as intermediate_yaml:
+            yaml.dump(self.data, intermediate_yaml)
+
         Topo.__init__(self)
+
+
+    def generate_plc_data(self, plcs):
+        for idx, plc in enumerate(plcs):
+            plc_ip = "192.168.1." + str(idx + 1) + "/24"
+            plc_mac = get_random_mac_address()
+            plc_int = plc['name'] + "-eth0"
+
+            # Store the data in self.data
+            plc['ip'] = plc_ip
+            plc['mac'] = plc_mac
+            plc['interface'] = plc_int
+
 
     def build(self):
         """
@@ -53,13 +75,15 @@ class SimpleTopo(Topo):
 
         gateway = 'via ' + router_ip
 
-        print(self.data)
-
         if 'plcs' in self.data.keys():
+            # Add PLCs to the mininet network
             for idx, plc in enumerate(self.data['plcs']):
-                plc_ip = "192.168.1." + str(idx + 1) + "/24"
-                plc_node = self.addHost(plc['name'], ip=plc_ip, defaultRoute=gateway)
-                self.addLink(switch, plc_node)
+                plc_node = self.addHost(
+                    plc['name'],
+                    mac=plc['mac'],
+                    ip=plc['ip'],
+                    defaultRoute=gateway)
+                self.addLink(switch, plc_node, intfName2=plc['interface'])
 
         # -- SUPERVISOR NETWORK -- #
         supervisor_ip = "192.168.2.254/24"
@@ -73,3 +97,11 @@ class SimpleTopo(Topo):
         scada = self.addHost('scada', ip="192.168.2.1/24", defaultRoute=supervisor_gateway)
         # Add a link between the switch and the scada
         self.addLink(supervisor_switch, scada)
+
+    def setup_network(self, net):
+        # Code from automatic_run.py
+        pass
+
+
+def get_random_mac_address():
+    return "05:01:65:%02x:%02x:%02x" % (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
