@@ -28,7 +28,7 @@ class PhysicalPlant:
 
         # Some users may not configure the parameter
         # Sets the attack_flag to load attack_start and attack_end before main loop
-        if config_options['run_attack']:
+        if 'run_attack' in config_options:
                 if config_options['run_attack'] == "True":
                     self.attack_flag = True
                     self.attack_path = sys.argv[3]
@@ -310,9 +310,7 @@ class PhysicalPlant:
             print("Iteration %d out of %d. Estimated remaining time: %s" % (master_time, iteration_limit, eta))
 
             results = self.sim.run_sim(convergence_error=True)
-            #toc
             values_list = self.register_results(results)
-
             self.results_list.append(values_list)
 
             # TODO: DB?
@@ -342,6 +340,6 @@ class PhysicalPlant:
         self.write_results(self.results_list)
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     simulation = PhysicalPlant()
     simulation.main()
