@@ -39,5 +39,6 @@ test:2:
     - source venv/bin/activate
     - git clone https://github.com/afmurillo/minicps.git
     - pip install -e ./minicps
+    - apt install mininet
     - pip install pytest
     - python -m pytest test/python2/
