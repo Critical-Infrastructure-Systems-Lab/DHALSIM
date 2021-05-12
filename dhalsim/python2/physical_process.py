@@ -39,7 +39,7 @@ class PhysicalPlant:
 
         self.output_path = config_options['output_ground_truth_path']
         self.simulation_days = int(config_options['duration_days'])
-
+        self.simulation_days = 0.05
         # Create the network
         self.wn = wntr.network.WaterNetworkModel(config_options['inp_file'])
 
@@ -281,11 +281,20 @@ class PhysicalPlant:
         # We want to simulate only 1 hydraulic timestep each time MiniCPS processes the simulation data
         self.wn.options.time.duration = self.wn.options.time.hydraulic_timestep
 
-        # TODO: Master time from database..
         master_time = 0
         start = datetime.now()
 
-        iteration_limit = (self.simulation_days * 24 * 3600) / self.wn.options.time.hydraulic_timestep
+        # Creates master_time table if it does not yet exist
+        query = "CREATE TABLE IF NOT EXISTS master_time (id INTEGER PRIMARY KEY, time INTEGER)"
+        self.c.execute(query)
+        self.conn.commit()
+
+        # Sets master_time to 0
+        query = "REPLACE INTO master_time (id, time) VALUES (1, 0)"
+        self.c.execute(query)
+        self.conn.commit()
+
+        iteration_limit = round((self.simulation_days * 24 * 3600) / self.wn.options.time.hydraulic_timestep)
 
         # Check attack duration
         if self.attack_flag:
@@ -307,8 +316,17 @@ class PhysicalPlant:
             values_list = self.register_results(results)
             self.results_list.append(values_list)
 
-            # TODO: DB?
-            master_time += 1
+            # Fetch master_time
+            query = "SELECT * FROM master_time"
+            execute = self.c.execute(query)
+            self.conn.commit()
+
+            master_time = int(execute.fetchall()[0][1]) + 1
+
+            # Update master_time
+            query = "REPLACE INTO master_time (id, time) VALUES(1, " + str(master_time) + ")"
+            self.c.execute(query)
+            self.conn.commit()
 
             for tank in self.tank_list:
                 tank_name = '\'' + tank + '\''
