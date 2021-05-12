@@ -42,4 +42,5 @@ test:2:
     - pip install mininet
     - pip install pyyaml
     - pip install pytest
+    - pip install pytest-mock
     - python -m pytest test/python2/
