@@ -27,6 +27,7 @@ setuptools.setup(
         'PyYAML',
         'antlr4-python3-runtime',
         'mininet',
+        'wntr',
     ],
     extras_require={
         'test': ['pytest', 'pytest-mock'],
