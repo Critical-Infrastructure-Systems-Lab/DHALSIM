@@ -1,4 +1,5 @@
 from dhalsim.python2.topo.simple_topo import SimpleTopo
+from mininet.net import Mininet
 import pytest
 import pytest_mock
 import yaml
@@ -15,7 +16,7 @@ def filled_dict():
 
 @pytest.fixture
 def topo_fixture(mocker, tmpdir, unmodified_dict):
-    mocker.patch('dhalsim.python2.topo.simple_topo.get_random_mac_address', return_value="00:1D:9C:C7:B0:70")
+    mocker.patch('mininet.net.Mininet.randMac', return_value="00:1D:9C:C7:B0:70")
 
     c = tmpdir.join("intermediate.yaml")
     with c.open(mode='w') as intermediate_yaml:
