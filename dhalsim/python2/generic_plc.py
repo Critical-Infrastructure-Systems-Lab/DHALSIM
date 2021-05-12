@@ -8,19 +8,24 @@ import time
 import threading
 import sys
 import yaml
+from pathlib import Path
+from control import AboveControl, BelowControl, TimeControl
 
-intermediate_abs_path = '/home/chizzy/Documents/VM16_SSHFS_MNT/dhalsim/examples/wadi_topology/intermediate.yaml'
+
+class Error(Exception):
+    """Base class for exceptions in this module."""
+
+
+class TagDoesNotExist(Error):
+    """Raised when tag you are looking for does not exist"""
+
+
+class InvalidControlValue(Error):
+    """Raised when tag you are looking for does not exist"""
 
 
 # plc1_log_path = 'plc1.log'
 # todo: make intermediate yaml location not hardcoded
-
-def get_arguments():
-    parser = argparse.ArgumentParser(description='Script for individual PLCs')
-    parser.add_argument("--index", "-i", help="Index of the PLC in intermediate yaml")
-    parser.add_argument("--week", "-w", help="Week index of the simulation")
-    parser.add_argument("--yaml", "-y", help="Path of intermediate yaml")
-    return parser.parse_args()
 
 
 def generate_real_tags(sensors, dependants, actuators):
@@ -44,9 +49,8 @@ def generate_tags(taggable):
 
     if taggable:
         for tag in taggable:
-            if tag:
-                if tag != "":
-                    tags.append((tag, 1))
+            if tag and tag != "":
+                tags.append((tag, 1))
 
     return tags
 
@@ -66,12 +70,11 @@ def create_controls(controls_list):
 
 class GenericPLC(BasePLC):
 
-    def __init__(self, intermediate_yaml_path, yaml_index, week_index):
+    def __init__(self, intermediate_yaml_path, yaml_index):
         self.yaml_index = yaml_index
-        self.week_index = week_index
         self.local_time = 0
 
-        with open(os.path.abspath(intermediate_yaml_path)) as yaml_file:
+        with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
         self.intermediate_plc = self.intermediate_yaml["plcs"][self.yaml_index]
@@ -139,13 +142,32 @@ class GenericPLC(BasePLC):
                                self.intermediate_plc['ip'])
         self.startup()
 
-    # def get_attack_dict(self, path, name):
-    #     with open(path) as config_file:
-    #         attack_file = yaml.load(config_file, Loader=yaml.FullLoader)
-    #
-    #     for attack in attack_file['attacks']:
-    #         if name == attack['name']:
-    #             return attack
+    def get_tag(self, tag):
+        if tag in self.intermediate_plc["sensors"] or tag in self.intermediate_plc["actuators"]:
+            return self.get((tag, 1))
+
+        for i, plc_data in enumerate(self.intermediate_yaml["plcs"]):
+            if i == self.index:
+                continue
+            if tag in plc_data[i]["sensors"] or tag in plc_data[i]["actuators"]:
+                return self.receive((tag, 1), plc_data[i]["ip"])
+                # return -1
+        raise TagDoesNotExist(tag)
+
+    def set_tag(self, tag, value):
+        if isinstance(value, basestring) and value.lower() == "closed":
+            value = 0
+        elif isinstance(value, basestring) and value.lower() == "open":
+            value = 1
+        else:
+            raise InvalidControlValue(value)
+
+        self.set((tag, 1), value)
+        pass
+
+    # todo: get an actual master clock from the DB
+    def get_master_clock(self):
+        return self.local_time
 
     def main_loop(self):
         print('DEBUG: ' + self.intermediate_plc['name'] + ' enters main_loop')
@@ -162,29 +184,22 @@ class GenericPLC(BasePLC):
                 continue
 
 
+def is_valid_file(parser, arg):
+    if not os.path.exists(arg):
+        parser.error(arg + " does not exist")
+    else:
+        return arg
+
 
 if __name__ == "__main__":
-    # Get arguments from commandline
-    args = get_arguments()
-    # Get index and week index from commandline
-    if args.index:
-        plc_index = int(args.index)
-        print "PLC INDEX: " + str(plc_index)
-    else:
-        raise IOError
+    parser = argparse.ArgumentParser(description='Start everything for a plc')
+    parser.add_argument(dest="intermediate_yaml",
+                        help="intermediate yaml file", metavar="FILE",
+                        type=lambda x: is_valid_file(parser, x))
+    parser.add_argument(dest="index", help="Index of PLC in intermediate yaml", type=int, metavar="N")
 
-    if args.week:
-        w_index = int(args.week)
-        print "WEEK INDEX: " + str(w_index)
-    else:
-        w_index = 0
-
-    if args.yaml:
-        yaml_path = args.yaml
-    else:
-        yaml_path = intermediate_abs_path
+    args = parser.parse_args()
 
     plc = GenericPLC(
-        intermediate_yaml_path=yaml_path,
-        yaml_index=plc_index,
-        week_index=w_index)
+        intermediate_yaml_path=Path(args.intermediate_yaml),
+        yaml_index=args.index)

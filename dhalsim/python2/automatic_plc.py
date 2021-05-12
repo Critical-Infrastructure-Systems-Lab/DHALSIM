@@ -21,7 +21,7 @@ class NodeControl:
         with self.intermediate_yaml.open(mode='r') as file:
             self.data = yaml.safe_load(file)
 
-        self.intermediate_plc = self.data["plcs"][self.plc_index]
+        self.this_plc_data = self.data["plcs"][self.plc_index]
 
     def sigint_handler(self, sig, frame):
         self.terminate()
@@ -47,7 +47,7 @@ class NodeControl:
             self.plc_process.kill()
 
     def main(self):
-        self.interface_name = self.intermediate_plc["interface"]
+        self.interface_name = self.this_plc_data["interface"]
         self.delete_log()
         self.process_tcp_dump = self.start_tcpdump_capture()
 
@@ -59,7 +59,7 @@ class NodeControl:
         self.terminate()
 
     def delete_log(self):
-        subprocess.call(['rm', '-rf', self.intermediate_plc["name"] + '.log'])
+        subprocess.call(['rm', '-rf', self.this_plc_data["name"] + '.log'])
 
     def start_tcpdump_capture(self):
         pcap = self.interface_name + '.pcap'
@@ -67,7 +67,7 @@ class NodeControl:
         return tcp_dump
 
     def start_plc(self):
-        cmd = ["python2", "generic_plc.py", "-i", str(self.plc_index), "-y", str(self.intermediate_yaml)]
+        cmd = ["python2", "generic_plc.py", str(self.intermediate_yaml), str(self.plc_index)]
 
         plc_process = subprocess.Popen(cmd, shell=False, stderr=sys.stderr, stdout=sys.stdout)
         return plc_process
@@ -85,7 +85,7 @@ if __name__ == "__main__":
     parser.add_argument(dest="intermediate_yaml",
                         help="intermediate yaml file", metavar="FILE",
                         type=lambda x: is_valid_file(parser, x))
-    parser.add_argument("--index", "-i", help="Index of PLC in intermediate yaml", type=int)
+    parser.add_argument(dest="index", help="Index of PLC in intermediate yaml", type=int, metavar="N")
 
     args = parser.parse_args()
     node_control = NodeControl(Path(args.intermediate_yaml), args.index)

@@ -76,7 +76,7 @@ class GeneralCPS(MiniCPS):
 
         for i, plc in enumerate(self.data["plcs"]):
             node = self.net.get(plc["name"])
-            cmd = ["python2", "automatic_plc.py", "-i", str(i), str(self.intermediate_yaml)]
+            cmd = ["python2", "automatic_plc.py", str(self.intermediate_yaml), str(i)]
             self.plc_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
 
         # self.scada_process = self.net.get('scada').popen("python2", "automatic_plc.py", "-n",
