@@ -1,5 +1,9 @@
+import sys
+
 from dhalsim.parser.input_parser import InputParser
 
+def test_python_version():
+    assert sys.version_info.major is 3
 
 def test_no_controls(tmpdir):
     c = tmpdir.join("input.inp")

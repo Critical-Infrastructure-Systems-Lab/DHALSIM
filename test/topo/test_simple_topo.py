@@ -1,7 +1,12 @@
+import sys
+
 from dhalsim.static.plc_config import PlcConfig
 from dhalsim.topo.simple_topo import SimpleTopo
 from dhalsim.static.controls.ConcreteControl import *
 import pytest
+
+def test_python_version():
+    assert sys.version_info.major is 3
 
 @pytest.fixture
 def control_list_fixture():
