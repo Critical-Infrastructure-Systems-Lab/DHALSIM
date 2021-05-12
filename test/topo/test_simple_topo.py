@@ -1,14 +1,33 @@
 from dhalsim.python2.topo.simple_topo import SimpleTopo
 import pytest
-
-@pytest.fixture
-def yaml_path_fixture():
-    return "../../examples/wadi_topology/intermediate.yaml"
+import pytest_mock
+import yaml
 
 
 @pytest.fixture
-def topo_fixture(yaml_path_fixture):
-    return SimpleTopo(yaml_path_fixture)
+def unmodified_dict():
+    return {"plcs": [{"name": "PLC1",},{"name": "PLC2",},],}
+
+@pytest.fixture
+def filled_dict():
+    return {'plcs': [{'name': 'PLC1', 'ip': '192.168.1.1/24', 'mac': '00:1D:9C:C7:B0:70', 'interface': 'PLC1-eth0'}, {'name': 'PLC2', 'ip': '192.168.1.2/24', 'mac': '00:1D:9C:C7:B0:70', 'interface': 'PLC2-eth0'}]}
+
+
+@pytest.fixture
+def topo_fixture(mocker, tmpdir, unmodified_dict):
+    mocker.patch('dhalsim.python2.topo.simple_topo.get_random_mac_address', return_value="00:1D:9C:C7:B0:70")
+
+    c = tmpdir.join("intermediate.yaml")
+    with c.open(mode='w') as intermediate_yaml:
+        yaml.dump(unmodified_dict, intermediate_yaml)
+
+    return SimpleTopo(c)
+
+def test_writeback_yaml(tmpdir, topo_fixture, filled_dict):
+    with tmpdir.join("intermediate.yaml").open(mode='r') as intermediate_yaml:
+        dump = yaml.safe_load(intermediate_yaml)
+
+    assert dump == filled_dict
 
 
 def test_host_amount_network(topo_fixture):
@@ -24,6 +43,7 @@ def test_host_names(topo_fixture):
 
 
 def test_host_ips(topo_fixture):
+    print(topo_fixture.nodeInfo('PLC1'))
     assert topo_fixture.nodeInfo('PLC1')['ip'] == '192.168.1.1/24'
     assert topo_fixture.nodeInfo('PLC2')['ip'] == '192.168.1.2/24'
     assert topo_fixture.nodeInfo('r0')['ip'] == '192.168.1.254/24'
