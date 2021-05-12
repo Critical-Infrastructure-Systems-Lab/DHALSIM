@@ -1,17 +1,23 @@
 from dhalsim.python2.topo.simple_topo import SimpleTopo
 from mininet.net import Mininet
+from mininet.link import TCLink
 import pytest
-import pytest_mock
 import yaml
 
 
 @pytest.fixture
 def unmodified_dict():
-    return {"plcs": [{"name": "PLC1",},{"name": "PLC2",},],}
+    return {"plcs": [{"name": "PLC1", }, {"name": "PLC2", }, ], }
+
 
 @pytest.fixture
 def filled_dict():
-    return {'plcs': [{'name': 'PLC1', 'ip': '192.168.1.1/24', 'mac': '00:1D:9C:C7:B0:70', 'interface': 'PLC1-eth0'}, {'name': 'PLC2', 'ip': '192.168.1.2/24', 'mac': '00:1D:9C:C7:B0:70', 'interface': 'PLC2-eth0'}]}
+    return {'plcs': [{'name': 'PLC1', 'ip': '192.168.1.1/24',
+                      'mac': '00:1D:9C:C7:B0:70', 'interface': 'PLC1-eth0',
+                      'gateway': '192.168.1.254'},
+                     {'name': 'PLC2', 'ip': '192.168.1.2/24',
+                      'mac': '00:1D:9C:C7:B0:70', 'interface': 'PLC2-eth0',
+                      'gateway': '192.168.1.254'}]}
 
 
 @pytest.fixture
@@ -23,6 +29,7 @@ def topo_fixture(mocker, tmpdir, unmodified_dict):
         yaml.dump(unmodified_dict, intermediate_yaml)
 
     return SimpleTopo(c)
+
 
 def test_writeback_yaml(tmpdir, topo_fixture, filled_dict):
     with tmpdir.join("intermediate.yaml").open(mode='r') as intermediate_yaml:

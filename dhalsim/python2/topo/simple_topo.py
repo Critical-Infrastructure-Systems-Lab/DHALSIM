@@ -2,7 +2,6 @@ from mininet.topo import Topo
 from mininet.node import Node
 from mininet.net import Mininet
 import yaml
-import random
 
 
 class LinuxRouter(Node):
@@ -31,6 +30,10 @@ class SimpleTopo(Topo):
         :param intermediate_yaml_path: The path of the intermediate.yaml file
         """
 
+        # Set variables
+        self.router_ip = "192.168.1.254"
+        self.supervisor_ip = "192.168.2.254"
+
         # Load the data from the YAML file
         self.intermediate_yaml_path = intermediate_yaml_path
         with self.intermediate_yaml_path.open(mode='r') as intermediate_yaml:
@@ -55,6 +58,7 @@ class SimpleTopo(Topo):
             plc['ip'] = plc_ip
             plc['mac'] = plc_mac
             plc['interface'] = plc_int
+            plc['gateway'] = self.router_ip
 
 
     def build(self):
@@ -63,7 +67,7 @@ class SimpleTopo(Topo):
         """
 
         # -- FIELD NETWORK -- #
-        router_ip = "192.168.1.254/24"
+        router_ip = self.router_ip + "/24"
         # Add a router to the network
         router = self.addNode('r0', cls=LinuxRouter, ip=router_ip)
         # Add a switch to the network
@@ -83,7 +87,7 @@ class SimpleTopo(Topo):
                 self.addLink(switch, plc_node, intfName2=plc['interface'])
 
         # -- SUPERVISOR NETWORK -- #
-        supervisor_ip = "192.168.2.254/24"
+        supervisor_ip = self.supervisor_ip + "/24"
         # Add a switch for the supervisor network
         supervisor_switch = self.addSwitch("s2")
         # Link the router and the supervisor switch
@@ -96,6 +100,18 @@ class SimpleTopo(Topo):
         self.addLink(supervisor_switch, scada)
 
 
-def setup_network(net):
-    # Code from automatic_run.py
-    pass
+    def setup_network(self, net):
+        # Enable forwarding on router r0
+        net.get('r0').cmd('sysctl net.ipv4.ip_forward=1')
+
+        # Set the default gateway of the PLCs
+        if 'plcs' in self.data.keys():
+            for plc in self.data['plcs']:
+                net.get(plc).cmd('route add default gw ' + plc['gateway'])
+
+        # Set the default gateway of the SCADA
+        net.get('scada').cmd('route add default gw ' + self.supervisor_ip)
+
+        # Additional router commands
+        net.get('r0').cmd('ifconfig r0-eth2 192.168.2.254')
+        net.get('r0').waitOutput()
