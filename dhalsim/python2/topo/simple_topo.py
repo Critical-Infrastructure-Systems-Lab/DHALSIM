@@ -99,6 +99,9 @@ class SimpleTopo(Topo):
         # Add a link between the switch and the scada
         self.addLink(supervisor_switch, scada)
 
+        # -- PLANT -- #
+        self.addHost('plant')
+
 
     def setup_network(self, net):
         # Enable forwarding on router r0
