@@ -6,6 +6,7 @@ import sys
 import pandas as pd
 import yaml
 import time
+from datetime import datetime, timedelta
 
 
 class PhysicalPlant:
@@ -269,12 +270,26 @@ class PhysicalPlant:
                 self.attack_end = int(attack['end'])
                 self.attack_type = attack['type']
 
+    @staticmethod
+    def calculate_eta(start, iteration, total):
+        """
+        Calculates estimated time until finished simulation
+        :start: start time
+        :iteration: current iteration
+        :total: total number of iterations
+        """
+        diff = datetime.now() - start
+        if iteration == round(total):
+            return timedelta(seconds=0)
+        return timedelta(seconds=(diff.days.real * 24 * 3600 + diff.seconds.real / (float(iteration / float(round(total))) + 0.000001) - diff.total_seconds()))
+
     def main(self):
         # We want to simulate only 1 hydraulic timestep each time MiniCPS processes the simulation data
         self.wn.options.time.duration = self.wn.options.time.hydraulic_timestep
 
         # TODO: Master time from database..
         master_time = 0
+        start = datetime.now()
 
         iteration_limit = (self.simulation_days * 24 * 3600) / self.wn.options.time.hydraulic_timestep
 
@@ -291,8 +306,9 @@ class PhysicalPlant:
         while master_time <= iteration_limit:
 
             self.update_controls()
-            #toc
-            print("ITERATION %d ------------- " % master_time)
+            eta = self.calculate_eta(start, master_time, iteration_limit)
+            print("Iteration %d out of %d. Estimated remaining time: %s" % (master_time, iteration_limit, eta))
+
             results = self.sim.run_sim(convergence_error=True)
             #toc
             values_list = self.register_results(results)
