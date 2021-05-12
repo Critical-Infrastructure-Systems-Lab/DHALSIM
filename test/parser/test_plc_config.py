@@ -39,7 +39,7 @@ def test_mac(config_fixture):
 
 
 def test_controls(config_fixture, control_list_fixture):
-    assert config_fixture.intermediate_controls == control_list_fixture
+    assert config_fixture.controls == control_list_fixture
 
 
 def test_ip(config_fixture):
