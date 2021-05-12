@@ -40,5 +40,6 @@ test:2:
     - git clone https://github.com/afmurillo/minicps.git
     - pip install -e ./minicps
     - pip install mininet
+    - pip install pyyaml
     - pip install pytest
     - python -m pytest test/python2/
