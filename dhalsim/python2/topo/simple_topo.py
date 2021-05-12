@@ -43,7 +43,7 @@ class SimpleTopo(Topo):
         print(self.data)
 
         with self.intermediate_yaml_path.open(mode='w') as intermediate_yaml:
-            yaml.dump(self.data, intermediate_yaml)
+            yaml.safe_dump(self.data, intermediate_yaml)
 
         Topo.__init__(self)
 
