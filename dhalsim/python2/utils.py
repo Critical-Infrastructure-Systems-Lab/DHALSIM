@@ -225,7 +225,7 @@ ATT2_PROTOCOL = {
 
 # ---------------------------------------------------------
 # SPHINX_SWAT_TUTORIAL STATE(
-PATH = '/home/robert/dhalsim.sqlite'
+PATH = '/home/luc/dhalsim.sqlite'
 NAME = 'wadi'
 
 STATE = {
