@@ -239,7 +239,6 @@ class PhysicalPlant:
         act_name = '\'' + control['name'] + '\''
         rows_1 = self.c.execute('SELECT value FROM wadi WHERE name = ' + act_name).fetchall()
         self.conn.commit()
-        print(act_name, rows_1)
         new_status = int(rows_1[0][0])
 
         control['value'] = new_status

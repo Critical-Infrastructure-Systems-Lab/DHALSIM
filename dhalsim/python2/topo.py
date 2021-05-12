@@ -25,7 +25,6 @@ class SimpleTopo(Topo):
     def __init__(self, week_index, sim_type, config_file, plc_dict_path):
         # Create custom topo
         self.week_index = int(week_index)
-        self.options = self.load_options(config_file)
 
         # Initialize topology
         Topo.__init__(self)
