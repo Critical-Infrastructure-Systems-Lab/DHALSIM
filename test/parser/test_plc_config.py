@@ -1,11 +1,17 @@
+import sys
+
 from dhalsim.static.plc_config import PlcConfig
 from dhalsim.static.controls.ConcreteControl import *
 import pytest
 
 
+def test_python_version():
+    assert sys.version_info.major is 3
+
 @pytest.fixture
 def control_list_fixture():
-    return [TimeControl("testActuator1", "CLOSED", 5), BelowControl("testActuator1", "CLOSED", "testSensor2", 5)]
+    return [TimeControl("testActuator1", "CLOSED", 5),
+            BelowControl("testActuator1", "CLOSED", "testSensor2", 5)]
 
 
 @pytest.fixture
