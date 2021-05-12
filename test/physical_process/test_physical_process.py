@@ -111,9 +111,9 @@ def test_control_list():
     assert len(get_physical_plant().control_list) == 26
 
 
-# TODO: possible bug
 def test_demand_model():
-    assert get_physical_plant().wn.options.hydraulic.demand_model == 'PDD'
+    # WNTR converts value 'pdd' as seen in inp file to 'PDA' @dhalsim.options.py
+    assert get_physical_plant().wn.options.hydraulic.demand_model == 'PDA'
 
 
 def test_sim():
