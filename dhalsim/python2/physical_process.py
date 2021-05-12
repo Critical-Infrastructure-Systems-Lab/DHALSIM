@@ -12,12 +12,6 @@ from datetime import datetime, timedelta
 class PhysicalPlant:
 
     def __init__(self):
-        """{'db_path': '/home/simcha/dhalsim.sqlite', 'output_ground_truth_path': 'physical_process.csv',
-         'duration_days': 1, 'inp_file': 'wadi_map.inp', 'simulator': 'pdd', 'week_index': 0,
-         'plc_dict_path': 'plc_dicts.yaml', 'complex_topology': 'True', 'simulation_type': 'Single',
-         'run_attack': 'False', 'attacks_path': '../../attack_repository/wadi_attack_description.yaml',
-         'attack_name': 'wadi_network_empty_tank_1'}"""
-
         config_options = self.load_config(sys.argv[1])
 
         # Week index to initialize the simulation
@@ -45,7 +39,7 @@ class PhysicalPlant:
 
         self.output_path = config_options['output_ground_truth_path']
         self.simulation_days = int(config_options['duration_days'])
-        self.simulation_days = 0.1
+
         # Create the network
         self.wn = wntr.network.WaterNetworkModel(config_options['inp_file'])
 
