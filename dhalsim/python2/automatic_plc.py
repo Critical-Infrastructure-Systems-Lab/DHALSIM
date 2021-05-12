@@ -51,7 +51,7 @@ class NodeControl():
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
 
-        self.interface_name = self.name + '-eth0'
+        self.interface_name = self.name.lower() + '-eth0'
         self.delete_log()
         self.process_tcp_dump = self.start_tcpdump_capture()
 
@@ -83,6 +83,11 @@ class NodeControl():
             self.dict_path = arg_parser.dict
         else:
             self.dict_path = 'plc_dicts.yaml'
+
+        if arg_parser.yaml:
+            self.yaml_path = arg_parser.yaml
+        else:
+            raise IOError
 
         if arg_parser.attack_flag:
             self.attack_flag = True
@@ -123,7 +128,8 @@ class NodeControl():
         return tcp_dump
 
     def start_plc(self):
-        cmd_string = 'python2 generic_plc.py' + ' -i ' + self.plc_index + ' -w ' + str(self.week_index)
+        cmd_string = 'python2 generic_plc.py' + ' -i ' + str(self.plc_index) + ' -w ' \
+                     + str(self.week_index) + ' -y ' + str(self.yaml_path)
 
         # if self.attack_flag:
         #     # Pass the path to the PLC so it can parse the attack information and run it
@@ -138,6 +144,7 @@ class NodeControl():
         parser = argparse.ArgumentParser(description='Master Script of a node in Minicps')
         parser.add_argument("--name", "-n", help="Name of the Mininet node and script to run")
         parser.add_argument("--week", "-w", help="Week index of the simulation")
+        parser.add_argument("--yaml", "-y", help="Path to intermediate yaml")
         parser.add_argument("--index", "-i", help="Index of PLC in intermediate yaml")
         parser.add_argument("--dict", "-d", help="Dictionary of the PLCs logic")
         parser.add_argument("--attack_flag", "-f", help="Flag to indicate if this PLC needs to run an attack")

@@ -19,7 +19,7 @@ def get_arguments():
     parser = argparse.ArgumentParser(description='Script for individual PLCs')
     parser.add_argument("--index", "-i", help="Index of the PLC in intermediate yaml")
     parser.add_argument("--week", "-w", help="Week index of the simulation")
-    parser.add_argument("--path", "-p", help="Path of intermediate yaml")
+    parser.add_argument("--yaml", "-y", help="Path of intermediate yaml")
     return parser.parse_args()
 
 
@@ -42,9 +42,11 @@ def generate_real_tags(sensors, dependants, actuators):
 def generate_tags(taggable):
     tags = []
 
-    for tag in taggable:
-        if tag != "":
-            tags.append((tag, 1))
+    if taggable:
+        for tag in taggable:
+            if tag:
+                if tag != "":
+                    tags.append((tag, 1))
 
     return tags
 
@@ -67,18 +69,19 @@ class GenericPLC(BasePLC):
 
         # Create list of dependant sensors
         dependant_sensors = []
-        for control in self.intermediate_yaml['plcs'][plc_index]['controls']:
-            dependant_sensors.append(control['dependant'])
+        for control in self.intermediate_yaml['plcs'][self.yaml_index]['controls']:
+            if control["type"] != "Time":
+                dependant_sensors.append(control["dependant"])
 
         # Create list of PLC sensors
-        plc_sensors = self.intermediate_yaml['plcs'][plc_index]['sensors']
+        plc_sensors = self.intermediate_yaml['plcs'][self.yaml_index]['sensors']
 
         # Create server, real tags are generated
         plc_server = {
-            'address': self.intermediate_yaml['plcs'][plc_index]['ip'],
+            'address': self.intermediate_yaml['plcs'][self.yaml_index]['ip'],
             'tags': generate_real_tags(plc_sensors,
                                        list(set(dependant_sensors) - set(plc_sensors)),
-                                       self.intermediate_yaml['plcs'][plc_index]['actuators'])
+                                       self.intermediate_yaml['plcs'][self.yaml_index]['actuators'])
         }
 
         # Create protocol
@@ -88,16 +91,20 @@ class GenericPLC(BasePLC):
             'server': plc_server
         }
 
-        super(GenericPLC, self).__init__(self.intermediate_yaml[self.yaml_index]['name'],
-                                         state, plc_protocol, {'TODO': 'TODO', }, {'TODO': 'TODO', })
+        # print "DEBUG INIT: " + self.intermediate_yaml['plcs'][self.yaml_index]['name']
+        # print "state = " + str(state)
+        # print "plc_protocol = " + str(plc_protocol)
+
+        super(GenericPLC, self).__init__(name=self.intermediate_yaml['plcs'][self.yaml_index]['name'].lower(),
+                                         state=state, protocol=plc_protocol)
 
     def pre_loop(self):
-        print 'DEBUG: ' + self.intermediate_yaml[self.yaml_index]['name'] + ' enters pre_loop'
+        print 'DEBUG: ' + self.intermediate_yaml['plcs'][self.yaml_index]['name'] + ' enters pre_loop'
 
         reader = True
 
-        sensors = generate_tags(self.intermediate_yaml['plcs'][plc_index]['sensors'])
-        actuators = generate_tags(self.intermediate_yaml['plcs'][plc_index]['actuators'])
+        sensors = generate_tags(self.intermediate_yaml['plcs'][self.yaml_index]['sensors'])
+        actuators = generate_tags(self.intermediate_yaml['plcs'][self.yaml_index]['actuators'])
 
         values = []
         for tag in sensors:
@@ -107,8 +114,11 @@ class GenericPLC(BasePLC):
 
         lock = threading.Lock()
 
-        BasePLC.set_parameters(self, sensors.extend(actuators), values, reader, lock,
-                               self.intermediate_yaml['plcs'][plc_index]['ip'])
+        sensors.extend(actuators)
+        print str(sensors)
+
+        BasePLC.set_parameters(self, sensors, values, reader, lock,
+                               self.intermediate_yaml['plcs'][self.yaml_index]['ip'])
         self.startup()
 
     # def get_attack_dict(self, path, name):
@@ -119,76 +129,39 @@ class GenericPLC(BasePLC):
     #         if name == attack['name']:
     #             return attack
 
-    # def main_loop(self):
-    #     while True:
-    #         try:
-    #             self.local_time += 1
-    #
-    #             # Reads from the DB
-    #             attack_on = int(self.get(ATT_2))
-    #             self.set(ATT_1, attack_on)
-    #
-    #             self.t0 = Decimal(self.get(T0))
-    #             self.t2 = Decimal(self.receive(T2, PLC2_ADDR))
-    #             print("ITERATION %d ------------- " % self.local_time)
-    #             print("Tank 0 Level %f " % self.t0)
-    #             print("Tank 2 Level %f " % self.t2)
-    #
-    #             if self.t0 < 0.256:
-    #                 self.vpub = 1
-    #                 self.praw1 = 0
-    #
-    #             if self.t0 > 0.448:
-    #                 self.vpub = 0
-    #
-    #             if self.t2 < 0.16:
-    #                 print("Opening P_RAW1")
-    #                 self.praw1 = 1
-    #
-    #             if self.t2 > 0.32:
-    #                 print("Closing P_RAW1")
-    #                 self.praw1 = 0
-    #
-    #             # This is configured in the yaml file
-    #             if self.attack_flag:
-    #                 # Now ATT_2 is set in the physical_process. This in order to make more predictable the
-    #                 # attack start and end time. This ATT_2 is read from the DB
-    #                 if attack_on == 1:
-    #                     if self.attack_dict['command'] == 'Close':
-    #                         # toDo: Implement this dynamically.
-    #                         # There's a horrible way of doing it with the current code. This would be much
-    #                         # easier (and less horrible) if we use the general topology
-    #
-    #                         # pu1 and pu2 should not be hardcoded
-    #                         # This object should have a list of actuators
-    #                         self.praw1 = 0
-    #                         self.vpub = 0
-    #                     elif self.attack_dict['command'] == 'Open':
-    #                         self.praw1 = 1
-    #                         self.vpub = 1
-    #                     elif self.attack_dict['command'] == 'Maintain':
-    #                         continue
-    #                     elif self.attack_dict['command'] == 'Toggle':
-    #                         if self.praw1 == 1:
-    #                             self.praw1 = 0
-    #                         else:
-    #                             self.praw1 = 1
-    #
-    #                         if self.vpub == 1:
-    #                             self.vpub = 0
-    #                         else:
-    #                             self.vpub = 1
-    #                     else:
-    #                         print "Warning. Attack not implemented yet"
-    #
-    #             self.set(P_RAW1, self.praw1)
-    #             self.set(V_PUB, self.vpub)
-    #
-    #             self.set(ATT_1, 0)
-    #             time.sleep(0.1)
-    #
-    #         except Exception:
-    #             continue
+    def main_loop(self):
+        print 'DEBUG: ' + self.intermediate_yaml['plcs'][self.yaml_index]['name'] + ' enters main_loop'
+        while True:
+            try:
+                self.local_time += 1
+                # self.t0 = Decimal(self.get(T0))
+                # self.t2 = Decimal(self.receive(T2, PLC2_ADDR))
+                # print("ITERATION %d ------------- " % self.local_time)
+                # print("Tank 0 Level %f " % self.t0)
+                # print("Tank 2 Level %f " % self.t2)
+                #
+                # if self.t0 < 0.256:
+                #     self.vpub = 1
+                #     self.praw1 = 0
+                #
+                # if self.t0 > 0.448:
+                #     self.vpub = 0
+                #
+                # if self.t2 < 0.16:
+                #     print("Opening P_RAW1")
+                #     self.praw1 = 1
+                #
+                # if self.t2 > 0.32:
+                #     print("Closing P_RAW1")
+                #     self.praw1 = 0
+                #
+                # self.set(P_RAW1, self.praw1)
+                # self.set(V_PUB, self.vpub)
+
+                time.sleep(0.1)
+
+            except Exception:
+                continue
 
 
 if __name__ == "__main__":
@@ -196,17 +169,19 @@ if __name__ == "__main__":
     args = get_arguments()
     # Get index and week index from commandline
     if args.index:
-        plc_index = args.index
+        plc_index = int(args.index)
+        print "PLC INDEX: " + str(plc_index)
     else:
         raise IOError
 
     if args.week:
-        w_index = args.week
+        w_index = int(args.week)
+        print "WEEK INDEX: " + str(w_index)
     else:
         w_index = 0
 
-    if args.path:
-        yaml_path = args.path
+    if args.yaml:
+        yaml_path = args.yaml
     else:
         yaml_path = intermediate_abs_path
 
