@@ -225,7 +225,7 @@ class EpanetParser:
 
     def create_control_list(self):
         control_list = []
-        for control in self.wn.controls():
+        for control in self.wn.intermediate_controls():
             control_dict = {}
             control_dict['tank_tag'] = control[1].condition.name.split(":")[0]
             control_dict['operator'] = control[1].condition.name.split("level")[1][0:2]

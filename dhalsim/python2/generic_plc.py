@@ -51,6 +51,19 @@ def generate_tags(taggable):
     return tags
 
 
+def create_controls(controls_list):
+    ret = []
+    for control in controls_list:
+        if control["type"] == "Above":
+            ret.append(AboveControl(control["actuator"], control["action"], control["dependant"], control["value"]))
+        if control["type"] == "Below":
+            ret.append(BelowControl(control["actuator"], control["action"], control["dependant"], control["value"]))
+        if control["type"] == "Time":
+            ret.append(TimeControl(control["actuator"], control["action"], control["value"]))
+
+    return ret
+
+
 class GenericPLC(BasePLC):
 
     def __init__(self, intermediate_yaml_path, yaml_index, week_index):
@@ -61,7 +74,11 @@ class GenericPLC(BasePLC):
         with open(os.path.abspath(intermediate_yaml_path)) as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
-        self.controls = self.intermediate_yaml['plcs'][self.yaml_index]['controls']
+        self.intermediate_plc = self.intermediate_yaml["plcs"][self.yaml_index]
+
+        self.intermediate_controls = self.intermediate_plc['controls']
+
+        self.controls = create_controls(self.intermediate_controls)
 
         # Create state from db values
         state = {
@@ -71,19 +88,19 @@ class GenericPLC(BasePLC):
 
         # Create list of dependant sensors
         dependant_sensors = []
-        for control in self.controls:
+        for control in self.intermediate_controls:
             if control["type"] != "Time":
                 dependant_sensors.append(control["dependant"])
 
         # Create list of PLC sensors
-        plc_sensors = self.intermediate_yaml['plcs'][self.yaml_index]['sensors']
+        plc_sensors = self.intermediate_plc['sensors']
 
         # Create server, real tags are generated
         plc_server = {
-            'address': self.intermediate_yaml['plcs'][self.yaml_index]['ip'],
+            'address': self.intermediate_plc['ip'],
             'tags': generate_real_tags(plc_sensors,
                                        list(set(dependant_sensors) - set(plc_sensors)),
-                                       self.intermediate_yaml['plcs'][self.yaml_index]['actuators'])
+                                       self.intermediate_plc['actuators'])
         }
 
         # Create protocol
@@ -93,20 +110,20 @@ class GenericPLC(BasePLC):
             'server': plc_server
         }
 
-        print "DEBUG INIT: " + self.intermediate_yaml['plcs'][self.yaml_index]['name']
+        print "DEBUG INIT: " + self.intermediate_plc['name']
         print "state = " + str(state)
         print "plc_protocol = " + str(plc_protocol)
 
-        super(GenericPLC, self).__init__(name=self.intermediate_yaml['plcs'][self.yaml_index]['name'],
+        super(GenericPLC, self).__init__(name=self.intermediate_plc['name'],
                                          state=state, protocol=plc_protocol)
 
     def pre_loop(self):
-        print 'DEBUG: ' + self.intermediate_yaml['plcs'][self.yaml_index]['name'] + ' enters pre_loop'
+        print 'DEBUG: ' + self.intermediate_plc['name'] + ' enters pre_loop'
 
         reader = True
 
-        sensors = generate_tags(self.intermediate_yaml['plcs'][self.yaml_index]['sensors'])
-        actuators = generate_tags(self.intermediate_yaml['plcs'][self.yaml_index]['actuators'])
+        sensors = generate_tags(self.intermediate_plc['sensors'])
+        actuators = generate_tags(self.intermediate_plc['actuators'])
 
         values = []
         for tag in sensors:
@@ -119,7 +136,7 @@ class GenericPLC(BasePLC):
         sensors.extend(actuators)
 
         BasePLC.set_parameters(self, sensors, values, reader, lock,
-                               self.intermediate_yaml['plcs'][self.yaml_index]['ip'])
+                               self.intermediate_plc['ip'])
         self.startup()
 
     # def get_attack_dict(self, path, name):
@@ -131,42 +148,19 @@ class GenericPLC(BasePLC):
     #             return attack
 
     def main_loop(self):
-        print 'DEBUG: ' + self.intermediate_yaml['plcs'][self.yaml_index]['name'] + ' enters main_loop'
+        print('DEBUG: ' + self.intermediate_plc['name'] + ' enters main_loop')
         while True:
             try:
                 self.local_time += 1
 
-                # for control in self.controls:
-                #     depval = Decimal(self.get((control['dependant'], 1)))
+                for control in self.controls:
+                    control.apply(self)
 
-                # self.t0 = Decimal(self.get(T0))
-                # self.t2 = Decimal(self.receive(T2, PLC2_ADDR))
-                # print("ITERATION %d ------------- " % self.local_time)
-                # print("Tank 0 Level %f " % self.t0)
-                # print("Tank 2 Level %f " % self.t2)
-                #
-                # if self.t0 < 0.256:
-                #     self.vpub = 1
-                #     self.praw1 = 0
-                #
-                # if self.t0 > 0.448:
-                #     self.vpub = 0
-                #
-                # if self.t2 < 0.16:
-                #     print("Opening P_RAW1")
-                #     self.praw1 = 1
-                #
-                # if self.t2 > 0.32:
-                #     print("Closing P_RAW1")
-                #     self.praw1 = 0
-                #
-                # self.set(P_RAW1, self.praw1)
-                # self.set(V_PUB, self.vpub)
-
-                time.sleep(0.1)
+                time.sleep(0.25)
 
             except Exception:
                 continue
+
 
 
 if __name__ == "__main__":

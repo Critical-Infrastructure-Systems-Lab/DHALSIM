@@ -53,7 +53,7 @@ class GeneralCPS(MiniCPS):
 
         topo.setup_network(self.net)
 
-        CLI(self.net)
+        # CLI(self.net)
 
         with self.intermediate_yaml.open(mode='r') as file:
             self.data = yaml.safe_load(file)
