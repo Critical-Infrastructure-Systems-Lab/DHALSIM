@@ -53,6 +53,8 @@ class GeneralCPS(MiniCPS):
 
         topo.setup_network(self.net)
 
+        CLI(self.net)
+
         with self.intermediate_yaml.open(mode='r') as file:
             self.data = yaml.safe_load(file)
 
@@ -73,10 +75,8 @@ class GeneralCPS(MiniCPS):
         self.plc_processes = []
 
         for i, plc in enumerate(self.data["plcs"]):
-            # node = self.net.get(plc["name"])
-            node = self.net.get(plc["name"].lower())
-            cmd = ["python2", "automatic_plc.py", "-y", str(self.intermediate_yaml), "-i", str(i)]
-            # cmd = ["python2", "automatic_plc.py", "-n", plc["name"].lower(), "-w", "0"]
+            node = self.net.get(plc["name"])
+            cmd = ["python2", "automatic_plc.py", "-i", str(i), str(self.intermediate_yaml)]
             self.plc_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
 
         # self.scada_process = self.net.get('scada').popen("python2", "automatic_plc.py", "-n",

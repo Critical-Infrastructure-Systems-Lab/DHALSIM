@@ -61,6 +61,8 @@ class GenericPLC(BasePLC):
         with open(os.path.abspath(intermediate_yaml_path)) as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
+        self.controls = self.intermediate_yaml['plcs'][self.yaml_index]['controls']
+
         # Create state from db values
         state = {
             'name': self.intermediate_yaml['db_name'],
@@ -69,7 +71,7 @@ class GenericPLC(BasePLC):
 
         # Create list of dependant sensors
         dependant_sensors = []
-        for control in self.intermediate_yaml['plcs'][self.yaml_index]['controls']:
+        for control in self.controls:
             if control["type"] != "Time":
                 dependant_sensors.append(control["dependant"])
 
@@ -91,11 +93,11 @@ class GenericPLC(BasePLC):
             'server': plc_server
         }
 
-        # print "DEBUG INIT: " + self.intermediate_yaml['plcs'][self.yaml_index]['name']
-        # print "state = " + str(state)
-        # print "plc_protocol = " + str(plc_protocol)
+        print "DEBUG INIT: " + self.intermediate_yaml['plcs'][self.yaml_index]['name']
+        print "state = " + str(state)
+        print "plc_protocol = " + str(plc_protocol)
 
-        super(GenericPLC, self).__init__(name=self.intermediate_yaml['plcs'][self.yaml_index]['name'].lower(),
+        super(GenericPLC, self).__init__(name=self.intermediate_yaml['plcs'][self.yaml_index]['name'],
                                          state=state, protocol=plc_protocol)
 
     def pre_loop(self):
@@ -115,7 +117,6 @@ class GenericPLC(BasePLC):
         lock = threading.Lock()
 
         sensors.extend(actuators)
-        print str(sensors)
 
         BasePLC.set_parameters(self, sensors, values, reader, lock,
                                self.intermediate_yaml['plcs'][self.yaml_index]['ip'])
@@ -134,6 +135,10 @@ class GenericPLC(BasePLC):
         while True:
             try:
                 self.local_time += 1
+
+                # for control in self.controls:
+                #     depval = Decimal(self.get((control['dependant'], 1)))
+
                 # self.t0 = Decimal(self.get(T0))
                 # self.t2 = Decimal(self.receive(T2, PLC2_ADDR))
                 # print("ITERATION %d ------------- " % self.local_time)

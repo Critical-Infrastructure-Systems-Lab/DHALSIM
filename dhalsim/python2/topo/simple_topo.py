@@ -50,7 +50,7 @@ class SimpleTopo(Topo):
 
     def generate_plc_data(self, plcs):
         for idx, plc in enumerate(plcs):
-            plc_ip = "192.168.1." + str(idx + 1) + "/24"
+            plc_ip = "192.168.1." + str(idx + 1)
             plc_mac = Mininet.randMac()
             plc_int = plc['name'] + "-eth0"
 
@@ -82,7 +82,7 @@ class SimpleTopo(Topo):
                 plc_node = self.addHost(
                     plc['name'],
                     mac=plc['mac'],
-                    ip=plc['ip'],
+                    ip=plc['ip'] + "/24",
                     defaultRoute=gateway)
                 self.addLink(switch, plc_node, intfName2=plc['interface'])
 

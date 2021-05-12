@@ -6,12 +6,19 @@ import signal
 import shlex
 
 
-class NodeControl():
-    """
-    This class represents a PLC or SCADA node. All of these devices have the same pattern of launching a tcpdump process in
-    the eth0 interface, launching a plc_n.py script or scada.py script and when receives a SIGINT or SIGTERM signal store the recevied values into a .csv file.
-    In addition, a pcap file is created with the tcpdump results
-    """
+class NodeControl:
+
+    def __init__(self, intermediate_yaml, plc_index):
+        signal.signal(signal.SIGINT, self.sigint_handler)
+        signal.signal(signal.SIGTERM, self.sigint_handler)
+
+        self.intermediate_yaml = intermediate_yaml
+        self.plc_index = plc_index
+
+        with self.intermediate_yaml.open(mode='r') as file:
+            self.data = yaml.safe_load(file)
+
+        self.intermediate_plc = self.data["plcs"][self.plc_index]
 
     def sigint_handler(self, sig, frame):
         self.terminate()
@@ -40,18 +47,7 @@ class NodeControl():
             self.plc_process.kill()
 
     def main(self):
-        """
-        Main method of a device. The signal handler methods are define, the routing is configured (adding default gateways for the deviceS), a tcpdump process is started
-        and a plc_n.py or scada.py script is launched
-        :return:
-        """
-        args = self.get_arguments()
-        self.process_arguments(args)
-
-        signal.signal(signal.SIGINT, self.sigint_handler)
-        signal.signal(signal.SIGTERM, self.sigint_handler)
-
-        self.interface_name = self.name.lower() + '-eth0'
+        self.interface_name = self.intermediate_plc["interface"]
         self.delete_log()
         self.process_tcp_dump = self.start_tcpdump_capture()
 
@@ -151,6 +147,7 @@ class NodeControl():
         parser.add_argument("--attack_path", "-p", help="Path to the attack repository")
         parser.add_argument("--attack_name", "-a", help="Name of the attack to be run by this PLC")
         return parser.parse_args()
+
 
 
 if __name__ == "__main__":
