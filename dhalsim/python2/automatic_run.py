@@ -5,7 +5,7 @@ from pathlib import Path
 from mininet.net import Mininet
 from mininet.cli import CLI
 from minicps.mcps import MiniCPS
-from topo import SimpleTopo
+from topo.simple_topo import SimpleTopo
 from initialize_experiment import ExperimentInitializer
 import sys
 import time
@@ -19,25 +19,25 @@ import glob
 
 class GeneralCPS(MiniCPS):
 
-    def do_forward(self, node):
-        # Pre experiment configuration, prepare routing path
-        node.cmd('sysctl net.ipv4.ip_forward=1')
-        node.waitOutput()
-
-    def add_degault_gateway(self, node, gw_ip):
-        node.cmd('route add default gw ' + gw_ip)
-        node.waitOutput()
-
-    def setup_network(self):
-        r0 = self.net.get('r0')
-        self.do_forward(r0)
-        self.add_degault_gateway(self.net.get('plc1'), '192.168.1.254')
-        self.add_degault_gateway(self.net.get('plc2'), '192.168.1.254')
-        self.add_degault_gateway(self.net.get('attacker_1'), '192.168.1.254')
-        self.add_degault_gateway(self.net.get('scada'), '192.168.2.254')
-        self.add_degault_gateway(self.net.get('attacker_2'), '192.168.2.254')
-        r0.cmd('ifconfig r0-eth2 192.168.2.254')
-        r0.waitOutput()
+    # def do_forward(self, node):
+    #     # Pre experiment configuration, prepare routing path
+    #     node.cmd('sysctl net.ipv4.ip_forward=1')
+    #     node.waitOutput()
+    #
+    # def add_degault_gateway(self, node, gw_ip):
+    #     node.cmd('route add default gw ' + gw_ip)
+    #     node.waitOutput()
+    #
+    # def setup_network(self):
+    #     r0 = self.net.get('r0')
+    #     self.do_forward(r0)
+    #     self.add_degault_gateway(self.net.get('plc1'), '192.168.1.254')
+    #     self.add_degault_gateway(self.net.get('plc2'), '192.168.1.254')
+    #     self.add_degault_gateway(self.net.get('attacker_1'), '192.168.1.254')
+    #     self.add_degault_gateway(self.net.get('scada'), '192.168.2.254')
+    #     self.add_degault_gateway(self.net.get('attacker_2'), '192.168.2.254')
+    #     r0.cmd('ifconfig r0-eth2 192.168.2.254')
+    #     r0.waitOutput()
 
     def __init__(self, intermediate_yaml):
 
@@ -46,12 +46,12 @@ class GeneralCPS(MiniCPS):
         signal.signal(signal.SIGINT, self.interrupt)
         signal.signal(signal.SIGTERM, self.interrupt)
 
-        topo = SimpleTopo("0", None, None, None)
+        topo = SimpleTopo(self.intermediate_yaml)
         self.net = Mininet(topo=topo, autoSetMacs=True, link=TCLink)
 
         self.net.start()
 
-        self.setup_network()
+        topo.setup_network(self.net)
 
         with self.intermediate_yaml.open(mode='r') as file:
             self.data = yaml.safe_load(file)
@@ -73,8 +73,8 @@ class GeneralCPS(MiniCPS):
         self.plc_processes = []
 
         for i, plc in enumerate(self.data["plcs"]):
-            # node = self.net.get(plc["name"])
-            node = self.net.get(plc["name"].lower())
+            node = self.net.get(plc["name"])
+            # node = self.net.get(plc["name"].lower())
             # cmd = ["python2", "automatic_plc.py", "-y", str(self.intermediate_yaml), "-i", i]
             cmd = ["python2", "automatic_plc.py", "-n", plc["name"].lower(), "-w", "0"]
             self.plc_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))

@@ -107,7 +107,7 @@ class SimpleTopo(Topo):
         # Set the default gateway of the PLCs
         if 'plcs' in self.data.keys():
             for plc in self.data['plcs']:
-                net.get(plc).cmd('route add default gw ' + plc['gateway'])
+                net.get(plc['name']).cmd('route add default gw ' + plc['gateway'])
 
         # Set the default gateway of the SCADA
         net.get('scada').cmd('route add default gw ' + self.supervisor_ip)
