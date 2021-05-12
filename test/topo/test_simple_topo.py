@@ -39,15 +39,16 @@ def test_writeback_yaml(tmpdir, topo_fixture, filled_dict):
 
 
 def test_host_amount_network(topo_fixture):
-    # Expecting 4 hosts; 2 PLCs, a router and a scada
-    assert len(topo_fixture.hosts()) == 4
+    # Expecting 4 hosts; 2 PLCs, a router, a scada and a plant
+    assert len(topo_fixture.hosts()) == 5
 
 
 def test_host_names(topo_fixture):
     assert topo_fixture.hosts()[0] == 'PLC1'
     assert topo_fixture.hosts()[1] == 'PLC2'
-    assert topo_fixture.hosts()[2] == 'r0'
-    assert topo_fixture.hosts()[3] == 'scada'
+    assert topo_fixture.hosts()[2] == 'plant'
+    assert topo_fixture.hosts()[3] == 'r0'
+    assert topo_fixture.hosts()[4] == 'scada'
 
 
 def test_host_ips(topo_fixture):
