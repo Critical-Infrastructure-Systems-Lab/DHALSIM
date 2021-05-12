@@ -5,13 +5,14 @@ import argparse
 import signal
 import shlex
 
-class NodeControl():
 
+class NodeControl():
     """
     This class represents a PLC or SCADA node. All of these devices have the same pattern of launching a tcpdump process in
     the eth0 interface, launching a plc_n.py script or scada.py script and when receives a SIGINT or SIGTERM signal store the recevied values into a .csv file.
     In addition, a pcap file is created with the tcpdump results
     """
+
     def sigint_handler(self, sig, frame):
         self.terminate()
         sys.exit(0)
@@ -21,7 +22,7 @@ class NodeControl():
         All the subprocesses launched in this Digital Twin follow the same pattern to ensure that they finish before continuing with the finishing of the parent process
         """
         print "Stopping Tcp dump process on PLC..."
-        #self.process_tcp_dump.kill()
+        # self.process_tcp_dump.kill()
 
         self.process_tcp_dump.send_signal(signal.SIGINT)
         self.process_tcp_dump.wait()
@@ -61,7 +62,7 @@ class NodeControl():
 
         self.terminate()
 
-    def process_arguments(self,arg_parser):
+    def process_arguments(self, arg_parser):
         if arg_parser.name:
             self.name = arg_parser.name
             print self.name
@@ -72,6 +73,11 @@ class NodeControl():
             self.week_index = arg_parser.week
         else:
             self.week_index = 0
+
+        if arg_parser.index:
+            self.plc_index = arg_parser.index
+        else:
+            print "NO INDEX PROVIDED"
 
         if arg_parser.dict:
             self.dict_path = arg_parser.dict
@@ -94,7 +100,6 @@ class NodeControl():
             self.attack_path = None
             self.attack_name = None
 
-
     def delete_log(self):
         """
         We delete the log of previous experiments
@@ -105,18 +110,20 @@ class NodeControl():
     def configure_routing(self):
         self.interface_name = self.name + '-eth0'
         if self.name == 'scada':
-            routing = subprocess.call(['route', 'add', 'default', 'gw', '192.168.2.254', self.interface_name],shell=False)
+            routing = subprocess.call(['route', 'add', 'default', 'gw', '192.168.2.254', self.interface_name],
+                                      shell=False)
         else:
-            routing = subprocess.call(['route','add','default', 'gw' ,'192.168.1.254', self.interface_name], shell=False)
+            routing = subprocess.call(['route', 'add', 'default', 'gw', '192.168.1.254', self.interface_name],
+                                      shell=False)
         return routing
 
     def start_tcpdump_capture(self):
-        pcap = self.interface_name+'.pcap'
-        tcp_dump = subprocess.Popen(['tcpdump', '-i', self.interface_name, '-w', 'output/'+pcap], shell=False)
+        pcap = self.interface_name + '.pcap'
+        tcp_dump = subprocess.Popen(['tcpdump', '-i', self.interface_name, '-w', 'output/' + pcap], shell=False)
         return tcp_dump
 
     def start_plc(self):
-        cmd_string = 'python2 ' + self.name + '.py' + ' -w ' + str(self.week_index)
+        cmd_string = 'python2 generic_plc.py' + ' -i ' + self.plc_index + ' -w ' + str(self.week_index)
 
         # if self.attack_flag:
         #     # Pass the path to the PLC so it can parse the attack information and run it
@@ -131,12 +138,14 @@ class NodeControl():
         parser = argparse.ArgumentParser(description='Master Script of a node in Minicps')
         parser.add_argument("--name", "-n", help="Name of the Mininet node and script to run")
         parser.add_argument("--week", "-w", help="Week index of the simulation")
+        parser.add_argument("--index", "-i", help="Index of PLC in intermediate yaml")
         parser.add_argument("--dict", "-d", help="Dictionary of the PLCs logic")
         parser.add_argument("--attack_flag", "-f", help="Flag to indicate if this PLC needs to run an attack")
         parser.add_argument("--attack_path", "-p", help="Path to the attack repository")
         parser.add_argument("--attack_name", "-a", help="Name of the attack to be run by this PLC")
         return parser.parse_args()
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     node_control = NodeControl()
     node_control.main()
