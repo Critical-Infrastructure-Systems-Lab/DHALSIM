@@ -1,24 +1,41 @@
-import sys
-
-from dhalsim.static.plc_config import PlcConfig
-from dhalsim.topo.simple_topo import SimpleTopo
-from dhalsim.static.controls.ConcreteControl import *
+from dhalsim.python2.topo.simple_topo import SimpleTopo
+from mininet.net import Mininet
+from mininet.link import TCLink
 import pytest
-
-def test_python_version():
-    assert sys.version_info.major is 3
-
-@pytest.fixture
-def control_list_fixture():
-    return [TimeControl("testActuator1", "CLOSED", 5), BelowControl("testActuator1", "CLOSED", "testSensor2", 5)]
+import yaml
 
 
 @pytest.fixture
-def topo_fixture(control_list_fixture):
-    return SimpleTopo([
-        PlcConfig('TestPLC1', ['testSensor1', 'testSensor2'], ['testActuator1', 'testActuator2'], control_list_fixture),
-        PlcConfig('TestPLC2', ['testSensor3'], ['testActuator3'], control_list_fixture)
-    ])
+def unmodified_dict():
+    return {"plcs": [{"name": "PLC1", }, {"name": "PLC2", }, ], }
+
+
+@pytest.fixture
+def filled_dict():
+    return {'plcs': [{'name': 'PLC1', 'ip': '192.168.1.1/24',
+                      'mac': '00:1D:9C:C7:B0:70', 'interface': 'PLC1-eth0',
+                      'gateway': '192.168.1.254'},
+                     {'name': 'PLC2', 'ip': '192.168.1.2/24',
+                      'mac': '00:1D:9C:C7:B0:70', 'interface': 'PLC2-eth0',
+                      'gateway': '192.168.1.254'}]}
+
+
+@pytest.fixture
+def topo_fixture(mocker, tmpdir, unmodified_dict):
+    mocker.patch('mininet.net.Mininet.randMac', return_value="00:1D:9C:C7:B0:70")
+
+    c = tmpdir.join("intermediate.yaml")
+    with c.open(mode='w') as intermediate_yaml:
+        yaml.dump(unmodified_dict, intermediate_yaml)
+
+    return SimpleTopo(c)
+
+
+def test_writeback_yaml(tmpdir, topo_fixture, filled_dict):
+    with tmpdir.join("intermediate.yaml").open(mode='r') as intermediate_yaml:
+        dump = yaml.safe_load(intermediate_yaml)
+
+    assert dump == filled_dict
 
 
 def test_host_amount_network(topo_fixture):
@@ -27,22 +44,23 @@ def test_host_amount_network(topo_fixture):
 
 
 def test_host_names(topo_fixture):
-    assert topo_fixture.hosts()[0] == 'TestPLC1'
-    assert topo_fixture.hosts()[1] == 'TestPLC2'
+    assert topo_fixture.hosts()[0] == 'PLC1'
+    assert topo_fixture.hosts()[1] == 'PLC2'
     assert topo_fixture.hosts()[2] == 'r0'
     assert topo_fixture.hosts()[3] == 'scada'
 
 
 def test_host_ips(topo_fixture):
-    assert topo_fixture.nodeInfo('TestPLC1')['ip'] == '192.168.1.1/24'
-    assert topo_fixture.nodeInfo('TestPLC2')['ip'] == '192.168.1.2/24'
+    print(topo_fixture.nodeInfo('PLC1'))
+    assert topo_fixture.nodeInfo('PLC1')['ip'] == '192.168.1.1/24'
+    assert topo_fixture.nodeInfo('PLC2')['ip'] == '192.168.1.2/24'
     assert topo_fixture.nodeInfo('r0')['ip'] == '192.168.1.254/24'
     assert topo_fixture.nodeInfo('scada')['ip'] == '192.168.2.1/24'
 
 
 def test_host_gateways(topo_fixture):
-    assert topo_fixture.nodeInfo('TestPLC1')['defaultRoute'] == 'via 192.168.1.254/24'
-    assert topo_fixture.nodeInfo('TestPLC2')['defaultRoute'] == 'via 192.168.1.254/24'
+    assert topo_fixture.nodeInfo('PLC1')['defaultRoute'] == 'via 192.168.1.254/24'
+    assert topo_fixture.nodeInfo('PLC2')['defaultRoute'] == 'via 192.168.1.254/24'
     assert topo_fixture.nodeInfo('scada')['defaultRoute'] == 'via 192.168.2.254/24'
 
 
@@ -66,10 +84,10 @@ def test_links_endpoints(topo_fixture):
     assert topo_fixture.links()[1][1] == 'r0'
     # Link from switch 1 to PLC1
     assert topo_fixture.links()[2][0] == 's1'
-    assert topo_fixture.links()[2][1] == 'TestPLC1'
+    assert topo_fixture.links()[2][1] == 'PLC1'
     # Link from switch 1 to PLC2
     assert topo_fixture.links()[3][0] == 's1'
-    assert topo_fixture.links()[3][1] == 'TestPLC2'
+    assert topo_fixture.links()[3][1] == 'PLC2'
     # Link from switch 2 to scada
     assert topo_fixture.links()[4][0] == 's2'
     assert topo_fixture.links()[4][1] == 'scada'
