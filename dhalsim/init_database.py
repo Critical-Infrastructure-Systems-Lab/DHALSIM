@@ -5,6 +5,7 @@ from pathlib import Path
 
 import yaml
 
+
 class DatabaseInitializer:
     def __init__(self, intermediate_yaml: Path):
         self.intermediate_yaml = intermediate_yaml
@@ -29,9 +30,8 @@ class DatabaseInitializer:
                             (valve["name"], initial_state,))
             for tank in self.data["tanks"]:
                 cur.execute("INSERT INTO " + self.db_name + " VALUES (?, 1, ?);",
-                            (tank["name"], str(tank["initial_value"],)))
+                            (tank["name"], str(tank["initial_value"], )))
             for pump in self.data["pumps"]:
-                print(pump["initial_state"])
                 initial_state = "0" if pump["initial_state"].lower() == "closed" else "1"
                 cur.execute("INSERT INTO " + self.db_name + " VALUES (?, 1, ?);",
                             (pump["name"], initial_state,))
@@ -99,11 +99,13 @@ class DatabaseInitializer:
             cur.execute("SELECT * FROM " + self.db_name + ";")
             print(cur.fetchall())
 
+
 def is_valid_file(parser, arg):
     if not os.path.exists(arg):
         parser.error(arg + " does not exist")
     else:
         return arg
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Setup a sqlite DB from a intermediate yaml file')

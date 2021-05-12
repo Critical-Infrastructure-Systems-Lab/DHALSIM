@@ -131,7 +131,7 @@ class NodeControl():
         #                  str(self.attack_path) + ' -a ' + str(self.attack_name)
 
         cmd = shlex.split(cmd_string)
-        plc_process = subprocess.Popen(cmd, shell=False)
+        plc_process = subprocess.Popen(cmd, shell=False, stderr=sys.stderr, stdout=sys.stdout)
         return plc_process
 
     def get_arguments(self):
