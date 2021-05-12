@@ -11,9 +11,13 @@ import time
 class PhysicalPlant:
 
     def __init__(self):
+        """{'db_path': '/home/simcha/dhalsim.sqlite', 'output_ground_truth_path': 'physical_process.csv',
+         'duration_days': 1, 'inp_file': 'wadi_map.inp', 'simulator': 'pdd', 'week_index': 0,
+         'plc_dict_path': 'plc_dicts.yaml', 'complex_topology': 'True', 'simulation_type': 'Single',
+         'run_attack': 'False', 'attacks_path': '../../attack_repository/wadi_attack_description.yaml',
+         'attack_name': 'wadi_network_empty_tank_1'}"""
 
-        config_file_path = sys.argv[1]
-        config_options = self.load_config(config_file_path)
+        config_options = self.load_config(sys.argv[1])
 
         # Week index to initialize the simulation
         if "week_index" in config_options:
@@ -40,10 +44,9 @@ class PhysicalPlant:
 
         self.output_path = config_options['output_ground_truth_path']
         self.simulation_days = int(config_options['duration_days'])
-
+        self.simulation_days = 0.1
         # Create the network
-        inp_file = config_options['inp_file']
-        self.wn = wntr.network.WaterNetworkModel(inp_file)
+        self.wn = wntr.network.WaterNetworkModel(config_options['inp_file'])
 
         self.node_list = list(self.wn.node_name_list)
         self.link_list = list(self.wn.link_name_list)
@@ -52,6 +55,9 @@ class PhysicalPlant:
         self.junction_list = self.get_node_list_by_type(self.node_list, 'Junction')
         self.pump_list = self.get_link_list_by_type(self.link_list, 'Pump')
         self.valve_list = self.get_link_list_by_type(self.link_list, 'Valve')
+
+        self.attack_start = 0
+        self.attack_end = 0
 
         list_header = ["Timestamps"]
 
@@ -88,7 +94,6 @@ class PhysicalPlant:
         if simulator_string == 'pdd':
             print('Running simulation using PDD')
             self.wn.options.hydraulic.demand_model = 'PDD'
-
         elif simulator_string == 'dd':
             print('Running simulation using DD')
         else:
@@ -96,10 +101,11 @@ class PhysicalPlant:
             sys.exit(1)
 
         self.sim = wntr.sim.WNTRSimulator(self.wn)
+
         print("Starting simulation for " + str(config_options['inp_file']) + " topology ")
 
-    # TODO: Static?
-    def load_config(self, config_path):
+    @staticmethod
+    def load_config(config_path):
         """
         Reads the YAML configuration file
         :param config_path: The path of the YAML configuration file
@@ -110,15 +116,13 @@ class PhysicalPlant:
         return options
 
     def initialize_simulation(self, config_options):
-        # TODO: Add doc
-        # TODO: Why below?
-        if self.simulation_days == 7:
-            limit = 167
-        else:
-            limit = 239
-
+        """
+        Initializes the simulation
+        :param config_options: contains all the configuration options
+        """
         if 'initial_custom_flag' in config_options:
-            custom_initial_conditions_flag =  bool(config_options['initial_custom_flag'])
+            custom_initial_conditions_flag = bool(config_options['initial_custom_flag'])
+
             if custom_initial_conditions_flag:
                 demand_patterns_path = config_options['demand_patterns_path']
                 starting_demand_path = config_options['starting_demand_path']
@@ -152,15 +156,15 @@ class PhysicalPlant:
                 result.append(str(link))
         return result
 
-    # TODO: Static?
-    def create_node_header(self, a_list):
+    @staticmethod
+    def create_node_header(a_list):
         result = []
         for node in a_list:
             result.append(node + "_LEVEL")
         return result
 
-    # TODO: Static?
-    def create_link_header(self, a_list):
+    @staticmethod
+    def create_link_header(a_list):
         result = []
         for link in a_list:
             result.append(link + "_FLOW")
@@ -272,18 +276,13 @@ class PhysicalPlant:
         # TODO: Master time from database..
         master_time = 0
 
-        # TODO: Simulation days, want to move to other unit
         iteration_limit = (self.simulation_days * 24 * 3600) / self.wn.options.time.hydraulic_timestep
 
-        # check attack duration
+        # Check attack duration
         if self.attack_flag:
             self.load_attack_options()
             print("Launching attack " + str(self.attack_name) + " with start in iteration " + str(self.attack_start)
                   + " and finish at iteration " + str(self.attack_end))
-        else:
-            # TODO: Placement of initialization below, could be automatically set
-            self.attack_start = 0
-            self.attack_end = 0
 
         print("Simulation will run for " + str(self.simulation_days) + " days. Hydraulic timestep is " + str(
             self.wn.options.time.hydraulic_timestep) +
