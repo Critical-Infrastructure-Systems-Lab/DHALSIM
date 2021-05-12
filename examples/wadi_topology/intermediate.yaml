@@ -9,7 +9,6 @@ plcs:
     interface: plc1-eth0
     sensors:
       - T0
-      - T1
     actuators:
       - P_RAW1
       - V_PUB

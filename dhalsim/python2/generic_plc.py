@@ -2,12 +2,9 @@ import argparse
 import os.path
 
 from basePLC import BasePLC
-from utils import PLC1_DATA, STATE, PLC1_PROTOCOL
-from utils import T0, T2, P_RAW1, V_PUB, flag_attack_plc1, PLC2_ADDR, PLC1_ADDR
 from datetime import datetime
 from decimal import Decimal
 import time
-from utils import ATT_1, ATT_2
 import threading
 import sys
 import yaml
@@ -22,78 +19,97 @@ def get_arguments():
     parser = argparse.ArgumentParser(description='Script for individual PLCs')
     parser.add_argument("--index", "-i", help="Index of the PLC in intermediate yaml")
     parser.add_argument("--week", "-w", help="Week index of the simulation")
+    parser.add_argument("--path", "-p", help="Path of intermediate yaml")
     return parser.parse_args()
 
-def generate_real_tags(sensors, actuators):
-    real_tags = "("
+
+def generate_real_tags(sensors, dependants, actuators):
+    real_tags = []
 
     for sensor_tag in sensors:
         if sensor_tag != "":
-            real_tags += "\n    ('" + sensor_tag + "', 1, 'REAL'),"
+            real_tags.append((sensor_tag, 1, 'REAL'))
+    for dependant_tag in dependants:
+        if dependant_tag != "":
+            real_tags.append((dependant_tag, 1, 'REAL'))
     for actuator_tag in actuators:
         if actuator_tag != "":
-            real_tags += "\n    ('" + actuator_tag + "', 1, 'REAL'),"
+            real_tags.append((actuator_tag, 1, 'REAL'))
 
-    real_tags += "\n)"
-    return real_tags
+    return tuple(real_tags)
 
-def generate_tags(sensors, actuators):
-    tags = "("
 
-    for sensor_tag in sensors:
-        if sensor_tag != "":
-            tags += "\n    ('" + sensor_tag + "', 1),"
-    for actuator_tag in actuators:
-        if actuator_tag != "":
-            tags += "\n    ('" + actuator_tag + "', 1),"
+def generate_tags(taggable):
+    tags = []
 
-    tags += "\n)"
+    for tag in taggable:
+        if tag != "":
+            tags.append((tag, 1))
+
     return tags
 
 
 class GenericPLC(BasePLC):
 
-    def __init__(self, name, state, protocol, memory, disk, intermediate_yaml_file, yaml_index):
-        self.yaml_path = intermediate_yaml_file
+    def __init__(self, intermediate_yaml_path, yaml_index, week_index):
         self.yaml_index = yaml_index
-        super(GenericPLC, self).__init__(name, state, protocol, memory, disk)
+        self.week_index = week_index
+        self.local_time = 0
+
+        with open(os.path.abspath(intermediate_yaml_path)) as yaml_file:
+            self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
+
+        # Create state from db values
+        state = {
+            'name': self.intermediate_yaml['db_name'],
+            'path': self.intermediate_yaml['db_path']
+        }
+
+        # Create list of dependant sensors
+        dependant_sensors = []
+        for control in self.intermediate_yaml['plcs'][plc_index]['controls']:
+            dependant_sensors.append(control['dependant'])
+
+        # Create list of PLC sensors
+        plc_sensors = self.intermediate_yaml['plcs'][plc_index]['sensors']
+
+        # Create server, real tags are generated
+        plc_server = {
+            'address': self.intermediate_yaml['plcs'][plc_index]['ip'],
+            'tags': generate_real_tags(plc_sensors,
+                                       list(set(dependant_sensors) - set(plc_sensors)),
+                                       self.intermediate_yaml['plcs'][plc_index]['actuators'])
+        }
+
+        # Create protocol
+        plc_protocol = {
+            'name': 'enip',
+            'mode': 1,
+            'server': plc_server
+        }
+
+        super(GenericPLC, self).__init__(self.intermediate_yaml[self.yaml_index]['name'],
+                                         state, plc_protocol, {'TODO': 'TODO', }, {'TODO': 'TODO', })
 
     def pre_loop(self):
-        print 'DEBUG: plc1 enters pre_loop'
+        print 'DEBUG: ' + self.intermediate_yaml[self.yaml_index]['name'] + ' enters pre_loop'
 
-        # # We wish we could implement this as arg_parse, but we cannot overwrite the constructor
-        # self.week_index = sys.argv[2]
-        #
-        # self.attack_flag = False
-        # self.attack_dict = None
-        #
-        # if len(sys.argv) >= 4:
-        #     self.attack_flag = sys.argv[4]
-        #     self.attack_path = sys.argv[6]
-        #     self.attack_name = sys.argv[8]
-        #
-        # if self.attack_flag:
-        #     self.attack_dict = self.get_attack_dict(self.attack_path, self.attack_name)
-        #     print "PLC1 running attack: " + str(self.attack_dict)
-        #
-        #
-        # self.local_time = 0
-        #
-        # self.reader = True
-        #
-        # self.t0 = Decimal(self.get(T0))
-        #
-        # self.praw1 = int(self.get(P_RAW1))
-        # self.vpub = int(self.get(V_PUB))
-        #
-        # self.p_raw_delay_timer = 0
-        # self.timeout_counter = 0
-        #
-        # self.lock = threading.Lock()
-        #
-        # BasePLC.set_parameters(self, [T0, P_RAW1, V_PUB],
-        #                        [self.t0, self.praw1, self.vpub], self.reader, self.lock, PLC1_ADDR)
-        # self.startup()
+        reader = True
+
+        sensors = generate_tags(self.intermediate_yaml['plcs'][plc_index]['sensors'])
+        actuators = generate_tags(self.intermediate_yaml['plcs'][plc_index]['actuators'])
+
+        values = []
+        for tag in sensors:
+            values.append(Decimal(self.get(tag)))
+        for tag in actuators:
+            values.append(int(self.get(tag)))
+
+        lock = threading.Lock()
+
+        BasePLC.set_parameters(self, sensors.extend(actuators), values, reader, lock,
+                               self.intermediate_yaml['plcs'][plc_index]['ip'])
+        self.startup()
 
     # def get_attack_dict(self, path, name):
     #     with open(path) as config_file:
@@ -176,45 +192,25 @@ class GenericPLC(BasePLC):
 
 
 if __name__ == "__main__":
+    # Get arguments from commandline
     args = get_arguments()
-
-    with open(os.path.abspath(intermediate_abs_path)) as yaml_file:
-        intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
-
+    # Get index and week index from commandline
     if args.index:
         plc_index = args.index
     else:
         raise IOError
 
-    # Not sure why week index passed tbh
-    # if args.week:
-    #     week_index = args.week
-    # else:
-    #     week_index = 0
+    if args.week:
+        w_index = args.week
+    else:
+        w_index = 0
 
-    STATE = {
-        'name': intermediate_yaml['db_name'],
-        'path': intermediate_yaml['db_path']
-    }
-
-    PLC1_SERVER = {
-        'address': intermediate_yaml['plcs'][plc_index]['ip'],
-        'tags': generate_real_tags(intermediate_yaml['plcs'][plc_index]['sensors'], intermediate_yaml['plcs'][plc_index]['actuators'])
-    }
-
-    PLC1_PROTOCOL = {
-        'name': 'enip',
-        'mode': 1,
-        'server': PLC1_SERVER
-    }
-
-    NAME =  intermediate_yaml['plcs'][plc_index]['name']
+    if args.path:
+        yaml_path = args.path
+    else:
+        yaml_path = intermediate_abs_path
 
     plc = GenericPLC(
-        name=NAME,
-        state=STATE,
-        protocol=PLC1_PROTOCOL,
-        memory=PLC1_DATA,
-        disk=PLC1_DATA,
-        intermediate_yaml_file=intermediate_yaml,
-        yaml_index=plc_index)
+        intermediate_yaml_path=yaml_path,
+        yaml_index=plc_index,
+        week_index=w_index)
