@@ -12,10 +12,10 @@ def unmodified_dict():
 
 @pytest.fixture
 def filled_dict():
-    return {'plcs': [{'name': 'PLC1', 'ip': '192.168.1.1/24',
+    return {'plcs': [{'name': 'PLC1', 'ip': '192.168.1.1',
                       'mac': '00:1D:9C:C7:B0:70', 'interface': 'PLC1-eth0',
                       'gateway': '192.168.1.254'},
-                     {'name': 'PLC2', 'ip': '192.168.1.2/24',
+                     {'name': 'PLC2', 'ip': '192.168.1.2',
                       'mac': '00:1D:9C:C7:B0:70', 'interface': 'PLC2-eth0',
                       'gateway': '192.168.1.254'}]}
 
