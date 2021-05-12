@@ -154,19 +154,19 @@ def test_generate_plc_config_plcs_normal(tmpdir, inp_data_fixture):
     assert result[0].sensors == ["T1"]
     assert result[0].actuators == ["P_RAW1", "V_PUB"]
     # Assert Correct Control parse
-    assert len(result[0].intermediate_controls) == 1
-    assert result[0].intermediate_controls[0].actuator == "V_PUB"
-    assert result[0].intermediate_controls[0].action == "OPEN"
-    assert result[0].intermediate_controls[0].dependant == "T1"
-    assert result[0].intermediate_controls[0].value == 0.256
+    assert len(result[0].controls) == 1
+    assert result[0].controls[0].actuator == "V_PUB"
+    assert result[0].controls[0].action == "OPEN"
+    assert result[0].controls[0].dependant == "T1"
+    assert result[0].controls[0].value == 0.256
     # PLC 2
     assert result[1].name == "PLC2"
     assert result[1].sensors == ["T2", "T3"]
     assert result[1].actuators == ["V_ER2i"]
-    assert len(result[1].intermediate_controls) == 1
-    assert result[1].intermediate_controls[0].actuator == "V_ER2i"
-    assert result[1].intermediate_controls[0].action == "CLOSED"
-    assert result[1].intermediate_controls[0].value == 0
+    assert len(result[1].controls) == 1
+    assert result[1].controls[0].actuator == "V_ER2i"
+    assert result[1].controls[0].action == "CLOSED"
+    assert result[1].controls[0].value == 0
 
 
 def test_generate_plc_config_plcs_empty_sensor(tmpdir, inp_data_fixture):
@@ -189,11 +189,11 @@ def test_generate_plc_config_plcs_empty_sensor(tmpdir, inp_data_fixture):
     assert result[0].name == "PLC1"
     assert result[0].sensors == []
     assert result[0].actuators == ["P_RAW1", "V_PUB"]
-    assert len(result[0].intermediate_controls) == 1
-    assert result[0].intermediate_controls[0].actuator == "V_PUB"
-    assert result[0].intermediate_controls[0].action == "OPEN"
-    assert result[0].intermediate_controls[0].dependant == "T1"
-    assert result[0].intermediate_controls[0].value == 0.256
+    assert len(result[0].controls) == 1
+    assert result[0].controls[0].actuator == "V_PUB"
+    assert result[0].controls[0].action == "OPEN"
+    assert result[0].controls[0].dependant == "T1"
+    assert result[0].controls[0].value == 0.256
 
 
 def test_generate_plc_config_plcs_empty_actuator(tmpdir, inp_data_fixture):
@@ -215,4 +215,4 @@ def test_generate_plc_config_plcs_empty_actuator(tmpdir, inp_data_fixture):
     assert result[0].name == "PLC1"
     assert result[0].sensors == ["T1"]
     assert result[0].actuators == []
-    assert len(result[0].intermediate_controls) == 0
+    assert len(result[0].controls) == 0
