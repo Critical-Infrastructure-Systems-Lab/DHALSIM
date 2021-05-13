@@ -7,10 +7,17 @@ from os.path import expanduser
 import shlex
 from pathlib import Path
 
+
 class SimulationControl():
     """
     Class representing the simulation process of a plant. All the automatic_plant.py have the same pattern
     """
+
+    def __init__(self, intermediate_yaml):
+        signal.signal(signal.SIGINT, self.interrupt)
+        signal.signal(signal.SIGTERM, self.interrupt)
+
+        self.intermediate_yaml = intermediate_yaml
 
     def main(self):
         """
@@ -18,8 +25,6 @@ class SimulationControl():
         All the automatic_plant.py scrpits follow the same pattern. They process the arguments, register the method interrupt() to handle SIGINT and SIGTERM signals.
         Later, they start the simulation, by calling the script physical_process.py
         """
-        signal.signal(signal.SIGINT, self.interrupt)
-        signal.signal(signal.SIGTERM, self.interrupt)
         self.simulation = self.start_simulation()
 
         while self.simulation.poll() is None:
@@ -49,19 +54,28 @@ class SimulationControl():
         By default WNTR is run using the PDD model and the output file is a .csv file called "physical_process.csv"
         :return: An object representing the simulation process
         """
-        home_path = expanduser("~")
-        wntr_environment_path = home_path + str("/wntr-experiments/bin/python")
-        wntr_environment_path = "python3"
-        print("Launching simulation for week index: " + str(sys.argv[2]))
-
         physical_process_path = Path(__file__).parent.absolute().parent / "physical_process.py"
 
-        cmd_string = wntr_environment_path + " "+str(physical_process_path)+" " + sys.argv[1] + " " + sys.argv[2]
+        cmd = ["python3", str(physical_process_path), str(self.intermediate_yaml)]
 
-        cmd = shlex.split(cmd_string)
         simulation = subprocess.Popen(cmd)
         return simulation
 
-if __name__=="__main__":
-    simulation_control = SimulationControl()
+
+def is_valid_file(parser, arg):
+    if not os.path.exists(arg):
+        parser.error(arg + " does not exist")
+    else:
+        return arg
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Run a automatic plant')
+    parser.add_argument(dest="intermediate_yaml",
+                        help="intermediate yaml file", metavar="FILE",
+                        type=lambda x: is_valid_file(parser, x))
+
+    args = parser.parse_args()
+
+    simulation_control = SimulationControl(Path(args.intermediate_yaml))
     simulation_control.main()
