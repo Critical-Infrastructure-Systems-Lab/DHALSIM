@@ -67,7 +67,9 @@ class NodeControl:
         return tcp_dump
 
     def start_plc(self):
-        cmd = ["python2", "generic_plc.py", str(self.intermediate_yaml), str(self.plc_index)]
+        generic_plc_path = Path(__file__).parent.absolute() / "generic_plc.py"
+
+        cmd = ["python2", str(generic_plc_path), str(self.intermediate_yaml), str(self.plc_index)]
 
         plc_process = subprocess.Popen(cmd, shell=False, stderr=sys.stderr, stdout=sys.stdout)
         return plc_process
