@@ -1,7 +1,6 @@
 import sys
-from dhalsim.python2.physical_process import PhysicalPlant
+from dhalsim.physical_process import PhysicalPlant
 from mock import patch
-import pytest
 from wntr.network import WaterNetworkModel
 from wntr.sim import WNTRSimulator
 from pytest import raises
@@ -10,7 +9,7 @@ from pytest import raises
 # TODO:
 # test other classes in physical_process.py
 
-def get_physical_plant(test_args=[0, '../wadi_config.yaml', 1, False]):
+def get_physical_plant(test_args=[0, '../../test/auxilary_testing_files/wadi_config.yaml', 1, False]):
     with patch.object(sys, 'argv', test_args):
         return PhysicalPlant()
 
