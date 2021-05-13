@@ -1,3 +1,6 @@
+import argparse
+import os
+
 import wntr
 import wntr.network.controls as controls
 import sqlite3
@@ -7,41 +10,26 @@ import pandas as pd
 import yaml
 import time
 from datetime import datetime, timedelta
+from pathlib import Path
 
 
 class PhysicalPlant:
 
-    def __init__(self):
-        config_options = self.load_config(sys.argv[1])
+    def __init__(self, intermediate_yaml):
+        self.intermediate_yaml = intermediate_yaml
 
-        # Week index to initialize the simulation
-        if "week_index" in config_options:
-            self.week_index = int(config_options['week_index'])
-        else:
-            self.week_index = 0
+        with self.intermediate_yaml.open(mode='r') as file:
+            self.data = yaml.safe_load(file)
 
-        # Some users may not configure the parameter
-        # Sets the attack_flag to load attack_start and attack_end before main loop
-        if 'run_attack' in config_options:
-                if config_options['run_attack'] == "True":
-                    self.attack_flag = True
-                    self.attack_path = sys.argv[3]
-                    self.attack_name = config_options['attack_name']
-                else:
-                    self.attack_flag = False
-        else:
-            self.attack_flag = False
+        self.ground_truth_path = Path(self.data["output_path"])/"ground_truth.csv"
+        self.ground_truth_path.touch(exist_ok=True)
 
         # connection to the database
-        self.db_path = config_options['db_path']
-        self.conn = sqlite3.connect(self.db_path)
+        self.conn = sqlite3.connect(self.data["db_path"])
         self.c = self.conn.cursor()
 
-        self.output_path = config_options['output_ground_truth_path']
-        self.simulation_days = int(config_options['duration_days'])
-
         # Create the network
-        self.wn = wntr.network.WaterNetworkModel(config_options['inp_file'])
+        self.wn = wntr.network.WaterNetworkModel(self.data['inp_file'])
 
         self.node_list = list(self.wn.node_name_list)
         self.link_list = list(self.wn.link_name_list)
@@ -51,24 +39,15 @@ class PhysicalPlant:
         self.pump_list = self.get_link_list_by_type(self.link_list, 'Pump')
         self.valve_list = self.get_link_list_by_type(self.link_list, 'Valve')
 
-        self.attack_start = 0
-        self.attack_end = 0
-
         list_header = ["Timestamps"]
 
         list_header.extend(self.create_node_header(self.tank_list))
         list_header.extend(self.create_node_header(self.junction_list))
         list_header.extend(self.create_link_header(self.pump_list))
-        # TODO: Why twice?
-        list_header.extend(self.create_link_header(self.pump_list))
         list_header.extend(self.create_link_header(self.valve_list))
-        list_header.extend(["Attack#01", "Attack#02"])
 
         self.results_list = []
         self.results_list.append(list_header)
-
-        # Initialize the simulation with the random demand patterns and tank levels
-        self.initialize_simulation(config_options)
 
         dummy_condition = controls.ValueCondition(self.wn.get_node(self.tank_list[0]), 'level', '>=', -1)
 
@@ -84,7 +63,7 @@ class PhysicalPlant:
             a_control = controls.Control(control['condition'], an_action, name=control['name'])
             self.wn.add_control(control['name'], a_control)
 
-        simulator_string = config_options['simulator']
+        simulator_string = self.data['simulator']
 
         if simulator_string == 'pdd':
             print('Running simulation using PDD')
@@ -97,45 +76,7 @@ class PhysicalPlant:
 
         self.sim = wntr.sim.WNTRSimulator(self.wn)
 
-        print("Starting simulation for " + str(config_options['inp_file']) + " topology ")
-
-    @staticmethod
-    def load_config(config_path):
-        """
-        Reads the YAML configuration file
-        :param config_path: The path of the YAML configuration file
-        :return: an object representing the options stored in the configuration file
-        """
-        with open(config_path) as config_file:
-            options = yaml.load(config_file, Loader=yaml.FullLoader)
-        return options
-
-    def initialize_simulation(self, config_options):
-        """
-        Initializes the simulation
-        :param config_options: contains all the configuration options
-        """
-        if 'initial_custom_flag' in config_options:
-            custom_initial_conditions_flag = bool(config_options['initial_custom_flag'])
-
-            if custom_initial_conditions_flag:
-                demand_patterns_path = config_options['demand_patterns_path']
-                starting_demand_path = config_options['starting_demand_path']
-                initial_tank_levels_path = config_options['initial_tank_levels_path']
-
-                print("Running simulation with week index: " + str(self.week_index))
-                total_demands = pd.read_csv(demand_patterns_path, index_col=0)
-                demand_starting_points = pd.read_csv(starting_demand_path, index_col=0)
-                initial_tank_levels = pd.read_csv(initial_tank_levels_path, index_col=0)
-                week_start = demand_starting_points.iloc[self.week_index][0]
-                week_demands = total_demands.loc[week_start:week_start + limit, :]
-
-                for name, pat in self.wn.patterns():
-                    pat.multipliers = week_demands[name].values.tolist()
-
-                for i in range(1, 8):
-                    self.wn.get_node('T' + str(i)).init_level = \
-                        float(initial_tank_levels.iloc[self.week_index]['T' + str(i)])
+        print("Starting simulation for " + str(self.data['inp_file']) + " topology ")
 
     def get_node_list_by_type(self, a_list, a_type):
         result = []
@@ -249,19 +190,9 @@ class PhysicalPlant:
         self.wn.add_control(control['name'], new_control)
 
     def write_results(self, results):
-        with open('output/' + self.output_path, 'w') as f:
+        with self.ground_truth_path.open(mode='w') as f:
             writer = csv.writer(f)
             writer.writerows(results)
-
-    def load_attack_options(self):
-        with open(self.attack_path) as config_file:
-            attack_file = yaml.load(config_file, Loader=yaml.FullLoader)
-
-        for attack in attack_file['attacks']:
-            if self.attack_name == attack['name']:
-                self.attack_start = int(attack['start'])
-                self.attack_end = int(attack['end'])
-                self.attack_type = attack['type']
 
     @staticmethod
     def calculate_eta(start, iteration, total):
@@ -293,17 +224,10 @@ class PhysicalPlant:
         self.c.execute(query)
         self.conn.commit()
 
-        iteration_limit = round((self.simulation_days * 24 * 3600) / self.wn.options.time.hydraulic_timestep)
+        iteration_limit = self.data["itterations"]
 
-        # Check attack duration
-        if self.attack_flag:
-            self.load_attack_options()
-            print("Launching attack " + str(self.attack_name) + " with start in iteration " + str(self.attack_start)
-                  + " and finish at iteration " + str(self.attack_end))
-
-        print("Simulation will run for " + str(self.simulation_days) + " days. Hydraulic timestep is " + str(
-            self.wn.options.time.hydraulic_timestep) +
-              " for a total of " + str(iteration_limit) + " iterations ")
+        print("Simulation will run for", iteration_limit, "iterations")
+        print("Hydraulic timestep is", self.wn.options.time.hydraulic_timestep)
 
         while master_time <= iteration_limit:
 
@@ -334,23 +258,24 @@ class PhysicalPlant:
                 self.c.execute(query)  # UPDATE TANKS IN THE DATABASE
                 self.conn.commit()
 
-            # For concealment attacks, we need more stages in the attack
-            if self.attack_flag and (self.attack_type == "device_attack" or self.attack_type == "network_attack"):
-                if self.attack_start <= master_time < self.attack_end:
-                    query = "UPDATE wadi SET value = " + str(1) + " WHERE name = 'ATT_2'"
-                    self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to launch attack
-                    self.conn.commit()
-                else:
-                    query = "UPDATE wadi SET value = " + str(0) + " WHERE name = 'ATT_2'"
-                    self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to stop attack
-                    self.conn.commit()
-
             # TODO: This seems arbitrary and inefficient
             time.sleep(0.03)
 
         self.write_results(self.results_list)
 
+def is_valid_file(parser, arg):
+    if not os.path.exists(arg):
+        parser.error(arg + " does not exist")
+    else:
+        return arg
 
 if __name__ == "__main__":
-    simulation = PhysicalPlant()
+    parser = argparse.ArgumentParser(description='Run the simulation')
+    parser.add_argument(dest="intermediate_yaml",
+                        help="intermediate yaml file", metavar="FILE",
+                        type=lambda x: is_valid_file(parser, x))
+
+    args = parser.parse_args()
+
+    simulation = PhysicalPlant(Path(args.intermediate_yaml))
     simulation.main()
