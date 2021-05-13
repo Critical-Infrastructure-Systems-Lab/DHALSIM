@@ -12,7 +12,7 @@ class ExperimentInitializer:
 
         # Simulation type is needed to handle week_index.
         if 'simulation_type' in self.options:
-            self.simulation_type = self.options['simulation_tpye']
+            self.simulation_type = self.options['simulation_type']
         else:
             self.simulation_type = "Single"
 
@@ -21,12 +21,16 @@ class ExperimentInitializer:
                     and 'initial_tank_levels_path' in self.options:
                 self.week_index = week_index
             else:
-                print('Batch mode configured, but no initial customization options are set, aborting.')
+                print 'Batch mode configured, but no initial customization options are set, aborting.'
                 sys.exit(1)
         elif self.simulation_type == "Single":
-            self.week_index = int(self.options['week_index'])
+            try:
+                self.week_index = int(self.options['week_index'])
+            except KeyError:
+                print 'Missing week index parameter in yaml configuration file'
+
         else:
-            print('Invalid simulation mode, supported values are "Single" and "Batch", aborting')
+            print 'Invalid simulation mode, supported values are "Single" and "Batch", aborting'
             sys.exit(1)
 
         # complex_topology flag is going to define which topo instance we create
@@ -36,7 +40,7 @@ class ExperimentInitializer:
             elif self.options['complex_topology'] == "False":
                 self.complex_topology = False
             else:
-                print('complex_topology parameter has to bee a bolean, aborting')
+                print 'complex_topology parameter has to bee a bolean, aborting'
                 sys.exit(1)
         else:
             self.complex_topology = False
@@ -60,6 +64,26 @@ class ExperimentInitializer:
         else:
             self.plc_dict_path = "plc_dicts.yaml"
 
+        if 'run_attack' in self.options:
+            if self.options['run_attack'] == "True":
+                self.run_attack = True
+
+                if 'attacks_path' in self.options:
+                    self.attack_path = self.options['attacks_path']
+                else:
+                    print 'Warning. Using default attack path ../../attack_repository/ctown.cpa'
+                    self.attack_path = '../../attack_repository/attack_description.yaml'
+
+                if 'attack_name' in self.options:
+                    self.attack_name = self.options['attack_name']
+                else:
+                    print 'Warning. Using default attack plc_empty_tank_1'
+                    self.attack_name = 'plc_empty_tank_1'
+            else:
+                self.run_attack = False
+        else:
+            self.run_attack = False
+
     def get_plc_dict_path(self):
         return self.plc_dict_path
 
@@ -77,6 +101,15 @@ class ExperimentInitializer:
 
     def get_cpa_file_path(self):
         return self.cpa_file_path
+
+    def get_attack_flag(self):
+        return self.run_attack
+
+    def get_attack_path(self):
+        return self.attack_path
+
+    def get_attack_name(self):
+        return self.attack_name
 
     def run_parser(self):
         """

@@ -1,25 +1,25 @@
 ---
 # General simulation parameters
-#db_path: "wadi_db.sqlite"
-#output_ground_truth_path: "physical_process.csv"
-#duration_days: 1
-inp_file: "wadi_map_pda_original.inp"
-cpa_file: "wadi_cpa.yaml"
-#simulator: "pdd"
-#week_index: 0
+db_path: "wadi_db.sqlite"
+output_ground_truth_path: "physical_process.csv"
+duration_days: 1
+inp_file: "test/auxilary_testing_files/wadi_map_pda_original.inp"
+cpa_file: "test/auxilary_testing_files/wadi_cpa.yaml"
+simulator: "pdd"
+week_index: 0
 
 # PLC dictionary output file
 # This is the output path of the epanet_parser script. A YAML file that synthetizes the control logc and PLC
 # configuration parsed from the EPANET and epanetCPA files
 # There shouldn't be a real reason to change the path of this temporary file
-#plc_dict_path: "plc_dicts.yaml"
+plc_dict_path: "plc_dicts.yaml"
 
 # Network simulation parameters
 # True in complex topology means that each PLC is in its own LAN; NAT and port forwarding is used to connect the LAns
 # in a start topology. This uses the mininet topology described in simple_topo.py
 # False in complex topology means that all the PLCs are in the same LAN. This uses the mininet topology describes in
 # complex_topo.py
-#complex_topology: "True"
+complex_topology: "False"
 
 # Simulation type. Supported values now are "Single" and "Batch"
 # A single simulation runs only once. Possibly using the customization values as defined by initial_custom_flag
@@ -27,12 +27,12 @@ cpa_file: "wadi_cpa.yaml"
 # A Batch simulation runs consecutive weeks. Batch simulation requires that the initial_custom_flag is set to true
 # and that the demand paths are correctly set. Batch simulations takes the week_index parameter for sys.argv. Hence,
 # the responsibility of passing this parameter to general_automatic_run.py is on the calling script
-#simulation_type: "Single"
+simulation_type: "Single"
 
 # Run attack. Boolean.
 # This flag indicates if the experiment will have an attack in the network
 # Using this flag also requires setting the value of attacks_path and attack_name.
 # The attack_name should be present in the attacks_path file
-#run_attack: "False"
-#attacks_path: "../../attack_repository/wadi_attack_description.yaml"
-#attack_name: "wadi_network_empty_tank_1"
+run_attack: "False"
+attacks_path: "../../attack_repository/wadi_attack_description.yaml"
+attack_name: "wadi_network_empty_tank_1"

@@ -1,7 +1,11 @@
+import os
 import subprocess
+import argparse
 import signal
 import sys
 from os.path import expanduser
+import shlex
+from pathlib import Path
 
 class SimulationControl():
     """
@@ -47,9 +51,16 @@ class SimulationControl():
         """
         home_path = expanduser("~")
         wntr_environment_path = home_path + str("/wntr-experiments/bin/python")
-        simulation = subprocess.Popen([wntr_environment_path, 'physical_process.py', sys.argv[1]])
-        return simulation
+        wntr_environment_path = "python3"
+        print("Launching simulation for week index: " + str(sys.argv[2]))
 
+        physical_process_path = Path(__file__).parent.absolute().parent / "physical_process.py"
+
+        cmd_string = wntr_environment_path + " "+str(physical_process_path)+" " + sys.argv[1] + " " + sys.argv[2]
+
+        cmd = shlex.split(cmd_string)
+        simulation = subprocess.Popen(cmd)
+        return simulation
 
 if __name__=="__main__":
     simulation_control = SimulationControl()

@@ -1,7 +1,11 @@
+import sys
+
 import pytest
 
 from dhalsim.parser.config_parser import ConfigParser, EmptyConfigError, MissingValueError
 
+def test_python_version():
+    assert sys.version_info.major is 3
 
 @pytest.fixture
 def inp_data_fixture():

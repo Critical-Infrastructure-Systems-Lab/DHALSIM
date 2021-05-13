@@ -1,12 +1,11 @@
 from basePLC import BasePLC
-from utils import *
-
-import time
+from utils import SCADA_PROTOCOL, STATE
+from utils import PLC1_ADDR, PLC2_ADDR
+from utils import T0, T2, P_RAW1, V_PUB, V_ER2i
 from datetime import datetime
-from decimal import Decimal
 import signal
-import sys
 import csv
+import sys
 
 class SCADAServer(BasePLC):
 
@@ -16,6 +15,7 @@ class SCADAServer(BasePLC):
             writer.writerows(self.saved_tank_levels)
 
     def sigint_handler(self, sig, frame):
+        print 'DEBUG SCADA shutdown'
         self.write_output()
         sys.exit(0)
 
@@ -23,30 +23,28 @@ class SCADAServer(BasePLC):
         """scada pre loop.
             - sleep
         """
-        self.saved_tank_levels = [["timestamp", "T_2", "X_Pump_4"]]
-        self.plc1_tags = [X_Pump_4]
-        self.plc2_tags = [T_2]
+        self.saved_tank_levels = [["timestamp", "T0", "P_RAW1", "V_PUB", "T2", "V_ER2i"]]
+        self.path = 'scada_values.csv'
 
-        self.path = 'scada_saved_tank_levels_received.csv'
+        self.plc1_tags = [T0, P_RAW1, V_PUB]
+        self.plc2_tags = [T2, V_ER2i]
+
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
 
     def main_loop(self):
         """scada main loop."""
-        print("DEBUG: scada main loop.")
+        print("DEBUG: scada main loop")
         while True:
 
             try:
-                #plc1 is in the same LAN as SCADA!
-                plc1_values = self.receive_multiple(self.plc1_tags, ENIP_LISTEN_PLC_ADDR)
-                plc2_values = self.receive_multiple(self.plc2_tags, CTOWN_IPS['plc2'])
+                plc1_values = self.receive_multiple(self.plc1_tags, PLC1_ADDR)
+                plc2_values = self.receive_multiple(self.plc2_tags, PLC2_ADDR)
                 results = [datetime.now()]
                 results.extend(plc1_values)
                 results.extend(plc2_values)
                 self.saved_tank_levels.append(results)
-
-                time.sleep(0.3)
-            except Exception as msg:
+            except Exception, msg:
                 print(msg)
                 continue
 
