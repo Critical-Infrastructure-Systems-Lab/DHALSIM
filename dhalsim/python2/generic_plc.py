@@ -168,7 +168,6 @@ class GenericPLC(BasePLC):
             raise InvalidControlValue(value)
 
         self.set((tag, 1), value)
-        pass
 
     # todo: get an actual master clock from the DB
     def get_master_clock(self):
