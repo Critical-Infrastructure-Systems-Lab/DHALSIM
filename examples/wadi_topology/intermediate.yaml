@@ -1,4 +1,5 @@
-inp_file: /home/robert/dhalsim/examples/wadi_topology/wadi_map.cpa
+inp_file: /home/robert/dhalsim/examples/wadi_topology/wadi_map.inp
+cpa_file: /home/robert/dhalsim/examples/wadi_topology/wadi_cpa.yaml
 db_path: /home/robert/dhalsim.sqlite
 db_name: wadi
 
