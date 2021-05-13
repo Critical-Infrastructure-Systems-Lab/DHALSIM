@@ -39,5 +39,9 @@ test:2:
     - source venv/bin/activate
     - git clone https://github.com/afmurillo/minicps.git
     - pip install -e ./minicps
+    - pip install mininet
+    - pip install pyyaml
     - pip install pytest
+    - pip install pytest-mock
+    - pip install mock
     - python -m pytest test/python2/

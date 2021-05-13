@@ -8,6 +8,7 @@ import threading
 import shlex
 import subprocess
 
+
 class BasePLC(PLC):
 
     def send_system_state(self, a, b):
@@ -42,4 +43,4 @@ class BasePLC(PLC):
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
 
-        thread.start_new_thread(self.send_system_state,(0,0))
+        thread.start_new_thread(self.send_system_state, (0, 0))

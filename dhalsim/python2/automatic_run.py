@@ -53,6 +53,8 @@ class GeneralCPS(MiniCPS):
 
         topo.setup_network(self.net)
 
+        # CLI(self.net)
+
         with self.intermediate_yaml.open(mode='r') as file:
             self.data = yaml.safe_load(file)
 
@@ -74,14 +76,12 @@ class GeneralCPS(MiniCPS):
 
         for i, plc in enumerate(self.data["plcs"]):
             node = self.net.get(plc["name"])
-            # node = self.net.get(plc["name"].lower())
-            # cmd = ["python2", "automatic_plc.py", "-y", str(self.intermediate_yaml), "-i", i]
-            cmd = ["python2", "automatic_plc.py", "-n", plc["name"].lower(), "-w", "0"]
+            cmd = ["python2", "automatic_plc.py", str(self.intermediate_yaml), str(i)]
             self.plc_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
 
-        self.scada_process = self.net.get('scada').popen("python2", "automatic_plc.py", "-n",
-                                                    "scada",
-                                                    stderr=sys.stderr, stdout=sys.stdout)
+        # self.scada_process = self.net.get('scada').popen("python2", "automatic_plc.py", "-n",
+        #                                             "scada",
+        #                                             stderr=sys.stderr, stdout=sys.stdout)
         print("[*] Launched the PLCs and SCADA processes")
         cmd = ["python2", "automatic_plant.py", "wadi_config.yaml", "0"]
         self.plant_process = self.net.get('plant').popen(cmd, stderr=sys.stderr, stdout=sys.stdout)
@@ -104,7 +104,7 @@ class GeneralCPS(MiniCPS):
     def finish(self):
         print("[*] Simulation finished")
 
-        self.end_process(self.scada_process)
+        # self.end_process(self.scada_process)
 
         for plc_process in self.plc_processes:
             self.end_process(plc_process)

@@ -12,10 +12,10 @@ def unmodified_dict():
 
 @pytest.fixture
 def filled_dict():
-    return {'plcs': [{'name': 'PLC1', 'ip': '192.168.1.1/24',
+    return {'plcs': [{'name': 'PLC1', 'ip': '192.168.1.1',
                       'mac': '00:1D:9C:C7:B0:70', 'interface': 'PLC1-eth0',
                       'gateway': '192.168.1.254'},
-                     {'name': 'PLC2', 'ip': '192.168.1.2/24',
+                     {'name': 'PLC2', 'ip': '192.168.1.2',
                       'mac': '00:1D:9C:C7:B0:70', 'interface': 'PLC2-eth0',
                       'gateway': '192.168.1.254'}]}
 
@@ -77,18 +77,19 @@ def test_links_amount(topo_fixture):
 
 
 def test_links_endpoints(topo_fixture):
+    print(topo_fixture.links())
     # Link from switch 1 to router
-    assert topo_fixture.links()[0][0] == 's1'
+    assert topo_fixture.links()[0][0] == 's2'
     assert topo_fixture.links()[0][1] == 'r0'
     # Link from switch2 to router
-    assert topo_fixture.links()[1][0] == 's2'
+    assert topo_fixture.links()[1][0] == 's1'
     assert topo_fixture.links()[1][1] == 'r0'
     # Link from switch 1 to PLC1
-    assert topo_fixture.links()[2][0] == 's1'
-    assert topo_fixture.links()[2][1] == 'PLC1'
+    assert topo_fixture.links()[2][0] == 's2'
+    assert topo_fixture.links()[2][1] == 'scada'
     # Link from switch 1 to PLC2
     assert topo_fixture.links()[3][0] == 's1'
-    assert topo_fixture.links()[3][1] == 'PLC2'
+    assert topo_fixture.links()[3][1] == 'PLC1'
     # Link from switch 2 to scada
-    assert topo_fixture.links()[4][0] == 's2'
-    assert topo_fixture.links()[4][1] == 'scada'
+    assert topo_fixture.links()[4][0] == 's1'
+    assert topo_fixture.links()[4][1] == 'PLC2'

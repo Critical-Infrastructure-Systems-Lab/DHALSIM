@@ -1,6 +1,6 @@
 ---
 # General simulation parameters
-db_path: "/home/robert/dhalsim.sqlite"
+db_path: "/home/luc/dhalsim.sqlite"
 output_ground_truth_path: "physical_process.csv"
 duration_days: 1
 #inp_file: "wadi_map_dda_run55.inp"
