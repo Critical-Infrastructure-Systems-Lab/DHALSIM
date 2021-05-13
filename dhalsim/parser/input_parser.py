@@ -38,12 +38,13 @@ class InputParser:
         else:
             raise NoInpFileGiven()
 
+
+    def write(self):
         # Generate PLC controls
         self.generate_controls()
 
         with self.intermediate_yaml_path.open(mode='w') as intermediate_yaml:
             yaml.safe_dump(self.data, intermediate_yaml)
-
 
     def generate_controls(self):
         input = FileStream(self.inp_file_path)

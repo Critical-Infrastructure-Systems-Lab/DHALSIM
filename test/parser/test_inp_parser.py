@@ -64,7 +64,7 @@ def test_no_controls(tmpdir, written_intermediate_yaml, filled_dict):
     inp = tmpdir.join("input.inp")
     inp.write("\n[CONTROLS]")
 
-    InputParser(tmpdir.join("intermediate.yaml"))
+    InputParser(tmpdir.join("intermediate.yaml")).write()
 
 
 def test_node_and_time_controls(tmpdir, written_intermediate_yaml, filled_dict):
@@ -76,7 +76,7 @@ def test_node_and_time_controls(tmpdir, written_intermediate_yaml, filled_dict):
             "LINK V_ER2i CLOSED AT TIME 0\n"
             "LINK V_ER2i CLOSED IF NODE T2 ABOVE 0.32\n")
 
-    InputParser(tmpdir.join("intermediate.yaml"))
+    InputParser(tmpdir.join("intermediate.yaml")).write()
 
     with tmpdir.join("intermediate.yaml").open(mode='r') as intermediate_yaml:
         dump = yaml.safe_load(intermediate_yaml)

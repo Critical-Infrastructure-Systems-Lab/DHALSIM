@@ -107,5 +107,4 @@ class ConfigParser:
             yaml.safe_dump(yaml_data, intermediate_yaml)
 
         # todo: add controls and initial values
-        # inp_parser = InputParser(self.yaml_path)
-        # inp_parser.write_inp_values()
+        InputParser(self.yaml_path).write()
