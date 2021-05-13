@@ -59,12 +59,17 @@ def create_controls(controls_list):
     ret = []
     for control in controls_list:
         if control["type"] == "Above":
-            ret.append(AboveControl(control["actuator"], control["action"], control["dependant"], control["value"]))
+            a = AboveControl(control["actuator"], control["action"], control["dependant"], control["value"])
+            ret.append(a)
+            # print "Making Above control: Value=" + str(a.value) + " | Action=" + str(a.action) + " | Actuator=" + str(a.actuator) + " | Dependant=" + str(a.dependant)
         if control["type"] == "Below":
-            ret.append(BelowControl(control["actuator"], control["action"], control["dependant"], control["value"]))
+            a = BelowControl(control["actuator"], control["action"], control["dependant"], control["value"])
+            ret.append(a)
+            # print "Making Below control: Value=" + str(a.value) + " | Action=" + str(a.action) + " | Actuator=" + str(a.actuator) + " | Dependant=" + str(a.dependant)
         if control["type"] == "Time":
-            ret.append(TimeControl(control["actuator"], control["action"], control["value"]))
-
+            a = TimeControl(control["actuator"], control["action"], control["value"])
+            ret.append(a)
+            # print "Making Time control: Value=" + str(a.value) + " | Action=" + str(a.action) + " | Actuator=" + str(a.actuator)
     return ret
 
 
@@ -113,9 +118,9 @@ class GenericPLC(BasePLC):
             'server': plc_server
         }
 
-        print "DEBUG INIT: " + self.intermediate_plc['name']
-        print "state = " + str(state)
-        print "plc_protocol = " + str(plc_protocol)
+        # print "DEBUG INIT: " + self.intermediate_plc['name']
+        # print "state = " + str(state)
+        # print "plc_protocol = " + str(plc_protocol)
 
         super(GenericPLC, self).__init__(name=self.intermediate_plc['name'],
                                          state=state, protocol=plc_protocol)
