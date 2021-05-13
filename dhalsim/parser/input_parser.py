@@ -1,4 +1,5 @@
 import logging
+import yaml
 
 from antlr4 import *
 from dhalsim.parser.antlr.controlsParser import controlsParser
@@ -6,6 +7,14 @@ from dhalsim.parser.antlr.controlsLexer import controlsLexer
 from dhalsim.static.controls.ConcreteControl import *
 
 logger = logging.getLogger(__name__)
+
+
+class Error(Exception):
+    """Base class for exceptions in this module."""
+
+
+class NoInpFileGiven(Error):
+    """Raised when tag you are looking for does not exist"""
 
 
 class InputParser:
@@ -16,19 +25,29 @@ class InputParser:
     :type inp_path: str
     """
 
-    def __init__(self, inp_path):
+    def __init__(self, intermediate_yaml_path):
         """Constructor method
         """
-        self.inp_path = inp_path
+        self.intermediate_yaml_path = intermediate_yaml_path
+        with self.intermediate_yaml_path.open(mode='r') as intermediate_yaml:
+            self.data = yaml.safe_load(intermediate_yaml)
 
-        logger.debug("inp file: %s", inp_path)
+        # Get the INP file path
+        if 'inp_file' in self.data.keys():
+            self.inp_file_path = self.data['inp_file']
+        else:
+            raise NoInpFileGiven()
+
+        # Generate PLC controls
+        self.generate_controls()
+
+        with self.intermediate_yaml_path.open(mode='w') as intermediate_yaml:
+            yaml.safe_dump(self.data, intermediate_yaml)
+
 
     def generate_controls(self):
-        input = FileStream(self.inp_path)
-        lexer = controlsLexer(input)
-        stream = CommonTokenStream(lexer)
-        parser = controlsParser(stream)
-        tree = parser.controls()
+        input = FileStream(self.inp_file_path)
+        tree = controlsParser(CommonTokenStream(controlsLexer(input))).controls()
 
         controls = []
         for i in range(0, tree.getChildCount()):
@@ -38,17 +57,28 @@ class InputParser:
             action = str(child.getChild(2))
             if child.getChildCount() == 7:
                 # This is an AT NODE control
-                # Get other common control values
                 dependant = str(child.getChild(4))
                 value = float(str(child.getChild(6)))
-                if str(child.getChild(5)) == "BELOW":
-                    # This is a BelowControl
-                    controls.append(BelowControl(actuator, action, dependant, value))
-                if str(child.getChild(5)) == "ABOVE":
-                    # This is a BelowControl
-                    controls.append(AboveControl(actuator, action, dependant, value))
+                controls.append({
+                    "type": str(child.getChild(5)).lower(),
+                    "dependant": dependant,
+                    "value": value,
+                    "actuator": actuator,
+                    "action": action
+                })
             if child.getChildCount() == 5:
+                # This is a TIME control
                 value = float(str(child.getChild(4)))
-                controls.append(TimeControl(actuator, action, value))
+                controls.append({
+                    "type": "time",
+                    "value": value,
+                    "actuator": actuator,
+                    "action": action
+                })
 
-        return controls
+        for plc in self.data['plcs']:
+            plc['controls'] = []
+            actuators = plc['actuators']
+            for control in controls:
+                if control['actuator'] in actuators:
+                    plc['controls'].append(control)
