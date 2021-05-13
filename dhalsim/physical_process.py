@@ -21,7 +21,7 @@ class PhysicalPlant:
         with self.intermediate_yaml.open(mode='r') as file:
             self.data = yaml.safe_load(file)
 
-        self.ground_truth_path = Path(self.data["output_path"])/"ground_truth.csv"
+        self.ground_truth_path = Path(self.data["output_path"]) / "ground_truth.csv"
         self.ground_truth_path.touch(exist_ok=True)
 
         # connection to the database
@@ -180,10 +180,7 @@ class PhysicalPlant:
 
         control['value'] = new_status
 
-        # act1 = controls.ControlAction(pump1, 'status', int(pump1_status))
         new_action = controls.ControlAction(control['actuator'], control['parameter'], control['value'])
-
-        # pump1_control = controls.Control(condition, act1, name='pump1control')
         new_control = controls.Control(control['condition'], new_action, name=control['name'])
 
         self.wn.remove_control(control['name'])
@@ -205,7 +202,9 @@ class PhysicalPlant:
         diff = datetime.now() - start
         if iteration == round(total):
             return timedelta(seconds=0)
-        return timedelta(seconds=(diff.days.real * 24 * 3600 + diff.seconds.real / (float(iteration / float(round(total))) + 0.000001) - diff.total_seconds()))
+        return timedelta(seconds=(diff.days.real * 24 * 3600 + diff.seconds.real
+                                  / (float(iteration / float(round(total))) + 0.000001)
+                                  - diff.total_seconds()))
 
     def main(self):
         # We want to simulate only 1 hydraulic timestep each time MiniCPS processes the simulation data
@@ -251,23 +250,26 @@ class PhysicalPlant:
             self.c.execute(query)
             self.conn.commit()
 
+            # Update tanks in database
             for tank in self.tank_list:
                 tank_name = '\'' + tank + '\''
                 a_level = self.wn.get_node(tank).level
                 query = "UPDATE wadi SET value = " + str(a_level) + " WHERE name = " + tank_name
-                self.c.execute(query)  # UPDATE TANKS IN THE DATABASE
+                self.c.execute(query)
                 self.conn.commit()
 
-            # TODO: This seems arbitrary and inefficient
+            # TODO: This seems arbitrary.. We need to be sure all PLCs have executed their loop.
             time.sleep(0.03)
 
         self.write_results(self.results_list)
 
-def is_valid_file(parser, arg):
+
+def is_valid_file(test_parser, arg):
     if not os.path.exists(arg):
-        parser.error(arg + " does not exist")
+        test_parser.error(arg + " does not exist")
     else:
         return arg
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run the simulation')
