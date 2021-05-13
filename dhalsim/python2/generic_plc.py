@@ -87,7 +87,7 @@ class GenericPLC(BasePLC):
         self.intermediate_controls = self.intermediate_plc['controls']
 
         self.controls = create_controls(self.intermediate_controls)
-
+        # print(self.controls)
         # Create state from db values
         state = {
             'name': self.intermediate_yaml['db_name'],
@@ -143,6 +143,8 @@ class GenericPLC(BasePLC):
 
         sensors.extend(actuators)
 
+        print(values)
+
         BasePLC.set_parameters(self, sensors, values, reader, lock,
                                self.intermediate_plc['ip'])
         self.startup()
@@ -152,11 +154,12 @@ class GenericPLC(BasePLC):
             return self.get((tag, 1))
 
         for i, plc_data in enumerate(self.intermediate_yaml["plcs"]):
-            if i == self.index:
+            if i == self.yaml_index:
                 continue
-            if tag in plc_data[i]["sensors"] or tag in plc_data[i]["actuators"]:
-                return self.receive((tag, 1), plc_data[i]["ip"])
-                # return -1
+            if tag in plc_data["sensors"] or tag in plc_data["actuators"]:
+                received = Decimal(self.receive((tag, 1), plc_data["ip"]))
+                print(str((tag, 1)) + " : " + str(received) + " from " + plc_data["ip"])
+                return received
         raise TagDoesNotExist(tag)
 
     def set_tag(self, tag, value):
@@ -167,6 +170,7 @@ class GenericPLC(BasePLC):
         else:
             raise InvalidControlValue(value)
 
+        # print(self.intermediate_plc["name"] +" sets " + tag + " to " + str(value))
         self.set((tag, 1), value)
 
     # todo: get an actual master clock from the DB
@@ -176,16 +180,17 @@ class GenericPLC(BasePLC):
     def main_loop(self):
         print('DEBUG: ' + self.intermediate_plc['name'] + ' enters main_loop')
         while True:
-            try:
-                self.local_time += 1
+            # try:
+            self.local_time += 1
+            # print(self.intermediate_plc["name"] + " time: " + str(self.local_time))
 
-                for control in self.controls:
-                    control.apply(self)
+            for control in self.controls:
+                control.apply(self)
 
-                time.sleep(0.25)
+            time.sleep(0.05)
 
-            except Exception:
-                continue
+            # except Exception:
+            #     continue
 
 
 def is_valid_file(parser, arg):

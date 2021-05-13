@@ -1,5 +1,6 @@
 import argparse
 import os
+import signal
 
 import wntr
 import wntr.network.controls as controls
@@ -16,6 +17,9 @@ from pathlib import Path
 class PhysicalPlant:
 
     def __init__(self, intermediate_yaml):
+        signal.signal(signal.SIGINT, self.interrupt)
+        signal.signal(signal.SIGTERM, self.interrupt)
+
         self.intermediate_yaml = intermediate_yaml
 
         with self.intermediate_yaml.open(mode='r') as file:
@@ -261,6 +265,12 @@ class PhysicalPlant:
             # TODO: This seems arbitrary and inefficient
             time.sleep(0.03)
 
+        self.finish()
+
+    def interrupt(self):
+        self.finish()
+
+    def finish(self):
         self.write_results(self.results_list)
 
 def is_valid_file(parser, arg):

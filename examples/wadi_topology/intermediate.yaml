@@ -7,7 +7,8 @@ output_path: /home/robert/dhalsim/output
 mininet_cli: False
 
 simulator: pdd
-itterations: 86400
+itterations: 500
+#itterations: 86400
 
 plcs:
   - name: PLC1
@@ -23,12 +24,12 @@ plcs:
       - type: Below
         dependant: T0
         value: 0.256
-        actuator: P_PUB
+        actuator: V_PUB
         action: OPEN
       - type: Above
         dependant: T0
         value: 0.448
-        actuator: P_PUB
+        actuator: V_PUB
         action: CLOSED
       - type: Below
         dependant: T0
