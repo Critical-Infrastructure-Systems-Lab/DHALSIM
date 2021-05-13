@@ -5,20 +5,32 @@ import csv
 import sys
 import pandas as pd
 import yaml
+import time
+from datetime import datetime, timedelta
 
 
 class PhysicalPlant:
 
     def __init__(self):
-
-        config_file_path = sys.argv[1]
-        config_options = self.load_config(config_file_path)
+        config_options = self.load_config(sys.argv[1])
 
         # Week index to initialize the simulation
         if "week_index" in config_options:
             self.week_index = int(config_options['week_index'])
         else:
             self.week_index = 0
+
+        # Some users may not configure the parameter
+        # Sets the attack_flag to load attack_start and attack_end before main loop
+        if 'run_attack' in config_options:
+                if config_options['run_attack'] == "True":
+                    self.attack_flag = True
+                    self.attack_path = sys.argv[3]
+                    self.attack_name = config_options['attack_name']
+                else:
+                    self.attack_flag = False
+        else:
+            self.attack_flag = False
 
         # connection to the database
         self.db_path = config_options['db_path']
@@ -29,8 +41,7 @@ class PhysicalPlant:
         self.simulation_days = int(config_options['duration_days'])
 
         # Create the network
-        inp_file = config_options['inp_file']
-        self.wn = wntr.network.WaterNetworkModel(inp_file)
+        self.wn = wntr.network.WaterNetworkModel(config_options['inp_file'])
 
         self.node_list = list(self.wn.node_name_list)
         self.link_list = list(self.wn.link_name_list)
@@ -40,24 +51,23 @@ class PhysicalPlant:
         self.pump_list = self.get_link_list_by_type(self.link_list, 'Pump')
         self.valve_list = self.get_link_list_by_type(self.link_list, 'Valve')
 
+        self.attack_start = 0
+        self.attack_end = 0
+
         list_header = ["Timestamps"]
-        aux = self.create_node_header(self.tank_list)
-        list_header.extend(aux)
 
-        aux = self.create_node_header(self.junction_list)
-        list_header.extend(aux)
-
-        aux = self.create_link_header(self.pump_list)
-        list_header.extend(aux)
-        list_header.extend(aux)
-
-        aux = self.create_link_header(self.valve_list)
-        list_header.extend(aux)
+        list_header.extend(self.create_node_header(self.tank_list))
+        list_header.extend(self.create_node_header(self.junction_list))
+        list_header.extend(self.create_link_header(self.pump_list))
+        # TODO: Why twice?
+        list_header.extend(self.create_link_header(self.pump_list))
+        list_header.extend(self.create_link_header(self.valve_list))
+        list_header.extend(["Attack#01", "Attack#02"])
 
         self.results_list = []
         self.results_list.append(list_header)
 
-        # intialize the simulation with the random demand patterns and tank levels
+        # Initialize the simulation with the random demand patterns and tank levels
         self.initialize_simulation(config_options)
 
         dummy_condition = controls.ValueCondition(self.wn.get_node(self.tank_list[0]), 'level', '>=', -1)
@@ -79,7 +89,6 @@ class PhysicalPlant:
         if simulator_string == 'pdd':
             print('Running simulation using PDD')
             self.wn.options.hydraulic.demand_model = 'PDD'
-
         elif simulator_string == 'dd':
             print('Running simulation using DD')
         else:
@@ -88,9 +97,10 @@ class PhysicalPlant:
 
         self.sim = wntr.sim.WNTRSimulator(self.wn)
 
-        print(("Starting simulation for " + str(config_options['inp_file']) + " topology "))
+        print("Starting simulation for " + str(config_options['inp_file']) + " topology ")
 
-    def load_config(self, config_path):
+    @staticmethod
+    def load_config(config_path):
         """
         Reads the YAML configuration file
         :param config_path: The path of the YAML configuration file
@@ -101,19 +111,19 @@ class PhysicalPlant:
         return options
 
     def initialize_simulation(self, config_options):
-
-        if self.simulation_days == 7:
-            limit = 167
-        else:
-            limit = 239
-
+        """
+        Initializes the simulation
+        :param config_options: contains all the configuration options
+        """
         if 'initial_custom_flag' in config_options:
-            if config_options['initial_custom_flag'] == "True":
+            custom_initial_conditions_flag = bool(config_options['initial_custom_flag'])
+
+            if custom_initial_conditions_flag:
                 demand_patterns_path = config_options['demand_patterns_path']
                 starting_demand_path = config_options['starting_demand_path']
                 initial_tank_levels_path = config_options['initial_tank_levels_path']
 
-                print(("Running simulation with week index: " + str(self.week_index)))
+                print("Running simulation with week index: " + str(self.week_index))
                 total_demands = pd.read_csv(demand_patterns_path, index_col=0)
                 demand_starting_points = pd.read_csv(starting_demand_path, index_col=0)
                 initial_tank_levels = pd.read_csv(initial_tank_levels_path, index_col=0)
@@ -141,13 +151,15 @@ class PhysicalPlant:
                 result.append(str(link))
         return result
 
-    def create_node_header(self, a_list):
+    @staticmethod
+    def create_node_header(a_list):
         result = []
         for node in a_list:
             result.append(node + "_LEVEL")
         return result
 
-    def create_link_header(self, a_list):
+    @staticmethod
+    def create_link_header(a_list):
         result = []
         for link in a_list:
             result.append(link + "_FLOW")
@@ -204,6 +216,15 @@ class PhysicalPlant:
             else:
                 values_list.extend([self.wn.get_link(valve).status.value])
 
+        # TODO: Check commented code
+        # rows = self.c.execute("SELECT value FROM wadi WHERE name = 'ATT_1'").fetchall()
+        # self.conn.commit()
+        # attack1 = int(rows[0][0])
+        # rows = self.c.execute("SELECT value FROM wadi WHERE name = 'ATT_2'").fetchall()
+        # self.conn.commit()
+        # attack2 = int(rows[0][0])
+
+        # values_list.extend([attack1, attack2])
         return values_list
 
     def update_controls(self):
@@ -212,13 +233,17 @@ class PhysicalPlant:
 
     def update_control(self, control):
         act_name = '\'' + control['name'] + '\''
-        rows_1 = self.c.execute('SELECT value FROM plant WHERE name = ' + act_name).fetchall()
+        rows_1 = self.c.execute('SELECT value FROM wadi WHERE name = ' + act_name).fetchall()
         self.conn.commit()
+        print(act_name, rows_1)
         new_status = int(rows_1[0][0])
 
         control['value'] = new_status
 
+        # act1 = controls.ControlAction(pump1, 'status', int(pump1_status))
         new_action = controls.ControlAction(control['actuator'], control['parameter'], control['value'])
+
+        # pump1_control = controls.Control(condition, act1, name='pump1control')
         new_control = controls.Control(control['condition'], new_action, name=control['name'])
 
         self.wn.remove_control(control['name'])
@@ -229,38 +254,101 @@ class PhysicalPlant:
             writer = csv.writer(f)
             writer.writerows(results)
 
+    def load_attack_options(self):
+        with open(self.attack_path) as config_file:
+            attack_file = yaml.load(config_file, Loader=yaml.FullLoader)
+
+        for attack in attack_file['attacks']:
+            if self.attack_name == attack['name']:
+                self.attack_start = int(attack['start'])
+                self.attack_end = int(attack['end'])
+                self.attack_type = attack['type']
+
+    @staticmethod
+    def calculate_eta(start, iteration, total):
+        """
+        Calculates estimated time until finished simulation
+        :start: start time
+        :iteration: current iteration
+        :total: total number of iterations
+        """
+        diff = datetime.now() - start
+        if iteration == round(total):
+            return timedelta(seconds=0)
+        return timedelta(seconds=(diff.days.real * 24 * 3600 + diff.seconds.real / (float(iteration / float(round(total))) + 0.000001) - diff.total_seconds()))
+
     def main(self):
         # We want to simulate only 1 hydraulic timestep each time MiniCPS processes the simulation data
         self.wn.options.time.duration = self.wn.options.time.hydraulic_timestep
+
         master_time = 0
+        start = datetime.now()
 
-        mask_full_control = 7
-        iteration_limit = (self.simulation_days * 24 * 3600) / self.wn.options.time.hydraulic_timestep
+        # Creates master_time table if it does not yet exist
+        query = "CREATE TABLE IF NOT EXISTS master_time (id INTEGER PRIMARY KEY, time INTEGER)"
+        self.c.execute(query)
+        self.conn.commit()
 
-        print(("Simulation will run for " + str(self.simulation_days) + " days. Hydraulic timestep is " + str(
+        # Sets master_time to 0
+        query = "REPLACE INTO master_time (id, time) VALUES (1, 0)"
+        self.c.execute(query)
+        self.conn.commit()
+
+        iteration_limit = round((self.simulation_days * 24 * 3600) / self.wn.options.time.hydraulic_timestep)
+
+        # Check attack duration
+        if self.attack_flag:
+            self.load_attack_options()
+            print("Launching attack " + str(self.attack_name) + " with start in iteration " + str(self.attack_start)
+                  + " and finish at iteration " + str(self.attack_end))
+
+        print("Simulation will run for " + str(self.simulation_days) + " days. Hydraulic timestep is " + str(
             self.wn.options.time.hydraulic_timestep) +
-              " for a total of " + str(iteration_limit) + " iterations "))
+              " for a total of " + str(iteration_limit) + " iterations ")
 
         while master_time <= iteration_limit:
 
             self.update_controls()
-            print(("ITERATION %d ------------- " % master_time))
+            eta = self.calculate_eta(start, master_time, iteration_limit)
+            print("Iteration %d out of %d. Estimated remaining time: %s" % (master_time, iteration_limit, eta))
+
             results = self.sim.run_sim(convergence_error=True)
             values_list = self.register_results(results)
-
             self.results_list.append(values_list)
-            master_time += 1
+
+            # Fetch master_time
+            query = "SELECT * FROM master_time"
+            execute = self.c.execute(query)
+            self.conn.commit()
+
+            master_time = int(execute.fetchall()[0][1]) + 1
+
+            # Update master_time
+            query = "REPLACE INTO master_time (id, time) VALUES(1, " + str(master_time) + ")"
+            self.c.execute(query)
+            self.conn.commit()
 
             for tank in self.tank_list:
                 tank_name = '\'' + tank + '\''
                 a_level = self.wn.get_node(tank).level
-                query = "UPDATE plant SET value = " + str(a_level) + " WHERE name = " + tank_name
+                query = "UPDATE wadi SET value = " + str(a_level) + " WHERE name = " + tank_name
                 self.c.execute(query)  # UPDATE TANKS IN THE DATABASE
                 self.conn.commit()
 
-            query = "UPDATE plant SET value = 0 WHERE name = 'CONTROL'"
-            self.c.execute(query)  # UPDATE CONTROL value for the PLCs to apply control
-            self.conn.commit()
+            # For concealment attacks, we need more stages in the attack
+            if self.attack_flag and (self.attack_type == "device_attack" or self.attack_type == "network_attack"):
+                if self.attack_start <= master_time < self.attack_end:
+                    query = "UPDATE wadi SET value = " + str(1) + " WHERE name = 'ATT_2'"
+                    self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to launch attack
+                    self.conn.commit()
+                else:
+                    query = "UPDATE wadi SET value = " + str(0) + " WHERE name = 'ATT_2'"
+                    self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to stop attack
+                    self.conn.commit()
+
+            # TODO: This seems arbitrary and inefficient
+            time.sleep(0.03)
+
         self.write_results(self.results_list)
 
 

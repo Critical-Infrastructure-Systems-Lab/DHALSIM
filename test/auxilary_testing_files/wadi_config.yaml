@@ -1,10 +1,10 @@
 ---
 # General simulation parameters
-db_path: "/home/robert/dhalsim.sqlite"
+db_path: "wadi_db.sqlite"
 output_ground_truth_path: "physical_process.csv"
 duration_days: 1
-#inp_file: "wadi_map_dda_run55.inp"
-inp_file: "wadi_map.inp"
+inp_file: "test/auxilary_testing_files/wadi_map_pda_original.inp"
+cpa_file: "test/auxilary_testing_files/wadi_cpa.yaml"
 simulator: "pdd"
 week_index: 0
 
@@ -19,7 +19,7 @@ plc_dict_path: "plc_dicts.yaml"
 # in a start topology. This uses the mininet topology described in simple_topo.py
 # False in complex topology means that all the PLCs are in the same LAN. This uses the mininet topology describes in
 # complex_topo.py
-complex_topology: "True"
+complex_topology: "False"
 
 # Simulation type. Supported values now are "Single" and "Batch"
 # A single simulation runs only once. Possibly using the customization values as defined by initial_custom_flag
