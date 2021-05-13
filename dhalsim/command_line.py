@@ -8,6 +8,8 @@ from pathlib import Path
 
 import yaml
 
+from dhalsim.init_database import DatabaseInitializer
+
 
 def is_valid_file(parser, arg):
     if not os.path.exists(arg):
@@ -34,6 +36,12 @@ class Runner():
         sys.exit(0)
 
     def run(self):
+        db_initializer = DatabaseInitializer(self.intermediate_yaml_path)
+
+        db_initializer.drop()
+        db_initializer.write()
+        db_initializer.print()
+
         automatic_run_path = Path(__file__).parent.absolute() / "python2" / "automatic_run.py"
         self.automatic_run = subprocess.Popen(
             ["python2", str(automatic_run_path), str(self.intermediate_yaml_path)])
