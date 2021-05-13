@@ -79,14 +79,20 @@ class GeneralCPS(MiniCPS):
 
         for i, plc in enumerate(self.data["plcs"]):
             node = self.net.get(plc["name"])
-            cmd = ["python2", "automatic_plc.py", str(self.intermediate_yaml), str(i)]
+
+            automatic_plc_path = Path(__file__).parent.absolute() / "automatic_plc.py"
+
+            cmd = ["python2", str(automatic_plc_path), str(self.intermediate_yaml), str(i)]
             self.plc_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
 
         # self.scada_process = self.net.get('scada').popen("python2", "automatic_plc.py", "-n",
         #                                             "scada",
         #                                             stderr=sys.stderr, stdout=sys.stdout)
         print("[*] Launched the PLCs and SCADA processes")
-        cmd = ["python2", "automatic_plant.py", "wadi_config.yaml", "0"]
+
+        automatic_plant_path = Path(__file__).parent.absolute() / "automatic_plant.py"
+
+        cmd = ["python2", str(automatic_plant_path), "wadi_config.yaml", "0"]
         self.plant_process = self.net.get('plant').popen(cmd, stderr=sys.stderr, stdout=sys.stdout)
 
         print("[] Simulating...")
@@ -116,7 +122,9 @@ class GeneralCPS(MiniCPS):
             self.end_process(self.plant_process)
             print("Physical Simulation process terminated")
 
-        cmd = shlex.split("./kill_cppo.sh")
+        kill_cppo_path = Path(__file__).parent.absolute() / "kill_cppo.sh"
+
+        cmd = shlex.split(str(kill_cppo_path))
         subprocess.call(cmd)
 
         self.net.stop()

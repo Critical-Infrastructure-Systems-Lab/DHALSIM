@@ -290,7 +290,6 @@ class PhysicalPlant:
 
         # Sets master_time to 0
         query = "REPLACE INTO master_time (id, time) VALUES (1, 0)"
-        query = "REPLACE INTO master_time (id, time) VALUES (1, 0)"
         self.c.execute(query)
         self.conn.commit()
 
