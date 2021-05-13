@@ -122,10 +122,8 @@ class GeneralCPS(MiniCPS):
             self.end_process(self.plant_process)
             print("Physical Simulation process terminated")
 
-        kill_cppo_path = Path(__file__).parent.absolute() / "kill_cppo.sh"
-
-        cmd = shlex.split(str(kill_cppo_path))
-        subprocess.call(cmd)
+        cmd = 'sudo pkill -f "python2 -m cpppo.server.enip"'
+        subprocess.call(cmd, shell=True, stderr=sys.stderr, stdout=sys.stdout)
 
         self.net.stop()
         sys.exit(0)
