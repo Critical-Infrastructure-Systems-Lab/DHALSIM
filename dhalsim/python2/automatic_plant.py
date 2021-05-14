@@ -8,7 +8,7 @@ import shlex
 from pathlib import Path
 
 
-class SimulationControl():
+class SimulationControl:
     """
     Class representing the simulation process of a plant. All the automatic_plant.py have the same pattern
     """
@@ -19,12 +19,6 @@ class SimulationControl():
 
         self.intermediate_yaml = intermediate_yaml
 
-    def main(self):
-        """
-        main method of the automatic_plant
-        All the automatic_plant.py scrpits follow the same pattern. They process the arguments, register the method interrupt() to handle SIGINT and SIGTERM signals.
-        Later, they start the simulation, by calling the script physical_process.py
-        """
         self.simulation = self.start_simulation()
 
         while self.simulation.poll() is None:
@@ -35,7 +29,7 @@ class SimulationControl():
         This method is provided by the signal python library. We call the finish method that interrupts, terminates, or kills the simulation and exit
         """
         self.finish()
-        sys.exit(0)
+        sys.exit(1)
 
     def finish(self):
         """
@@ -78,4 +72,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     simulation_control = SimulationControl(Path(args.intermediate_yaml))
-    simulation_control.main()

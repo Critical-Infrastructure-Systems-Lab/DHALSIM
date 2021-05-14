@@ -91,6 +91,7 @@ class PhysicalPlant:
             print("Starting simulation for " + str(self.data['inp_file']) + " topology ")
         except KeyError as e:
             print("ERROR: An incorrect YAML file has been supplied: " + str(e))
+            sys.exit(0)
 
     def get_node_list_by_type(self, a_list, a_type):
         result = []
