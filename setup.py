@@ -28,10 +28,9 @@ setuptools.setup(
         'antlr4-python3-runtime',
         'mininet',
         'wntr',
-        'mock',
     ],
     extras_require={
-        'test': ['pytest', 'pytest-mock'],
+        'test': ['pytest', 'pytest-mock', 'mock'],
         'doc': ['sphinx', 'sphinx-rtd-theme'],
     },
     python_requires=">=3.8",
