@@ -4,6 +4,7 @@ import signal
 import subprocess
 import sys
 import time
+from dhalsim.parser.config_parser import ConfigParser
 from pathlib import Path
 
 import yaml
@@ -36,6 +37,8 @@ class Runner():
         sys.exit(0)
 
     def run(self):
+        config_parser = ConfigParser(config_file)
+
         db_initializer = DatabaseInitializer(self.intermediate_yaml_path)
 
         db_initializer.drop()

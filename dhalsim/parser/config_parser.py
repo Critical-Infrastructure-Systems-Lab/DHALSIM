@@ -29,14 +29,15 @@ class ConfigParser:
     :type config_path: str
     """
 
-    def __init__(self, config_path):
+    def __init__(self, config_path: Path):
         """Constructor method
         """
-        self.config_path = os.path.abspath(config_path)
+        self.config_path = config_path.absolute()
 
-        logger.debug("config file: %s", config_path)
+        logger.debug("config file: %s", str(config_path))
+
         # Load yaml data from config file
-        with open(config_path) as file:
+        with config_path.open(mode='r') as file:
             self.config_data = yaml.load(file, Loader=yaml.FullLoader)
         # Assert config data is not empty
         if not self.config_data:
@@ -55,7 +56,7 @@ class ConfigParser:
         path = self.config_data.get("inp_file")
         if not path:
             raise MissingValueError("inp_file not in config file")
-        path = os.path.join(os.path.dirname(self.config_path), path)
+        path = os.path.join(os.path.dirname(str(self.config_path)), path)
         path = os.path.abspath(path)
         if not os.path.isfile(path):
             raise FileNotFoundError(path + " is not a file")
@@ -71,7 +72,7 @@ class ConfigParser:
         path = self.config_data.get("cpa_file")
         if not path:
             raise MissingValueError("cpa_file not in config file")
-        path = os.path.join(os.path.dirname(self.config_path), path)
+        path = os.path.join(os.path.dirname(str(self.config_path)), path)
         path = os.path.abspath(path)
         if not os.path.isfile(path):
             raise FileNotFoundError(path + " is not a file")
