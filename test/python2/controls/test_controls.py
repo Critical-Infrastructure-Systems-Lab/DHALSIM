@@ -2,9 +2,8 @@
 # from unittest.mock import MagicMock, call
 import sys
 import pytest
-import pytest_mock
 
-from dhalsim.python2.control import AboveControl, BelowControl, TimeControl
+from dhalsim.python2.entities.control import AboveControl, BelowControl, TimeControl
 
 
 # @pytest.fixture

@@ -9,7 +9,7 @@ import threading
 import sys
 import yaml
 from pathlib import Path
-from control import AboveControl, BelowControl, TimeControl
+from entities.control import AboveControl, BelowControl, TimeControl
 
 
 class Error(Exception):

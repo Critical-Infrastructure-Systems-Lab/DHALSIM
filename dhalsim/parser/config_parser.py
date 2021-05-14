@@ -102,12 +102,19 @@ class ConfigParser:
             yaml_data["mininet_cli"] = self.config_data["mininet_cli"]
         else:
             yaml_data["mininet_cli"] = False
+
         if "simulator" in self.config_data.keys():
             yaml_data["simulator"] = self.config_data["simulator"]
         else:
             yaml_data["simulator"] = "pdd"
+
         if "iterations" in self.config_data.keys():
             yaml_data["iterations"] = self.config_data["iterations"]
+
+        if "run_attack" in self.config_data.keys():
+            yaml_data["run_attack"] = self.config_data["run_attack"]
+        else:
+            yaml_data["run_attack"] = False
 
         # Write data to yaml file
         with self.yaml_path.open(mode='w') as intermediate_yaml:
