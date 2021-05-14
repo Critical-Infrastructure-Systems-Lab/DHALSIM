@@ -21,6 +21,8 @@ class NodeControl:
         with self.intermediate_yaml.open(mode='r') as file:
             self.data = yaml.safe_load(file)
 
+        self.output_path = Path(self.data["output_path"])
+
         self.this_plc_data = self.data["plcs"][self.plc_index]
 
     def sigint_handler(self, sig, frame):
@@ -28,7 +30,7 @@ class NodeControl:
         sys.exit(0)
 
     def terminate(self):
-        print "Stopping Tcp dump process on PLC..."
+        print("Stopping Tcp dump process on PLC...")
         # self.process_tcp_dump.kill()
 
         self.process_tcp_dump.send_signal(signal.SIGINT)
@@ -38,7 +40,7 @@ class NodeControl:
         if self.process_tcp_dump.poll() is None:
             self.process_tcp_dump.kill()
 
-        print "Stopping PLC..."
+        print("Stopping PLC...")
         self.plc_process.send_signal(signal.SIGINT)
         self.plc_process.wait()
         if self.plc_process.poll() is None:
@@ -62,8 +64,9 @@ class NodeControl:
         subprocess.call(['rm', '-rf', self.this_plc_data["name"] + '.log'])
 
     def start_tcpdump_capture(self):
-        pcap = self.interface_name + '.pcap'
-        tcp_dump = subprocess.Popen(['tcpdump', '-i', self.interface_name, '-w', 'output/' + pcap], shell=False)
+        pcap = self.output_path / (self.interface_name + '.pcap')
+        tcp_dump = subprocess.Popen(['tcpdump', '-i', self.interface_name, '-w',
+                                     str(pcap)], shell=False)
         return tcp_dump
 
     def start_plc(self):
@@ -87,7 +90,8 @@ if __name__ == "__main__":
     parser.add_argument(dest="intermediate_yaml",
                         help="intermediate yaml file", metavar="FILE",
                         type=lambda x: is_valid_file(parser, x))
-    parser.add_argument(dest="index", help="Index of PLC in intermediate yaml", type=int, metavar="N")
+    parser.add_argument(dest="index", help="Index of PLC in intermediate yaml", type=int,
+                        metavar="N")
 
     args = parser.parse_args()
     node_control = NodeControl(Path(args.intermediate_yaml), args.index)

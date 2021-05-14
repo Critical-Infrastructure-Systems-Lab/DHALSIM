@@ -12,12 +12,12 @@ class DatabaseInitializer:
         with intermediate_yaml.open(mode='r') as file:
             self.data = yaml.safe_load(file)
         self.db_path = self.data["db_path"]
-        self.db_name = self.data["db_name"]
 
     def write(self):
         with sqlite3.connect(self.db_path) as conn:
             cur = conn.cursor()
-            cur.execute("""CREATE TABLE """ + self.db_name + """
+
+            cur.execute("""CREATE TABLE plant
                 (
                     name  TEXT    NOT NULL,
                     pid   INTEGER NOT NULL,
@@ -26,15 +26,33 @@ class DatabaseInitializer:
                 );""")
             for valve in self.data["valves"]:
                 initial_state = "0" if valve["initial_state"].lower() == "closed" else "1"
-                cur.execute("INSERT INTO " + self.db_name + " VALUES (?, 1, ?);",
+                cur.execute("INSERT INTO plant VALUES (?, 1, ?);",
                             (valve["name"], initial_state,))
             for tank in self.data["tanks"]:
-                cur.execute("INSERT INTO " + self.db_name + " VALUES (?, 1, ?);",
+                cur.execute("INSERT INTO plant VALUES (?, 1, ?);",
                             (tank["name"], str(tank["initial_value"], )))
             for pump in self.data["pumps"]:
                 initial_state = "0" if pump["initial_state"].lower() == "closed" else "1"
-                cur.execute("INSERT INTO " + self.db_name + " VALUES (?, 1, ?);",
+                cur.execute("INSERT INTO plant VALUES (?, 1, ?);",
                             (pump["name"], initial_state,))
+
+            # Creates master_time table if it does not yet exist
+            cur.execute("CREATE TABLE master_time (id INTEGER PRIMARY KEY, time INTEGER)")
+
+            # Sets master_time to 0
+            cur.execute("REPLACE INTO master_time (id, time) VALUES (1, 0)")
+
+            # Creates master_time table if it does not yet exist
+            cur.execute("""CREATE TABLE sync (
+                name TEXT NOT NULL,
+                flag INT NOT NULL,
+                PRIMARY KEY (name)
+            );""")
+
+            for plc in self.data["plcs"]:
+                cur.execute("INSERT INTO sync (name, flag) VALUES (?, 0);",
+                            (plc["name"],))
+
             conn.commit()
 
     # def write(self):
@@ -90,13 +108,19 @@ class DatabaseInitializer:
     def drop(self):
         with sqlite3.connect(self.db_path) as conn:
             cur = conn.cursor()
-            cur.execute("DROP TABLE IF EXISTS " + self.db_name + ";")
+            cur.execute("DROP TABLE IF EXISTS plant;")
+            cur.execute("DROP TABLE IF EXISTS master_time;")
+            cur.execute("DROP TABLE IF EXISTS sync;")
             conn.commit()
 
     def print(self):
         with sqlite3.connect(self.db_path) as conn:
             cur = conn.cursor()
-            cur.execute("SELECT * FROM " + self.db_name + ";")
+            cur.execute("SELECT * FROM plant;")
+            print(cur.fetchall())
+            cur.execute("SELECT * FROM master_time;")
+            print(cur.fetchall())
+            cur.execute("SELECT * FROM sync;")
             print(cur.fetchall())
 
 

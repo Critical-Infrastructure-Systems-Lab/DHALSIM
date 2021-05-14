@@ -1,5 +1,6 @@
 import argparse
 import os.path
+import sqlite3
 
 from basePLC import BasePLC
 from datetime import datetime
@@ -84,13 +85,17 @@ class GenericPLC(BasePLC):
 
         self.intermediate_plc = self.intermediate_yaml["plcs"][self.yaml_index]
 
+        # connection to the database
+        self.conn = sqlite3.connect(self.intermediate_yaml["db_path"])
+        self.c = self.conn.cursor()
+
         self.intermediate_controls = self.intermediate_plc['controls']
 
         self.controls = create_controls(self.intermediate_controls)
-
+        # print(self.controls)
         # Create state from db values
         state = {
-            'name': self.intermediate_yaml['db_name'],
+            'name': "plant",
             'path': self.intermediate_yaml['db_path']
         }
 
@@ -125,7 +130,7 @@ class GenericPLC(BasePLC):
         super(GenericPLC, self).__init__(name=self.intermediate_plc['name'],
                                          state=state, protocol=plc_protocol)
 
-    def pre_loop(self):
+    def pre_loop(self, sleep=0.5):
         print('DEBUG: ' + self.intermediate_plc['name'] + ' enters pre_loop')
 
         reader = True
@@ -143,20 +148,24 @@ class GenericPLC(BasePLC):
 
         sensors.extend(actuators)
 
+        print(values)
+
         BasePLC.set_parameters(self, sensors, values, reader, lock,
                                self.intermediate_plc['ip'])
         self.startup()
 
+        time.sleep(sleep)
+
     def get_tag(self, tag):
         if tag in self.intermediate_plc["sensors"] or tag in self.intermediate_plc["actuators"]:
-            return self.get((tag, 1))
+            return Decimal(self.get((tag, 1)))
 
         for i, plc_data in enumerate(self.intermediate_yaml["plcs"]):
-            if i == self.index:
+            if i == self.yaml_index:
                 continue
-            if tag in plc_data[i]["sensors"] or tag in plc_data[i]["actuators"]:
-                return self.receive((tag, 1), plc_data[i]["ip"])
-                # return -1
+            if tag in plc_data["sensors"] or tag in plc_data["actuators"]:
+                received = Decimal(self.receive((tag, 1), plc_data["ip"]))
+                return received
         raise TagDoesNotExist(tag)
 
     def set_tag(self, tag, value):
@@ -167,25 +176,41 @@ class GenericPLC(BasePLC):
         else:
             raise InvalidControlValue(value)
 
+        # print(self.intermediate_plc["name"] +" sets " + tag + " to " + str(value))
         self.set((tag, 1), value)
 
     # todo: get an actual master clock from the DB
     def get_master_clock(self):
-        return self.local_time
+        # Fetch master_time
+        self.c.execute("SELECT time FROM master_time WHERE id IS 1")
+        time = self.c.fetchone()[0]
+        return time
 
-    def main_loop(self):
+    def get_sync(self):
+        self.c.execute("SELECT flag FROM sync WHERE name IS ?", (self.intermediate_plc["name"],))
+        flag = bool(self.c.fetchone()[0])
+        return flag
+
+    def set_sync(self, flag):
+
+        self.c.execute("UPDATE sync SET flag=? WHERE name IS ?",
+                       (int(flag), self.intermediate_plc["name"],))
+        self.conn.commit()
+
+    def main_loop(self, sleep=0.5):
         print('DEBUG: ' + self.intermediate_plc['name'] + ' enters main_loop')
         while True:
-            try:
-                self.local_time += 1
+            while self.get_sync():
+                pass
 
-                for control in self.controls:
-                    control.apply(self)
+            self.local_time += 1
 
-                time.sleep(0.25)
+            for control in self.controls:
+                control.apply(self)
 
-            except Exception:
-                continue
+            self.set_sync(1)
+
+            # time.sleep(0.05)
 
 
 def is_valid_file(parser, arg):
@@ -200,7 +225,8 @@ if __name__ == "__main__":
     parser.add_argument(dest="intermediate_yaml",
                         help="intermediate yaml file", metavar="FILE",
                         type=lambda x: is_valid_file(parser, x))
-    parser.add_argument(dest="index", help="Index of PLC in intermediate yaml", type=int, metavar="N")
+    parser.add_argument(dest="index", help="Index of PLC in intermediate yaml", type=int,
+                        metavar="N")
 
     args = parser.parse_args()
 

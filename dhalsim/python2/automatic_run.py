@@ -40,8 +40,22 @@ class GeneralCPS(MiniCPS):
     #     r0.waitOutput()
 
     def __init__(self, intermediate_yaml):
+        # Create logs directory in working directory
+        try:
+            os.mkdir('logs')
+        except OSError:
+            pass
 
         self.intermediate_yaml = intermediate_yaml
+
+        with self.intermediate_yaml.open(mode='r') as file:
+            self.data = yaml.safe_load(file)
+
+        # Create directory output path
+        try:
+            os.makedirs(str(Path(self.data["output_path"])))
+        except OSError:
+            pass
 
         signal.signal(signal.SIGINT, self.interrupt)
         signal.signal(signal.SIGTERM, self.interrupt)
@@ -52,8 +66,6 @@ class GeneralCPS(MiniCPS):
         self.net.start()
 
         topo.setup_network(self.net)
-
-        # CLI(self.net)
 
         with self.intermediate_yaml.open(mode='r') as file:
             self.data = yaml.safe_load(file)
@@ -92,10 +104,10 @@ class GeneralCPS(MiniCPS):
 
         automatic_plant_path = Path(__file__).parent.absolute() / "automatic_plant.py"
 
-        cmd = ["python2", str(automatic_plant_path), "wadi_config.yaml", "0"]
+        cmd = ["python2", str(automatic_plant_path), str(self.intermediate_yaml)]
         self.plant_process = self.net.get('plant').popen(cmd, stderr=sys.stderr, stdout=sys.stdout)
 
-        print("[] Simulating...")
+        print("[ ] Simulating...")
         # We wait until the simulation ends
         while self.plant_process.poll() is None:
             pass
@@ -122,10 +134,8 @@ class GeneralCPS(MiniCPS):
             self.end_process(self.plant_process)
             print("Physical Simulation process terminated")
 
-        kill_cppo_path = Path(__file__).parent.absolute() / "kill_cppo.sh"
-
-        cmd = shlex.split(str(kill_cppo_path))
-        subprocess.call(cmd)
+        cmd = 'sudo pkill -f "python2 -m cpppo.server.enip"'
+        subprocess.call(cmd, shell=True, stderr=sys.stderr, stdout=sys.stdout)
 
         self.net.stop()
         sys.exit(0)
