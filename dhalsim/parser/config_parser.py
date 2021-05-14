@@ -1,6 +1,4 @@
 import logging
-import os
-import pathlib
 from pathlib import Path
 
 import yaml
@@ -91,6 +89,9 @@ class ConfigParser:
     def generate_intermediate_yaml(self):
         """Writes the intermediate.yaml file to include all options specified in the config, the plc's and their
         data, and all valves/pumps/tanks etc
+
+        :return: the path to the yaml file
+        :rtype: Path
         """
         # Begin with PLC data specified in CPA file
         yaml_data = self.cpa_data
@@ -119,3 +120,5 @@ class ConfigParser:
 
         # Write values from IMP file into yaml file (controls, tanks/valves/initial values, etc.)
         InputParser(self.yaml_path).write()
+
+        return self.yaml_path

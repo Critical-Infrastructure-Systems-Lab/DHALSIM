@@ -3,13 +3,10 @@ import os.path
 import signal
 import subprocess
 import sys
-import time
-from dhalsim.parser.config_parser import ConfigParser
 from pathlib import Path
 
-import yaml
-
 from dhalsim.init_database import DatabaseInitializer
+from dhalsim.parser.config_parser import ConfigParser
 
 
 def is_valid_file(parser, arg):
@@ -27,9 +24,6 @@ class Runner():
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
 
-        self.intermediate_yaml_path = Path(
-            __file__).parent.parent.absolute() / "examples" / "wadi_topology" / "intermediate.yaml"
-
         self.automatic_run = None
 
     def sigint_handler(self, sig, frame):
@@ -37,9 +31,10 @@ class Runner():
         sys.exit(0)
 
     def run(self):
-        config_parser = ConfigParser(config_file)
+        config_parser = ConfigParser(self.config_file)
 
-        db_initializer = DatabaseInitializer(self.intermediate_yaml_path)
+        intermediate_yaml_path = config_parser.generate_intermediate_yaml()
+        db_initializer = DatabaseInitializer(intermediate_yaml_path)
 
         db_initializer.drop()
         db_initializer.write()
@@ -47,7 +42,7 @@ class Runner():
 
         automatic_run_path = Path(__file__).parent.absolute() / "python2" / "automatic_run.py"
         self.automatic_run = subprocess.Popen(
-            ["python2", str(automatic_run_path), str(self.intermediate_yaml_path)])
+            ["python2", str(automatic_run_path), str(intermediate_yaml_path)])
         self.automatic_run.wait()
 
 
@@ -66,6 +61,7 @@ def main():
 
     runner = Runner(config_file, output_folder)
     runner.run()
+
 
 if __name__ == '__main__':
     main()

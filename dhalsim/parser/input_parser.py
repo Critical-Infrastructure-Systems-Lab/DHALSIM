@@ -1,11 +1,12 @@
 import logging
-import yaml
-import wntr
+from pathlib import Path
 
+import wntr
+import yaml
 from antlr4 import *
-from dhalsim.parser.antlr.controlsParser import controlsParser
+
 from dhalsim.parser.antlr.controlsLexer import controlsLexer
-from dhalsim.static.controls.ConcreteControl import *
+from dhalsim.parser.antlr.controlsParser import controlsParser
 
 logger = logging.getLogger(__name__)
 
@@ -34,10 +35,10 @@ class InputParser:
     """Class handling the parsing of .inp input files
 
     :param intermediate_yaml_path: The path of the inp file
-    :type intermediate_yaml_path: str
+    :type intermediate_yaml_path: Path
     """
 
-    def __init__(self, intermediate_yaml_path):
+    def __init__(self, intermediate_yaml_path: Path):
         """Constructor method
         """
         self.intermediate_yaml_path = intermediate_yaml_path

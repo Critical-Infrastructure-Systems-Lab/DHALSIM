@@ -11,7 +11,7 @@ class DatabaseInitializer:
         self.intermediate_yaml = intermediate_yaml
         with intermediate_yaml.open(mode='r') as file:
             self.data = yaml.safe_load(file)
-        self.db_path = self.data["db_path"]
+        self.db_path = Path(self.data["db_path"])
         self.db_path.touch(exist_ok=True)
 
     def write(self):
