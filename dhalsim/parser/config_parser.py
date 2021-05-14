@@ -78,6 +78,20 @@ class ConfigParser:
         return path
 
     @property
+    def output_path(self):
+        """Property for the path to the output folder
+        ``output`` by default
+
+        :return: absolute path to the output folder
+        :rtype: Path
+        """
+        path = self.config_data.get("output_path")
+        if not path:
+            path = "output"
+        path = (self.config_path.parent / path).absolute()
+        return path
+
+    @property
     def cpa_data(self):
         """Property to load the yaml data from the cpa file
 
@@ -98,6 +112,7 @@ class ConfigParser:
         # Add path and database information
         yaml_data["inp_file"] = str(self.inp_path)
         yaml_data["cpa_file"] = str(self.cpa_path)
+        yaml_data["output_path"] = str(self.output_path)
         yaml_data["db_path"] = "/tmp/dhalsim/dhalsim.sqlite"
 
         # Add options from the config_file
