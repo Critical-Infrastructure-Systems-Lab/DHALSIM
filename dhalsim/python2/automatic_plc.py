@@ -1,15 +1,17 @@
-import os
-import subprocess
-import time
-import sys
 import argparse
+import os
 import signal
-import shlex
-import yaml
+import subprocess
+import sys
 from pathlib import Path
+
+import yaml
 
 
 class NodeControl:
+    """
+    This class is started for a plc. It starts a tcpdump and a plc process.
+    """
 
     def __init__(self, intermediate_yaml, plc_index):
         signal.signal(signal.SIGINT, self.sigint_handler)
@@ -23,13 +25,22 @@ class NodeControl:
 
         self.output_path = Path(self.data["output_path"])
 
+        self.process_tcp_dump = None
+        self.plc_process = None
+
         self.this_plc_data = self.data["plcs"][self.plc_index]
 
-    def sigint_handler(self, sig, frame):
+    def sigint_handler(self):
+        """
+        Interrupt handler for :class:`~signal.SIGINT` and :class:`~signal.SIGINT`.
+        """
         self.terminate()
         sys.exit(0)
 
     def terminate(self):
+        """
+        This function stops the tcp dump and the plc process.
+        """
         print("Stopping Tcp dump process on PLC...")
         # self.process_tcp_dump.kill()
 
@@ -49,8 +60,10 @@ class NodeControl:
             self.plc_process.kill()
 
     def main(self):
-        self.interface_name = self.this_plc_data["interface"]
-        self.delete_log()
+        """
+        This function starts the tcp dump and plc process and then waits for the plc
+        process to finish.
+        """
         self.process_tcp_dump = self.start_tcpdump_capture()
 
         self.plc_process = self.start_plc()
@@ -60,16 +73,19 @@ class NodeControl:
 
         self.terminate()
 
-    def delete_log(self):
-        subprocess.call(['rm', '-rf', self.this_plc_data["name"] + '.log'])
-
     def start_tcpdump_capture(self):
-        pcap = self.output_path / (self.interface_name + '.pcap')
-        tcp_dump = subprocess.Popen(['tcpdump', '-i', self.interface_name, '-w',
+        """
+        Start a tcp dump.
+        """
+        pcap = self.output_path / (self.this_plc_data["interface"] + '.pcap')
+        tcp_dump = subprocess.Popen(['tcpdump', '-i', self.this_plc_data["interface"], '-w',
                                      str(pcap)], shell=False)
         return tcp_dump
 
     def start_plc(self):
+        """
+        Start a plc process.
+        """
         generic_plc_path = Path(__file__).parent.absolute() / "generic_plc.py"
 
         cmd = ["python2", str(generic_plc_path), str(self.intermediate_yaml), str(self.plc_index)]
@@ -78,9 +94,9 @@ class NodeControl:
         return plc_process
 
 
-def is_valid_file(parser, arg):
+def is_valid_file(parser_instance, arg):
     if not os.path.exists(arg):
-        parser.error(arg + " does not exist")
+        parser_instance.error(arg + " does not exist")
     else:
         return arg
 

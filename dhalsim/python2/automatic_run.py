@@ -1,43 +1,26 @@
 import argparse
 import os
+import signal
+import subprocess
+import sys
 from pathlib import Path
 
-from mininet.net import Mininet
-from mininet.cli import CLI
-from minicps.mcps import MiniCPS
-from topo.simple_topo import SimpleTopo
-from initialize_experiment import ExperimentInitializer
-import sys
-import time
-import shlex
-import subprocess
-import signal
-from mininet.link import TCLink
 import yaml
-import glob
+from minicps.mcps import MiniCPS
+from mininet.cli import CLI
+from mininet.link import TCLink
+from mininet.net import Mininet
+
+from dhalsim.python2.topo.simple_topo import SimpleTopo
 
 
 class GeneralCPS(MiniCPS):
+    """
+    This class can run a experiment from a intermediate yaml file
 
-    # def do_forward(self, node):
-    #     # Pre experiment configuration, prepare routing path
-    #     node.cmd('sysctl net.ipv4.ip_forward=1')
-    #     node.waitOutput()
-    #
-    # def add_degault_gateway(self, node, gw_ip):
-    #     node.cmd('route add default gw ' + gw_ip)
-    #     node.waitOutput()
-    #
-    # def setup_network(self):
-    #     r0 = self.net.get('r0')
-    #     self.do_forward(r0)
-    #     self.add_degault_gateway(self.net.get('plc1'), '192.168.1.254')
-    #     self.add_degault_gateway(self.net.get('plc2'), '192.168.1.254')
-    #     self.add_degault_gateway(self.net.get('attacker_1'), '192.168.1.254')
-    #     self.add_degault_gateway(self.net.get('scada'), '192.168.2.254')
-    #     self.add_degault_gateway(self.net.get('attacker_2'), '192.168.2.254')
-    #     r0.cmd('ifconfig r0-eth2 192.168.2.254')
-    #     r0.waitOutput()
+    :param intermediate_yaml: The path to the intermediate yaml file
+    :type intermediate_yaml: Path
+    """
 
     def __init__(self, intermediate_yaml):
         # Create logs directory in working directory
@@ -81,11 +64,17 @@ class GeneralCPS(MiniCPS):
 
         self.net.stop()
 
-    def interrupt(self, sig, frame):
+    def interrupt(self):
+        """
+        Interrupt handler for :class:`~signal.SIGINT` and :class:`~signal.SIGINT`.
+        """
         self.finish()
         sys.exit(0)
 
     def automatic_start(self):
+        """
+        This starts all the processes for plcs, etc.
+        """
 
         self.plc_processes = []
 
@@ -115,6 +104,11 @@ class GeneralCPS(MiniCPS):
 
     @staticmethod
     def end_process(process):
+        """
+        End a process.
+        :param process: the process to end
+
+        """
         process.send_signal(signal.SIGINT)
         process.wait()
         if process.poll() is None:
@@ -123,6 +117,10 @@ class GeneralCPS(MiniCPS):
             process.kill()
 
     def finish(self):
+        """
+        Terminate the plcs, physical process, mininet, and remaining processes that
+        automatic run spawned.
+        """
         print("[*] Simulation finished")
 
         # self.end_process(self.scada_process)
@@ -141,9 +139,9 @@ class GeneralCPS(MiniCPS):
         sys.exit(0)
 
 
-def is_valid_file(parser, arg):
+def is_valid_file(parser_instance, arg):
     if not os.path.exists(arg):
-        parser.error(arg + " does not exist")
+        parser_instance.error(arg + " does not exist")
     else:
         return arg
 
