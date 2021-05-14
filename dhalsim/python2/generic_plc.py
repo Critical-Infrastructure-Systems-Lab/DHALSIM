@@ -148,8 +148,6 @@ class GenericPLC(BasePLC):
 
         sensors.extend(actuators)
 
-        print(values)
-
         BasePLC.set_parameters(self, sensors, values, reader, lock,
                                self.intermediate_plc['ip'])
         self.startup()
