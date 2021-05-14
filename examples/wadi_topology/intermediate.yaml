@@ -7,8 +7,8 @@ output_path: /home/robert/dhalsim/output
 mininet_cli: False
 
 simulator: pdd
-itterations: 500
-#itterations: 86400
+iterations: 500
+#iterations: 86400
 
 plcs:
   - name: PLC1

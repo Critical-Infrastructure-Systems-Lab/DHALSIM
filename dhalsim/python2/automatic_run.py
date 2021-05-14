@@ -40,6 +40,16 @@ class GeneralCPS(MiniCPS):
     #     r0.waitOutput()
 
     def __init__(self, intermediate_yaml):
+        # Create logs and output directories
+        try:
+            os.mkdir('logs')
+        except OSError, e:
+            pass
+
+        try:
+            os.mkdir('output')
+        except OSError, e:
+            pass
 
         self.intermediate_yaml = intermediate_yaml
 
@@ -95,7 +105,7 @@ class GeneralCPS(MiniCPS):
         cmd = ["python2", str(automatic_plant_path), str(self.intermediate_yaml)]
         self.plant_process = self.net.get('plant').popen(cmd, stderr=sys.stderr, stdout=sys.stdout)
 
-        print("[] Simulating...")
+        print("[ ] Simulating...")
         # We wait until the simulation ends
         while self.plant_process.poll() is None:
             pass
