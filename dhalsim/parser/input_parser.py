@@ -18,12 +18,23 @@ class NoInpFileGiven(Error):
     """Raised when tag you are looking for does not exist"""
 
 
-class InputParser:
-    """
-    Class handling the parsing of .inp input files
+def value_to_status(actuator_value):
+    """Translates int corresponding to actuator status
 
-    :param inp_path: The path of the inp file
-    :type inp_path: str
+    :param actuator_value: The value from the status.value of the actuator
+    :type actuator_value: int
+    """
+    if actuator_value == 0:
+        return "closed"
+    else:
+        return "open"
+
+
+class InputParser:
+    """Class handling the parsing of .inp input files
+
+    :param intermediate_yaml_path: The path of the inp file
+    :type intermediate_yaml_path: str
     """
 
     def __init__(self, intermediate_yaml_path):
@@ -38,9 +49,13 @@ class InputParser:
             self.inp_file_path = self.data['inp_file']
         else:
             raise NoInpFileGiven()
+        # Read the inp file with WNTR
+        self.wn = wntr.network.WaterNetworkModel(self.inp_file_path)
 
 
     def write(self):
+        """Writes all needed inp file sections into the intermediate_yaml
+        """
         # Generate PLC controls
         self.generate_controls()
         # Generate list of pumps + initial values
@@ -56,6 +71,9 @@ class InputParser:
             yaml.safe_dump(self.data, intermediate_yaml)
 
     def generate_controls(self):
+        """Generates list of controls with their types, values, actuators, and
+        potentially dependant; then adds that to self.data to be written to the yaml
+        """
         input = FileStream(self.inp_file_path)
         tree = controlsParser(CommonTokenStream(controlsLexer(input))).controls()
 
@@ -81,7 +99,7 @@ class InputParser:
                 value = float(str(child.getChild(4)))
                 controls.append({
                     "type": "time",
-                    "value": value,
+                    "value": int(value),
                     "actuator": actuator,
                     "action": action.lower()
                 })
