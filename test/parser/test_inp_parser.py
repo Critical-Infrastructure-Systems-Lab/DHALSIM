@@ -32,13 +32,6 @@ def test_python_version():
     assert sys.version_info.major is 3
 
 
-def test_no_controls(tmpdir, written_intermediate_yaml):
-    inp = tmpdir.join("input.inp")
-    inp.write("\n[CONTROLS]")
-
-    InputParser(tmpdir.join("intermediate.yaml")).write()
-
-
 def test_node_and_time_controls(tmpdir, inp_path, written_intermediate_yaml, filled_yaml_path):
     InputParser(written_intermediate_yaml).write()
 
