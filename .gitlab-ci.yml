@@ -39,6 +39,7 @@ test:2:
     - pip install virtualenv
     - virtualenv venv
     - source venv/bin/activate
+    - pip install cpppo==4.0.4
     - git clone https://github.com/afmurillo/minicps.git
     - pip install -e ./minicps
     - pip install mininet
