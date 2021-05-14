@@ -17,6 +17,7 @@ class DatabaseInitializer:
     def write(self):
         with sqlite3.connect(self.db_path) as conn:
             cur = conn.cursor()
+
             cur.execute("""CREATE TABLE """ + self.db_name + """
                 (
                     name  TEXT    NOT NULL,
@@ -35,6 +36,15 @@ class DatabaseInitializer:
                 initial_state = "0" if pump["initial_state"].lower() == "closed" else "1"
                 cur.execute("INSERT INTO " + self.db_name + " VALUES (?, 1, ?);",
                             (pump["name"], initial_state,))
+
+            # Creates master_time table if it does not yet exist
+            query = "CREATE TABLE master_time (id INTEGER PRIMARY KEY, time INTEGER)"
+            cur.execute(query)
+
+            # Sets master_time to 0
+            query = "REPLACE INTO master_time (id, time) VALUES (1, 0)"
+            cur.execute(query)
+
             conn.commit()
 
     # def write(self):
@@ -91,6 +101,7 @@ class DatabaseInitializer:
         with sqlite3.connect(self.db_path) as conn:
             cur = conn.cursor()
             cur.execute("DROP TABLE IF EXISTS " + self.db_name + ";")
+            cur.execute("DROP TABLE IF EXISTS master_time;")
             conn.commit()
 
     def print(self):

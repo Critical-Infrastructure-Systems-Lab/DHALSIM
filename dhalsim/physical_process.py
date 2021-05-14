@@ -227,22 +227,15 @@ class PhysicalPlant:
         master_time = 0
         start = datetime.now()
 
-        # Creates master_time table if it does not yet exist
-        query = "CREATE TABLE IF NOT EXISTS master_time (id INTEGER PRIMARY KEY, time INTEGER)"
-        self.c.execute(query)
-        self.conn.commit()
-
-        # Sets master_time to 0
-        query = "REPLACE INTO master_time (id, time) VALUES (1, 0)"
-        self.c.execute(query)
-        self.conn.commit()
-
         iteration_limit = self.data["iterations"]
 
         print("Simulation will run for", iteration_limit, "iterations")
         print("Hydraulic timestep is", self.wn.options.time.hydraulic_timestep)
 
         while master_time <= iteration_limit:
+            query = "REPLACE INTO master_time (id, time) VALUES(1, " + str(master_time) + ")"
+            self.c.execute(query)
+            self.conn.commit()
 
             self.update_controls()
             eta = self.calculate_eta(start, master_time, iteration_limit)
@@ -253,16 +246,15 @@ class PhysicalPlant:
             self.results_list.append(values_list)
 
             # Fetch master_time
-            query = "SELECT * FROM master_time"
-            execute = self.c.execute(query)
-            self.conn.commit()
+            # query = "SELECT * FROM master_time"
+            # execute = self.c.execute(query)
+            # self.conn.commit()
 
-            master_time = int(execute.fetchall()[0][1]) + 1
+            # master_time = int(execute.fetchall()[0][1]) + 1
+
 
             # Update master_time
-            query = "REPLACE INTO master_time (id, time) VALUES(1, " + str(master_time) + ")"
-            self.c.execute(query)
-            self.conn.commit()
+
 
             # Update tanks in database
             for tank in self.tank_list:
@@ -271,6 +263,8 @@ class PhysicalPlant:
                 query = "UPDATE wadi SET value = " + str(a_level) + " WHERE name = " + tank_name
                 self.c.execute(query)
                 self.conn.commit()
+
+            master_time = master_time + 1
 
             # TODO: This seems arbitrary.. We need to be sure all PLCs have executed their loop.
             time.sleep(0.03)
