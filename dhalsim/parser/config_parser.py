@@ -54,15 +54,14 @@ class ConfigParser:
         """Property for the path to the inp file
 
         :return: absolute path to the inp file
-        :rtype: str
+        :rtype: Path
         """
         path = self.config_data.get("inp_file")
         if not path:
             raise MissingValueError("inp_file not in config file")
-        path = os.path.join(os.path.dirname(str(self.config_path)), path)
-        path = os.path.abspath(path)
-        if not os.path.isfile(path):
-            raise FileNotFoundError(path + " is not a file")
+        path = (self.config_path.parent / path).absolute()
+        if not path.is_file():
+            raise FileNotFoundError(str(path) + " is not a file")
         return path
 
     @property
@@ -70,15 +69,14 @@ class ConfigParser:
         """Property for the path to the cpa file
 
         :return: absolute path to the cpa file
-        :rtype: str
+        :rtype: Path
         """
         path = self.config_data.get("cpa_file")
         if not path:
             raise MissingValueError("cpa_file not in config file")
-        path = os.path.join(os.path.dirname(str(self.config_path)), path)
-        path = os.path.abspath(path)
-        if not os.path.isfile(path):
-            raise FileNotFoundError(path + " is not a file")
+        path = (self.config_path.parent / path).absolute()
+        if not path.is_file():
+            raise FileNotFoundError(str(path) + " is not a file")
         return path
 
     @property
@@ -87,7 +85,7 @@ class ConfigParser:
 
         :return: data from cpa file
         """
-        with open(self.cpa_path) as file:
+        with self.cpa_path.open() as file:
             return yaml.load(file, Loader=yaml.FullLoader)
 
     def generate_intermediate_yaml(self):
@@ -97,8 +95,8 @@ class ConfigParser:
         # Begin with PLC data specified in CPA file
         yaml_data = self.cpa_data
         # Add path and database information
-        yaml_data["inp_file"] = self.inp_path
-        yaml_data["cpa_file"] = self.cpa_path
+        yaml_data["inp_file"] = str(self.inp_path)
+        yaml_data["cpa_file"] = str(self.cpa_path)
         yaml_data["db_path"] = "/tmp/dhalsim/dhalsim.sqlite"
 
         # Add options from the config_file
