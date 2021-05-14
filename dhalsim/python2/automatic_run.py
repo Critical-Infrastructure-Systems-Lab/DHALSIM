@@ -46,13 +46,16 @@ class GeneralCPS(MiniCPS):
         except OSError:
             pass
 
-        # Create output directory in file directory
+        self.intermediate_yaml = intermediate_yaml
+
+        with self.intermediate_yaml.open(mode='r') as file:
+            self.data = yaml.safe_load(file)
+
+        # Create directory output path
         try:
-            os.mkdir(os.path.realpath(__file__).join('output'))
+            os.makedirs(str(Path(self.data["output_path"])))
         except OSError:
             pass
-
-        self.intermediate_yaml = intermediate_yaml
 
         signal.signal(signal.SIGINT, self.interrupt)
         signal.signal(signal.SIGTERM, self.interrupt)
