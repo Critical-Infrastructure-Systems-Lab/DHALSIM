@@ -25,7 +25,6 @@ class BasePLC(PLC):
                         "Exception trying to get the tag"
                         time.sleep(0.05)
                         continue
-            print(self.intermediate_plc["name"] + " sending " + str(self.tags) + " values " + str(values) + " address " + str(self.send_adddress))
             self.send_multiple(self.tags, values, self.send_adddress)
             time.sleep(0.05)
 
@@ -39,7 +38,7 @@ class BasePLC(PLC):
         self.week_index = week_index
 
     def sigint_handler(self, sig, frame):
-        print 'DEBUG plc shutdown'
+        print('DEBUG plc shutdown')
         self.reader = False
         sys.exit(0)
 
