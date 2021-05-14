@@ -55,7 +55,8 @@ class PhysicalPlant:
             self.results_list = []
             self.results_list.append(list_header)
 
-            dummy_condition = controls.ValueCondition(self.wn.get_node(self.tank_list[0]), 'level', '>=', -1)
+            dummy_condition = controls.ValueCondition(self.wn.get_node(self.tank_list[0]), 'level',
+                                                      '>=', -1)
 
             self.control_list = []
             for valve in self.valve_list:
@@ -65,7 +66,8 @@ class PhysicalPlant:
                 self.control_list.append(self.create_control_dict(pump, dummy_condition))
 
             for control in self.control_list:
-                an_action = controls.ControlAction(control['actuator'], control['parameter'], control['value'])
+                an_action = controls.ControlAction(control['actuator'], control['parameter'],
+                                                   control['value'])
                 a_control = controls.Control(control['condition'], an_action, name=control['name'])
                 self.wn.add_control(control['name'], a_control)
 
@@ -145,7 +147,8 @@ class PhysicalPlant:
 
         # Get junction  levels
         for junction in self.junction_list:
-            values_list.extend([self.wn.get_node(junction).head - self.wn.get_node(junction).elevation])
+            values_list.extend(
+                [self.wn.get_node(junction).head - self.wn.get_node(junction).elevation])
 
         # Get pumps flows and status
         for pump in self.pump_list:
@@ -182,14 +185,15 @@ class PhysicalPlant:
             self.update_control(control)
 
     def update_control(self, control):
-        act_name = '\'' + control['name'] + '\''
-        rows_1 = self.c.execute('SELECT value FROM wadi WHERE name = ' + act_name).fetchall()
+        rows_1 = self.c.execute('SELECT value FROM plant WHERE name = ?',
+                                (control['name'],)).fetchone()
         self.conn.commit()
-        new_status = int(rows_1[0][0])
+        new_status = int(rows_1[0])
 
         control['value'] = new_status
 
-        new_action = controls.ControlAction(control['actuator'], control['parameter'], control['value'])
+        new_action = controls.ControlAction(control['actuator'], control['parameter'],
+                                            control['value'])
         new_control = controls.Control(control['condition'], new_action, name=control['name'])
 
         self.wn.remove_control(control['name'])
@@ -228,13 +232,13 @@ class PhysicalPlant:
         print("Hydraulic timestep is", self.wn.options.time.hydraulic_timestep)
 
         while master_time <= iteration_limit:
-            query = "REPLACE INTO master_time (id, time) VALUES(1, " + str(master_time) + ")"
-            self.c.execute(query)
+            self.c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(master_time),))
             self.conn.commit()
 
             self.update_controls()
             eta = self.calculate_eta(start, master_time, iteration_limit)
-            print("Iteration %d out of %d. Estimated remaining time: %s" % (master_time, iteration_limit, eta))
+            print("Iteration %d out of %d. Estimated remaining time: %s" % (
+                master_time, iteration_limit, eta))
 
             results = self.sim.run_sim(convergence_error=True)
             values_list = self.register_results(results)
@@ -247,16 +251,14 @@ class PhysicalPlant:
 
             # master_time = int(execute.fetchall()[0][1]) + 1
 
-
             # Update master_time
-
 
             # Update tanks in database
             for tank in self.tank_list:
                 tank_name = '\'' + tank + '\''
                 a_level = self.wn.get_node(tank).level
-                query = "UPDATE wadi SET value = " + str(a_level) + " WHERE name = " + tank_name
-                self.c.execute(query)
+                self.c.execute("UPDATE plant SET value = ? WHERE name = ?",
+                               (str(a_level), tank_name,))
                 self.conn.commit()
 
             master_time = master_time + 1

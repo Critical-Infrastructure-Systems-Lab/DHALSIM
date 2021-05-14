@@ -60,11 +60,13 @@ def create_controls(controls_list):
     ret = []
     for control in controls_list:
         if control["type"] == "Above":
-            a = AboveControl(control["actuator"], control["action"], control["dependant"], control["value"])
+            a = AboveControl(control["actuator"], control["action"], control["dependant"],
+                             control["value"])
             ret.append(a)
             # print "Making Above control: Value=" + str(a.value) + " | Action=" + str(a.action) + " | Actuator=" + str(a.actuator) + " | Dependant=" + str(a.dependant)
         if control["type"] == "Below":
-            a = BelowControl(control["actuator"], control["action"], control["dependant"], control["value"])
+            a = BelowControl(control["actuator"], control["action"], control["dependant"],
+                             control["value"])
             ret.append(a)
             # print "Making Below control: Value=" + str(a.value) + " | Action=" + str(a.action) + " | Actuator=" + str(a.actuator) + " | Dependant=" + str(a.dependant)
         if control["type"] == "Time":
@@ -95,7 +97,7 @@ class GenericPLC(BasePLC):
         # print(self.controls)
         # Create state from db values
         state = {
-            'name': self.intermediate_yaml['db_name'],
+            'name': "plant",
             'path': self.intermediate_yaml['db_path']
         }
 
@@ -213,7 +215,8 @@ if __name__ == "__main__":
     parser.add_argument(dest="intermediate_yaml",
                         help="intermediate yaml file", metavar="FILE",
                         type=lambda x: is_valid_file(parser, x))
-    parser.add_argument(dest="index", help="Index of PLC in intermediate yaml", type=int, metavar="N")
+    parser.add_argument(dest="index", help="Index of PLC in intermediate yaml", type=int,
+                        metavar="N")
 
     args = parser.parse_args()
 
