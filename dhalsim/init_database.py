@@ -37,24 +37,21 @@ class DatabaseInitializer:
                             (pump["name"], initial_state,))
 
             # Creates master_time table if it does not yet exist
-            query = "CREATE TABLE master_time (id INTEGER PRIMARY KEY, time INTEGER)"
-            cur.execute(query)
+            cur.execute("CREATE TABLE master_time (id INTEGER PRIMARY KEY, time INTEGER)")
 
             # Sets master_time to 0
-            query = "REPLACE INTO master_time (id, time) VALUES (1, 0)"
-            cur.execute(query)
+            cur.execute("REPLACE INTO master_time (id, time) VALUES (1, 0)")
 
             # Creates master_time table if it does not yet exist
-            query = """CREATE TABLE sync (
+            cur.execute("""CREATE TABLE sync (
                 name TEXT NOT NULL,
-                done INT NOT NULL,
+                flag INT NOT NULL,
                 PRIMARY KEY (name)
-            );"""
-            cur.execute(query)
+            );""")
 
-            # Sets master_time to 0
-            query = "REPLACE INTO master_time (id, time) VALUES (1, 0)"
-            cur.execute(query)
+            for plc in self.data["plcs"]:
+                cur.execute("INSERT INTO sync (name, flag) VALUES (?, 0);",
+                            (plc["name"],))
 
             conn.commit()
 
@@ -120,6 +117,10 @@ class DatabaseInitializer:
         with sqlite3.connect(self.db_path) as conn:
             cur = conn.cursor()
             cur.execute("SELECT * FROM plant;")
+            print(cur.fetchall())
+            cur.execute("SELECT * FROM master_time;")
+            print(cur.fetchall())
+            cur.execute("SELECT * FROM sync;")
             print(cur.fetchall())
 
 

@@ -219,6 +219,13 @@ class PhysicalPlant:
                                   / (float(iteration / float(round(total))) + 0.000001)
                                   - diff.total_seconds()))
 
+    def get_plcs_ready(self):
+        self.c.execute("""SELECT count(*)
+                        FROM sync
+                        WHERE flag <= 0""")
+        flag = int(self.c.fetchone()[0]) == 0
+        return flag
+
     def main(self):
         # We want to simulate only 1 hydraulic timestep each time MiniCPS processes the simulation data
         self.wn.options.time.duration = self.wn.options.time.hydraulic_timestep
@@ -234,6 +241,12 @@ class PhysicalPlant:
         while master_time <= iteration_limit:
             self.c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(master_time),))
             self.conn.commit()
+
+            self.c.execute("UPDATE sync SET flag=0")
+            self.conn.commit()
+
+            while not self.get_plcs_ready():
+                pass
 
             self.update_controls()
             eta = self.calculate_eta(start, master_time, iteration_limit)
@@ -255,10 +268,9 @@ class PhysicalPlant:
 
             # Update tanks in database
             for tank in self.tank_list:
-                tank_name = '\'' + tank + '\''
                 a_level = self.wn.get_node(tank).level
                 self.c.execute("UPDATE plant SET value = ? WHERE name = ?",
-                               (str(a_level), tank_name,))
+                               (str(a_level), tank,))
                 self.conn.commit()
 
             master_time = master_time + 1

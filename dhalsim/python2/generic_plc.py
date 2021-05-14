@@ -158,7 +158,7 @@ class GenericPLC(BasePLC):
 
     def get_tag(self, tag):
         if tag in self.intermediate_plc["sensors"] or tag in self.intermediate_plc["actuators"]:
-            return self.get((tag, 1))
+            return Decimal(self.get((tag, 1)))
 
         for i, plc_data in enumerate(self.intermediate_yaml["plcs"]):
             if i == self.yaml_index:
@@ -186,21 +186,31 @@ class GenericPLC(BasePLC):
         time = self.c.fetchone()[0]
         return time
 
+    def get_sync(self):
+        self.c.execute("SELECT flag FROM sync WHERE name IS ?", (self.intermediate_plc["name"],))
+        flag = bool(self.c.fetchone()[0])
+        return flag
+
+    def set_sync(self, flag):
+
+        self.c.execute("UPDATE sync SET flag=? WHERE name IS ?",
+                       (int(flag), self.intermediate_plc["name"],))
+        self.conn.commit()
+
     def main_loop(self, sleep=0.5):
         print('DEBUG: ' + self.intermediate_plc['name'] + ' enters main_loop')
         while True:
-            # try:
+            while self.get_sync():
+                pass
+
             self.local_time += 1
-            # print(self.intermediate_plc["name"] + " time: " + str(self.local_time))
 
             for control in self.controls:
-                # print(self.intermediate_plc['name'] + " tries " + str(control))
                 control.apply(self)
 
-            time.sleep(0.05)
+            self.set_sync(1)
 
-            # except Exception:
-            #     continue
+            # time.sleep(0.05)
 
 
 def is_valid_file(parser, arg):
