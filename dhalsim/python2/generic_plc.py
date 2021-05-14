@@ -58,15 +58,15 @@ def generate_tags(taggable):
 def create_controls(controls_list):
     ret = []
     for control in controls_list:
-        if control["type"] == "Above":
+        if control["type"].lower() == "above":
             a = AboveControl(control["actuator"], control["action"], control["dependant"], control["value"])
             ret.append(a)
             # print "Making Above control: Value=" + str(a.value) + " | Action=" + str(a.action) + " | Actuator=" + str(a.actuator) + " | Dependant=" + str(a.dependant)
-        if control["type"] == "Below":
+        if control["type"].lower() == "below":
             a = BelowControl(control["actuator"], control["action"], control["dependant"], control["value"])
             ret.append(a)
             # print "Making Below control: Value=" + str(a.value) + " | Action=" + str(a.action) + " | Actuator=" + str(a.actuator) + " | Dependant=" + str(a.dependant)
-        if control["type"] == "Time":
+        if control["type"].lower() == "time":
             a = TimeControl(control["actuator"], control["action"], control["value"])
             ret.append(a)
             # print "Making Time control: Value=" + str(a.value) + " | Action=" + str(a.action) + " | Actuator=" + str(a.actuator)
@@ -126,7 +126,7 @@ class GenericPLC(BasePLC):
                                          state=state, protocol=plc_protocol)
 
     def pre_loop(self):
-        print 'DEBUG: ' + self.intermediate_plc['name'] + ' enters pre_loop'
+        print('DEBUG: ' + self.intermediate_plc['name'] + ' enters pre_loop')
 
         reader = True
 

@@ -1,9 +1,9 @@
 import logging
 import os
+import pathlib
+
 import yaml
 
-from dhalsim.static.plc_config import PlcConfig
-from dhalsim.static.controls import ConcreteControl
 from dhalsim.parser.input_parser import InputParser
 
 logger = logging.getLogger(__name__)
@@ -41,6 +41,9 @@ class ConfigParser:
         # Assert config data is not empty
         if not self.config_data:
             raise EmptyConfigError
+        # Create temp directory and intermediate yaml files in /tmp/
+        self.yaml_path = pathlib.Path("/tmp/dhalsim/intermediate.yaml")
+        self.yaml_path.parent.mkdir(parents=True, exist_ok=True)
 
     @property
     def inp_path(self):
@@ -83,43 +86,34 @@ class ConfigParser:
         with open(self.cpa_path) as file:
             return yaml.load(file, Loader=yaml.FullLoader)
 
-    def generate_plc_configs(self):
-        """Returns a list of plc configs
-
-        :return: list containing parsed PlcConfig objects
-        :rtype: List[PlcConfig]
+    def generate_intermediate_yaml(self):
+        """Writes the intermediate.yaml file to include all options specified in the config, the plc's and their
+        data, and all valves/pumps/tanks etc
         """
-        plcs = self.cpa_data.get("plcs")
+        # Begin with PLC data specified in CPA file
+        yaml_data = self.cpa_data
+        # Add path and database information
+        yaml_data["inp_file"] = self.inp_path
+        yaml_data["cpa_file"] = self.cpa_path
+        yaml_data["db_path"] = "/tmp/dhalsim/dhalsim.sqlite"
 
-        plc_config_list = []
+        # Add options from the config_file
+        if "mininet_cli" in self.config_data.keys():
+            yaml_data["mininet_cli"] = self.config_data["mininet_cli"]
+        else:
+            yaml_data["mininet_cli"] = False
+        if "simulator" in self.config_data.keys():
+            yaml_data["simulator"] = self.config_data["simulator"]
+        else:
+            yaml_data["simulator"] = "pdd"
+        if "iterations" in self.config_data.keys():
+            yaml_data["iterations"] = self.config_data["iterations"]
 
-        if plcs:
-            # Generate the list of all plc rules
-            global_plc_controls = InputParser(self.inp_path).generate_controls()
-            for plc in plcs:
-                # Assign name of PLC
-                name = plc.get("name")
-                if not name:
-                    raise MissingValueError("plc is missing a name")
+        # Write data to yaml file
+        with self.yaml_path.open(mode='w') as intermediate_yaml:
+            yaml.safe_dump(yaml_data, intermediate_yaml)
 
-                # Assign sensors to the plc
-                sensor_list = []
-                sensors = plc.get("sensors")
-                if sensors:
-                    for sensor in sensors:
-                        sensor_list.append(sensor)
+        # todo: and initial values
 
-                # Assign actuators for PLC and assign all rules that attach to a given actuator
-                actuator_list = []
-                plc_controls = []
-                actuators = plc.get("actuators")
-                if actuators:
-                    for actuator in actuators:
-                        actuator_list.append(actuator)
-                        for control in global_plc_controls:
-                            if control.actuator == actuator:
-                                plc_controls.append(control)
-
-                plc_config_list.append(PlcConfig(name, sensor_list, actuator_list, plc_controls))
-
-        return plc_config_list
+        # Write values from IMP file into yaml file (controls, tanks/valves/initial values, etc.)
+        InputParser(self.yaml_path).write()
