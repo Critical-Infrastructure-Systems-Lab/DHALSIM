@@ -1,5 +1,6 @@
 import argparse
 import os.path
+import sqlite3
 
 from basePLC import BasePLC
 from datetime import datetime
@@ -84,6 +85,10 @@ class GenericPLC(BasePLC):
 
         self.intermediate_plc = self.intermediate_yaml["plcs"][self.yaml_index]
 
+        # connection to the database
+        self.conn = sqlite3.connect(self.intermediate_yaml["db_path"])
+        self.c = self.conn.cursor()
+
         self.intermediate_controls = self.intermediate_plc['controls']
 
         self.controls = create_controls(self.intermediate_controls)
@@ -125,8 +130,8 @@ class GenericPLC(BasePLC):
         super(GenericPLC, self).__init__(name=self.intermediate_plc['name'],
                                          state=state, protocol=plc_protocol)
 
-    def pre_loop(self):
-        print 'DEBUG: ' + self.intermediate_plc['name'] + ' enters pre_loop'
+    def pre_loop(self, sleep=0.5):
+        print('DEBUG: ' + self.intermediate_plc['name'] + ' enters pre_loop')
 
         reader = True
 
@@ -158,7 +163,6 @@ class GenericPLC(BasePLC):
                 continue
             if tag in plc_data["sensors"] or tag in plc_data["actuators"]:
                 received = Decimal(self.receive((tag, 1), plc_data["ip"]))
-                print(str((tag, 1)) + " : " + str(received) + " from " + plc_data["ip"])
                 return received
         raise TagDoesNotExist(tag)
 
@@ -175,9 +179,12 @@ class GenericPLC(BasePLC):
 
     # todo: get an actual master clock from the DB
     def get_master_clock(self):
-        return self.local_time
+        # Fetch master_time
+        self.c.execute("SELECT time FROM master_time WHERE id IS 1")
+        time = self.c.fetchone()[0]
+        return time
 
-    def main_loop(self):
+    def main_loop(self, sleep=0.5):
         print('DEBUG: ' + self.intermediate_plc['name'] + ' enters main_loop')
         while True:
             # try:
@@ -185,6 +192,7 @@ class GenericPLC(BasePLC):
             # print(self.intermediate_plc["name"] + " time: " + str(self.local_time))
 
             for control in self.controls:
+                # print(self.intermediate_plc['name'] + " tries " + str(control))
                 control.apply(self)
 
             time.sleep(0.05)
