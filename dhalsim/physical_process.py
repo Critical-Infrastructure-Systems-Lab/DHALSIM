@@ -25,62 +25,73 @@ class PhysicalPlant:
         with self.intermediate_yaml.open(mode='r') as file:
             self.data = yaml.safe_load(file)
 
-        self.ground_truth_path = Path(self.data["output_path"]) / "ground_truth.csv"
-        self.ground_truth_path.touch(exist_ok=True)
+        try:
+            self.ground_truth_path = Path(self.data["output_path"]) / "ground_truth.csv"
 
-        # connection to the database
-        self.conn = sqlite3.connect(self.data["db_path"])
-        self.c = self.conn.cursor()
+            try:
+                print("\n\nPATH: ", Path(self.data["output_path"]))
+                os.makedirs(str(Path(self.data["output_path"])))
+            except OSError as e:
+                print("\n\nERROR: ", e)
+                pass
 
-        # Create the network
-        self.wn = wntr.network.WaterNetworkModel(self.data['inp_file'])
+            self.ground_truth_path.touch(exist_ok=True)
 
-        self.node_list = list(self.wn.node_name_list)
-        self.link_list = list(self.wn.link_name_list)
+            # connection to the database
+            self.conn = sqlite3.connect(self.data["db_path"])
+            self.c = self.conn.cursor()
 
-        self.tank_list = self.get_node_list_by_type(self.node_list, 'Tank')
-        self.junction_list = self.get_node_list_by_type(self.node_list, 'Junction')
-        self.pump_list = self.get_link_list_by_type(self.link_list, 'Pump')
-        self.valve_list = self.get_link_list_by_type(self.link_list, 'Valve')
+            # Create the network
+            self.wn = wntr.network.WaterNetworkModel(self.data['inp_file'])
 
-        list_header = ["Timestamps"]
+            self.node_list = list(self.wn.node_name_list)
+            self.link_list = list(self.wn.link_name_list)
 
-        list_header.extend(self.create_node_header(self.tank_list))
-        list_header.extend(self.create_node_header(self.junction_list))
-        list_header.extend(self.create_link_header(self.pump_list))
-        list_header.extend(self.create_link_header(self.valve_list))
+            self.tank_list = self.get_node_list_by_type(self.node_list, 'Tank')
+            self.junction_list = self.get_node_list_by_type(self.node_list, 'Junction')
+            self.pump_list = self.get_link_list_by_type(self.link_list, 'Pump')
+            self.valve_list = self.get_link_list_by_type(self.link_list, 'Valve')
 
-        self.results_list = []
-        self.results_list.append(list_header)
+            list_header = ["Timestamps"]
 
-        dummy_condition = controls.ValueCondition(self.wn.get_node(self.tank_list[0]), 'level', '>=', -1)
+            list_header.extend(self.create_node_header(self.tank_list))
+            list_header.extend(self.create_node_header(self.junction_list))
+            list_header.extend(self.create_link_header(self.pump_list))
+            list_header.extend(self.create_link_header(self.valve_list))
 
-        self.control_list = []
-        for valve in self.valve_list:
-            self.control_list.append(self.create_control_dict(valve, dummy_condition))
+            self.results_list = []
+            self.results_list.append(list_header)
 
-        for pump in self.pump_list:
-            self.control_list.append(self.create_control_dict(pump, dummy_condition))
+            dummy_condition = controls.ValueCondition(self.wn.get_node(self.tank_list[0]), 'level', '>=', -1)
 
-        for control in self.control_list:
-            an_action = controls.ControlAction(control['actuator'], control['parameter'], control['value'])
-            a_control = controls.Control(control['condition'], an_action, name=control['name'])
-            self.wn.add_control(control['name'], a_control)
+            self.control_list = []
+            for valve in self.valve_list:
+                self.control_list.append(self.create_control_dict(valve, dummy_condition))
 
-        simulator_string = self.data['simulator']
+            for pump in self.pump_list:
+                self.control_list.append(self.create_control_dict(pump, dummy_condition))
 
-        if simulator_string == 'pdd':
-            print('Running simulation using PDD')
-            self.wn.options.hydraulic.demand_model = 'PDD'
-        elif simulator_string == 'dd':
-            print('Running simulation using DD')
-        else:
-            print('Invalid simulation mode, exiting...')
-            sys.exit(1)
+            for control in self.control_list:
+                an_action = controls.ControlAction(control['actuator'], control['parameter'], control['value'])
+                a_control = controls.Control(control['condition'], an_action, name=control['name'])
+                self.wn.add_control(control['name'], a_control)
 
-        self.sim = wntr.sim.WNTRSimulator(self.wn)
+            simulator_string = self.data['simulator']
 
-        print("Starting simulation for " + str(self.data['inp_file']) + " topology ")
+            if simulator_string == 'pdd':
+                print('Running simulation using PDD')
+                self.wn.options.hydraulic.demand_model = 'PDD'
+            elif simulator_string == 'dd':
+                print('Running simulation using DD')
+            else:
+                print('Invalid simulation mode, exiting...')
+                sys.exit(1)
+
+            self.sim = wntr.sim.WNTRSimulator(self.wn)
+
+            print("Starting simulation for " + str(self.data['inp_file']) + " topology ")
+        except KeyError as e:
+            print("ERROR: An incorrect YAML file has been supplied: " + str(e))
 
     def get_node_list_by_type(self, a_list, a_type):
         result = []
@@ -227,7 +238,7 @@ class PhysicalPlant:
         self.c.execute(query)
         self.conn.commit()
 
-        iteration_limit = self.data["itterations"]
+        iteration_limit = self.data["iterations"]
 
         print("Simulation will run for", iteration_limit, "iterations")
         print("Hydraulic timestep is", self.wn.options.time.hydraulic_timestep)
