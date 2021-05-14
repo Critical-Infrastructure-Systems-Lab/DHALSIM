@@ -17,6 +17,7 @@ cache:
   paths:
     - .cache/pip
     - venv/
+    - minicps
 
 stages:
   - test
