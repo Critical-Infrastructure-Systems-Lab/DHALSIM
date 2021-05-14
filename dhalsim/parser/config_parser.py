@@ -96,7 +96,6 @@ class ConfigParser:
         yaml_data["inp_file"] = self.inp_path
         yaml_data["cpa_file"] = self.cpa_path
         yaml_data["db_path"] = "/tmp/dhalsim/dhalsim.sqlite"
-        yaml_data["db_name"] = "wadi"
 
         # Add options from the config_file
         if "mininet_cli" in self.config_data.keys():
@@ -107,6 +106,8 @@ class ConfigParser:
             yaml_data["simulator"] = self.config_data["simulator"]
         else:
             yaml_data["simulator"] = "pdd"
+        if "iterations" in self.config_data.keys():
+            yaml_data["iterations"] = self.config_data["iterations"]
 
         # Write data to yaml file
         with self.yaml_path.open(mode='w') as intermediate_yaml:

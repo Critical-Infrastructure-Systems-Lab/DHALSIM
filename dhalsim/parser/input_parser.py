@@ -52,7 +52,6 @@ class InputParser:
         # Read the inp file with WNTR
         self.wn = wntr.network.WaterNetworkModel(self.inp_file_path)
 
-
     def write(self):
         """Writes all needed inp file sections into the intermediate_yaml
         """
@@ -66,6 +65,11 @@ class InputParser:
         self.generate_tanks_list()
         # Generate list of times
         self.generate_times()
+        # Add iterations if not existing
+        if "iterations" not in self.data.keys():
+            self.data["iterations"] = int(self.data["time"][0]["duration"]
+                                          / self.data["time"][1]["hydraulic_timestep"])
+
         # Write to the yaml
         with self.intermediate_yaml_path.open(mode='w') as intermediate_yaml:
             yaml.safe_dump(self.data, intermediate_yaml)
