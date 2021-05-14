@@ -40,7 +40,7 @@ test:2:
     - virtualenv venv
     - source venv/bin/activate
     - pip install cpppo==4.0.4
-    - git clone https://github.com/afmurillo/minicps.git
+    - git clone https://github.com/afmurillo/minicps.git || git -C minicps pull
     - pip install -e ./minicps
     - pip install mininet
     - pip install pyyaml
