@@ -96,7 +96,6 @@ class ConfigParser:
         yaml_data["inp_file"] = self.inp_path
         yaml_data["cpa_file"] = self.cpa_path
         yaml_data["db_path"] = "/tmp/dhalsim/dhalsim.sqlite"
-        yaml_data["db_name"] = "wadi"
 
         # Add options from the config_file
         if "mininet_cli" in self.config_data.keys():
