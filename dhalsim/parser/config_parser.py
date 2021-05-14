@@ -1,6 +1,7 @@
 import logging
 import os
 import pathlib
+from pathlib import Path
 
 import yaml
 
@@ -26,7 +27,7 @@ class ConfigParser:
     Class handling the parsing of the input config data.
 
     :param config_path: The path to the config file of the experiment in yaml format
-    :type config_path: str
+    :type config_path: Path
     """
 
     def __init__(self, config_path: Path):
@@ -43,7 +44,7 @@ class ConfigParser:
         if not self.config_data:
             raise EmptyConfigError
         # Create temp directory and intermediate yaml files in /tmp/
-        self.yaml_path = pathlib.Path("/tmp/dhalsim/intermediate.yaml")
+        self.yaml_path = Path("/tmp/dhalsim/intermediate.yaml")
         self.yaml_path.parent.mkdir(parents=True, exist_ok=True)
 
     @property
