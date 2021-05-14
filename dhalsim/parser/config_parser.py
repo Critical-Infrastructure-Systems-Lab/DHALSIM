@@ -107,6 +107,8 @@ class ConfigParser:
             yaml_data["simulator"] = self.config_data["simulator"]
         else:
             yaml_data["simulator"] = "pdd"
+        if "iterations" in self.config_data.keys():
+            yaml_data["iterations"] = self.config_data["iterations"]
 
         # Write data to yaml file
         with self.yaml_path.open(mode='w') as intermediate_yaml:

@@ -5,6 +5,7 @@ from pathlib import Path
 
 from dhalsim.parser.input_parser import InputParser
 
+
 @pytest.fixture
 def inp_path(tmpdir):
     return Path("test/auxilary_testing_files/wadi_map_pda_original.inp")
@@ -13,7 +14,8 @@ def inp_path(tmpdir):
 @pytest.fixture
 def initial_dict(inp_path):
     return {"inp_file": str(inp_path),
-            "plcs": [{"name": "PLC1", "actuators": ["P_RAW1", "V_PUB"], "sensors": ["T0"]}, {"name": "PLC2", "actuators": ["V_ER2i"], "sensors": ["T2"]}]}
+            "plcs": [{"name": "PLC1", "actuators": ["P_RAW1", "V_PUB"], "sensors": ["T0"]},
+                     {"name": "PLC2", "actuators": ["V_ER2i"], "sensors": ["T2"]}]}
 
 
 @pytest.fixture
@@ -27,6 +29,7 @@ def written_intermediate_yaml(tmpdir, initial_dict):
     with intermediate.open(mode='w') as intermediate_yaml:
         yaml.dump(initial_dict, intermediate_yaml)
     return tmpdir.join("intermediate.yaml")
+
 
 def test_python_version():
     assert sys.version_info.major is 3
