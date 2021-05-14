@@ -28,11 +28,10 @@ class PhysicalPlant:
         try:
             self.ground_truth_path = Path(self.data["output_path"]) / "ground_truth.csv"
 
+            # Create directory output path
             try:
-                print("\n\nPATH: ", Path(self.data["output_path"]))
                 os.makedirs(str(Path(self.data["output_path"])))
-            except OSError as e:
-                print("\n\nERROR: ", e)
+            except OSError:
                 pass
 
             self.ground_truth_path.touch(exist_ok=True)

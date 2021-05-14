@@ -40,15 +40,16 @@ class GeneralCPS(MiniCPS):
     #     r0.waitOutput()
 
     def __init__(self, intermediate_yaml):
-        # Create logs and output directories
+        # Create logs directory in working directory
         try:
             os.mkdir('logs')
-        except OSError, e:
+        except OSError:
             pass
 
+        # Create output directory in file directory
         try:
-            os.mkdir('output')
-        except OSError, e:
+            os.mkdir(os.path.realpath(__file__).join('output'))
+        except OSError:
             pass
 
         self.intermediate_yaml = intermediate_yaml
