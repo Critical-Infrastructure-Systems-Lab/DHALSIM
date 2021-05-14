@@ -30,7 +30,7 @@ class NodeControl:
 
         self.this_plc_data = self.data["plcs"][self.plc_index]
 
-    def sigint_handler(self):
+    def sigint_handler(self, sig, frame):
         """
         Interrupt handler for :class:`~signal.SIGINT` and :class:`~signal.SIGINT`.
         """

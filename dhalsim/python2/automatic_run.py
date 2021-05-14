@@ -64,7 +64,7 @@ class GeneralCPS(MiniCPS):
 
         self.net.stop()
 
-    def interrupt(self):
+    def interrupt(self, sig, frame):
         """
         Interrupt handler for :class:`~signal.SIGINT` and :class:`~signal.SIGINT`.
         """
@@ -126,7 +126,10 @@ class GeneralCPS(MiniCPS):
         # self.end_process(self.scada_process)
 
         for plc_process in self.plc_processes:
-            self.end_process(plc_process)
+            try:
+                self.end_process(plc_process)
+            except:
+                continue
 
         if self.plant_process.poll() is None:
             self.end_process(self.plant_process)

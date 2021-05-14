@@ -280,11 +280,13 @@ class PhysicalPlant:
 
         self.finish()
 
-    def interrupt(self):
+    def interrupt(self, sig, frame):
         self.finish()
+        sys.exit(0)
 
     def finish(self):
         self.write_results(self.results_list)
+        sys.exit(0)
 
 
 def is_valid_file(test_parser, arg):
