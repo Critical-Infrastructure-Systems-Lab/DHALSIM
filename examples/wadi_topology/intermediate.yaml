@@ -1,6 +1,5 @@
-inp_file: /home/robert/dhalsim/examples/wadi_topology/wadi_map_pda_original.inp
+inp_file: /home/robert/dhalsim/examples/wadi_topology/wadi_map_newer.inp
 db_path: /home/robert/dhalsim.sqlite
-db_name: wadi
 
 output_path: /home/robert/dhalsim/output
 
@@ -46,14 +45,14 @@ plcs:
         value: 0.32
         actuator: P_RAW1
         action: CLOSED
-      - type: Time
-        value: 0
-        actuator: V_PUB
-        action: OPEN
-      - type: Time
-        value: 0
-        actuator: P_RAW1
-        action: CLOSED
+#      - type: Time
+#        value: 0
+#        actuator: V_PUB
+#        action: OPEN
+#      - type: Time
+#        value: 0
+#        actuator: P_RAW1
+#        action: CLOSED
   - name: PLC2
     ip: 192.168.1.2
     mac: 11:22:33:44:55:02
@@ -62,10 +61,10 @@ plcs:
     actuators:
       - V_ER2i
     controls:
-      - type: Time
-        value: 0
-        actuator: V_ER2i
-        action: CLOSED
+#      - type: Time
+#        value: 0
+#        actuator: V_ER2i
+#        action: CLOSED
       - type: Above
         dependant: T2
         value: 0.32
@@ -78,63 +77,63 @@ plcs:
         action: OPEN
 
 valves:
+  - name: V_PUB
+    initial_state: Closed
+  - name: V_ER1i
+    initial_state: Open
+  - name: V_ER1o
+    initial_state: Closed
+  - name: V_ER2i
+    initial_state: Closed
+  - name: V_ER2o
+    initial_state: Open
   - name: V_Gi_G
     initial_state: Closed
   - name: V_Gi_B
     initial_state: Open
   - name: V_SWaT
     initial_state: Closed
-  - name: V_PUB
-    initial_state: Open
-  - name: V_ER2i
-    initial_state: Open
-  - name: V_ER2o
-    initial_state: Open
-  - name: V_ER1i
-    initial_state: Closed
-  - name: V_ER1o
-    initial_state: Closed
   - name: FCV_ER
     initial_state: Open
   - name: FCV_RWin
     initial_state: Open
-  - name: 1
+  - name: V1
     initial_state: Open
-  - name: 2
+  - name: V2
     initial_state: Open
-  - name: 3
+  - name: V3
     initial_state: Open
-  - name: 4
+  - name: V4
     initial_state: Open
-  - name: 5
+  - name: V5
     initial_state: Open
-  - name: 6
+  - name: V6
     initial_state: Open
-  - name: 7
+  - name: V7
     initial_state: Open
-  - name: 8
+  - name: V8
     initial_state: Open
-  - name: 9
+  - name: V9
     initial_state: Open
-  - name: 10
+  - name: V10
     initial_state: Open
-  - name: 11
+  - name: V11
     initial_state: Open
-  - name: 12
+  - name: V12
     initial_state: Open
 
 tanks:
   - name: T1
-    initial_value: 0.3129975
+    initial_value: 0.3212883
   - name: T2
-    initial_value: 0.2369489
+    initial_value: 0.1466138
   - name: T0
-    initial_value: 0.4259549
+    initial_value: 0.5629288
 
 
 pumps:
   - name: P_RAW1
-    initial_state: Open
+    initial_state: Closed
   - name: P_RAW2
     initial_state: Closed
   - name: P_B1
