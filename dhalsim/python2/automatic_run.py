@@ -7,11 +7,11 @@ from pathlib import Path
 
 import yaml
 from minicps.mcps import MiniCPS
+from mininet.net import Mininet
 from mininet.cli import CLI
 from mininet.link import TCLink
-from mininet.net import Mininet
 
-from dhalsim.python2.topo.simple_topo import SimpleTopo
+from topo.simple_topo import SimpleTopo
 
 
 class GeneralCPS(MiniCPS):
