@@ -40,9 +40,11 @@ class ConfigParser:
         # Load yaml data from config file
         with config_path.open(mode='r') as file:
             self.config_data = yaml.load(file, Loader=yaml.FullLoader)
+
         # Assert config data is not empty
         if not self.config_data:
             raise EmptyConfigError
+
         # Create temp directory and intermediate yaml files in /tmp/
         self.yaml_path = Path("/tmp/dhalsim/intermediate.yaml")
         self.yaml_path.parent.mkdir(parents=True, exist_ok=True)
