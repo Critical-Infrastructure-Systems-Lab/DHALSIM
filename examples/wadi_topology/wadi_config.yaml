@@ -6,6 +6,7 @@
 inp_file: "wadi_map_pda_original.inp"
 cpa_file: "wadi_cpa.yaml"
 output_path: "output"
+iterations: 50
 #simulator: "pdd"
 #week_index: 0
 

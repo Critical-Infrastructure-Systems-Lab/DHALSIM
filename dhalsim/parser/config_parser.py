@@ -100,6 +100,19 @@ class ConfigParser:
         with self.cpa_path.open() as file:
             return yaml.load(file, Loader=yaml.FullLoader)
 
+    @property
+    def iterations(self):
+        """Load the amount of iterations for the simulation
+
+        :return: the amount of itteration
+        :rtype: int
+        """
+        with self.cpa_path.open() as file:
+            iterations = self.config_data.get("iterations")
+            if not iterations:
+                raise MissingValueError("iterations not in config file")
+            return iterations
+
     def generate_intermediate_yaml(self):
         """Writes the intermediate.yaml file to include all options specified in the config, the plc's and their
         data, and all valves/pumps/tanks etc
@@ -114,6 +127,7 @@ class ConfigParser:
         yaml_data["cpa_file"] = str(self.cpa_path)
         yaml_data["output_path"] = str(self.output_path)
         yaml_data["db_path"] = "/tmp/dhalsim/dhalsim.sqlite"
+        yaml_data["iterations"] = self.iterations
 
         # Add options from the config_file
         if "mininet_cli" in self.config_data.keys():
@@ -124,14 +138,12 @@ class ConfigParser:
             yaml_data["simulator"] = self.config_data["simulator"]
         else:
             yaml_data["simulator"] = "pdd"
-        if "iterations" in self.config_data.keys():
-            yaml_data["iterations"] = self.config_data["iterations"]
 
         # Write data to yaml file
         with self.yaml_path.open(mode='w') as intermediate_yaml:
             yaml.safe_dump(yaml_data, intermediate_yaml)
 
-        # todo: and initial values
+        # todo: add initial values
 
         # Write values from IMP file into yaml file (controls, tanks/valves/initial values, etc.)
         InputParser(self.yaml_path).write()
