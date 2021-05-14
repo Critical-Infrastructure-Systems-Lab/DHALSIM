@@ -19,12 +19,12 @@ plcs:
       - type: Below
         dependant: T0
         value: 0.256
-        actuator: P_PUB
+        actuator: V_PUB
         action: OPEN
       - type: Above
         dependant: T0
         value: 0.448
-        actuator: P_PUB
+        actuator: V_PUB
         action: CLOSED
       - type: Below
         dependant: T0

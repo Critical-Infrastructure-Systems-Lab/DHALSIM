@@ -1,52 +1,24 @@
 import sys
 import pytest
 import yaml
+from pathlib import Path
 
 from dhalsim.parser.input_parser import InputParser
 
 @pytest.fixture
 def inp_path(tmpdir):
-    return tmpdir.join("input.inp")
+    return Path("test/auxilary_testing_files/wadi_map_pda_original.inp")
 
 
 @pytest.fixture
 def initial_dict(inp_path):
     return {"inp_file": str(inp_path),
-            "plcs": [{"name": "PLC1", "actuators": ["P_RAW1", "V_PUB"]}, {"name": "PLC2", "actuators": ["V_ER2i"]}]}
+            "plcs": [{"name": "PLC1", "actuators": ["P_RAW1", "V_PUB"], "sensors": ["T0"]}, {"name": "PLC2", "actuators": ["V_ER2i"], "sensors": ["T2"]}]}
 
 
 @pytest.fixture
-def filled_dict(inp_path):
-    return {"inp_file": str(inp_path),
-            "plcs": [{"name": "PLC1",
-                      "actuators": ["P_RAW1", "V_PUB"],
-                      "controls": [{
-                          "type": "below",
-                          "dependant": "T0",
-                          "value": 0.256,
-                          "actuator": "V_PUB",
-                          "action": "OPEN"
-                      }, {
-                          "type": "above",
-                          "dependant": "T0",
-                          "value": 0.448,
-                          "actuator": "V_PUB",
-                          "action": "CLOSED"
-                      }]},
-                     {"name": "PLC2",
-                      "actuators": ["V_ER2i"],
-                      "controls": [{
-                          "type": "time",
-                          "value": 0,
-                          "actuator": "V_ER2i",
-                          "action": "CLOSED"
-                      }, {
-                          "type": "above",
-                          "dependant": "T2",
-                          "value": 0.32,
-                          "actuator": "V_ER2i",
-                          "action": "CLOSED"
-                      }]}]}
+def filled_yaml_path():
+    return Path("test/auxilary_testing_files/intermediate-wadi-pda-original.yaml")
 
 
 @pytest.fixture
@@ -60,25 +32,20 @@ def test_python_version():
     assert sys.version_info.major is 3
 
 
-def test_no_controls(tmpdir, written_intermediate_yaml, filled_dict):
+def test_no_controls(tmpdir, written_intermediate_yaml):
     inp = tmpdir.join("input.inp")
     inp.write("\n[CONTROLS]")
 
     InputParser(tmpdir.join("intermediate.yaml")).write()
 
 
-def test_node_and_time_controls(tmpdir, written_intermediate_yaml, filled_dict):
-    c = tmpdir.join("input.inp")
-    c.write("\n"
-            "[CONTROLS]\n"
-            "LINK V_PUB  OPEN   IF NODE T0 BELOW 0.256\n"
-            "LINK V_PUB  CLOSED IF NODE T0 ABOVE 0.448\n"
-            "LINK V_ER2i CLOSED AT TIME 0\n"
-            "LINK V_ER2i CLOSED IF NODE T2 ABOVE 0.32\n")
-
-    InputParser(tmpdir.join("intermediate.yaml")).write()
+def test_node_and_time_controls(tmpdir, inp_path, written_intermediate_yaml, filled_yaml_path):
+    InputParser(written_intermediate_yaml).write()
 
     with tmpdir.join("intermediate.yaml").open(mode='r') as intermediate_yaml:
         dump = yaml.safe_load(intermediate_yaml)
 
-    assert dump == filled_dict
+    with filled_yaml_path.open(mode='r') as expectation:
+        expected = yaml.safe_load(expectation)
+
+    assert dump == expected
