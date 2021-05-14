@@ -156,6 +156,8 @@ class GenericPLC(BasePLC):
                                self.intermediate_plc['ip'])
         self.startup()
 
+        time.sleep(sleep)
+
     def get_tag(self, tag):
         if tag in self.intermediate_plc["sensors"] or tag in self.intermediate_plc["actuators"]:
             return Decimal(self.get((tag, 1)))
