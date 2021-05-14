@@ -87,24 +87,28 @@ class ConfigParser:
             return yaml.load(file, Loader=yaml.FullLoader)
 
     def generate_intermediate_yaml(self):
-        """Returns a list of plc configs
-
-        :return: list containing parsed PlcConfig objects
-        :rtype: List[PlcConfig]
+        """Writes the intermediate.yaml file to include all options specified in the config, the plc's and their
+        data, and all valves/pumps/tanks etc
         """
+        # Begin with PLC data specified in CPA file
         yaml_data = self.cpa_data
+        # Add path and database information
         yaml_data["inp_file"] = self.inp_path
         yaml_data["cpa_file"] = self.cpa_path
         yaml_data["db_path"] = "/tmp/dhalsim/dhalsim.sqlite"
         yaml_data["db_name"] = "wadi"
 
+        # Add options from the config_file
         if "mininet_cli" in self.config_data.keys():
             yaml_data["mininet_cli"] = self.config_data["mininet_cli"]
         else:
             yaml_data["mininet_cli"] = False
 
+        # Write data to yaml file
         with self.yaml_path.open(mode='w') as intermediate_yaml:
             yaml.safe_dump(yaml_data, intermediate_yaml)
 
-        # todo: add controls and initial values
+        # todo: and initial values
+
+        # Write values from IMP file into yaml file (controls, tanks/valves/initial values, etc.)
         InputParser(self.yaml_path).write()
