@@ -8,8 +8,8 @@ from pathlib import Path
 
 import yaml
 
-from dhalsim.python2.basePLC import BasePLC
-from dhalsim.python2.control import AboveControl, BelowControl, TimeControl
+from basePLC import BasePLC
+from control import AboveControl, BelowControl, TimeControl
 
 
 class Error(Exception):
