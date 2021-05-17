@@ -29,7 +29,7 @@ POSTCONTROLS        :   '['CAPITALS']'.*? -> skip;
 /** Skip over comments */
 COMMENT             :   ';'.*?NEWLINES -> skip;
 
-/** Skip newlines, whitespaces and spaces */
+/** Skip newlines, whitespaces */
 NEWLINES            :   [\n]+ -> skip ;
 WS                  :   [ \t\r\n]+ -> skip ;
 
