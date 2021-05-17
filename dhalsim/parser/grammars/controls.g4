@@ -1,6 +1,9 @@
 /** INP File Controls Grammar */
 grammar controls;
 
+/** Skip spaces */
+SPACES              :   ' ' -> skip;
+
 /** States */
 STATE               :   (OPEN | CLOSED) ;
 OPEN                :   'OPEN';
@@ -26,10 +29,10 @@ POSTCONTROLS        :   '['CAPITALS']'.*? -> skip;
 /** Skip over comments */
 COMMENT             :   ';'.*?NEWLINES -> skip;
 
-/** Skip newlines and whitespaces */
+/** Skip newlines, whitespaces and spaces */
 NEWLINES            :   [\n]+ -> skip ;
 WS                  :   [ \t\r\n]+ -> skip ;
 
-nodeControl         :   'LINK' ID STATE 'IF NODE' ID CONDITION VALUE ;
-timeControl         :   'LINK' ID STATE 'AT TIME' VALUE ;
+nodeControl         :   'LINK' ID STATE 'IF' 'NODE' ID CONDITION VALUE ;
+timeControl         :   'LINK' ID STATE 'AT' 'TIME' VALUE ;
 controls            :   (nodeControl | timeControl)*;
