@@ -55,7 +55,8 @@ class SimpleTopo(Topo):
             plc_int = plc['name'] + "-eth0"
 
             # Store the data in self.data
-            plc['ip'] = plc_ip
+            plc['local_ip'] = plc_ip
+            plc['public_ip'] = plc_ip
             plc['mac'] = plc_mac
             plc['interface'] = plc_int
             plc['gateway'] = self.router_ip
@@ -82,7 +83,7 @@ class SimpleTopo(Topo):
                 plc_node = self.addHost(
                     plc['name'],
                     mac=plc['mac'],
-                    ip=plc['ip'] + "/24",
+                    ip=plc['local_ip'] + "/24",
                     defaultRoute=gateway)
                 self.addLink(switch, plc_node, intfName2=plc['interface'])
 
