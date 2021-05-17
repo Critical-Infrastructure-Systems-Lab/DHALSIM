@@ -146,6 +146,8 @@ class GeneralCPS(MiniCPS):
 
 
 def is_valid_file(parser_instance, arg):
+    """Verifies whether the intermediate yaml path is valid
+    """
     if not os.path.exists(arg):
         parser_instance.error(arg + " does not exist")
     else:

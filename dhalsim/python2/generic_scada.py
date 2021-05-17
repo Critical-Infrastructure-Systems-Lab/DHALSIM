@@ -5,7 +5,6 @@ import sqlite3
 import signal
 import sys
 import time
-from datetime import datetime
 from pathlib import Path
 
 import yaml
@@ -105,12 +104,12 @@ class GenericScada(BasePLC):
             self.saved_values[0].extend(PLC['sensors'])
             self.saved_values[0].extend(PLC['actuators'])
 
-        print "-----------DEBUG SCADA INIT-----------"
-        print "state = " + str(state)
-        print "scada_protocol = " + str(scada_protocol)
-        print "plc_data = " + str(self.plc_data)
-        print "output_format = " + str(self.saved_values)
-        print "-----------DEBUG SCADA INIT-----------"
+        # print "-----------DEBUG SCADA INIT-----------"
+        # print "state = " + str(state)
+        # print "scada_protocol = " + str(scada_protocol)
+        # print "plc_data = " + str(self.plc_data)
+        # print "output_format = " + str(self.saved_values)
+        # print "-----------DEBUG SCADA INIT-----------"
 
         super(GenericScada, self).__init__(name='scada', state=state, protocol=scada_protocol)
 
