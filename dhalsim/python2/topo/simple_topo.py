@@ -42,6 +42,7 @@ class SimpleTopo(Topo):
         # Generate PLC data and write back to file (mac addresses, ip addresses, interface names, ...)
         self.generate_plc_data(self.data['plcs'])
         # Generate scada data
+        self.data['scada'] = {}
         self.data['scada']['name'] = "scada"
         self.data['scada']['ip'] = "192.168.2.1"
         self.data['scada']['interface'] = "scada-eth0"
