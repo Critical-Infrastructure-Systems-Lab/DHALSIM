@@ -78,17 +78,17 @@ class GeneralCPS(MiniCPS):
 
         self.plc_processes = []
 
+        automatic_plc_path = Path(__file__).parent.absolute() / "automatic_plc.py"
         for i, plc in enumerate(self.data["plcs"]):
             node = self.net.get(plc["name"])
-
-            automatic_plc_path = Path(__file__).parent.absolute() / "automatic_plc.py"
 
             cmd = ["python2", str(automatic_plc_path), str(self.intermediate_yaml), str(i)]
             self.plc_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
 
-        # self.scada_process = self.net.get('scada').popen("python2", "automatic_plc.py", "-n",
-        #                                             "scada",
-        #                                             stderr=sys.stderr, stdout=sys.stdout)
+        automatic_scada_path = Path(__file__).parent.absolute() / "automatic_scada.py"
+        scada_cmd = ["python2", str(automatic_scada_path), str(self.intermediate_yaml)]
+        self.scada_process = self.net.get('scada').popen(scada_cmd, stderr=sys.stderr, stdout=sys.stdout)
+
         print("[*] Launched the PLCs and SCADA processes")
 
         automatic_plant_path = Path(__file__).parent.absolute() / "automatic_plant.py"
