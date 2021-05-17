@@ -1,10 +1,10 @@
 import argparse
+import csv
 import os.path
 import sqlite3
 import signal
 import sys
 import time
-from decimal import Decimal
 from pathlib import Path
 
 import yaml
@@ -25,6 +25,12 @@ class InvalidControlValue(Error):
 
 
 def generate_real_tags(tanks, pumps, valves):
+    """generates real tags with all tanks, pumps, and values
+
+    :param tanks: list of tanks
+    :param pumps: list of pumps
+    :param valves: list of valves
+    """
     real_tags = []
 
     for tank in tanks:
@@ -41,6 +47,8 @@ def generate_real_tags(tanks, pumps, valves):
 
 
 def generate_tags(taggable):
+    """generates tags from a list of taggable entities (sensor or actuator)
+    """
     tags = []
 
     if taggable:
@@ -57,8 +65,6 @@ class GenericScada(BasePLC):
     """
 
     def __init__(self, intermediate_yaml_path):
-        self.local_time = 0
-
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
@@ -89,9 +95,18 @@ class GenericScada(BasePLC):
             'server': scada_server
         }
 
+        self.plc_data = self.generate_plcs()
+        self.saved_values = [[]]
+
+        for PLC in self.intermediate_yaml['plcs']:
+            self.saved_values[0].extend(PLC['sensors'])
+            self.saved_values[0].extend(PLC['actuators'])
+
         # print "DEBUG SCADA INIT"
         # print "state = " + str(state)
         # print "scada_protocol = " + str(scada_protocol)
+        # print "plc_data = " + str(self.plc_data)
+        # print "output_format = " + str(self.saved_values)
 
         super(GenericScada, self).__init__(name='scada', state=state, protocol=scada_protocol)
 
@@ -107,64 +122,13 @@ class GenericScada(BasePLC):
 
         time.sleep(sleep)
 
-    def get_tag(self, tag):
-        """
-        Get the value of a tag that is connected to this plc or over the network.
-
-        :param tag: The tag to get
-        :return: Value of that tag
-        :rtype: int
-        :raise: TagDoesNotExist if tag cannot be found
-        """
-        if tag in self.intermediate_plc["sensors"] or tag in self.intermediate_plc["actuators"]:
-            return Decimal(self.get((tag, 1)))
-
-        for i, plc_data in enumerate(self.intermediate_yaml["plcs"]):
-            if i == self.yaml_index:
-                continue
-            if tag in plc_data["sensors"] or tag in plc_data["actuators"]:
-                received = Decimal(self.receive((tag, 1), plc_data["ip"]))
-                return received
-        raise TagDoesNotExist(tag)
-
-    def set_tag(self, tag, value):
-        """
-        Set a tag that is connected to this plc to a value.
-
-        :param tag: Which tag to set
-        :type tag: str
-        :param value: value to set the Tag to
-        :raise: TagDoesNotExist if tag is not connected to this plc
-        """
-        if isinstance(value, basestring) and value.lower() == "closed":
-            value = 0
-        elif isinstance(value, basestring) and value.lower() == "open":
-            value = 1
-        else:
-            raise InvalidControlValue(value)
-
-        if tag in self.intermediate_plc["sensors"] or tag in self.intermediate_plc["actuators"]:
-            self.set((tag, 1), value)
-        else:
-            raise TagDoesNotExist(tag + " cannot be set from " + self.intermediate_plc["name"])
-
-    def get_master_clock(self):
-        """
-        Get the value of the master clock of the physical process through the database
-        :return: Iteration in the physical process
-        """
-        # Fetch master_time
-        self.cur.execute("SELECT time FROM master_time WHERE id IS 1")
-        master_time = self.cur.fetchone()[0]
-        return master_time
-
     def get_sync(self):
         """
         Get the sync flag of this plc.
 
         :return: False if physical process wants the plc to do a iteration, True if not.
         """
-        self.cur.execute("SELECT flag FROM sync WHERE name IS ?", (self.intermediate_plc["name"],))
+        self.cur.execute("SELECT flag FROM sync WHERE name IS ?", ('scada',))
         flag = bool(self.cur.fetchone()[0])
         return flag
 
@@ -178,13 +142,38 @@ class GenericScada(BasePLC):
         """
 
         self.cur.execute("UPDATE sync SET flag=? WHERE name IS ?",
-                         (int(flag), self.intermediate_plc["name"],))
+                         (int(flag), 'scada',))
         self.conn.commit()
 
     def sigint_handler(self, sig, frame):
+        """shutdown protocol for the scada, writes the output before exiting
+        """
         print 'DEBUG SCADA shutdown'
         self.write_output()
         sys.exit(0)
+
+    def write_output(self):
+        """writes the csv output of the scada
+        """
+        with self.output_path.open(mode='w') as output:
+            writer = csv.writer(output)
+            writer.writerows(self.saved_tank_levels)
+
+    def generate_plcs(self):
+        """Generates a list of tuples, the first part being the ip of a PLC,
+        and the second  being a list of tags attached to that plc
+        """
+        plcs = []
+
+        for PLC in self.intermediate_yaml['plcs']:
+            tags = []
+
+            tags.extend(generate_tags(PLC['sensors']))
+            tags.extend(generate_tags(PLC['actuators']))
+
+            plcs.append((PLC['ip'], tags))
+
+        return plcs
 
     def main_loop(self, sleep=0.5):
         """
@@ -198,17 +187,24 @@ class GenericScada(BasePLC):
             while self.get_sync():
                 pass
 
-            self.local_time += 1
-
-            for control in self.controls:
-                control.apply(self)
+            try:
+                results = []
+                for plc_datum in self.plc_data:
+                    plc_value = self.receive_multiple(plc_datum[1], plc_datum[0])
+                    results.extend(plc_value)
+                self.saved_values.append(results)
+            except Exception, msg:
+                print(msg)
+                continue
 
             self.set_sync(1)
 
-            # time.sleep(0.05)
+            # time.sleep(sleep)
 
 
 def is_valid_file(parser_instance, arg):
+    """Verifies whether the intermediate yaml path is valid
+    """
     if not os.path.exists(arg):
         parser_instance.error(arg + " does not exist")
     else:
