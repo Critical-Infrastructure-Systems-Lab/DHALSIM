@@ -98,7 +98,17 @@ class ConfigParser:
         :return: data from cpa file
         """
         with self.cpa_path.open() as file:
-            return yaml.load(file, Loader=yaml.FullLoader)
+            cpa = yaml.load(file, Loader=yaml.FullLoader)
+
+        # Verification of plc data
+        plcs = cpa.get("plcs")
+        if not plcs:
+            raise MissingValueError("PLCs section not present in cpa_file")
+        for plc in plcs:
+            if not plc.get("name"):
+                raise MissingValueError("PLC in cpa file missing a name")
+
+        return cpa
 
     @property
     def iterations(self):

@@ -55,7 +55,7 @@ def test_empty_config(tmpdir):
 def test_cpa_path_good(tmpdir):
     c = tmpdir.join("config.yaml")
     inp_file = tmpdir.join("test.yaml")
-    inp_file.write("some: thing")
+    inp_file.write("plcs:\n - name: test")
     c.write("cpa_file: test.yaml")
     parser = ConfigParser(Path(c))
     assert str(parser.cpa_path) == str(tmpdir.join("test.yaml"))
@@ -80,15 +80,35 @@ def test_cpa_path_not_found(tmpdir):
 def test_cpa_data_path_good(tmpdir):
     c = tmpdir.join("config.yaml")
     cpa_file = tmpdir.join("test.yaml")
-    cpa_file.write("some: thing")
+    cpa_file.write("plcs:\n - name: test")
     c.write("cpa_file: test.yaml")
     parser = ConfigParser(Path(c))
-    assert parser.cpa_data == {"some": "thing"}
+    assert parser.cpa_data == {'plcs': [{'name': 'test'}]}
 
 
 def test_cpa_data_path_missing(tmpdir):
     c = tmpdir.join("config.yaml")
     c.write("something: else")
+    parser = ConfigParser(Path(c))
+    with pytest.raises(MissingValueError):
+        parser.cpa_data
+
+
+def test_cpa_missing_plcs(tmpdir):
+    c = tmpdir.join("config.yaml")
+    inp_file = tmpdir.join("test.yaml")
+    inp_file.write("test: values")
+    c.write("cpa_file: test.yaml")
+    parser = ConfigParser(Path(c))
+    with pytest.raises(MissingValueError):
+        parser.cpa_data
+
+
+def test_cpa_missing_plc_name(tmpdir):
+    c = tmpdir.join("config.yaml")
+    inp_file = tmpdir.join("test.yaml")
+    inp_file.write("plcs:\n - not_name: test")
+    c.write("cpa_file: test.yaml")
     parser = ConfigParser(Path(c))
     with pytest.raises(MissingValueError):
         parser.cpa_data
@@ -100,7 +120,6 @@ def test_cpa_data_path_not_found(tmpdir):
     parser = ConfigParser(Path(c))
     with pytest.raises(FileNotFoundError):
         parser.cpa_data
-
 
 # def test_generate_intermediate_yaml_no_plcs(tmpdir, inp_data_fixture):
 #     c = tmpdir.join("config.yaml")
