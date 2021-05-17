@@ -74,7 +74,7 @@ class ScadaControl:
         Start a tcp dump.
         """
         pcap = self.output_path / "scada-eth0.pcap"
-        tcp_dump = subprocess.Popen(['tcpdump', '-i', 'scada', '-w',
+        tcp_dump = subprocess.Popen(['tcpdump', '-i', self.data["scada"]["interface"], '-w',
                                      str(pcap)], shell=False)
         return tcp_dump
 
@@ -104,5 +104,5 @@ if __name__ == "__main__":
                         type=lambda x: is_valid_file(parser, x))
 
     args = parser.parse_args()
-    node_control = ScadaControl(Path(args.intermediate_yaml), args.index)
-    node_control.main()
+    scada = ScadaControl(Path(args.intermediate_yaml))
+    scada.main()

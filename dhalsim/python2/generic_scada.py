@@ -182,7 +182,7 @@ class GenericScada(BasePLC):
         :param sleep:  (Default value = 0.5) Not used
 
         """
-        print('DEBUG: ' + self.intermediate_plc['name'] + ' enters main_loop')
+        print('DEBUG: SCADA enters main_loop')
         while True:
             while self.get_sync():
                 pass
