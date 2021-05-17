@@ -73,7 +73,7 @@ class ScadaControl:
         """
         Start a tcp dump.
         """
-        pcap = self.output_path / "scada.pcap"
+        pcap = self.output_path / "scada-eth0.pcap"
         tcp_dump = subprocess.Popen(['tcpdump', '-i', 'scada', '-w',
                                      str(pcap)], shell=False)
         return tcp_dump
