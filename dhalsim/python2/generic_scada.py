@@ -5,6 +5,7 @@ import sqlite3
 import signal
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 
 import yaml
@@ -74,6 +75,8 @@ class GenericScada(BasePLC):
 
         self.output_path = Path(self.intermediate_yaml["output_path"]) / "scada_values.csv"
 
+        self.output_path.touch(exist_ok=True)
+
         # Create state from db values
         state = {
             'name': "plant",
@@ -102,11 +105,12 @@ class GenericScada(BasePLC):
             self.saved_values[0].extend(PLC['sensors'])
             self.saved_values[0].extend(PLC['actuators'])
 
-        # print "DEBUG SCADA INIT"
-        # print "state = " + str(state)
-        # print "scada_protocol = " + str(scada_protocol)
-        # print "plc_data = " + str(self.plc_data)
-        # print "output_format = " + str(self.saved_values)
+        print "-----------DEBUG SCADA INIT-----------"
+        print "state = " + str(state)
+        print "scada_protocol = " + str(scada_protocol)
+        print "plc_data = " + str(self.plc_data)
+        print "output_format = " + str(self.saved_values)
+        print "-----------DEBUG SCADA INIT-----------"
 
         super(GenericScada, self).__init__(name='scada', state=state, protocol=scada_protocol)
 
@@ -155,9 +159,9 @@ class GenericScada(BasePLC):
     def write_output(self):
         """writes the csv output of the scada
         """
-        with self.output_path.open(mode='w') as output:
+        with self.output_path.open(mode='wb') as output:
             writer = csv.writer(output)
-            writer.writerows(self.saved_tank_levels)
+            writer.writerows(self.saved_values)
 
     def generate_plcs(self):
         """Generates a list of tuples, the first part being the ip of a PLC,
@@ -191,6 +195,7 @@ class GenericScada(BasePLC):
                 results = []
                 for plc_datum in self.plc_data:
                     plc_value = self.receive_multiple(plc_datum[1], plc_datum[0])
+                    print "plc_value received by scada from ip: " + str(plc_datum[0]) + " is " + str(plc_value)
                     results.extend(plc_value)
                 self.saved_values.append(results)
             except Exception, msg:

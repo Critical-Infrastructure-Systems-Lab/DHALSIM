@@ -122,8 +122,11 @@ class GeneralCPS(MiniCPS):
         automatic run spawned.
         """
         print("[*] Simulation finished")
-
-        # self.end_process(self.scada_process)
+        try:
+            self.end_process(self.scada_process)
+        except Exception, msg:
+            print("exception shutting down scada")
+            print(msg)
 
         for plc_process in self.plc_processes:
             try:
