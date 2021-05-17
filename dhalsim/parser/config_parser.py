@@ -116,11 +116,11 @@ class ConfigParser:
         else:
             yaml_data["run_attack"] = False
 
+        # Write values from IMP file into yaml file (controls, tanks/valves/initial values, etc.)
+        yaml_data = InputParser(yaml_data).write()
+
         # Write data to yaml file
         with self.yaml_path.open(mode='w') as intermediate_yaml:
             yaml.safe_dump(yaml_data, intermediate_yaml)
 
         # todo: and initial values
-
-        # Write values from IMP file into yaml file (controls, tanks/valves/initial values, etc.)
-        InputParser(self.yaml_path).write()

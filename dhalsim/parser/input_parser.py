@@ -37,12 +37,10 @@ class InputParser:
     :type intermediate_yaml_path: str
     """
 
-    def __init__(self, intermediate_yaml_path):
+    def __init__(self, intermediate_yaml):
         """Constructor method
         """
-        self.intermediate_yaml_path = intermediate_yaml_path
-        with self.intermediate_yaml_path.open(mode='r') as intermediate_yaml:
-            self.data = yaml.safe_load(intermediate_yaml)
+        self.data = intermediate_yaml
 
         # Get the INP file path
         if 'inp_file' in self.data.keys():
@@ -70,9 +68,8 @@ class InputParser:
             self.data["iterations"] = int(self.data["time"][0]["duration"]
                                           / self.data["time"][1]["hydraulic_timestep"])
 
-        # Write to the yaml
-        with self.intermediate_yaml_path.open(mode='w') as intermediate_yaml:
-            yaml.safe_dump(self.data, intermediate_yaml)
+        # Return the YAML object
+        return self.data
 
     def generate_controls(self):
         """Generates list of controls with their types, values, actuators, and
