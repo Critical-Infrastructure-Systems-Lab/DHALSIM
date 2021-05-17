@@ -88,20 +88,20 @@ class InputParser:
             # Get all common control values from the control
             actuator = str(child.getChild(1))
             action = str(child.getChild(2))
-            if child.getChildCount() == 7:
+            if child.getChildCount() == 8:
                 # This is an AT NODE control
-                dependant = str(child.getChild(4))
-                value = float(str(child.getChild(6)))
+                dependant = str(child.getChild(5))
+                value = float(str(child.getChild(7)))
                 controls.append({
-                    "type": str(child.getChild(5)).lower(),
+                    "type": str(child.getChild(6)).lower(),
                     "dependant": dependant,
                     "value": value,
                     "actuator": actuator,
                     "action": action.lower()
                 })
-            if child.getChildCount() == 5:
+            if child.getChildCount() == 6:
                 # This is a TIME control
-                value = float(str(child.getChild(4)))
+                value = float(str(child.getChild(5)))
                 controls.append({
                     "type": "time",
                     "value": int(value),
