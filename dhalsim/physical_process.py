@@ -22,15 +22,16 @@ class PhysicalPlant:
 
         # Some users may not configure the parameter
         # Sets the attack_flag to load attack_start and attack_end before main loop
-        if 'run_attack' in config_options:
-                if config_options['run_attack'] == "True":
-                    self.attack_flag = True
-                    self.attack_path = sys.argv[3]
-                    self.attack_name = config_options['attack_name']
-                else:
-                    self.attack_flag = False
-        else:
-            self.attack_flag = False
+        # if 'run_attack' in config_options:
+        #         if config_options['run_attack'] == "True":
+        #             self.attack_flag = True
+        #             self.attack_path = sys.argv[3]
+        #             self.attack_name = config_options['attack_name']
+        #         else:
+        #             self.attack_flag = False
+        # else:
+        #     self.attack_flag = False
+        self.attack_flag = False
 
         # connection to the database
         self.db_path = config_options['db_path']
