@@ -81,6 +81,12 @@ class PLC1(BasePLC):
                 if self.t0 > 0.448:
                     self.vpub = 0
 
+
+                # Override flag == 1
+                # Read from the GUI/attacker DB (vpub_db)
+                # self.vpub = vpub_db # This would be a device attack
+
+
                 if self.t2 < 0.16:
                     print("Opening P_RAW1")
                     self.praw1 = 1

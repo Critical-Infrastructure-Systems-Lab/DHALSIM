@@ -398,9 +398,9 @@ SCHEMA_INIT = """
     INSERT INTO ctown VALUES ('T5', 1, '1.0');
     INSERT INTO ctown VALUES ('T6', 1, '5.2');
     INSERT INTO ctown VALUES ('T7', 1, '2.5');
-    INSERT INTO ctown VALUES ('v1', 1, '2');
-    INSERT INTO ctown VALUES ('V45', 1, '2');
-    INSERT INTO ctown VALUES ('V47', 1, '2');
+    INSERT INTO ctown VALUES ('v1', 1, '1');
+    INSERT INTO ctown VALUES ('V45', 1, '1');
+    INSERT INTO ctown VALUES ('V47', 1, '1');
     INSERT INTO ctown VALUES ('V2', 1, '0');
     INSERT INTO ctown VALUES ('PU1', 1, '0');
     INSERT INTO ctown VALUES ('PU2', 1, '1');
