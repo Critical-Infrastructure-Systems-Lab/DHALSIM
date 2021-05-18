@@ -2,13 +2,12 @@ import argparse
 import os.path
 
 from basePLC import BasePLC
-from datetime import datetime
 from decimal import Decimal
 import time
 import threading
-import sys
 import yaml
 from pathlib import Path
+from entities.attack import DeviceAttack
 from entities.control import AboveControl, BelowControl, TimeControl
 
 
@@ -61,16 +60,24 @@ def create_controls(controls_list):
         if control["type"].lower() == "above":
             a = AboveControl(control["actuator"], control["action"], control["dependant"], control["value"])
             ret.append(a)
-            # print "Making Above control: Value=" + str(a.value) + " | Action=" + str(a.action) + " | Actuator=" + str(a.actuator) + " | Dependant=" + str(a.dependant)
         if control["type"].lower() == "below":
             a = BelowControl(control["actuator"], control["action"], control["dependant"], control["value"])
             ret.append(a)
-            # print "Making Below control: Value=" + str(a.value) + " | Action=" + str(a.action) + " | Actuator=" + str(a.actuator) + " | Dependant=" + str(a.dependant)
         if control["type"].lower() == "time":
             a = TimeControl(control["actuator"], control["action"], control["value"])
             ret.append(a)
-            # print "Making Time control: Value=" + str(a.value) + " | Action=" + str(a.action) + " | Actuator=" + str(a.actuator)
     return ret
+
+
+def create_attacks(attack_list):
+    """This function will create an array of DeviceAttacks
+
+    :param attack_list: A list of attack dicts that need to be converted to DeviceAttacks
+    """
+    attacks = []
+    for attack in attack_list:
+        attacks.append(DeviceAttack(attack['name'], attack['target'], attack['actuators'], attack['command'], attack['start'], attack['end']))
+    return attacks
 
 
 class GenericPLC(BasePLC):
@@ -85,8 +92,9 @@ class GenericPLC(BasePLC):
         self.intermediate_plc = self.intermediate_yaml["plcs"][self.yaml_index]
 
         self.intermediate_controls = self.intermediate_plc['controls']
-
         self.controls = create_controls(self.intermediate_controls)
+
+        self.attacks = create_attacks(self.intermediate_plc['attacks'])
 
         # Create state from db values
         state = {
@@ -181,6 +189,9 @@ class GenericPLC(BasePLC):
 
                 for control in self.controls:
                     control.apply(self)
+
+                for attack in self.attakcs:
+                    attack.apply(self)
 
                 time.sleep(0.25)
 
