@@ -112,15 +112,24 @@ class ConfigParser:
             yaml_data["iterations"] = self.config_data["iterations"]
 
         if "run_attack" in self.config_data.keys():
-            yaml_data["run_attack"] = self.config_data["run_attack"]
+            yaml_data["run_attack"] = bool(self.config_data["run_attack"])
         else:
             yaml_data["run_attack"] = False
 
         # Write values from IMP file into yaml file (controls, tanks/valves/initial values, etc.)
         yaml_data = InputParser(yaml_data).write()
 
+        # Parse the device attacks from the config file
+        for device_attack in self.config_data['device_attacks']:
+            for plc in yaml_data['plcs']:
+                print("Checking PLC for attack!")
+                if set(device_attack['actuators']).issubset(set(plc['actuators'])):
+                    print("Match!")
+                    if 'attacks' not in plc.keys():
+                        plc['attacks'] = []
+                    plc['attacks'].append(device_attack)
+                    break
+
         # Write data to yaml file
         with self.yaml_path.open(mode='w') as intermediate_yaml:
             yaml.safe_dump(yaml_data, intermediate_yaml)
-
-        # todo: and initial values
