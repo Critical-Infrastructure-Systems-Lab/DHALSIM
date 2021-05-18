@@ -131,7 +131,7 @@ class GenericScada(BasePLC):
 
         :return: False if physical process wants the plc to do a iteration, True if not.
         """
-        self.cur.execute("SELECT flag FROM sync WHERE name IS ?", ('scada',))
+        self.cur.execute("SELECT flag FROM sync WHERE name IS 'scada'")
         flag = bool(self.cur.fetchone()[0])
         return flag
 
@@ -144,8 +144,8 @@ class GenericScada(BasePLC):
 
         """
 
-        self.cur.execute("UPDATE sync SET flag=? WHERE name IS ?",
-                         (int(flag), 'scada',))
+        self.cur.execute("UPDATE sync SET flag=? WHERE name IS 'scada'",
+                         (int(flag), ))
         self.conn.commit()
 
     def sigint_handler(self, sig, frame):
@@ -194,7 +194,7 @@ class GenericScada(BasePLC):
                 results = []
                 for plc_datum in self.plc_data:
                     plc_value = self.receive_multiple(plc_datum[1], plc_datum[0])
-                    print "plc_value received by scada from ip: " + str(plc_datum[0]) + " is " + str(plc_value)
+                    # print "plc_value received by scada from ip: " + str(plc_datum[0]) + " is " + str(plc_value)
                     results.extend(plc_value)
                 self.saved_values.append(results)
             except Exception, msg:
