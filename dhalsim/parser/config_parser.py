@@ -20,6 +20,10 @@ class MissingValueError(Error):
     """Raised when there is a value missing in a configuration file"""
 
 
+class DuplicateValueError(Error):
+    """Raised when there is a duplicate plc value in the cpa file"""
+
+
 class ConfigParser:
     """
     Class handling the parsing of the input config data.
@@ -104,10 +108,17 @@ class ConfigParser:
         plcs = cpa.get("plcs")
         if not plcs:
             raise MissingValueError("PLCs section not present in cpa_file")
+
+        # Check for plc names (and check for duplicates)
+        plc_list = []
         for plc in plcs:
             if not plc.get("name"):
                 raise MissingValueError("PLC in cpa file missing a name")
+            else:
+                plc_list.append(plc.get("name"))
 
+        if len(plc_list) != len(set(plc_list)):
+            raise DuplicateValueError
         return cpa
 
     def generate_intermediate_yaml(self):

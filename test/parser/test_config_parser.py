@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from dhalsim.parser.config_parser import ConfigParser, EmptyConfigError, MissingValueError
+from dhalsim.parser.config_parser import ConfigParser, EmptyConfigError, MissingValueError, DuplicateValueError
 
 
 def test_python_version():
@@ -115,4 +115,14 @@ def test_cpa_data_path_not_found(tmpdir):
     c.write("cpa_file: test.yaml")
     parser = ConfigParser(Path(c))
     with pytest.raises(FileNotFoundError):
+        parser.cpa_data
+
+
+def test_cpa_data_duplicate_name(tmpdir):
+    c = tmpdir.join("config.yaml")
+    cpa_file = tmpdir.join("test.yaml")
+    cpa_file.write("plcs:\n - name: test \n - name: test")
+    c.write("cpa_file: test.yaml")
+    parser = ConfigParser(Path(c))
+    with pytest.raises(DuplicateValueError):
         parser.cpa_data
