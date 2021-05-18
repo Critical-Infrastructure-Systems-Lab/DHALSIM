@@ -10,6 +10,11 @@ simulator: pdd
 iterations: 500
 #iterations: 86400
 
+scada:
+    name: scada
+    ip: 192.168.2.1
+    interface: scada-eth0
+
 plcs:
   - name: PLC1
     ip: 192.168.1.1

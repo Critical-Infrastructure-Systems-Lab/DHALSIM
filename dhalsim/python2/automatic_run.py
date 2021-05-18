@@ -78,17 +78,17 @@ class GeneralCPS(MiniCPS):
 
         self.plc_processes = []
 
+        automatic_plc_path = Path(__file__).parent.absolute() / "automatic_plc.py"
         for i, plc in enumerate(self.data["plcs"]):
             node = self.net.get(plc["name"])
-
-            automatic_plc_path = Path(__file__).parent.absolute() / "automatic_plc.py"
 
             cmd = ["python2", str(automatic_plc_path), str(self.intermediate_yaml), str(i)]
             self.plc_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
 
-        # self.scada_process = self.net.get('scada').popen("python2", "automatic_plc.py", "-n",
-        #                                             "scada",
-        #                                             stderr=sys.stderr, stdout=sys.stdout)
+        automatic_scada_path = Path(__file__).parent.absolute() / "automatic_scada.py"
+        scada_cmd = ["python2", str(automatic_scada_path), str(self.intermediate_yaml)]
+        self.scada_process = self.net.get('scada').popen(scada_cmd, stderr=sys.stderr, stdout=sys.stdout)
+
         print("[*] Launched the PLCs and SCADA processes")
 
         automatic_plant_path = Path(__file__).parent.absolute() / "automatic_plant.py"
@@ -122,8 +122,11 @@ class GeneralCPS(MiniCPS):
         automatic run spawned.
         """
         print("[*] Simulation finished")
-
-        # self.end_process(self.scada_process)
+        try:
+            self.end_process(self.scada_process)
+        except Exception, msg:
+            print("exception shutting down scada")
+            print(msg)
 
         for plc_process in self.plc_processes:
             try:
@@ -143,6 +146,8 @@ class GeneralCPS(MiniCPS):
 
 
 def is_valid_file(parser_instance, arg):
+    """Verifies whether the intermediate yaml path is valid
+    """
     if not os.path.exists(arg):
         parser_instance.error(arg + " does not exist")
     else:
