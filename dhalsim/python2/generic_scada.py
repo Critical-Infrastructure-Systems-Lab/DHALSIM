@@ -8,8 +8,7 @@ import time
 from pathlib import Path
 
 import yaml
-
-from basePLC import BasePLC
+from minicps.devices import SCADAServer
 
 
 class Error(Exception):
@@ -59,7 +58,7 @@ def generate_tags(taggable):
     return tags
 
 
-class GenericScada(BasePLC):
+class GenericScada(SCADAServer):
     """This class represents a scada. This scada knows what plcs it is collecting data from by reading the
     yaml file at intermediate_yaml_path and looking at the plcs.
     """
