@@ -51,24 +51,3 @@ class DeviceAttack(Attack):
         if self.start >= curr_time >= self.end:
             for actuator in self.actuators:
                 plc.set_tag(actuator, self.command)
-
-
-class NetworkAttack(Attack):
-    """Defines a Network Attack, which is an attack that will send values from a PLC to another PLC
-
-    :param name: The name of the attack
-    :param source: The PLC that will be sending the values
-    :param destination: The PLC that will receive the values
-    :param tags: The tags that will have their values sent
-    :param values: The values that correspond to the tags that will be sent
-    :param start: The start time of the attack
-    :param end: The end time of the attack
-    """
-    def __init__(self, name, source, destination, tags, values, start, end):
-        super(NetworkAttack, self).__init__(name, start, end)
-        self.source = source
-        self.destination = destination
-        self.tags = tags
-        self.values = values
-
-    # TODO Create apply method
