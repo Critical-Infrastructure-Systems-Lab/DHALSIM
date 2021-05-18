@@ -136,7 +136,7 @@ class GeneralCPS(MiniCPS):
 
         if self.plant_process.poll() is None:
             self.end_process(self.plant_process)
-            print("Physical Simulation process terminated")
+            print("Physical Simulation process terminated\n")
 
         cmd = 'sudo pkill -f "python2 -m cpppo.server.enip"'
         subprocess.call(cmd, shell=True, stderr=sys.stderr, stdout=sys.stdout)
