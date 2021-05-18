@@ -6,6 +6,7 @@ import sys
 import pandas as pd
 import yaml
 import time
+import os
 from datetime import datetime, timedelta
 
 
@@ -13,6 +14,7 @@ class PhysicalPlant:
 
     def __init__(self):
         config_options = self.load_config(sys.argv[1])
+        self.config_path = os.path.abspath(sys.argv[1])
 
         # Week index to initialize the simulation
         if "week_index" in config_options:
@@ -42,7 +44,7 @@ class PhysicalPlant:
         self.simulation_days = int(config_options['duration_days'])
 
         # Create the network
-        self.wn = wntr.network.WaterNetworkModel(config_options['inp_file'])
+        self.wn = wntr.network.WaterNetworkModel(os.path.join(os.path.dirname(self.config_path), config_options['inp_file']))
 
         self.node_list = list(self.wn.node_name_list)
         self.link_list = list(self.wn.link_name_list)

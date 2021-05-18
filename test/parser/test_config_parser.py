@@ -24,7 +24,7 @@ def test_file_not_found():
         ConfigParser("non_existing_path.yaml")
 
 
-def test_imp_path_good(tmpdir):
+def test_inp_path_good(tmpdir):
     c = tmpdir.join("config.yaml")
     inp_file = tmpdir.join("test.inp")
     inp_file.write("some: thing")
