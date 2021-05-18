@@ -2,16 +2,41 @@
 
 cd ~
 
+sudo apt update
+
+## Installing necessary packages
+sudo apt install git
+
+# Python 2 and pip
+sudo apt install python2
+
+sudo apt install curl
+curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
+sudo python2 get-pip.py
+
+# Python 3 and pip
+sudo apt install python3
+
+sudo apt install python3-pip
+
+## Installing DHALSIM dependencies
+sudo pip install minicps
+
+sudo pip install pathlib
+
+sudo pip install pyyaml
+
+sudo pip uninstall cpppo
+sudo pip install cpppo==4.0.4
+
 git clone git://github.com/mininet/mininet.git
 
-PYTHON=python3 ~/mininet/util/install.sh -fnv
+PYTHON=python2 ~/mininet/util/install.sh -fnv
 
-git clone git@gitlab.ewi.tudelft.nl:cse2000-software-project/2020-2021-q4/cluster-06/water-infrastructure/minicps.git
+cd dhalsim
 
-cd minicps
-
-sudo python3 -m pip install -r ~/minicps/requirements-dev.txt
-
-sudo python3 -m pip install .
+sudo python3 -m pip install -e .
 
 cd ~
+
+printf "\nInstallation finished. You can now run DHALSIM by using \n\t\<sudo dhalsim your_config.yaml\>.\n"
