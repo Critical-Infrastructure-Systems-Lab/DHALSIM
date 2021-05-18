@@ -19,9 +19,13 @@ sudo apt install python3
 
 sudo apt install python3-pip
 
-## Installing DHALSIM dependencies
-sudo pip install minicps
+# MiniCPS
+git clone https://github.com/afmurillo/minicps.git
+cd minicps
+sudo python2 -m pip install .
+cd ~
 
+## Installing other DHALSIM dependencies
 sudo pip install pathlib
 
 sudo pip install pyyaml
@@ -29,9 +33,7 @@ sudo pip install pyyaml
 sudo pip uninstall cpppo
 sudo pip install cpppo==4.0.4
 
-git clone git://github.com/mininet/mininet.git
-
-PYTHON=python2 ~/mininet/util/install.sh -fnv
+sudo apt install mininet
 
 cd dhalsim
 
