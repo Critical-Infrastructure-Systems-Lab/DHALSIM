@@ -12,6 +12,7 @@ from mininet.cli import CLI
 from mininet.link import TCLink
 
 from topo.simple_topo import SimpleTopo
+from topo.complex_topo import ComplexTopo
 
 
 class GeneralCPS(MiniCPS):
@@ -43,7 +44,11 @@ class GeneralCPS(MiniCPS):
         signal.signal(signal.SIGINT, self.interrupt)
         signal.signal(signal.SIGTERM, self.interrupt)
 
-        topo = SimpleTopo(self.intermediate_yaml)
+        if self.data["network_topology_type"].lower() == "complex":
+            topo = ComplexTopo(self.intermediate_yaml)
+        else:
+            topo = SimpleTopo(self.intermediate_yaml)
+
         self.net = Mininet(topo=topo, autoSetMacs=True, link=TCLink)
 
         self.net.start()

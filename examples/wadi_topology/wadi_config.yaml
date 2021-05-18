@@ -7,7 +7,8 @@ inp_file: "wadi_map_newer.inp"
 cpa_file: "wadi_cpa.yaml"
 output_path: "output"
 iterations: 500
-network_topology_type: simple
+network_topology_type: complex
+mininet_cli: True
 #simulator: "pdd"
 #week_index: 0
 
