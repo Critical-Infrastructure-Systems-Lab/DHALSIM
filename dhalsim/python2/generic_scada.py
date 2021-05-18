@@ -47,6 +47,8 @@ def generate_real_tags(tanks, pumps, valves):
 
 def generate_tags(taggable):
     """generates tags from a list of taggable entities (sensor or actuator)
+
+    :param taggable: a list of strings containing names of things like tanks, pumps, and valves
     """
     tags = []
 
@@ -202,11 +204,13 @@ class GenericScada(SCADAServer):
 
             self.set_sync(1)
 
-            # time.sleep(sleep)
 
 
 def is_valid_file(parser_instance, arg):
     """Verifies whether the intermediate yaml path is valid
+
+    :param parser_instance: instance of argparser
+    :param arg: the path to check
     """
     if not os.path.exists(arg):
         parser_instance.error(arg + " does not exist")
