@@ -1,3 +1,6 @@
+import sys
+from pathlib import Path
+
 from mininet.topo import Topo
 from mininet.node import Node
 from mininet.net import Mininet
@@ -35,6 +38,7 @@ class ComplexTopo(Topo):
         self.supervisor_ip = "10.0.2.254"
         self.local_plc_ips = "192.168.1.1"
         self.local_router_ips = "192.168.1.254"
+        self.cpppo_port = "44818"
 
         # Load the data from the YAML file
         self.intermediate_yaml_path = intermediate_yaml_path
@@ -51,21 +55,16 @@ class ComplexTopo(Topo):
 
     def generate_plc_data(self, plcs):
         for idx, plc in enumerate(plcs):
-            plc_ip = "10.0." + str(idx + 1) + ".1"
-            provider_ip = "10.0." + str(idx + 1) + ".254"
-            plc_mac = Mininet.randMac()
-            plc_int = plc['name'] + "-eth0"
-
             # Store the data in self.data
             plc['local_ip'] = self.local_plc_ips
-            plc['public_ip'] = plc_ip
-            plc['provider_ip'] = provider_ip
-            plc['mac'] = plc_mac
-            plc['interface'] = plc_int
-            plc['provider-interface'] = "r0-eth" + str(idx)
-            plc['gateway-name'] = "r" + str(idx+1)
-            plc['switch-name'] = "s" + str(idx+1)
-            plc['gateway'] = self.local_router_ips
+            plc['public_ip'] = "10.0." + str(idx + 1) + ".1"
+            plc['provider_ip'] = "10.0." + str(idx + 1) + ".254"
+            plc['mac'] = Mininet.randMac()
+            plc['interface'] = plc['name'] + "-eth0"
+            plc['provider_interface'] = "r0-eth" + str(idx)
+            plc['gateway_name'] = "r" + str(idx + 1)
+            plc['switch_name'] = "s" + str(idx + 1)
+            plc['gateway_ip'] = self.local_router_ips
 
     def build(self):
         """
@@ -76,28 +75,26 @@ class ComplexTopo(Topo):
 
         # -- FIELD NETWORK -- #
         # Add a router to the network
-        router = self.addNode('r0', cls=LinuxRouter, ip=self.router_ip + "/24")
+        provider_router = self.addNode('r0', cls=LinuxRouter, ip=self.router_ip + "/24")
 
         # -- FIELD NETWORK -- #
         if 'plcs' in self.data.keys():
             # Add PLCs to the mininet network
             for plc in self.data['plcs']:
-                plc_router = self.addNode(plc['gateway-name'], cls=LinuxRouter,
+                plc_router = self.addNode(plc['gateway_name'], cls=LinuxRouter,
                                           ip=plc['public_ip'] + "/24")
 
-                # self.addLink(plc_router, router)
-                self.addLink(plc_router, router, params2={'ip': plc['provider_ip'] + "/24"})
-
-                plc_switch = self.addSwitch(plc['switch-name'])
-
-                self.addLink(plc_switch, plc_router, params2={'ip': plc['gateway'] + "/24"})
+                plc_switch = self.addSwitch(plc['switch_name'])
 
                 plc_node = self.addHost(
                     plc['name'],
                     mac=plc['mac'],
                     ip=plc['local_ip'] + "/24",
-                    defaultRoute='via ' + plc['gateway'] + '/24')
+                    defaultRoute='via ' + plc['gateway_ip'] + '/24')
 
+                self.addLink(plc_router, provider_router,
+                             params2={'ip': plc['provider_ip'] + "/24"})
+                self.addLink(plc_switch, plc_router, params2={'ip': plc['gateway_ip'] + "/24"})
                 self.addLink(plc_node, plc_switch, intfName=plc['interface'])
 
         # # # -- SUPERVISOR NETWORK -- #
@@ -114,7 +111,7 @@ class ComplexTopo(Topo):
         # self.addLink(supervisor_switch, scada)
         #
         # # -- PLANT -- #
-        # self.addHost('plant')
+        self.addHost('plant')
 
     def setup_network(self, net):
         # Enable forwarding on router r0
@@ -123,13 +120,39 @@ class ComplexTopo(Topo):
         # Set the default gateway of the PLCs
         if 'plcs' in self.data.keys():
             for plc in self.data['plcs']:
-                net.get(plc['name']).cmd('route add default gw ' + plc['gateway'])
-                net.get("r0").cmd('ifconfig ' + plc['provider-interface'] + ' ' + plc[
+                # Add the plcs router as default gateway to the plc
+                net.get(plc['name']).cmd('route add default gw ' + plc['gateway_ip'])
+                # Set ips on the provider router for every interface
+                net.get("r0").cmd('ifconfig ' + plc['provider_interface'] + ' ' + plc[
                     "provider_ip"] + ' netmask 255.255.255.0')
-                net.get("r0").cmd('sysctl net.ipv4.ip_forward=1')
-                net.get(plc['gateway-name']).cmd('ifconfig ' + plc['gateway-name'] + '-eth1 ' + self.local_router_ips)
-                net.get(plc['gateway-name']).cmd('route add default gw ' + plc['provider_ip'])
 
+                # net.get(plc['gateway_name']).cmd('sysctl net.ipv4.ip_forward=1')
+                net.get(plc['gateway_name']).cmd('ifconfig ' + plc['gateway_name'] + '-eth1 192.168.1.254')
+
+                net.get(plc['gateway_name']).cmd(
+                    'ifconfig ' + plc['gateway_name'] + '-eth1 ' + plc['gateway_ip'])
+
+                net.get(plc['gateway_name']).cmd('sudo iptables -A FORWARD -o '+plc['gateway_name']+'-eth1 -i '+plc['gateway_name']+'-eth0 -s '+ plc['local_ip'] +' -m conntrack --ctstate NEW -j ACCEPT')
+                net.get(plc['gateway_name']).cmd('sudo iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT')
+                net.get(plc['gateway_name']).cmd('sudo iptables -t nat -F POSTROUTING')
+                net.get(plc['gateway_name']).cmd('sudo iptables -t nat -A POSTROUTING -o '+plc['gateway_name']+'-eth0  -j MASQUERADE')
+                net.get(plc['gateway_name']).cmd('sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"')
+
+                net.get(plc['gateway_name']).cmd('route add default gw ' + plc['provider_ip'])
+
+                net.get(plc['gateway_name']).cmd('sudo iptables -A PREROUTING -t nat -i ' + plc[
+                    'gateway_name'] + '-eth0 -p tcp --dport ' + self.cpppo_port + ' -j DNAT --to ' +
+                                                 plc['local_ip'] + ':' + self.cpppo_port)
+
+                net.get(plc['gateway_name']).cmd('sudo iptables -A FORWARD -p tcp -d ' + plc[
+                    'local_ip'] + ' --dport ' + self.cpppo_port + ' -j ACCEPT')
+
+                net.get(plc['gateway_name']).popen('tcpdump -i any -w ' + str(Path(self.data["output_path"])/(plc['gateway_name']+".pcap")), stderr=sys.stderr, stdout=sys.stdout)
+
+            net.get('r0').popen('tcpdump -i r0-eth0 -w ' + str(
+                Path(self.data["output_path"]) / ('r0-eth0' + ".pcap")), stderr=sys.stderr, stdout=sys.stdout)
+            net.get('r0').popen('tcpdump -i r0-eth1 -w ' + str(
+                Path(self.data["output_path"]) / ('r0-eth1' + ".pcap")), stderr=sys.stderr, stdout=sys.stdout)
 
         # # Set the default gateway of the SCADA
         # net.get('scada').cmd('route add default gw ' + self.supervisor_ip)
