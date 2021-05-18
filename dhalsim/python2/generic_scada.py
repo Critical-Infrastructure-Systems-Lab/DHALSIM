@@ -24,7 +24,8 @@ class InvalidControlValue(Error):
 
 
 def generate_real_tags(tanks, pumps, valves):
-    """generates real tags with all tanks, pumps, and values
+    """
+    Generates real tags with all tanks, pumps, and values
 
     :param tanks: list of tanks
     :param pumps: list of pumps
@@ -46,7 +47,8 @@ def generate_real_tags(tanks, pumps, valves):
 
 
 def generate_tags(taggable):
-    """generates tags from a list of taggable entities (sensor or actuator)
+    """
+    Generates tags from a list of taggable entities (sensor or actuator)
 
     :param taggable: a list of strings containing names of things like tanks, pumps, and valves
     """
@@ -61,7 +63,8 @@ def generate_tags(taggable):
 
 
 class GenericScada(SCADAServer):
-    """This class represents a scada. This scada knows what plcs it is collecting data from by reading the
+    """
+    This class represents a scada. This scada knows what plcs it is collecting data from by reading the
     yaml file at intermediate_yaml_path and looking at the plcs.
     """
 
@@ -115,7 +118,8 @@ class GenericScada(SCADAServer):
         super(GenericScada, self).__init__(name='scada', state=state, protocol=scada_protocol)
 
     def pre_loop(self, sleep=0.5):
-        """The pre loop of a SCADA. In which setup actions are started
+        """
+        The pre loop of a SCADA. In which setup actions are started
 
         :param sleep:  (Default value = 0.5) The time to sleep after setting everything up
         """
@@ -150,21 +154,24 @@ class GenericScada(SCADAServer):
         self.conn.commit()
 
     def sigint_handler(self, sig, frame):
-        """shutdown protocol for the scada, writes the output before exiting
+        """
+        Shutdown protocol for the scada, writes the output before exiting
         """
         print 'DEBUG SCADA shutdown'
         self.write_output()
         sys.exit(0)
 
     def write_output(self):
-        """writes the csv output of the scada
+        """
+        Writes the csv output of the scada
         """
         with self.output_path.open(mode='wb') as output:
             writer = csv.writer(output)
             writer.writerows(self.saved_values)
 
     def generate_plcs(self):
-        """Generates a list of tuples, the first part being the ip of a PLC,
+        """
+        Generates a list of tuples, the first part being the ip of a PLC,
         and the second  being a list of tags attached to that plc
         """
         plcs = []
@@ -207,7 +214,8 @@ class GenericScada(SCADAServer):
 
 
 def is_valid_file(parser_instance, arg):
-    """Verifies whether the intermediate yaml path is valid
+    """
+    Verifies whether the intermediate yaml path is valid
 
     :param parser_instance: instance of argparser
     :param arg: the path to check
