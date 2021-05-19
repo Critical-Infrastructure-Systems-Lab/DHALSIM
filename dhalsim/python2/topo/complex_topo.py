@@ -46,7 +46,7 @@ class ComplexTopo(Topo):
 
     def generate_data(self, data):
         plcs = data["plcs"]
-        max_idx = 0;
+        max_idx = 0
         for idx, plc in enumerate(plcs):
             # Store the data in self.data
             plc['local_ip'] = self.local_plc_ips
