@@ -8,7 +8,7 @@ cpa_file: "wadi_cpa.yaml"
 output_path: "output"
 iterations: 500
 network_topology_type: complex
-mininet_cli: True
+mininet_cli: False
 #simulator: "pdd"
 #week_index: 0
 
