@@ -1,6 +1,6 @@
 ---
 # Simulation initialization parameters.
-initial_custom_flag: "False"
+initial_custom_flag: "True"
 week_index: 0
 demand_patterns_path: "../../Demand_patterns/three_year_demands_ctown.csv" # that file was this one. the total demand pattern csv
 starting_demand_path: "../../Demand_patterns/starting_demand_points.csv" # that would be this file

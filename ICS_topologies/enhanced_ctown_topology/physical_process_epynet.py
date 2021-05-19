@@ -56,7 +56,7 @@ class PhysicalPlant:
         # todo: Check if it's better to have separate lists for tank names
         self.tank_list = list(self.wn.tanks.keys())
         self.junction_list = list(self.wn.junctions.keys())
-        self.pump_list = list( self.wn.pumps.keys())
+        self.pump_list = list(self.wn.pumps.keys())
         #print("initial pump list: " + str(self.pump_list))
         self.valve_list = list(self.wn.valves.keys())
 
@@ -98,8 +98,40 @@ class PhysicalPlant:
             options = yaml.load(config_file, Loader=yaml.FullLoader)
         return options
 
+
+    def configure_demand_patterns(self, patterns_path, starting_demand):
+        limit = (self.simulation_days * 24) - 1
+        total_demands = pd.read_csv(patterns_path, index_col=0)
+        demand_starting_points = pd.read_csv(starting_demand, index_col=0)
+
+        week_start = demand_starting_points.iloc[self.week_index][0]
+        week_demands = total_demands.loc[week_start:week_start + limit, :]
+
+        print("Week_demands: " + str(week_demands))
+        print("wn.patterns" + str(list(self.wn.patterns.keys())))
+
+        for pattern in list(self.wn.patterns.keys()):
+            print("Values: " + str(week_demands[pattern].values.tolist()))
+            self.wn.set_demand_pattern(pattern, week_demands[pattern].values.tolist())
+
+    def configure_initial_tank_levels(self, tank_levels_path):
+        initial_tank_levels = pd.read_csv(tank_levels_path, index_col=0)
+        #todo: Handle exception if there are key errors due to malformed columns in the tank init file
+        for tank in initial_tank_levels.columns:
+            self.wn.tanks[tank].tanklevel = float(initial_tank_levels.iloc[self.week_index][tank])
+
     def initialize_simulation(self, config_options):
         self.build_initial_actuator_dict()
+
+        if 'initial_custom_flag' in config_options:
+            if config_options['initial_custom_flag'] == "True":
+                demand_patterns_path = config_options['demand_patterns_path']
+                starting_demand_path = config_options['starting_demand_path']
+                print("Running simulation with demmand patterns of week: " + str(self.week_index))
+                #self.configure_demand_patterns(demand_patterns_path, starting_demand_path)
+
+                initial_tank_levels_path = config_options['initial_tank_levels_path']
+                self.configure_initial_tank_levels(initial_tank_levels_path)
 
     def build_initial_actuator_dict(self):
         actuator_status = []
@@ -150,7 +182,6 @@ class PhysicalPlant:
 
         # toDo: For some reason, pump_list now also includes the valves
         for pump in self.pump_list:
-            #print(str(pump) + " Pump Flow: " + str(results[pump]['flow']) + " Status: " + str(results[pump]['status']))
             values_list.extend([results[pump]['flow'], results[pump]['status']])
 
         attack1 = 0
@@ -241,12 +272,12 @@ class PhysicalPlant:
             print("ITERATION %d ------------- " % master_time)
 
             #print("Network State")
-            print(network_state)
+            #print(network_state)
 
             step_results = self.register_results(network_state)
 
             #print("Step Results")
-            print(step_results)
+            #print(step_results)
 
             self.results_list.append(step_results)
 
