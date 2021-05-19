@@ -20,15 +20,19 @@ class LinuxRouter(Node):
 
 class SimpleTopo(Topo):
     """
-    A class for a simple mininet topology
+    This class represents a simple topology. A simple topology is a network topology where every
+    PLC is on the same LAN.
+
+    This class will generate ip addresses, mac addresses etc. and write them back to the
+    intermediate yaml file. Then, it will use that file to create all the routers, switches
+    and nodes. After that, iptables rules and routes will be setup.
+
+
+    :param intermediate_yaml_path: The path to the intermediate yaml file. Here will also be writen to.
+    :type intermediate_yaml_path: Path
     """
 
     def __init__(self, intermediate_yaml_path):
-        """
-        Initialize a simple mininet topology
-
-        :param intermediate_yaml_path: The path of the intermediate.yaml file
-        """
 
         # Set variables
         self.router_ip = "192.168.1.254"
@@ -54,6 +58,13 @@ class SimpleTopo(Topo):
         Topo.__init__(self)
 
     def generate_plc_data(self, plcs):
+        """
+        Generate all the ips, interfaces, etc. from every plc and the scada.
+        These are then applied when building the topo
+
+        :param data: the dict resulting from a dump of the intermediate yaml
+
+        """
         for idx, plc in enumerate(plcs):
             plc_ip = "192.168.1." + str(idx + 1)
             plc_mac = Mininet.randMac()
@@ -68,7 +79,8 @@ class SimpleTopo(Topo):
 
     def build(self):
         """
-        Build the mininet topology
+        Build the topology. This make nodes for every router, switch, plc and scada
+        and add links to connect them.
         """
 
         # -- FIELD NETWORK -- #
@@ -108,6 +120,12 @@ class SimpleTopo(Topo):
         self.addHost('plant')
 
     def setup_network(self, net):
+        """
+        Here all the rules are applied to make the routers function like routers
+        :param net: The initiated net to setup.
+        :type net: Mininet
+
+        """
         # Enable forwarding on router r0
         net.get('r0').cmd('sysctl net.ipv4.ip_forward=1')
 

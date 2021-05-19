@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from mininet.topo import Topo
 from mininet.node import Node
 from mininet.net import Mininet
@@ -10,17 +8,11 @@ class LinuxRouter(Node):
     """A node with IP forwarding enabled"""
 
     def config(self, **params):
-        """
-
-        :param **params: 
-
-        """
         super(LinuxRouter, self).config(**params)
         # Enable forwarding on the router
         self.cmd('sysctl net.ipv4.ip_foward=1')
 
     def terminate(self):
-        """ """
         self.cmd('sysctl net.ipv4.ip_foward=0')
 
 
@@ -69,7 +61,7 @@ class ComplexTopo(Topo):
         """
         plcs = data["plcs"]
         index = 1
-        for idx, plc in enumerate(plcs):
+        for plc in plcs:
             # Store the data in self.data
             plc['local_ip'] = self.local_plc_ips
             plc['public_ip'] = "10.0." + str(index) + ".1"
@@ -95,7 +87,7 @@ class ComplexTopo(Topo):
         scada['switch_name'] = "s" + str(index)
         scada['gateway_ip'] = self.local_router_ips
 
-    def build(self):
+    def build(self, *args, **params ):
         """
         Build the topology. This make nodes for every router, switch, plc and scada
         and add links to connect them.
