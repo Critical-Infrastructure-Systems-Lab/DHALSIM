@@ -12,6 +12,13 @@ from dhalsim.python2.generic_plc import GenericPLC
 
 
 @pytest.fixture
+def magic_mock_network():
+    mock = MagicMock()
+    mock.get.return_value = "42"
+    return mock
+
+
+@pytest.fixture
 def magic_mock_init():
     mock = MagicMock()
     mock.do_super_construction.return_value = None
@@ -24,7 +31,6 @@ def magic_mock_preloop():
     mock = MagicMock()
     mock.set_parameters.return_value = None
     mock.startup.return_value = None
-    mock.get.return_value = "42"
     mock.Lock.return_value = "testLock"
     return mock
 
@@ -60,8 +66,8 @@ def yaml_file(tmpdir):
     return file
 
 
-@pytest.fixture
-def generic_plc1(mocker, yaml_file, magic_mock_init, magic_mock_preloop):
+def patch_methods(magic_mock_init, magic_mock_preloop, magic_mock_network, mocker):
+    # Init mocker patches
     mocker.patch(
         'dhalsim.python2.generic_plc.GenericPLC.initialize_db',
         magic_mock_init.initialize_db
@@ -70,10 +76,7 @@ def generic_plc1(mocker, yaml_file, magic_mock_init, magic_mock_preloop):
         'dhalsim.python2.generic_plc.GenericPLC.do_super_construction',
         magic_mock_init.do_super_construction
     )
-    mocker.patch(
-        'dhalsim.python2.generic_plc.GenericPLC.get',
-        magic_mock_preloop.get
-    )
+    # Preloop mocker patches
     mocker.patch(
         'dhalsim.python2.basePLC.BasePLC.set_parameters',
         magic_mock_preloop.set_parameters
@@ -86,35 +89,22 @@ def generic_plc1(mocker, yaml_file, magic_mock_init, magic_mock_preloop):
         'threading.Lock',
         magic_mock_preloop.Lock
     )
+    # Network mocker patches
+    mocker.patch(
+        'dhalsim.python2.generic_plc.GenericPLC.get',
+        magic_mock_network.get
+    )
+
+
+@pytest.fixture
+def generic_plc1(mocker, yaml_file, magic_mock_init, magic_mock_preloop, magic_mock_network):
+    patch_methods(magic_mock_init, magic_mock_preloop, magic_mock_network, mocker)
     return GenericPLC(Path(str(yaml_file)), 0)
 
 
 @pytest.fixture
-def generic_plc2(mocker, yaml_file, magic_mock_init, magic_mock_preloop):
-    mocker.patch(
-        'dhalsim.python2.generic_plc.GenericPLC.initialize_db',
-        magic_mock_init.initialize_db
-    )
-    mocker.patch(
-        'dhalsim.python2.generic_plc.GenericPLC.do_super_construction',
-        magic_mock_init.do_super_construction
-    )
-    mocker.patch(
-        'dhalsim.python2.generic_plc.GenericPLC.get',
-        magic_mock_preloop.get
-    )
-    mocker.patch(
-        'dhalsim.python2.basePLC.BasePLC.set_parameters',
-        magic_mock_preloop.set_parameters
-    )
-    mocker.patch(
-        'dhalsim.python2.basePLC.BasePLC.startup',
-        magic_mock_preloop.startup
-    )
-    mocker.patch(
-        'threading.Lock',
-        magic_mock_preloop.Lock
-    )
+def generic_plc2(mocker, yaml_file, magic_mock_init, magic_mock_preloop, magic_mock_network):
+    patch_methods(magic_mock_init, magic_mock_preloop, magic_mock_network, mocker)
     return GenericPLC(Path(str(yaml_file)), 1)
 
 
@@ -180,27 +170,31 @@ def test_generic_plc2_init(generic_plc2, magic_mock_init, yaml_file):
     assert magic_mock_init.mock_calls == expected_calls
 
 
-def test_generic_plc1_preloop(generic_plc1, magic_mock_preloop):
+def test_generic_plc1_preloop(generic_plc1, magic_mock_preloop, magic_mock_network):
     generic_plc1.pre_loop()
     # Verify pre loop function calls
-    expected_calls = [call.get(('T0', 1)), call.get(('P_RAW1', 1)),
-                      call.Lock(),
-                      call.set_parameters(generic_plc1,
-                                          [('T0', 1), ('P_RAW1', 1)],
-                                          [Decimal('42'), 42], True,
-                                          'testLock', '192.168.1.1'),
-                      call.startup()]
-    assert magic_mock_preloop.mock_calls == expected_calls
+    expected_preloop_calls = [call.Lock(),
+                              call.set_parameters(generic_plc1,
+                                                  [('T0', 1), ('P_RAW1', 1)],
+                                                  [Decimal('42'), 42], True,
+                                                  'testLock', '192.168.1.1'),
+                              call.startup()]
+    assert magic_mock_preloop.mock_calls == expected_preloop_calls
+    # Verify network function calls
+    expected_network_calls = [call.get(('T0', 1)), call.get(('P_RAW1', 1))]
+    assert magic_mock_network.mock_calls == expected_network_calls
 
 
-def test_generic_plc2_preloop(generic_plc2, magic_mock_preloop):
+def test_generic_plc2_preloop(generic_plc2, magic_mock_preloop, magic_mock_network):
     generic_plc2.pre_loop()
     # Verify pre loop function calls
-    expected_calls = [call.get(('T2', 1)), call.get(('V_ER2i', 1)),
-                      call.Lock(),
-                      call.set_parameters(generic_plc2,
-                                          [('T2', 1), ('V_ER2i', 1)],
-                                          [Decimal('42'), 42], True,
-                                          'testLock', '192.168.1.2'),
-                      call.startup()]
-    assert magic_mock_preloop.mock_calls == expected_calls
+    expected_preloop_calls = [call.Lock(),
+                              call.set_parameters(generic_plc2,
+                                                  [('T2', 1), ('V_ER2i', 1)],
+                                                  [Decimal('42'), 42], True,
+                                                  'testLock', '192.168.1.2'),
+                              call.startup()]
+    assert magic_mock_preloop.mock_calls == expected_preloop_calls
+    # Verify network function calls
+    expected_network_calls = [call.get(('T2', 1)), call.get(('V_ER2i', 1))]
+    assert magic_mock_network.mock_calls == expected_network_calls
