@@ -3,6 +3,7 @@ import os.path
 from basePLC import BasePLC
 import threading
 import time
+import sqlite3
 from decimal import Decimal
 import yaml
 from pathlib import Path

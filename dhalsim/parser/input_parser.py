@@ -33,15 +33,12 @@ class InputParser:
     """Class handling the parsing of .inp input files
 
     :param intermediate_yaml_path: The path of the inp file
-    :type intermediate_yaml_path: Path
     """
 
-    def __init__(self, intermediate_yaml_path: Path):
+    def __init__(self, intermediate_yaml):
         """Constructor method
         """
-        self.intermediate_yaml_path = intermediate_yaml_path
-        with self.intermediate_yaml_path.open(mode='r') as intermediate_yaml:
-            self.data = yaml.safe_load(intermediate_yaml)
+        self.data = intermediate_yaml
 
         for plc in self.data['plcs']:
             if 'sensors' not in plc:

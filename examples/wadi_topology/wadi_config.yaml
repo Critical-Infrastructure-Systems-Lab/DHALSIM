@@ -35,6 +35,14 @@ iterations: 500
 # This flag indicates if the experiment will have an attack in the network
 # Using this flag also requires setting the value of attacks_path and attack_name.
 # The attack_name should be present in the attacks_path file
-#run_attack: "False"
+run_attack: "False"
 #attacks_path: "../../attack_repository/wadi_attack_description.yaml"
 #attack_name: "wadi_network_empty_tank_1"
+device_attacks:
+  - name: "plc_empty_tank_1"
+    target: "PLC1"
+    actuators:
+      - P_RAW1
+    command: "closed"
+    start: 5
+    end: 10

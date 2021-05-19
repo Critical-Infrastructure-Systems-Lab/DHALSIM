@@ -48,6 +48,8 @@ class DeviceAttack(Attack):
         :param plc: The PLC that will apply the action
         """
         curr_time = plc.get_master_clock()
-        if self.start >= curr_time >= self.end:
+        print("Checking attack time: " + str(curr_time))
+        if self.start <= curr_time <= self.end:
+            print("Attack applied")
             for actuator in self.actuators:
                 plc.set_tag(actuator, self.command)
