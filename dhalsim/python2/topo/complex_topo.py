@@ -22,17 +22,8 @@ class LinuxRouter(Node):
 
 
 class ComplexTopo(Topo):
-    """
-    A class for a simple mininet topology
-    """
 
     def __init__(self, intermediate_yaml_path):
-        """
-        Initialize a simple mininet topology
-
-        :param intermediate_yaml_path: The path of the intermediate.yaml file
-        """
-
         # Set variables
         self.router_ip = "10.0.1.254"
         self.supervisor_ip = "10.0.2.254"
@@ -45,7 +36,7 @@ class ComplexTopo(Topo):
         with self.intermediate_yaml_path.open(mode='r') as intermediate_yaml:
             self.data = yaml.safe_load(intermediate_yaml)
 
-        # Generate PLC data and write back to file (mac addresses, ip addresses, interface names, ...)
+        # Generate PLC data and write back to file
         self.generate_plc_data(self.data['plcs'])
         with self.intermediate_yaml_path.open(mode='w') as intermediate_yaml:
             yaml.safe_dump(self.data, intermediate_yaml)
@@ -67,11 +58,6 @@ class ComplexTopo(Topo):
             plc['gateway_ip'] = self.local_router_ips
 
     def build(self):
-        """
-        Build the mininet topology
-        """
-
-        # Todo change maartens comments
 
         # -- FIELD NETWORK -- #
         # Add a router to the network
@@ -114,45 +100,55 @@ class ComplexTopo(Topo):
         self.addHost('plant')
 
     def setup_network(self, net):
-        # Enable forwarding on router r0
-        net.get('r0').cmd('sysctl net.ipv4.ip_forward=1')
+        # Enable ip forwarding on provider router
+        provider = net.get('r0')
+        provider.cmd('sysctl net.ipv4.ip_forward=1')
 
-        # Set the default gateway of the PLCs
         if 'plcs' in self.data.keys():
-            for plc in self.data['plcs']:
-                # Add the plcs router as default gateway to the plc
-                net.get(plc['name']).cmd('route add default gw ' + plc['gateway_ip'])
+            for plc_data in self.data['plcs']:
+                plc = net.get(plc_data['name'])
+                gateway = net.get(plc_data['gateway_name'])
+
+                # Add the plcs gateway router as default gateway to the plc
+                plc.cmd('route add default gw {ip}'.format(ip=plc_data['gateway_ip']))
+
                 # Set ips on the provider router for every interface
-                net.get("r0").cmd('ifconfig ' + plc['provider_interface'] + ' ' + plc[
-                    "provider_ip"] + ' netmask 255.255.255.0')
+                provider.cmd('ifconfig {interface} {ip} netmask 255.255.255.0'.format(
+                    interface=plc_data['provider_interface'], ip=plc_data["provider_ip"]))
 
-                # net.get(plc['gateway_name']).cmd('sysctl net.ipv4.ip_forward=1')
-                net.get(plc['gateway_name']).cmd('ifconfig ' + plc['gateway_name'] + '-eth1 192.168.1.254')
+                # Set ip on gateway on plc sides interface
+                gateway.cmd(
+                    'ifconfig {name}-eth1 192.168.1.254'.format(name=plc_data['gateway_name']))
 
-                net.get(plc['gateway_name']).cmd(
-                    'ifconfig ' + plc['gateway_name'] + '-eth1 ' + plc['gateway_ip'])
+                # Set ip on gateway on the provider sides interface
+                gateway.cmd('ifconfig {name}-eth1 {ip}'.format(name=plc_data['gateway_name'],
+                                                               ip=plc_data['gateway_ip']))
 
-                net.get(plc['gateway_name']).cmd('sudo iptables -A FORWARD -o '+plc['gateway_name']+'-eth1 -i '+plc['gateway_name']+'-eth0 -s '+ plc['local_ip'] +' -m conntrack --ctstate NEW -j ACCEPT')
-                net.get(plc['gateway_name']).cmd('sudo iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT')
-                net.get(plc['gateway_name']).cmd('sudo iptables -t nat -F POSTROUTING')
-                net.get(plc['gateway_name']).cmd('sudo iptables -t nat -A POSTROUTING -o '+plc['gateway_name']+'-eth0  -j MASQUERADE')
-                net.get(plc['gateway_name']).cmd('sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"')
+                # Enable ip forwarding on gateway router
+                gateway.cmd('sysctl net.ipv4.ip_forward=1')
 
-                net.get(plc['gateway_name']).cmd('route add default gw ' + plc['provider_ip'])
+                # Add provider router as default gateway to the plcs gateway router
+                gateway.cmd('route add default gw {ip}'.format(ip=plc_data['provider_ip']))
 
-                net.get(plc['gateway_name']).cmd('sudo iptables -A PREROUTING -t nat -i ' + plc[
-                    'gateway_name'] + '-eth0 -p tcp --dport ' + self.cpppo_port + ' -j DNAT --to ' +
-                                                 plc['local_ip'] + ':' + self.cpppo_port)
+                # TODO what do these do? they are not necessary yet
+                # gateway.cmd(
+                #     'iptables -A FORWARD -o {name}-eth1 -i {name}-eth0 -s {ip} -m conntrack --ctstate NEW -j ACCEPT'.format(
+                #         name=plc_data['gateway_name'], ip=plc_data['local_ip']))
+                # gateway.cmd(
+                #     'iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT')
 
-                net.get(plc['gateway_name']).cmd('sudo iptables -A FORWARD -p tcp -d ' + plc[
-                    'local_ip'] + ' --dport ' + self.cpppo_port + ' -j ACCEPT')
+                # Masquerade the from ip when forwarding a request from a plc to the provider
+                gateway.cmd('iptables -t nat -F POSTROUTING')
+                gateway.cmd('iptables -t nat -A POSTROUTING -o {name}-eth0  -j MASQUERADE'.format(
+                    name=plc_data['gateway_name']))
 
-                net.get(plc['gateway_name']).popen('tcpdump -i any -w ' + str(Path(self.data["output_path"])/(plc['gateway_name']+".pcap")), stderr=sys.stderr, stdout=sys.stdout)
-
-            net.get('r0').popen('tcpdump -i r0-eth0 -w ' + str(
-                Path(self.data["output_path"]) / ('r0-eth0' + ".pcap")), stderr=sys.stderr, stdout=sys.stdout)
-            net.get('r0').popen('tcpdump -i r0-eth1 -w ' + str(
-                Path(self.data["output_path"]) / ('r0-eth1' + ".pcap")), stderr=sys.stderr, stdout=sys.stdout)
+                # Portforwarding the cpppo port on the gateway to the plc
+                gateway.cmd(
+                    'iptables -A PREROUTING -t nat -i {name}-eth0 -p tcp --dport {port} -j DNAT --to {ip}:{port}'.format(
+                        name=plc_data['gateway_name'], port=self.cpppo_port,
+                        ip=plc_data['local_ip']))
+                gateway.cmd('iptables -A FORWARD -p tcp -d {ip} --dport {port} -j ACCEPT'.format(
+                    ip=plc_data['local_ip'], port=self.cpppo_port))
 
         # # Set the default gateway of the SCADA
         # net.get('scada').cmd('route add default gw ' + self.supervisor_ip)
