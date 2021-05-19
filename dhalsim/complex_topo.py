@@ -6,7 +6,7 @@ import yaml
 
 class LinuxRouter(Node):
     """
-    A node with IP forwarding enabled
+    A node with IP forwarding enabled.
     """
 
     def config(self, **params):
@@ -20,9 +20,9 @@ class LinuxRouter(Node):
 
 class ComplexTopo(Topo):
     """
-    Enhanced C-Town topology
-    Each PLC is now in a local area network called "substation"
-    Substation 1 includes the SCADA server
+    Enhanced C-Town topology.
+    Each PLC is now in a local area network called "substation".
+    Substation 1 includes the SCADA server.
     """
     def __init__( self, week_index, sim_type, config_file, plc_dict_path):
         "Create custom topo."

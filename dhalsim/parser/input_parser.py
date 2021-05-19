@@ -20,7 +20,8 @@ class NoInpFileGiven(Error):
 
 
 def value_to_status(actuator_value):
-    """Translates int corresponding to actuator status
+    """
+    Translates int corresponding to actuator status.
 
     :param actuator_value: The value from the status.value of the actuator
     :type actuator_value: int
@@ -32,7 +33,8 @@ def value_to_status(actuator_value):
 
 
 class InputParser:
-    """Class handling the parsing of .inp input files
+    """
+    Class handling the parsing of .inp input files.
 
     :param intermediate_yaml_path: The path of the inp file
     :type intermediate_yaml_path: Path
@@ -61,7 +63,8 @@ class InputParser:
         self.wn = wntr.network.WaterNetworkModel(self.inp_file_path)
 
     def write(self):
-        """Writes all needed inp file sections into the intermediate_yaml
+        """
+        Writes all needed inp file sections into the intermediate_yaml.
         """
         # Generate PLC controls
         self.generate_controls()
@@ -83,8 +86,9 @@ class InputParser:
             yaml.safe_dump(self.data, intermediate_yaml)
 
     def generate_controls(self):
-        """Generates list of controls with their types, values, actuators, and
-        potentially dependant; then adds that to self.data to be written to the yaml
+        """
+        Generates list of controls with their types, values, actuators, and
+        potentially dependant; then adds that to self.data to be written to the yaml.
         """
         input = FileStream(self.inp_file_path)
         tree = controlsParser(CommonTokenStream(controlsLexer(input))).controls()
@@ -124,8 +128,9 @@ class InputParser:
                     plc['controls'].append(control)
 
     def generate_pumps_list(self):
-        """Generates list of pumps with their initial states and
-        adds it to the data to be written to the yaml file
+        """
+        Generates list of pumps with their initial states and
+        adds it to the data to be written to the yaml file.
         """
         pumps = []
         for pump in self.wn.pumps():
@@ -136,8 +141,9 @@ class InputParser:
         self.data['pumps'] = pumps
 
     def generate_valves_list(self):
-        """Generates list of valves with their initial states and
-        adds it to the data to be written to the yaml file
+        """
+        Generates list of valves with their initial states and
+        adds it to the data to be written to the yaml file.
         """
         valves = []
         for valve in self.wn.valves():
@@ -148,8 +154,9 @@ class InputParser:
         self.data['valves'] = valves
 
     def generate_tanks_list(self):
-        """Generates list of tanks with their initial values and
-        adds it to the data to be written to the yaml file-
+        """
+        Generates list of tanks with their initial values and
+        adds it to the data to be written to the yaml file.
         """
         tanks = []
         for tank in self.wn.tanks():
@@ -160,8 +167,9 @@ class InputParser:
             self.data['tanks'] = tanks
 
     def generate_times(self):
-        """Generates duration and hydraulic timestep and adds to the
-        data to be written to the yaml file
+        """
+        Generates duration and hydraulic timestep and adds to the
+        data to be written to the yaml file.
         """
 
         # TODO Decide on the timestep (minutes or seconds?)

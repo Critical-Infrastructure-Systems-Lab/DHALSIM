@@ -113,7 +113,8 @@ class ExperimentInitializer:
 
     def run_parser(self):
         """
-        Parse the files to build plc_dicts.yaml and utils.py
+        Parse the files to build plc_dicts.yaml and utils.py.
+
         :return:
         """
         home_path = expanduser("~")

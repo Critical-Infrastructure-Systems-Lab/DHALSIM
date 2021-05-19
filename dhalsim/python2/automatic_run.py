@@ -21,7 +21,6 @@ class GeneralCPS(MiniCPS):
     :param intermediate_yaml: The path to the intermediate yaml file
     :type intermediate_yaml: Path
     """
-
     def __init__(self, intermediate_yaml):
         # Create logs directory in working directory
         try:
@@ -106,8 +105,8 @@ class GeneralCPS(MiniCPS):
     def end_process(process):
         """
         End a process.
-        :param process: the process to end
 
+        :param process: the process to end
         """
         process.send_signal(signal.SIGINT)
         process.wait()
@@ -146,7 +145,8 @@ class GeneralCPS(MiniCPS):
 
 
 def is_valid_file(parser_instance, arg):
-    """Verifies whether the intermediate yaml path is valid
+    """
+    Verifies whether the intermediate yaml path is valid.
     """
     if not os.path.exists(arg):
         parser_instance.error(arg + " does not exist")

@@ -71,7 +71,8 @@ def create_controls(controls_list):
 
 
 class GenericPLC(BasePLC):
-    """This class represents a plc. This plc knows what it is connected to by reading the
+    """
+    This class represents a plc. This plc knows what it is connected to by reading the
     yaml file at intermediate_yaml_path and looking at index yaml_index in the plcs section.
     """
 
@@ -141,7 +142,6 @@ class GenericPLC(BasePLC):
         the :class:`~dhalsim.python2.basePLC` class.
 
         :param sleep:  (Default value = 0.5) The time to sleep after setting everything up
-
         """
         print('DEBUG: ' + self.intermediate_plc['name'] + ' enters pre_loop')
 
@@ -168,10 +168,11 @@ class GenericPLC(BasePLC):
 
     def get_tag(self, tag):
         """
-        Get the value of a tag that is connected to this plc or over the network.
+        Get the value of a tag that is connected to this PLC or over the network.
 
         :param tag: The tag to get
-        :return: Value of that tag
+        :type tag: str
+        :return: value of that tag
         :rtype: int
         :raise: TagDoesNotExist if tag cannot be found
         """
@@ -188,7 +189,7 @@ class GenericPLC(BasePLC):
 
     def set_tag(self, tag, value):
         """
-        Set a tag that is connected to this plc to a value.
+        Set a tag that is connected to this PLC to a value.
 
         :param tag: Which tag to set
         :type tag: str
@@ -209,7 +210,8 @@ class GenericPLC(BasePLC):
 
     def get_master_clock(self):
         """
-        Get the value of the master clock of the physical process through the database
+        Get the value of the master clock of the physical process through the database.
+
         :return: Iteration in the physical process
         """
         # Fetch master_time
@@ -233,9 +235,7 @@ class GenericPLC(BasePLC):
         knows this plc finished the requested iteration.
 
         :param flag: True for sync to 1, false for sync to 0
-
         """
-
         self.cur.execute("UPDATE sync SET flag=? WHERE name IS ?",
                          (int(flag), self.intermediate_plc["name"],))
         self.conn.commit()
@@ -245,7 +245,6 @@ class GenericPLC(BasePLC):
         The main loop of a PLC. In here all the controls will be applied.
 
         :param sleep:  (Default value = 0.5) Not used
-
         """
         print('DEBUG: ' + self.intermediate_plc['name'] + ' enters main_loop')
         while True:

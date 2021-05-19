@@ -25,7 +25,7 @@ class InvalidControlValue(Error):
 
 def generate_real_tags(tanks, pumps, valves):
     """
-    Generates real tags with all tanks, pumps, and values
+    Generates real tags with all tanks, pumps, and values.
 
     :param tanks: list of tanks
     :param pumps: list of pumps
@@ -48,7 +48,7 @@ def generate_real_tags(tanks, pumps, valves):
 
 def generate_tags(taggable):
     """
-    Generates tags from a list of taggable entities (sensor or actuator)
+    Generates tags from a list of taggable entities (sensor or actuator).
 
     :param taggable: a list of strings containing names of things like tanks, pumps, and valves
     """
@@ -119,7 +119,7 @@ class GenericScada(SCADAServer):
 
     def pre_loop(self, sleep=0.5):
         """
-        The pre loop of a SCADA. In which setup actions are started
+        The pre loop of a SCADA. In which setup actions are started.
 
         :param sleep:  (Default value = 0.5) The time to sleep after setting everything up
         """
@@ -146,16 +146,14 @@ class GenericScada(SCADAServer):
         knows this plc finished the requested iteration.
 
         :param flag: True for sync to 1, false for sync to 0
-
         """
-
         self.cur.execute("UPDATE sync SET flag=? WHERE name IS 'scada'",
                          (int(flag), ))
         self.conn.commit()
 
     def sigint_handler(self, sig, frame):
         """
-        Shutdown protocol for the scada, writes the output before exiting
+        Shutdown protocol for the scada, writes the output before exiting.
         """
         print 'DEBUG SCADA shutdown'
         self.write_output()
@@ -172,7 +170,7 @@ class GenericScada(SCADAServer):
     def generate_plcs(self):
         """
         Generates a list of tuples, the first part being the ip of a PLC,
-        and the second  being a list of tags attached to that plc
+        and the second  being a list of tags attached to that PLC.
         """
         plcs = []
 
@@ -191,7 +189,6 @@ class GenericScada(SCADAServer):
         The main loop of a PLC. In here all the controls will be applied.
 
         :param sleep:  (Default value = 0.5) Not used
-
         """
         print('DEBUG: SCADA enters main_loop')
         while True:
@@ -215,7 +212,7 @@ class GenericScada(SCADAServer):
 
 def is_valid_file(parser_instance, arg):
     """
-    Verifies whether the intermediate yaml path is valid
+    Verifies whether the intermediate yaml path is valid.
 
     :param parser_instance: instance of argparser
     :param arg: the path to check
