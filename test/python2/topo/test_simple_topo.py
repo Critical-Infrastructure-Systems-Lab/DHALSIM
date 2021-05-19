@@ -12,11 +12,11 @@ def unmodified_dict():
 
 @pytest.fixture
 def filled_dict():
-    return {'plcs': [{'name': 'PLC1', 'ip': '192.168.1.1',
-                      'mac': '00:1D:9C:C7:B0:70', 'interface': 'PLC1-eth0',
+    return {'plcs': [{'public_ip': '192.168.1.1', 'mac': '00:1D:9C:C7:B0:70', 'name': 'PLC1',
+                      'local_ip': '192.168.1.1', 'interface': 'PLC1-eth0',
                       'gateway': '192.168.1.254'},
-                     {'name': 'PLC2', 'ip': '192.168.1.2',
-                      'mac': '00:1D:9C:C7:B0:70', 'interface': 'PLC2-eth0',
+                     {'public_ip': '192.168.1.2', 'mac': '00:1D:9C:C7:B0:70', 'name': 'PLC2',
+                      'local_ip': '192.168.1.2', 'interface': 'PLC2-eth0',
                       'gateway': '192.168.1.254'}]}
 
 
@@ -34,7 +34,6 @@ def topo_fixture(mocker, tmpdir, unmodified_dict):
 def test_writeback_yaml(tmpdir, topo_fixture, filled_dict):
     with tmpdir.join("intermediate.yaml").open(mode='r') as intermediate_yaml:
         dump = yaml.safe_load(intermediate_yaml)
-
     assert dump == filled_dict
 
 
