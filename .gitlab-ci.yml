@@ -30,7 +30,7 @@ test:3:
     - virtualenv venv
     - source venv/bin/activate
     - pip install -e .[test]
-    - python -m pytest test --ignore=test/python2/ --color=yes
+    - python -m pytest test --ignore=test/python2/ --color=yes -m "not integrationtest"
 
 test:2:
   image: python:2.7
@@ -47,6 +47,22 @@ test:2:
     - pip install pytest
     - pip install pytest-mock
     - pip install mock
-    - pip install wget
-    - pip install netcat
-    - python -m pytest test/python2/ --color=yes
+    - pip install pathlib
+    - python -m pytest test/python2/ --color=yes -m "not integrationtest"
+
+#test:intergration:
+#  image: ubuntu:20.04
+#  stage: test
+#  cache:
+#    paths:
+#      - ~/mininet
+#      - ~/minicps
+#  script:
+#    - apt-get update
+#    - chmod +x install.sh
+#    - apt-get install -y sudo
+#    - ./install.sh
+#    - python2 -m pip install pyyaml pytest pytest-mock mock pathlib
+#    - python3 -m pip install -e .[test]
+#    - python2 -m pytest test/python2/ --color=yes -m "not integrationtest"
+#    - python3 -m pytest test --ignore=python2 --color=yes -m "not integrationtest"
