@@ -94,7 +94,10 @@ class GenericPLC(BasePLC):
         self.intermediate_controls = self.intermediate_plc['controls']
         self.controls = create_controls(self.intermediate_controls)
 
-        self.attacks = create_attacks(self.intermediate_plc['attacks'])
+        if 'attacks' in self.intermediate_plc.keys():
+            self.attacks = create_attacks(self.intermediate_plc['attacks'])
+        else:
+            self.attacks = []
 
         # Create state from db values
         state = {
@@ -190,7 +193,7 @@ class GenericPLC(BasePLC):
                 for control in self.controls:
                     control.apply(self)
 
-                for attack in self.attakcs:
+                for attack in self.attacks:
                     attack.apply(self)
 
                 time.sleep(0.25)
