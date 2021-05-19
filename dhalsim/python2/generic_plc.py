@@ -252,12 +252,12 @@ class GenericPLC(BasePLC):
                          (int(flag), self.intermediate_plc["name"],))
         self.conn.commit()
 
-    def main_loop(self, sleep=0.5):
+    def main_loop(self, sleep=0.5, test_break=False):
         """
         The main loop of a PLC. In here all the controls will be applied.
 
         :param sleep:  (Default value = 0.5) Not used
-
+        :param test_break:  (Default value = False) used for unit testing, breaks the loop after one iteration
         """
         print('DEBUG: ' + self.intermediate_plc['name'] + ' enters main_loop')
         while True:
@@ -269,6 +269,8 @@ class GenericPLC(BasePLC):
 
             self.set_sync(1)
 
+            if test_break:
+                break
             # time.sleep(0.05)
 
 

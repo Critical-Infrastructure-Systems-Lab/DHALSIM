@@ -14,7 +14,13 @@ from dhalsim.python2.generic_plc import GenericPLC
 @pytest.fixture
 def magic_mock_network():
     mock = MagicMock()
-    mock.get.return_value = "42"
+    # network
+    mock.get.return_value = u'42'
+    mock.set.return_value = u'42'
+    mock.receive.return_value = u'0.15'
+    # database
+    mock.get_sync.return_value = 0
+    mock.set_sync.return_value = None
     return mock
 
 
@@ -45,7 +51,7 @@ def yaml_file(tmpdir):
                   "actuators": ["P_RAW1", ],
                   "controls": [{"type": "Below",
                                 "dependant": "T2",
-                                "value": "0.16",
+                                "value": 0.16,
                                 "actuator": "P_RAW1",
                                 "action": "OPEN"}, ]
                   },
@@ -55,7 +61,7 @@ def yaml_file(tmpdir):
                   "actuators": ["V_ER2i", ],
                   "controls": [{"type": "Above",
                                 "dependant": "T2",
-                                "value": "0.32",
+                                "value": 0.32,
                                 "actuator": "V_ER2i",
                                 "action": "CLOSED"}, ]
                   }, ],
@@ -94,6 +100,22 @@ def patch_methods(magic_mock_init, magic_mock_preloop, magic_mock_network, mocke
         'dhalsim.python2.generic_plc.GenericPLC.get',
         magic_mock_network.get
     )
+    mocker.patch(
+        'dhalsim.python2.generic_plc.GenericPLC.set',
+        magic_mock_network.set
+    )
+    mocker.patch(
+        'dhalsim.python2.generic_plc.GenericPLC.receive',
+        magic_mock_network.receive
+    )
+    mocker.patch(
+        'dhalsim.python2.generic_plc.GenericPLC.get_sync',
+        magic_mock_network.get_sync
+    )
+    mocker.patch(
+        'dhalsim.python2.generic_plc.GenericPLC.set_sync',
+        magic_mock_network.set_sync
+    )
 
 
 @pytest.fixture
@@ -124,12 +146,12 @@ def test_generic_plc1_init(generic_plc1, magic_mock_init, yaml_file):
     # Assert intermediate_plc correct
     assert generic_plc1.intermediate_plc == {"name": "PLC1", "ip": "192.168.1.1", "sensors": ["T0", ],
                                              "actuators": ["P_RAW1", ], "controls": [
-            {"type": "Below", "dependant": "T2", "value": "0.16",
+            {"type": "Below", "dependant": "T2", "value": 0.16,
              "actuator": "P_RAW1", "action": "OPEN"}, ]}
     # Assert control generation
     assert len(generic_plc1.controls) == 1
     assert isinstance(generic_plc1.controls[0], BelowControl)
-    assert generic_plc1.controls[0].value == "0.16"
+    assert generic_plc1.controls[0].value == 0.16
     assert generic_plc1.controls[0].dependant == "T2"
     assert generic_plc1.controls[0].action == "OPEN"
     assert generic_plc1.controls[0].actuator == "P_RAW1"
@@ -153,12 +175,12 @@ def test_generic_plc2_init(generic_plc2, magic_mock_init, yaml_file):
     # Assert intermediate_plc correct
     assert generic_plc2.intermediate_plc == {"name": "PLC2", "ip": "192.168.1.2", "sensors": ["T2", ],
                                              "actuators": ["V_ER2i", ], "controls": [
-            {"type": "Above", "dependant": "T2", "value": "0.32",
+            {"type": "Above", "dependant": "T2", "value": 0.32,
              "actuator": "V_ER2i", "action": "CLOSED"}, ]}
     # Assert control generation
     assert len(generic_plc2.controls) == 1
     assert isinstance(generic_plc2.controls[0], AboveControl)
-    assert generic_plc2.controls[0].value == "0.32"
+    assert generic_plc2.controls[0].value == 0.32
     assert generic_plc2.controls[0].dependant == "T2"
     assert generic_plc2.controls[0].action == "CLOSED"
     assert generic_plc2.controls[0].actuator == "V_ER2i"
@@ -198,3 +220,24 @@ def test_generic_plc2_preloop(generic_plc2, magic_mock_preloop, magic_mock_netwo
     # Verify network function calls
     expected_network_calls = [call.get(('T2', 1)), call.get(('V_ER2i', 1))]
     assert magic_mock_network.mock_calls == expected_network_calls
+
+
+def test_generic_plc1_mainloop(generic_plc1, magic_mock_network):
+    generic_plc1.main_loop(test_break=True)
+    # Verify network function calls (applying control rule)
+    expected_network_calls = [call.get_sync(),
+                              call.receive(('T2', 1), '192.168.1.2'),
+                              call.set(('P_RAW1', 1), 1),
+                              call.set_sync(1)]
+    assert magic_mock_network.mock_calls == expected_network_calls
+
+
+def test_generic_plc2_mainloop(generic_plc2, magic_mock_network):
+    generic_plc2.main_loop(test_break=True)
+    # Verify network function calls (applying control rule)
+    expected_network_calls = [call.get_sync(),
+                              call.get(('T2', 1)),
+                              call.set(('V_ER2i', 1), 0),
+                              call.set_sync(1)]
+    assert magic_mock_network.mock_calls == expected_network_calls
+
