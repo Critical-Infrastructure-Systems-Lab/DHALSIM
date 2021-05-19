@@ -1,4 +1,5 @@
 import sys
+import time
 
 import pytest
 import yaml
@@ -42,12 +43,14 @@ def test_ping(net, host1, host2):
 
 @pytest.mark.integrationtest
 def test_port_forward_1(net):
-    net.get("PLC1").cmd("echo 'test' | netcat -q 1 -l 44818 &")
+    net.get("PLC1").cmd("echo 'test' | netcat -l 44818 &")
+    time.sleep(0.1)
     response = net.get("r0").cmd("wget -qO - 10.0.1.1:44818")
     assert response.rstrip() == "test"
 
 @pytest.mark.integrationtest
 def test_port_forward_2(net):
-    net.get("PLC2").cmd("echo 'test' | netcat -q 1 -l 44818 &")
+    net.get("PLC2").cmd("echo 'test' | netcat -l 44818 &")
+    time.sleep(0.1)
     response = net.get("r0").cmd("wget -qO - 10.0.2.1:44818")
     assert response.rstrip() == "test"
