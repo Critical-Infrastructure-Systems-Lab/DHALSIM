@@ -84,6 +84,12 @@ class GenericPLC(BasePLC):
 
         self.intermediate_plc = self.intermediate_yaml["plcs"][self.yaml_index]
 
+        if 'sensors' not in self.intermediate_plc:
+            self.intermediate_plc['sensors'] = list()
+
+        if 'actuators' not in self.intermediate_plc:
+            self.intermediate_plc['actuators'] = list()
+
         # connection to the database
         self.conn = sqlite3.connect(self.intermediate_yaml["db_path"])
         self.cur = self.conn.cursor()

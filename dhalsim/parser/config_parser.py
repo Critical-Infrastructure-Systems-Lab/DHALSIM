@@ -24,6 +24,10 @@ class InvalidValueError(Error):
     """Raised when there is a invalid value in a configuration file"""
 
 
+class DuplicateValueError(Error):
+    """Raised when there is a duplicate plc value in the cpa file"""
+
+
 class ConfigParser:
     """
     Class handling the parsing of the input config data.
@@ -102,20 +106,24 @@ class ConfigParser:
         :return: data from cpa file
         """
         with self.cpa_path.open() as file:
-            return yaml.load(file, Loader=yaml.FullLoader)
+            cpa = yaml.load(file, Loader=yaml.FullLoader)
 
-    @property
-    def iterations(self):
-        """Load the amount of iterations for the simulation
+        # Verification of plc data
+        plcs = cpa.get("plcs")
+        if not plcs:
+            raise MissingValueError("PLCs section not present in cpa_file")
 
-        :return: the amount of itteration
-        :rtype: int
-        """
-        with self.cpa_path.open() as file:
-            iterations = self.config_data.get("iterations")
-            if not iterations:
-                raise MissingValueError("iterations not in config file")
-            return iterations
+        # Check for plc names (and check for duplicates)
+        plc_list = []
+        for plc in plcs:
+            if not plc.get("name"):
+                raise MissingValueError("PLC in cpa file missing a name")
+            else:
+                plc_list.append(plc.get("name"))
+
+        if len(plc_list) != len(set(plc_list)):
+            raise DuplicateValueError
+        return cpa
 
     @property
     def network_topology_type(self):
@@ -150,7 +158,6 @@ class ConfigParser:
         yaml_data["cpa_file"] = str(self.cpa_path)
         yaml_data["output_path"] = str(self.output_path)
         yaml_data["db_path"] = "/tmp/dhalsim/dhalsim.sqlite"
-        yaml_data["iterations"] = self.iterations
         yaml_data["network_topology_type"] = self.network_topology_type
 
         # Add options from the config_file
@@ -162,12 +169,13 @@ class ConfigParser:
             yaml_data["simulator"] = self.config_data["simulator"]
         else:
             yaml_data["simulator"] = "pdd"
+        # Note: if iterations not present then default value will be written in InputParser
+        if "iterations" in self.config_data.keys():
+            yaml_data["iterations"] = self.config_data["iterations"]
 
         # Write data to yaml file
         with self.yaml_path.open(mode='w') as intermediate_yaml:
             yaml.safe_dump(yaml_data, intermediate_yaml)
-
-        # todo: add initial values
 
         # Write values from IMP file into yaml file (controls, tanks/valves/initial values, etc.)
         InputParser(self.yaml_path).write()
