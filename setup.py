@@ -17,7 +17,6 @@ setuptools.setup(
     install_requires=[
         'PyYAML',
         'antlr4-python3-runtime',
-        'mininet',
         'wntr',
     ],
     extras_require={
