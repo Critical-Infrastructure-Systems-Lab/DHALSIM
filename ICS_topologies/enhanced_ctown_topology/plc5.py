@@ -5,12 +5,15 @@ from utils import J302, J306, J307, J317
 from decimal import Decimal
 import time
 import threading
+import sys
 
 
 class PLC5(BasePLC):
 
     def pre_loop(self):
         print 'DEBUG: plc5 enters pre_loop'
+
+        self.week_index = sys.argv[2]
         self.local_time = 0
 
         # Used to sync the actuators and the physical process
@@ -38,8 +41,7 @@ class PLC5(BasePLC):
 
         # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable
         # values into a persistent file
-        BasePLC.set_parameters(self, tags, values, self.reader, self.lock,
-                               ENIP_LISTEN_PLC_ADDR)
+        BasePLC.set_parameters(self, tags, values, self.reader, self.lock, ENIP_LISTEN_PLC_ADDR, self.week_index)
         self.startup()
 
     def check_control(self, mask):
