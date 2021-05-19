@@ -12,8 +12,10 @@ from dhalsim.python2.generic_plc import GenericPLC
 @pytest.fixture
 def magic_mock():
     mock = MagicMock()
-    mock.do_super_construction.return_value = 42
-    mock.initialize_db.return_value = 42
+    mock.do_super_construction.return_value = None
+    mock.initialize_db.return_value = None
+    mock.set_parameters.return_value = None
+    mock.startup.return_value = None
     return mock
 
 
@@ -58,6 +60,14 @@ def generic_plc1(mocker, yaml_file, magic_mock):
         'dhalsim.python2.generic_plc.GenericPLC.do_super_construction',
         magic_mock
     )
+    mocker.patch(
+        'dhalsim.python2.basePLC.BasePLC.set_parameters',
+        magic_mock
+    )
+    mocker.patch(
+        'dhalsim.python2.basePLC.BasePLC.startup',
+        magic_mock
+    )
     return GenericPLC(Path(str(yaml_file)), 0)
 
 
@@ -69,6 +79,14 @@ def generic_plc2(mocker, yaml_file, magic_mock):
     )
     mocker.patch(
         'dhalsim.python2.generic_plc.GenericPLC.do_super_construction',
+        magic_mock
+    )
+    mocker.patch(
+        'dhalsim.python2.basePLC.BasePLC.set_parameters',
+        magic_mock
+    )
+    mocker.patch(
+        'dhalsim.python2.basePLC.BasePLC.startup',
         magic_mock
     )
     return GenericPLC(Path(str(yaml_file)), 1)
@@ -134,3 +152,12 @@ def test_generic_plc2_init(generic_plc2, magic_mock, yaml_file):
                                                              'address': '192.168.1.2'}, 'name': 'enip', 'mode': 1},
                                                  {'path': '/home/test/dhalsim.sqlite', 'name': 'plant'})]
     assert magic_mock.mock_calls == expected_calls
+
+
+# def test_generic_plc1_preloop(generic_plc1, magic_mock):
+#     generic_plc1.pre_loop()
+#     expected_calls = [call.initialize_db(),
+#                       call.do_super_construction({'server': {'tags': (('T2', 1, 'REAL'), ('V_ER2i', 1, 'REAL')),
+#                                                              'address': '192.168.1.2'}, 'name': 'enip', 'mode': 1},
+#                                                  {'path': '/home/test/dhalsim.sqlite', 'name': 'plant'})]
+#     assert magic_mock.mock_calls == expected_calls
