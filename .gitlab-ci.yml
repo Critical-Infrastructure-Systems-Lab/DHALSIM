@@ -47,4 +47,5 @@ test:2:
     - pip install pytest
     - pip install pytest-mock
     - pip install mock
+    - pip install pathlib
     - python -m pytest test/python2/ --color=yes
