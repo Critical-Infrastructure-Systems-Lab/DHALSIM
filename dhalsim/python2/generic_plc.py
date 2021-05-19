@@ -77,7 +77,6 @@ class GenericPLC(BasePLC):
 
     def __init__(self, intermediate_yaml_path, yaml_index):
         self.yaml_index = yaml_index
-        self.local_time = 0
 
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
@@ -90,13 +89,11 @@ class GenericPLC(BasePLC):
         if 'actuators' not in self.intermediate_plc:
             self.intermediate_plc['actuators'] = list()
 
-        # connection to the database
-        self.conn = sqlite3.connect(self.intermediate_yaml["db_path"])
-        self.cur = self.conn.cursor()
+        # Initialize connection to database
+        self.initialize_db()
+        intermediate_controls = self.intermediate_plc['controls']
 
-        self.intermediate_controls = self.intermediate_plc['controls']
-
-        self.controls = create_controls(self.intermediate_controls)
+        self.controls = create_controls(intermediate_controls)
         # print(self.controls)
         # Create state from db values
         state = {
@@ -106,7 +103,7 @@ class GenericPLC(BasePLC):
 
         # Create list of dependant sensors
         dependant_sensors = []
-        for control in self.intermediate_controls:
+        for control in intermediate_controls:
             if control["type"] != "Time":
                 dependant_sensors.append(control["dependant"])
 
@@ -132,8 +129,23 @@ class GenericPLC(BasePLC):
         # print "state = " + str(state)
         # print "plc_protocol = " + str(plc_protocol)
 
+        self.do_super_construction(plc_protocol, state)
+
+    def do_super_construction(self, plc_protocol, state):
+        """
+        Function that performs the super constructor call to basePLC
+        Introduced to better facilitate testing
+        """
         super(GenericPLC, self).__init__(name=self.intermediate_plc['name'],
                                          state=state, protocol=plc_protocol)
+
+    def initialize_db(self):
+        """
+        Function that initializes PLC connection to the database
+        Introduced to better facilitate testing
+        """
+        self.conn = sqlite3.connect(self.intermediate_yaml["db_path"])
+        self.cur = self.conn.cursor()
 
     def pre_loop(self, sleep=0.5):
         """
