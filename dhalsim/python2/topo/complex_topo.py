@@ -36,15 +36,17 @@ class ComplexTopo(Topo):
         with self.intermediate_yaml_path.open(mode='r') as intermediate_yaml:
             self.data = yaml.safe_load(intermediate_yaml)
 
-        # Generate PLC data and write back to file
-        self.generate_plc_data(self.data['plcs'])
+        # Generate PLC and SCADA data and write back to file
+        self.generate_data(self.data)
         with self.intermediate_yaml_path.open(mode='w') as intermediate_yaml:
             yaml.safe_dump(self.data, intermediate_yaml)
 
         # Initialize mininet topology
         Topo.__init__(self)
 
-    def generate_plc_data(self, plcs):
+    def generate_data(self, data):
+        plcs = data["plcs"]
+        max_idx = 0;
         for idx, plc in enumerate(plcs):
             # Store the data in self.data
             plc['local_ip'] = self.local_plc_ips
@@ -56,6 +58,22 @@ class ComplexTopo(Topo):
             plc['gateway_name'] = "r" + str(idx + 1)
             plc['switch_name'] = "s" + str(idx + 1)
             plc['gateway_ip'] = self.local_router_ips
+            max_idx = max(max_idx, idx)
+
+        max_idx += 1
+
+        data["scada"] = {}
+        scada = data["scada"]
+        scada['name'] = "scada"
+        scada['local_ip'] = self.local_plc_ips
+        scada['public_ip'] = "10.0." + str(max_idx + 1) + ".1"
+        scada['provider_ip'] = "10.0." + str(max_idx + 1) + ".254"
+        scada['mac'] = Mininet.randMac()
+        scada['interface'] = scada['name'] + "-eth0"
+        scada['provider_interface'] = "r0-eth" + str(max_idx)
+        scada['gateway_name'] = "r" + str(max_idx + 1)
+        scada['switch_name'] = "s" + str(max_idx + 1)
+        scada['gateway_ip'] = self.local_router_ips
 
     def build(self):
 
@@ -83,20 +101,26 @@ class ComplexTopo(Topo):
                 self.addLink(plc_switch, plc_router, params2={'ip': plc['gateway_ip'] + "/24"})
                 self.addLink(plc_node, plc_switch, intfName=plc['interface'])
 
-        # # # -- SUPERVISOR NETWORK -- #
-        # supervisor_ip = self.supervisor_ip + "/24"
-        # # # Add a switch for the supervisor network
-        # supervisor_switch = self.addSwitch("s" + str(router_number))
-        # # # Link the router and the supervisor switch
-        # self.addLink(supervisor_switch, router, params2={'ip': supervisor_ip})
-        # # # Create a supervisor gateway
-        # supervisor_gateway = "via " + supervisor_ip
-        # # # Add a scada to the network
-        # scada = self.addHost('scada', ip="192.168.2.1/24", defaultRoute=supervisor_gateway)
-        # # # Add a link between the switch and the scada
-        # self.addLink(supervisor_switch, scada)
-        #
-        # # -- PLANT -- #
+        # -- SCADA -- #
+        scada = self.data["scada"]
+
+        scada_router = self.addNode(scada['gateway_name'], cls=LinuxRouter,
+                                    ip=scada['public_ip'] + "/24")
+
+        scada_switch = self.addSwitch(scada['switch_name'])
+
+        scada_node = self.addHost(
+            scada['name'],
+            mac=scada['mac'],
+            ip=scada['local_ip'] + "/24",
+            defaultRoute='via ' + scada['gateway_ip'] + '/24')
+
+        self.addLink(scada_router, provider_router,
+                     params2={'ip': scada['provider_ip'] + "/24"})
+        self.addLink(scada_switch, scada_router, params2={'ip': scada['gateway_ip'] + "/24"})
+        self.addLink(scada_node, scada_switch, intfName=scada['interface'])
+
+        # -- PLANT -- #
         self.addHost('plant')
 
     def setup_network(self, net):
@@ -150,5 +174,48 @@ class ComplexTopo(Topo):
                 gateway.cmd('iptables -A FORWARD -p tcp -d {ip} --dport {port} -j ACCEPT'.format(
                     ip=plc_data['local_ip'], port=self.cpppo_port))
 
-        # # Set the default gateway of the SCADA
-        # net.get('scada').cmd('route add default gw ' + self.supervisor_ip)
+        scada_data = self.data['scada']
+
+        scada = net.get(scada_data['name'])
+        gateway = net.get(scada_data['gateway_name'])
+
+        # Add the plcs gateway router as default gateway to the plc
+        scada.cmd('route add default gw {ip}'.format(ip=scada_data['gateway_ip']))
+
+        # Set ips on the provider router for every interface
+        provider.cmd('ifconfig {interface} {ip} netmask 255.255.255.0'.format(
+            interface=scada_data['provider_interface'], ip=scada_data["provider_ip"]))
+
+        # Set ip on gateway on plc sides interface
+        gateway.cmd(
+            'ifconfig {name}-eth1 192.168.1.254'.format(name=scada_data['gateway_name']))
+
+        # Set ip on gateway on the provider sides interface
+        gateway.cmd('ifconfig {name}-eth1 {ip}'.format(name=scada_data['gateway_name'],
+                                                       ip=scada_data['gateway_ip']))
+
+        # Enable ip forwarding on gateway router
+        gateway.cmd('sysctl net.ipv4.ip_forward=1')
+
+        # Add provider router as default gateway to the plcs gateway router
+        gateway.cmd('route add default gw {ip}'.format(ip=scada_data['provider_ip']))
+
+        # TODO what do these do? they are not necessary yet
+        # gateway.cmd(
+        #     'iptables -A FORWARD -o {name}-eth1 -i {name}-eth0 -s {ip} -m conntrack --ctstate NEW -j ACCEPT'.format(
+        #         name=plc_data['gateway_name'], ip=plc_data['local_ip']))
+        # gateway.cmd(
+        #     'iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT')
+
+        # Masquerade the from ip when forwarding a request from a plc to the provider
+        gateway.cmd('iptables -t nat -F POSTROUTING')
+        gateway.cmd('iptables -t nat -A POSTROUTING -o {name}-eth0  -j MASQUERADE'.format(
+            name=scada_data['gateway_name']))
+
+        # Portforwarding the cpppo port on the gateway to the plc
+        gateway.cmd(
+            'iptables -A PREROUTING -t nat -i {name}-eth0 -p tcp --dport {port} -j DNAT --to {ip}:{port}'.format(
+                name=scada_data['gateway_name'], port=self.cpppo_port,
+                ip=scada_data['local_ip']))
+        gateway.cmd('iptables -A FORWARD -p tcp -d {ip} --dport {port} -j ACCEPT'.format(
+            ip=scada_data['local_ip'], port=self.cpppo_port))

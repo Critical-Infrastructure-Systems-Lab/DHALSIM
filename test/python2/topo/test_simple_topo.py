@@ -1,9 +1,14 @@
+import sys
+
 from dhalsim.python2.topo.simple_topo import SimpleTopo
 from mininet.net import Mininet
 from mininet.link import TCLink
 import pytest
 import yaml
 
+def test_python_version():
+    assert sys.version_info.major is 2
+    assert sys.version_info.minor is 7
 
 @pytest.fixture
 def unmodified_dict():
@@ -12,7 +17,8 @@ def unmodified_dict():
 
 @pytest.fixture
 def filled_dict():
-    return {'scada': {'interface': 'scada-eth0', 'ip': '192.168.2.1', 'name': 'scada'},
+    return {'scada': {'interface': 'scada-eth0', 'local_ip': '192.168.2.1', 'name': 'scada',
+                      'public_ip': '192.168.2.1'},
             'plcs': [{'public_ip': '192.168.1.1', 'mac': '00:1D:9C:C7:B0:70', 'name': 'PLC1',
                       'local_ip': '192.168.1.1', 'interface': 'PLC1-eth0',
                       'gateway': '192.168.1.254'},

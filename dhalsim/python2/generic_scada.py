@@ -88,7 +88,7 @@ class GenericScada(SCADAServer):
 
         # Create server, real tags are generated
         scada_server = {
-            'address': self.intermediate_yaml['scada']['ip'],
+            'address': self.intermediate_yaml['scada']['local_ip'],
             'tags': generate_real_tags(self.intermediate_yaml['tanks'],
                                        self.intermediate_yaml['pumps'],
                                        self.intermediate_yaml['valves'])
@@ -182,7 +182,7 @@ class GenericScada(SCADAServer):
             tags.extend(generate_tags(PLC['sensors']))
             tags.extend(generate_tags(PLC['actuators']))
 
-            plcs.append((PLC['ip'], tags))
+            plcs.append((PLC['public_ip'], tags))
 
         return plcs
 

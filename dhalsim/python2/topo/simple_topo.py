@@ -44,7 +44,8 @@ class SimpleTopo(Topo):
         # Generate scada data
         self.data['scada'] = {}
         self.data['scada']['name'] = "scada"
-        self.data['scada']['ip'] = "192.168.2.1"
+        self.data['scada']['local_ip'] = "192.168.2.1"
+        self.data['scada']['public_ip'] = "192.168.2.1"
         self.data['scada']['interface'] = "scada-eth0"
         with self.intermediate_yaml_path.open(mode='w') as intermediate_yaml:
             yaml.safe_dump(self.data, intermediate_yaml)
@@ -99,7 +100,7 @@ class SimpleTopo(Topo):
         # Create a supervisor gateway
         supervisor_gateway = "via " + supervisor_ip
         # Add a scada to the network
-        scada = self.addHost('scada', ip=self.data['scada']['ip'] + "/24", defaultRoute=supervisor_gateway)
+        scada = self.addHost('scada', ip=self.data['scada']['local_ip'] + "/24", defaultRoute=supervisor_gateway)
         # Add a link between the switch and the scada
         self.addLink(supervisor_switch, scada, intfName2=self.data['scada']['interface'])
 
