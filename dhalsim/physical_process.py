@@ -169,15 +169,6 @@ class PhysicalPlant:
             else:
                 values_list.extend([self.wn.get_link(valve).status.value])
 
-        # TODO: Check commented code
-        # rows = self.c.execute("SELECT value FROM wadi WHERE name = 'ATT_1'").fetchall()
-        # self.conn.commit()
-        # attack1 = int(rows[0][0])
-        # rows = self.c.execute("SELECT value FROM wadi WHERE name = 'ATT_2'").fetchall()
-        # self.conn.commit()
-        # attack2 = int(rows[0][0])
-
-        # values_list.extend([attack1, attack2])
         return values_list
 
     def update_controls(self):
@@ -207,7 +198,8 @@ class PhysicalPlant:
     @staticmethod
     def calculate_eta(start, iteration, total):
         """
-        Calculates estimated time until finished simulation
+        Calculates estimated time until finished simulation.
+
         :start: start time
         :iteration: current iteration
         :total: total number of iterations
