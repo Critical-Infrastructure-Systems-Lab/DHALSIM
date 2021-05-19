@@ -45,6 +45,13 @@ class InputParser:
         with self.intermediate_yaml_path.open(mode='r') as intermediate_yaml:
             self.data = yaml.safe_load(intermediate_yaml)
 
+        for plc in self.data['plcs']:
+            if 'sensors' not in plc:
+                plc['sensors'] = list()
+
+            if 'actuators' not in plc:
+                plc['actuators'] = list()
+
         # Get the INP file path
         if 'inp_file' in self.data.keys():
             self.inp_file_path = self.data['inp_file']
