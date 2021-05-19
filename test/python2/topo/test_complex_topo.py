@@ -4,7 +4,7 @@ import time
 import pytest
 import yaml
 from mininet.net import Mininet
-from mininet.link import TCLink, Link
+from mininet.link import TCLink
 
 from dhalsim.python2.topo.complex_topo import ComplexTopo
 
@@ -33,6 +33,7 @@ def net(topo):
     net = Mininet(topo=topo, autoSetMacs=True, link=TCLink)
     net.start()
     topo.setup_network(net)
+    time.sleep(0.2)
     yield net
     net.stop()
 
@@ -53,7 +54,9 @@ def test_ping(net, host1, host2):
 def test_links(net, host1, host2):
     assert net.linksBetween(net.get(host1), net.get(host2)) != []
 
-def test_numer_of_links(net):
+
+@pytest.mark.integrationtest
+def test_number_of_links(net):
     assert len(net.links) == 9
 
 
@@ -63,7 +66,7 @@ def test_numer_of_links(net):
                           ("PLC1", "PLC2", "10.0.1.1"), ("PLC2", "PLC1", "10.0.2.1"),
                           ("PLC1", "scada", "10.0.1.1"), ("PLC2", "scada", "10.0.2.1")])
 def test_reachability(net, server, client, server_ip):
-    net.get("PLC1").cmd("echo 'test' | netcat -l 44818 &")
+    net.get(server).cmd("echo 'test' | netcat -l 44818 &")
     time.sleep(0.1)
-    response = net.get("r0").cmd("wget -qO - 10.0.1.1:44818")
+    response = net.get(client).cmd("wget -qO - {ip}:44818".format(ip=server_ip))
     assert response.rstrip() == "test"
