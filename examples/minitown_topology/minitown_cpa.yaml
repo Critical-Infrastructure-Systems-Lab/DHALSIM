@@ -1,0 +1,8 @@
+plcs:
+  - name: PLC1
+    sensors:
+      - TANK
+  - name: PLC2
+    actuators:
+      - PUMP1
+      - PUMP2

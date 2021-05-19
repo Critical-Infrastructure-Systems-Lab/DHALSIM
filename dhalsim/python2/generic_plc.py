@@ -1,10 +1,9 @@
 import argparse
 import os.path
-
 from basePLC import BasePLC
-from decimal import Decimal
-import time
 import threading
+import time
+from decimal import Decimal
 import yaml
 from pathlib import Path
 from entities.attack import DeviceAttack
@@ -21,10 +20,6 @@ class TagDoesNotExist(Error):
 
 class InvalidControlValue(Error):
     """Raised when tag you are looking for does not exist"""
-
-
-# plc1_log_path = 'plc1.log'
-# todo: make intermediate yaml location not hardcoded
 
 
 def generate_real_tags(sensors, dependants, actuators):
@@ -58,14 +53,18 @@ def create_controls(controls_list):
     ret = []
     for control in controls_list:
         if control["type"].lower() == "above":
-            a = AboveControl(control["actuator"], control["action"], control["dependant"], control["value"])
-            ret.append(a)
+            control_instance = AboveControl(control["actuator"], control["action"],
+                                            control["dependant"],
+                                            control["value"])
+            ret.append(control_instance)
         if control["type"].lower() == "below":
-            a = BelowControl(control["actuator"], control["action"], control["dependant"], control["value"])
-            ret.append(a)
+            control_instance = BelowControl(control["actuator"], control["action"],
+                                            control["dependant"],
+                                            control["value"])
+            ret.append(control_instance)
         if control["type"].lower() == "time":
-            a = TimeControl(control["actuator"], control["action"], control["value"])
-            ret.append(a)
+            control_instance = TimeControl(control["actuator"], control["action"], control["value"])
+            ret.append(control_instance)
     return ret
 
 
@@ -81,6 +80,9 @@ def create_attacks(attack_list):
 
 
 class GenericPLC(BasePLC):
+    """This class represents a plc. This plc knows what it is connected to by reading the
+    yaml file at intermediate_yaml_path and looking at index yaml_index in the plcs section.
+    """
 
     def __init__(self, intermediate_yaml_path, yaml_index):
         self.yaml_index = yaml_index
@@ -90,6 +92,16 @@ class GenericPLC(BasePLC):
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
         self.intermediate_plc = self.intermediate_yaml["plcs"][self.yaml_index]
+
+        if 'sensors' not in self.intermediate_plc:
+            self.intermediate_plc['sensors'] = list()
+
+        if 'actuators' not in self.intermediate_plc:
+            self.intermediate_plc['actuators'] = list()
+
+        # connection to the database
+        self.conn = sqlite3.connect(self.intermediate_yaml["db_path"])
+        self.cur = self.conn.cursor()
 
         self.intermediate_controls = self.intermediate_plc['controls']
         self.controls = create_controls(self.intermediate_controls)
@@ -101,7 +113,7 @@ class GenericPLC(BasePLC):
 
         # Create state from db values
         state = {
-            'name': self.intermediate_yaml['db_name'],
+            'name': "plant",
             'path': self.intermediate_yaml['db_path']
         }
 
@@ -136,7 +148,14 @@ class GenericPLC(BasePLC):
         super(GenericPLC, self).__init__(name=self.intermediate_plc['name'],
                                          state=state, protocol=plc_protocol)
 
-    def pre_loop(self):
+    def pre_loop(self, sleep=0.5):
+        """
+        The pre loop of a PLC. In everything is setup. Like starting the sending thread through
+        the :class:`~dhalsim.python2.basePLC` class.
+
+        :param sleep:  (Default value = 0.5) The time to sleep after setting everything up
+
+        """
         print('DEBUG: ' + self.intermediate_plc['name'] + ' enters pre_loop')
 
         reader = True
@@ -158,19 +177,37 @@ class GenericPLC(BasePLC):
                                self.intermediate_plc['ip'])
         self.startup()
 
+        time.sleep(sleep)
+
     def get_tag(self, tag):
+        """
+        Get the value of a tag that is connected to this plc or over the network.
+
+        :param tag: The tag to get
+        :return: Value of that tag
+        :rtype: int
+        :raise: TagDoesNotExist if tag cannot be found
+        """
         if tag in self.intermediate_plc["sensors"] or tag in self.intermediate_plc["actuators"]:
-            return self.get((tag, 1))
+            return Decimal(self.get((tag, 1)))
 
         for i, plc_data in enumerate(self.intermediate_yaml["plcs"]):
-            if i == self.index:
+            if i == self.yaml_index:
                 continue
-            if tag in plc_data[i]["sensors"] or tag in plc_data[i]["actuators"]:
-                return self.receive((tag, 1), plc_data[i]["ip"])
-                # return -1
+            if tag in plc_data["sensors"] or tag in plc_data["actuators"]:
+                received = Decimal(self.receive((tag, 1), plc_data["ip"]))
+                return received
         raise TagDoesNotExist(tag)
 
     def set_tag(self, tag, value):
+        """
+        Set a tag that is connected to this plc to a value.
+
+        :param tag: Which tag to set
+        :type tag: str
+        :param value: value to set the Tag to
+        :raise: TagDoesNotExist if tag is not connected to this plc
+        """
         if isinstance(value, basestring) and value.lower() == "closed":
             value = 0
         elif isinstance(value, basestring) and value.lower() == "open":
@@ -178,33 +215,72 @@ class GenericPLC(BasePLC):
         else:
             raise InvalidControlValue(value)
 
-        self.set((tag, 1), value)
+        if tag in self.intermediate_plc["sensors"] or tag in self.intermediate_plc["actuators"]:
+            self.set((tag, 1), value)
+        else:
+            raise TagDoesNotExist(tag + " cannot be set from " + self.intermediate_plc["name"])
 
-    # todo: get an actual master clock from the DB
     def get_master_clock(self):
-        return self.local_time
+        """
+        Get the value of the master clock of the physical process through the database
+        :return: Iteration in the physical process
+        """
+        # Fetch master_time
+        self.cur.execute("SELECT time FROM master_time WHERE id IS 1")
+        master_time = self.cur.fetchone()[0]
+        return master_time
 
-    def main_loop(self):
+    def get_sync(self):
+        """
+        Get the sync flag of this plc.
+
+        :return: False if physical process wants the plc to do a iteration, True if not.
+        """
+        self.cur.execute("SELECT flag FROM sync WHERE name IS ?", (self.intermediate_plc["name"],))
+        flag = bool(self.cur.fetchone()[0])
+        return flag
+
+    def set_sync(self, flag):
+        """
+        Set this plcs sync flag in the sync table. When this is 1, the physical process
+        knows this plc finished the requested iteration.
+
+        :param flag: True for sync to 1, false for sync to 0
+
+        """
+
+        self.cur.execute("UPDATE sync SET flag=? WHERE name IS ?",
+                         (int(flag), self.intermediate_plc["name"],))
+        self.conn.commit()
+
+    def main_loop(self, sleep=0.5):
+        """
+        The main loop of a PLC. In here all the controls will be applied.
+
+        :param sleep:  (Default value = 0.5) Not used
+
+        """
         print('DEBUG: ' + self.intermediate_plc['name'] + ' enters main_loop')
         while True:
-            try:
-                self.local_time += 1
+            while self.get_sync():
+                pass
 
-                for control in self.controls:
-                    control.apply(self)
+            self.local_time += 1
 
-                for attack in self.attacks:
-                    attack.apply(self)
+            for control in self.controls:
+                control.apply(self)
 
-                time.sleep(0.25)
+            for attack in self.attacks:
+                attack.apply(self)
 
-            except Exception:
-                continue
+            self.set_sync(1)
+
+            # time.sleep(0.05)
 
 
-def is_valid_file(parser, arg):
+def is_valid_file(parser_instance, arg):
     if not os.path.exists(arg):
-        parser.error(arg + " does not exist")
+        parser_instance.error(arg + " does not exist")
     else:
         return arg
 
@@ -214,7 +290,8 @@ if __name__ == "__main__":
     parser.add_argument(dest="intermediate_yaml",
                         help="intermediate yaml file", metavar="FILE",
                         type=lambda x: is_valid_file(parser, x))
-    parser.add_argument(dest="index", help="Index of PLC in intermediate yaml", type=int, metavar="N")
+    parser.add_argument(dest="index", help="Index of PLC in intermediate yaml", type=int,
+                        metavar="N")
 
     args = parser.parse_args()
 

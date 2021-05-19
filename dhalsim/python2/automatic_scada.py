@@ -8,17 +8,16 @@ from pathlib import Path
 import yaml
 
 
-class NodeControl:
+class ScadaControl:
     """
-    This class is started for a plc. It starts a tcpdump and a plc process.
+    This class is started for a scada. It starts a tcpdump and a scada process.
     """
 
-    def __init__(self, intermediate_yaml, plc_index):
+    def __init__(self, intermediate_yaml):
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
 
         self.intermediate_yaml = intermediate_yaml
-        self.plc_index = plc_index
 
         with self.intermediate_yaml.open(mode='r') as file:
             self.data = yaml.safe_load(file)
@@ -26,9 +25,7 @@ class NodeControl:
         self.output_path = Path(self.data["output_path"])
 
         self.process_tcp_dump = None
-        self.plc_process = None
-
-        self.this_plc_data = self.data["plcs"][self.plc_index]
+        self.scada_process = None
 
     def sigint_handler(self, sig, frame):
         """
@@ -41,8 +38,7 @@ class NodeControl:
         """
         This function stops the tcp dump and the plc process.
         """
-        print("Stopping Tcp dump process on PLC...")
-        # self.process_tcp_dump.kill()
+        print("Stopping Tcp dump process on SCADA...")
 
         self.process_tcp_dump.send_signal(signal.SIGINT)
         self.process_tcp_dump.wait()
@@ -51,24 +47,24 @@ class NodeControl:
         if self.process_tcp_dump.poll() is None:
             self.process_tcp_dump.kill()
 
-        print("Stopping PLC...")
-        self.plc_process.send_signal(signal.SIGINT)
-        self.plc_process.wait()
-        if self.plc_process.poll() is None:
-            self.plc_process.terminate()
-        if self.plc_process.poll() is None:
-            self.plc_process.kill()
+        print("Stopping SCADA...")
+        self.scada_process.send_signal(signal.SIGINT)
+        self.scada_process.wait()
+        if self.scada_process.poll() is None:
+            self.scada_process.terminate()
+        if self.scada_process.poll() is None:
+            self.scada_process.kill()
 
     def main(self):
         """
-        This function starts the tcp dump and plc process and then waits for the plc
+        This function starts the tcp dump and scada process and then waits for the scada
         process to finish.
         """
         self.process_tcp_dump = self.start_tcpdump_capture()
 
-        self.plc_process = self.start_plc()
+        self.scada_process = self.start_scada()
 
-        while self.plc_process.poll() is None:
+        while self.scada_process.poll() is None:
             pass
 
         self.terminate()
@@ -77,24 +73,27 @@ class NodeControl:
         """
         Start a tcp dump.
         """
-        pcap = self.output_path / (self.this_plc_data["interface"] + '.pcap')
-        tcp_dump = subprocess.Popen(['tcpdump', '-i', self.this_plc_data["interface"], '-w',
+        pcap = self.output_path / "scada-eth0.pcap"
+        tcp_dump = subprocess.Popen(['tcpdump', '-i', self.data["scada"]["interface"], '-w',
                                      str(pcap)], shell=False)
         return tcp_dump
 
-    def start_plc(self):
+    def start_scada(self):
         """
-        Start a plc process.
+        Start a scada process.
         """
-        generic_plc_path = Path(__file__).parent.absolute() / "generic_plc.py"
+        generic_scada_path = Path(__file__).parent.absolute() / "generic_scada.py"
 
-        cmd = ["python2", str(generic_plc_path), str(self.intermediate_yaml), str(self.plc_index)]
+        cmd = ["python2", str(generic_scada_path), str(self.intermediate_yaml)]
 
-        plc_process = subprocess.Popen(cmd, shell=False, stderr=sys.stderr, stdout=sys.stdout)
-        return plc_process
+        scada_process = subprocess.Popen(cmd, shell=False, stderr=sys.stderr, stdout=sys.stdout)
+        return scada_process
 
 
 def is_valid_file(parser_instance, arg):
+    """
+    Verifies whether the intermediate yaml path is valid
+    """
     if not os.path.exists(arg):
         parser_instance.error(arg + " does not exist")
     else:
@@ -106,9 +105,7 @@ if __name__ == "__main__":
     parser.add_argument(dest="intermediate_yaml",
                         help="intermediate yaml file", metavar="FILE",
                         type=lambda x: is_valid_file(parser, x))
-    parser.add_argument(dest="index", help="Index of PLC in intermediate yaml", type=int,
-                        metavar="N")
 
     args = parser.parse_args()
-    node_control = NodeControl(Path(args.intermediate_yaml), args.index)
-    node_control.main()
+    scada = ScadaControl(Path(args.intermediate_yaml))
+    scada.main()

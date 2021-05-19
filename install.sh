@@ -1,17 +1,46 @@
 #!/bin/bash
 
+cwd=$(pwd)
+
 cd ~
 
-git clone git://github.com/mininet/mininet.git
+sudo apt update
 
-PYTHON=python3 ~/mininet/util/install.sh -fnv
+## Installing necessary packages
+sudo apt install -y git
 
-git clone git@gitlab.ewi.tudelft.nl:cse2000-software-project/2020-2021-q4/cluster-06/water-infrastructure/minicps.git
+sudo apt install -y openvswitch-testcontroller
 
+# Python 2 and pip
+sudo apt install -y python2
+
+sudo apt install -y curl
+curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
+sudo python2 get-pip.py
+
+# Python 3 and pipd
+sudo apt install -y python3
+
+sudo apt install -y python3-pip
+
+# MiniCPS
+git clone https://github.com/afmurillo/minicps.git
 cd minicps
-
-sudo python3 -m pip install -r ~/minicps/requirements-dev.txt
-
-sudo python3 -m pip install .
-
+sudo python2 -m pip install .
 cd ~
+
+## Installing other DHALSIM dependencies
+sudo pip install pathlib
+
+sudo pip install pyyaml
+
+sudo pip uninstall -y cpppo
+sudo pip install cpppo==4.0.4
+
+sudo apt install -y mininet
+
+cd ${cwd}
+
+sudo python3 -m pip install -e .
+
+printf "\nInstallation finished. You can now run DHALSIM by using \n\t\<sudo dhalsim your_config.yaml\>.\n"

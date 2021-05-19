@@ -1,11 +1,10 @@
 import logging
-import yaml
 import wntr
-
+import yaml
 from antlr4 import *
-from dhalsim.parser.antlr.controlsParser import controlsParser
+from pathlib import Path
 from dhalsim.parser.antlr.controlsLexer import controlsLexer
-from dhalsim.static.controls.ConcreteControl import *
+from dhalsim.parser.antlr.controlsParser import controlsParser
 
 logger = logging.getLogger(__name__)
 
@@ -34,13 +33,22 @@ class InputParser:
     """Class handling the parsing of .inp input files
 
     :param intermediate_yaml_path: The path of the inp file
-    :type intermediate_yaml_path: str
+    :type intermediate_yaml_path: Path
     """
 
-    def __init__(self, intermediate_yaml):
+    def __init__(self, intermediate_yaml_path: Path):
         """Constructor method
         """
-        self.data = intermediate_yaml
+        self.intermediate_yaml_path = intermediate_yaml_path
+        with self.intermediate_yaml_path.open(mode='r') as intermediate_yaml:
+            self.data = yaml.safe_load(intermediate_yaml)
+
+        for plc in self.data['plcs']:
+            if 'sensors' not in plc:
+                plc['sensors'] = list()
+
+            if 'actuators' not in plc:
+                plc['actuators'] = list()
 
         # Get the INP file path
         if 'inp_file' in self.data.keys():
@@ -84,20 +92,20 @@ class InputParser:
             # Get all common control values from the control
             actuator = str(child.getChild(1))
             action = str(child.getChild(2))
-            if child.getChildCount() == 7:
+            if child.getChildCount() == 8:
                 # This is an AT NODE control
-                dependant = str(child.getChild(4))
-                value = float(str(child.getChild(6)))
+                dependant = str(child.getChild(5))
+                value = float(str(child.getChild(7)))
                 controls.append({
-                    "type": str(child.getChild(5)).lower(),
+                    "type": str(child.getChild(6)).lower(),
                     "dependant": dependant,
                     "value": value,
                     "actuator": actuator,
                     "action": action.lower()
                 })
-            if child.getChildCount() == 5:
+            if child.getChildCount() == 6:
                 # This is a TIME control
-                value = float(str(child.getChild(4)))
+                value = float(str(child.getChild(5)))
                 controls.append({
                     "type": "time",
                     "value": int(value),
