@@ -252,8 +252,6 @@ class GenericPLC(BasePLC):
             while self.get_sync():
                 pass
 
-            self.local_time += 1
-
             for control in self.controls:
                 control.apply(self)
 
