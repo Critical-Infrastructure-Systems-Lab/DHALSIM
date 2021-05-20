@@ -96,6 +96,21 @@ class ConfigParser:
         return path
 
     @property
+    def attacks_path(self):
+        """
+        Property to load attacks from the attacks file specified in the config file
+
+        :return: data from the attack file1
+        """
+        path = self.config_data.get("attacks_path")
+        if not path:
+            raise MissingValueError("Attack file not in config file")
+        path = (self.config_path.parent / path).absolute()
+        if not path.is_file():
+            raise FileNotFoundError(str(path) + " is not a file")
+        return path
+
+    @property
     def cpa_data(self):
         """Property to load the yaml data from the cpa file
 
@@ -120,6 +135,18 @@ class ConfigParser:
         if len(plc_list) != len(set(plc_list)):
             raise DuplicateValueError
         return cpa
+
+    @property
+    def attacks_data(self):
+        """
+        Property to load attacks from the attacks file specified in the config file
+
+        :return: data from the attack file1
+        """
+        with self.attacks_path.open(mode='r') as attacks_description:
+            attacks = yaml.safe_load(attacks_description)
+
+        return attacks
 
     def generate_intermediate_yaml(self):
         """Writes the intermediate.yaml file to include all options specified in the config, the plc's and their
@@ -151,18 +178,13 @@ class ConfigParser:
         if "iterations" in self.config_data.keys():
             yaml_data["iterations"] = self.config_data["iterations"]
 
-        if "run_attack" in self.config_data.keys():
-            yaml_data["run_attack"] = self.config_data["run_attack"]
-        else:
-            yaml_data["run_attack"] = False
-
         # Write values from IMP file into yaml file (controls, tanks/valves/initial values, etc.)
         yaml_data = InputParser(yaml_data).write()
 
         # Parse the device attacks from the config file
-        if yaml_data["run_attack"]:
-            if 'device_attacks' in self.config_data.keys():
-                for device_attack in self.config_data['device_attacks']:
+        if "run_attack" in self.config_data.keys() and self.config_data['run_attack']:
+            if 'device_attacks' in self.attacks_data.keys():
+                for device_attack in self.attacks_data['device_attacks']:
                     for plc in yaml_data['plcs']:
                         if set(device_attack['actuators']).issubset(set(plc['actuators'])):
                             if 'attacks' not in plc.keys():
