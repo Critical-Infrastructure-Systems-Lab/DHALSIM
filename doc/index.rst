@@ -33,14 +33,6 @@ Finally DHALSIM needs pathlib and pyyaml installed. Other dependencies can be au
    :maxdepth: 2
    :caption: Contents:
 
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
-.. automodule:: dhalsim.static.plc_config
-    :members:
+   installation.rst
+   configuration.rst
+   running.rst

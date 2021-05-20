@@ -21,7 +21,7 @@ setuptools.setup(
     ],
     extras_require={
         'test': ['pytest', 'pytest-mock', 'mock', 'wget', 'netcat'],
-        'doc': ['sphinx', 'sphinx-rtd-theme'],
+        'doc': ['sphinx', 'sphinx-rtd-theme', 'sphinx-prompt'],
     },
     python_requires=">=3.8",
     entry_points={
