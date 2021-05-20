@@ -67,12 +67,11 @@ class GenericScada(SCADAServer):
     This class represents a scada. This scada knows what plcs it is collecting data from by reading the
     yaml file at intermediate_yaml_path and looking at the plcs.
     """
-
     def __init__(self, intermediate_yaml_path):
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
-        # connection to the database
+        # Cnnection to the database
         self.conn = sqlite3.connect(self.intermediate_yaml["db_path"])
         self.cur = self.conn.cursor()
 
@@ -146,9 +145,7 @@ class GenericScada(SCADAServer):
         knows this plc finished the requested iteration.
 
         :param flag: True for sync to 1, false for sync to 0
-
         """
-
         self.cur.execute("UPDATE sync SET flag=? WHERE name IS 'scada'",
                          (int(flag), ))
         self.conn.commit()
@@ -177,6 +174,12 @@ class GenericScada(SCADAServer):
         plcs = []
 
         for PLC in self.intermediate_yaml['plcs']:
+            if 'sensors' not in PLC:
+                PLC['sensors'] = list()
+
+            if 'actuators' not in PLC:
+                PLC['actuators'] = list()
+
             tags = []
 
             tags.extend(generate_tags(PLC['sensors']))
@@ -191,7 +194,6 @@ class GenericScada(SCADAServer):
         The main loop of a PLC. In here all the controls will be applied.
 
         :param sleep:  (Default value = 0.5) Not used
-
         """
         print('DEBUG: SCADA enters main_loop')
         while True:
