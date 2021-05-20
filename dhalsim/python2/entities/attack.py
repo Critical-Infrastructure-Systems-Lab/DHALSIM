@@ -22,7 +22,7 @@ class Attack:
         pass
 
 
-class DeviceAttack(Attack):
+class TimeAttack(Attack):
     """
     Defines a Device Attack, which is an attack that will perform an action on a given PLC
 
@@ -33,7 +33,7 @@ class DeviceAttack(Attack):
     :param end: The end time of the attack
     """
     def __init__(self, name, actuators, command, start, end):
-        super(DeviceAttack, self).__init__(name, actuators, command)
+        super(TimeAttack, self).__init__(name, actuators, command)
         self.start = start
         self.end = end
 
@@ -57,12 +57,12 @@ class TriggerBelowAttack(Attack):
     :param name: The name of the attack
     :param actuators: The actuators that will be attacked
     :param command: The command to execute on the actuators
-    :param trigger: The tag that will be used as the trigger
+    :param sensor: The tag that will be used as the trigger
     :param value: The value that will be compared to the value of the trigger
     """
-    def __init__(self, name, actuators, command, trigger, value):
+    def __init__(self, name, actuators, command, sensor, value):
         super(TriggerBelowAttack, self).__init__(name, actuators, command)
-        self.trigger = trigger
+        self.sensor = sensor
         self.value = value
 
     def apply(self, plc):
@@ -71,8 +71,8 @@ class TriggerBelowAttack(Attack):
 
         :param plc: The PLC that will apply the action
         """
-        trigger_value = plc.get_tag(self.trigger)
-        if trigger_value < self.value:
+        sensor_value = plc.get_tag(self.sensor)
+        if sensor_value < self.value:
             for actuator in self.actuators:
                 plc.set_tag(actuator, self.command)
 
@@ -84,13 +84,13 @@ class TriggerAboveAttack(Attack):
     :param name: The name of the attack
     :param actuators: The actuators that will be attacked
     :param command: The command to execute on the actuators
-    :param trigger: The tag that will be used as the trigger
+    :param sensor: The tag that will be used as the trigger
     :param value: The value that will be compared to the value of the trigger
     """
 
-    def __init__(self, name, actuators, command, trigger, value):
+    def __init__(self, name, actuators, command, sensor, value):
         super(TriggerAboveAttack, self).__init__(name, actuators, command)
-        self.trigger = trigger
+        self.sensor = sensor
         self.value = value
 
     def apply(self, plc):
@@ -99,7 +99,7 @@ class TriggerAboveAttack(Attack):
 
         :param plc: The PLC that will apply the action
         """
-        trigger_value = plc.get_tag(self.trigger)
-        if trigger_value > self.value:
+        sensor_value = plc.get_tag(self.sensor)
+        if sensor_value > self.value:
             for actuator in self.actuators:
                 plc.set_tag(actuator, self.command)

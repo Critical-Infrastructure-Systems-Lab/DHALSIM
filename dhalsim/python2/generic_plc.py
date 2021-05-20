@@ -7,7 +7,7 @@ import sqlite3
 from decimal import Decimal
 import yaml
 from pathlib import Path
-from entities.attack import DeviceAttack
+from entities.attack import *
 from entities.control import AboveControl, BelowControl, TimeControl
 
 
@@ -76,7 +76,16 @@ def create_attacks(attack_list):
     """
     attacks = []
     for attack in attack_list:
-        attacks.append(DeviceAttack(attack['name'], attack['actuators'], attack['command'], attack['start'], attack['end']))
+        if attack['type'].lower() == "time":
+            attacks.append(TimeAttack(attack['name'], attack['actuators'], attack['command'], attack['start'], attack['end']))
+        elif attack['type'].lower() == "above":
+            attacks.append(
+                TriggerAboveAttack(attack['name'], attack['actuators'], attack['command'], attack['sensor'],
+                                   attack['value']))
+        elif attack['type'].lower() == "below":
+            attacks.append(
+                TriggerBelowAttack(attack['name'], attack['actuators'], attack['command'], attack['sensor'],
+                                   attack['value']))
     return attacks
 
 
