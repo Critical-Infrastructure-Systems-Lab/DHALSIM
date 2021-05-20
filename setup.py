@@ -16,7 +16,7 @@ setuptools.setup(
     packages=['dhalsim'],
     install_requires=[
         'PyYAML',
-        'antlr4-python3-runtime==4.6.9',
+        'antlr4-python3-runtime',
         'wntr',
     ],
     extras_require={
