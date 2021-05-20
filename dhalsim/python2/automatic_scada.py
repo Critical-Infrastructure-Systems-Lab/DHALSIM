@@ -75,8 +75,11 @@ class ScadaControl:
         Start a tcp dump.
         """
         pcap = self.output_path / "scada-eth0.pcap"
+
+        # Output is not printed to console
+        f = open('/dev/null', 'w')
         tcp_dump = subprocess.Popen(['tcpdump', '-i', self.data["scada"]["interface"], '-w',
-                                     str(pcap)], shell=False)
+                                     str(pcap)], shell=False, stdout=f, stderr=f)
         return tcp_dump
 
     def start_scada(self):
@@ -85,9 +88,10 @@ class ScadaControl:
         """
         generic_scada_path = Path(__file__).parent.absolute() / "generic_scada.py"
 
+        # Output is not printed to console
+        f = open('/dev/null', 'w')
         cmd = ["python2", str(generic_scada_path), str(self.intermediate_yaml)]
-
-        scada_process = subprocess.Popen(cmd, shell=False, stderr=sys.stderr, stdout=sys.stdout)
+        scada_process = subprocess.Popen(cmd, shell=False, stderr=f, stdout=f)
         return scada_process
 
 

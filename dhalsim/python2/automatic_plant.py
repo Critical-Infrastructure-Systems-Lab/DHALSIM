@@ -53,14 +53,13 @@ class SimulationControl:
         physical_process_path = Path(__file__).parent.absolute().parent / "physical_process.py"
 
         cmd = ["python3", str(physical_process_path), str(self.intermediate_yaml)]
-
         simulation = subprocess.Popen(cmd)
         return simulation
 
 
-def is_valid_file(parser, arg):
+def is_valid_file(parser_instance, arg):
     if not os.path.exists(arg):
-        parser.error(arg + " does not exist")
+        parser_instance.error(arg + " does not exist")
     else:
         return arg
 

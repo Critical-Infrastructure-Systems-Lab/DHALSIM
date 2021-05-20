@@ -80,8 +80,11 @@ class NodeControl:
         Start a tcp dump.
         """
         pcap = self.output_path / (self.this_plc_data["interface"] + '.pcap')
+
+        # Output is not printed to console
+        f = open('/dev/null', 'w')
         tcp_dump = subprocess.Popen(['tcpdump', '-i', self.this_plc_data["interface"], '-w',
-                                     str(pcap)], shell=False)
+                                     str(pcap)], shell=False, stderr=f, stdout=f)
         return tcp_dump
 
     def start_plc(self):
@@ -92,7 +95,9 @@ class NodeControl:
 
         cmd = ["python2", str(generic_plc_path), str(self.intermediate_yaml), str(self.plc_index)]
 
-        plc_process = subprocess.Popen(cmd, shell=False, stderr=sys.stderr, stdout=sys.stdout)
+        # Output is not printed to console
+        f = open('/dev/null', 'w')
+        plc_process = subprocess.Popen(cmd, shell=False, stderr=f, stdout=f)
         return plc_process
 
 
