@@ -152,7 +152,7 @@ class ConfigParser:
             yaml_data["iterations"] = self.config_data["iterations"]
 
         if "run_attack" in self.config_data.keys():
-            yaml_data["run_attack"] = bool(self.config_data["run_attack"])
+            yaml_data["run_attack"] = self.config_data["run_attack"]
         else:
             yaml_data["run_attack"] = False
 

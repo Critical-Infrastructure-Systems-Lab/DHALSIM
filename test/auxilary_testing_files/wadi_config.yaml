@@ -29,18 +29,28 @@ complex_topology: "False"
 # the responsibility of passing this parameter to general_automatic_run.py is on the calling script
 simulation_type: "Single"
 
-# Run attack. Boolean.
-# This flag indicates if the experiment will have an attack in the network
-# Using this flag also requires setting the value of attacks_path and attack_name.
-# The attack_name should be present in the attacks_path file
-run_attack: "True"
+# Run attack. Possible values:
+# - True
+# - False
+# This flag indicates whether or not the attacks should be executed.
+# Using this flag also requires specifying the attack file
+run_attack: False
+
 #attacks_path: "../../attack_repository/wadi_attack_description.yaml"
 #attack_name: "wadi_network_empty_tank_1"
+
 device_attacks:
-  - name: "plc_empty_tank_1"
+  - name: ""
     target: "PLC1"
     actuators:
       - P_RAW1
     command: "close"
-    start: 600
-    end: 1000
+    start: 5
+    end: 10
+  - name: "plc_empty_tank_1"
+    target: "PLC1"
+    actuators:
+     - P_RAW1
+    command: "close"
+    start: 5
+    end: 10

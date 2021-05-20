@@ -27,7 +27,8 @@ class Attack:
 
 
 class DeviceAttack(Attack):
-    """Defines a Device Attack, which is an attack that will perform an action on a given PLC
+    """
+    Defines a Device Attack, which is an attack that will perform an action on a given PLC
 
     :param name: The name of the attack
     :param target: The PLC target of the attack
