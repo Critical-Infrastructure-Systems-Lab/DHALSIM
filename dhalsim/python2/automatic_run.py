@@ -131,7 +131,7 @@ class GeneralCPS(MiniCPS):
         try:
             self.end_process(self.scada_process)
         except Exception, msg:
-            logger.error("Exception shutting down SCADA: " + msg)
+            logger.error("Exception shutting down SCADA: " + str(msg))
 
         for plc_process in self.plc_processes:
             try:
@@ -140,8 +140,8 @@ class GeneralCPS(MiniCPS):
                 continue
 
         if self.plant_process.poll() is None:
+            logger.info("Physical simulation process terminated")
             self.end_process(self.plant_process)
-            logger.info("Physical Simulation process terminated")
 
         cmd = 'sudo pkill -f "python2 -m cpppo.server.enip"'
         subprocess.call(cmd, shell=True, stderr=sys.stderr, stdout=sys.stdout)
