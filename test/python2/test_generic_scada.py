@@ -11,10 +11,10 @@ from dhalsim.python2.generic_scada import GenericScada
 
 
 @pytest.fixture
-def magic_mock_network():
+def magic_mock_scada_network():
     mock = MagicMock()
     # network
-    mock.receive_multiple.return_value = u'0.15'
+    mock.receive_multiple.return_value = ['0.420420', '1']
     # database
     mock.get_sync.return_value = 0
     mock.set_sync.return_value = None
@@ -22,7 +22,7 @@ def magic_mock_network():
 
 
 @pytest.fixture
-def magic_mock_init():
+def magic_mock_scada_init():
     mock = MagicMock()
     mock.do_super_construction.return_value = None
     mock.initialize_db.return_value = None
@@ -31,14 +31,14 @@ def magic_mock_init():
 
 
 @pytest.fixture
-def magic_mock_preloop():
+def magic_mock_scada_preloop():
     mock = MagicMock()
     mock.signal.return_value = None
     return mock
 
 
 @pytest.fixture
-def yaml_file(tmpdir):
+def yaml_scada_file(tmpdir):
     dict = {
         "db_path": "/home/test/dhalsim.sqlite",
         "output_path": "/home/test/dhalsim/output",
@@ -74,44 +74,44 @@ def yaml_file(tmpdir):
     return file
 
 
-def patch_methods(magic_mock_init, magic_mock_preloop, magic_mock_network, mocker):
+def patch_methods(magic_mock_scada_init, magic_mock_scada_preloop, magic_mock_scada_network, mocker):
     # Init mocker patches
     mocker.patch(
         'dhalsim.python2.generic_scada.GenericScada.initialize_db',
-        magic_mock_init.initialize_db
+        magic_mock_scada_init.initialize_db
     )
     mocker.patch(
         'dhalsim.python2.generic_scada.GenericScada.do_super_construction',
-        magic_mock_init.do_super_construction
+        magic_mock_scada_init.do_super_construction
     )
     mocker.patch(
         'pathlib.Path.touch',
-        magic_mock_init.touch
+        magic_mock_scada_init.touch
     )
     # Preloop mocker patches
     mocker.patch(
         'signal.signal',
-        magic_mock_preloop.signal
+        magic_mock_scada_preloop.signal
     )
     # Network mocker patches
     mocker.patch(
-        'dhalsim.python2.generic_scada.GenericScada.receive',
-        magic_mock_network.receive_multiple
+        'dhalsim.python2.generic_scada.GenericScada.receive_multiple',
+        magic_mock_scada_network.receive_multiple
     )
     mocker.patch(
         'dhalsim.python2.generic_scada.GenericScada.get_sync',
-        magic_mock_network.get_sync
+        magic_mock_scada_network.get_sync
     )
     mocker.patch(
         'dhalsim.python2.generic_scada.GenericScada.set_sync',
-        magic_mock_network.set_sync
+        magic_mock_scada_network.set_sync
     )
 
 
 @pytest.fixture
-def generic_scada(mocker, yaml_file, magic_mock_init, magic_mock_preloop, magic_mock_network):
-    patch_methods(magic_mock_init, magic_mock_preloop, magic_mock_network, mocker)
-    return GenericScada(Path(str(yaml_file)))
+def generic_scada(mocker, yaml_scada_file, magic_mock_scada_init, magic_mock_scada_preloop, magic_mock_scada_network):
+    patch_methods(magic_mock_scada_init, magic_mock_scada_preloop, magic_mock_scada_network, mocker)
+    return GenericScada(Path(str(yaml_scada_file)))
 
 
 def test_python_version():
@@ -119,9 +119,9 @@ def test_python_version():
     assert sys.version_info.minor is 7
 
 
-def test_generic_scada_init(generic_scada, magic_mock_init, yaml_file):
+def test_generic_scada_init(generic_scada, magic_mock_scada_init, yaml_scada_file):
     # Load test yaml
-    with yaml_file.open() as yaml_file_test:
+    with yaml_scada_file.open() as yaml_file_test:
         test_yaml = yaml.load(yaml_file_test, Loader=yaml.FullLoader)
     # Assert same as plc yaml
     assert generic_scada.intermediate_yaml == test_yaml
@@ -138,4 +138,25 @@ def test_generic_scada_init(generic_scada, magic_mock_init, yaml_file):
                           'tags': (('T0', 1, 'REAL'), ('T2', 1, 'REAL'), ('P_RAW1', 1, 'REAL'), ('V_ER2i', 1, 'REAL')),
                           'address': '192.168.2.1'}, 'name': 'enip', 'mode': 1},
                           {'path': '/home/test/dhalsim.sqlite', 'name': 'plant'})]
-    assert magic_mock_init.mock_calls == expected_calls
+    assert magic_mock_scada_init.mock_calls == expected_calls
+
+
+def test_generic_scada_preloop(generic_scada, magic_mock_scada_preloop):
+    generic_scada.pre_loop()
+    # Assert proper function calls
+    expected_calls = [call.signal(2, generic_scada.sigint_handler),
+                      call.signal(15, generic_scada.sigint_handler)]
+    assert magic_mock_scada_preloop.mock_calls == expected_calls
+
+
+def test_generic_scada_mainloop(generic_scada, magic_mock_scada_network, yaml_scada_file):
+    generic_scada.main_loop(test_break=True)
+    # Assert saved_values has been properly modified
+    assert generic_scada.saved_values == [['T0', 'P_RAW1', 'T2', 'V_ER2i'],
+                                          ['0.420420', '1', '0.420420', '1']]
+    # Assert proper function calls
+    expected_calls = [call.get_sync(),
+                      call.receive_multiple([('T0', 1), ('P_RAW1', 1)], '192.168.1.1'),
+                      call.receive_multiple([('T2', 1), ('V_ER2i', 1)], '192.168.1.2'),
+                      call.set_sync(1)]
+    assert magic_mock_scada_network.mock_calls == expected_calls
