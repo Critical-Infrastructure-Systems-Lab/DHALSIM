@@ -160,16 +160,15 @@ class ConfigParser:
         yaml_data = InputParser(yaml_data).write()
 
         # Parse the device attacks from the config file
-        if 'device_attacks' in self.config_data.keys():
-            for device_attack in self.config_data['device_attacks']:
-                for plc in yaml_data['plcs']:
-                    print("Checking PLC for attack!")
-                    if set(device_attack['actuators']).issubset(set(plc['actuators'])):
-                        print("Match!")
-                        if 'attacks' not in plc.keys():
-                            plc['attacks'] = []
-                        plc['attacks'].append(device_attack)
-                        break
+        if yaml_data["run_attack"]:
+            if 'device_attacks' in self.config_data.keys():
+                for device_attack in self.config_data['device_attacks']:
+                    for plc in yaml_data['plcs']:
+                        if set(device_attack['actuators']).issubset(set(plc['actuators'])):
+                            if 'attacks' not in plc.keys():
+                                plc['attacks'] = []
+                            plc['attacks'].append(device_attack)
+                            break
 
         # Write data to yaml file
         with self.yaml_path.open(mode='w') as intermediate_yaml:
