@@ -43,9 +43,8 @@ class TimeAttack(Attack):
         :param plc: The PLC that will apply the action
         """
         curr_time = plc.get_master_clock()
-        print("Checking attack time: " + str(curr_time))
         if self.start <= curr_time <= self.end:
-            print("Attack applied")
+            print("Time attack applied")
             for actuator in self.actuators:
                 plc.set_tag(actuator, self.command)
 
@@ -73,6 +72,7 @@ class TriggerBelowAttack(Attack):
         """
         sensor_value = plc.get_tag(self.sensor)
         if sensor_value < self.value:
+            print("Below attack applied")
             for actuator in self.actuators:
                 plc.set_tag(actuator, self.command)
 
@@ -101,5 +101,6 @@ class TriggerAboveAttack(Attack):
         """
         sensor_value = plc.get_tag(self.sensor)
         if sensor_value > self.value:
+            print("Above attack applied")
             for actuator in self.actuators:
                 plc.set_tag(actuator, self.command)

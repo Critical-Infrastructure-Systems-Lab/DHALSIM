@@ -34,23 +34,21 @@ simulation_type: "Single"
 # - False
 # This flag indicates whether or not the attacks should be executed.
 # Using this flag also requires specifying the attack file
-run_attack: False
-
+run_attack: True
 #attacks_path: "../../attack_repository/wadi_attack_description.yaml"
 #attack_name: "wadi_network_empty_tank_1"
-
 device_attacks:
-  - name: ""
-    target: "PLC1"
+  - name: "Close PRAW1 from iteration 5 to 10"
+    type: "Time"
     actuators:
       - P_RAW1
-    command: "close"
+    command: "closed"
     start: 5
     end: 10
-  - name: "plc_empty_tank_1"
-    target: "PLC1"
+  - name: "Close PRAW1 when T1 > 0.20"
+    type: "Above"
     actuators:
-     - P_RAW1
-    command: "close"
-    start: 5
-    end: 10
+      - P_RAW1
+    command: "closed"
+    sensor: "T1"
+    value: 0.20

@@ -86,7 +86,7 @@
 [TANKS]
 ;ID              	Elevation   	InitLevel   	MinLevel    	MaxLevel    	Diameter    	MinVol      	VolCurve
  T1              	1.6         	0.3129975   	0           	0.5         	1.809       	0           	ERtanks         	;
- T2              	1.6         	0.2369489   	0           	0.5         	1.809       	0           	ERtanks         	;
+ T2              	1.6         	0.15   	0           	0.5         	1.809       	0           	ERtanks         	;
  T0              	1.3         	0.4259549   	0           	1           	1.96        	0           	RAWtank         	;
 
 [PIPES]

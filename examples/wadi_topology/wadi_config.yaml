@@ -48,10 +48,10 @@ device_attacks:
     command: "closed"
     start: 5
     end: 10
-  - name: "Close PRAW1 when T1 > 0.20"
-    type: "Above"
+  - name: "Close PRAW1 when T2 < 0.16"
+    type: "Below"
     actuators:
       - P_RAW1
     command: "closed"
-    sensor: "T1"
-    value: 0.20
+    sensor: "T2"
+    value: 0.16
