@@ -40,3 +40,4 @@ network and generates .pcap files with this network data. DHALSIM was presented 
    installation.rst
    configuration.rst
    running.rst
+   modules.rst

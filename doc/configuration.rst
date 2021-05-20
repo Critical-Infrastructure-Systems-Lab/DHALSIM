@@ -91,7 +91,7 @@ local network. The PLCs connect to one switch and the SCADA to another, and thos
 
 .. figure:: static/simple_topo.svg
     :align: center
-    :alt: Diagram of simple topology
+    :alt: Diagram of a simple topology
     :figclass: align-center
 
     Diagram of simple topology
@@ -102,7 +102,7 @@ addresses. This makes testing of attacks such as man in the middle more realisti
 
 .. figure:: static/complex_topo.svg
     :align: center
-    :alt: Diagram of complex topology
+    :alt: Diagram of a complex topology
     :figclass: align-center
 
     Diagram of complex topology
