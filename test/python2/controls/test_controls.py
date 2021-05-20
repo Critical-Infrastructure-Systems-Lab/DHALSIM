@@ -8,6 +8,9 @@ from dhalsim.python2.control import AboveControl, BelowControl, TimeControl
 from dhalsim.python2.generic_plc import GenericPLC
 from dhalsim.python2.basePLC import BasePLC
 
+def test_python_version():
+    assert sys.version_info.major is 2
+    assert sys.version_info.minor is 7
 
 @pytest.fixture
 def mock_plc1():

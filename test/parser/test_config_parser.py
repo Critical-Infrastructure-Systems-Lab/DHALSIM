@@ -4,7 +4,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-from dhalsim.parser.config_parser import ConfigParser, EmptyConfigError, MissingValueError, DuplicateValueError
+from dhalsim.parser.config_parser import ConfigParser, EmptyConfigError, MissingValueError, \
+    InvalidValueError, DuplicateValueError
 
 
 def test_python_version():
@@ -126,3 +127,32 @@ def test_cpa_data_duplicate_name(tmpdir):
     parser = ConfigParser(Path(c))
     with pytest.raises(DuplicateValueError):
         parser.cpa_data
+
+
+def test_default_network_topology(tmpdir):
+    c = tmpdir.join("config.yaml")
+    c.write("something: else")
+    parser = ConfigParser(Path(c))
+    assert parser.network_topology_type == "simple"
+
+
+def test_capital_network_topology_simple(tmpdir):
+    c = tmpdir.join("config.yaml")
+    c.write("network_topology_type: Simple")
+    parser = ConfigParser(Path(c))
+    assert parser.network_topology_type == "simple"
+
+
+def test_capital_network_topology_complex(tmpdir):
+    c = tmpdir.join("config.yaml")
+    c.write("network_topology_type: Complex")
+    parser = ConfigParser(Path(c))
+    assert parser.network_topology_type == "complex"
+
+
+def test_invalid_network_topology(tmpdir):
+    c = tmpdir.join("config.yaml")
+    c.write("network_topology_type: invalid")
+    parser = ConfigParser(Path(c))
+    with pytest.raises(InvalidValueError):
+        parser.network_topology_type
