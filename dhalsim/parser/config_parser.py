@@ -20,6 +20,10 @@ class MissingValueError(Error):
     """Raised when there is a value missing in a configuration file"""
 
 
+class InvalidValueError(Error):
+    """Raised when there is a invalid value in a configuration file"""
+
+
 class DuplicateValueError(Error):
     """Raised when there is a duplicate plc value in the cpa file"""
 
@@ -33,8 +37,7 @@ class ConfigParser:
     """
 
     def __init__(self, config_path: Path):
-        """Constructor method
-        """
+        """Constructor method"""
         self.config_path = config_path.absolute()
 
         logger.debug("config file: %s", str(config_path))
@@ -121,6 +124,26 @@ class ConfigParser:
             raise DuplicateValueError
         return cpa
 
+    @property
+    def network_topology_type(self):
+        """
+        Load the type of topology. This is either `simple` or `complex`.
+
+        :return: the type of the topology
+        :rtype: str
+        """
+        if not "network_topology_type" in self.config_data:
+            return "simple"
+
+        network_type = self.config_data["network_topology_type"]
+
+        if type(network_type) != str:
+            raise InvalidValueError("network_topology_type must be simple or complex")
+        if network_type.lower() != "simple" and network_type.lower() != "complex":
+            raise InvalidValueError("network_topology_type must be simple or complex")
+
+        return network_type.lower()
+
     def generate_intermediate_yaml(self):
         """Writes the intermediate.yaml file to include all options specified in the config, the plc's and their
         data, and all valves/pumps/tanks etc
@@ -135,6 +158,7 @@ class ConfigParser:
         yaml_data["cpa_file"] = str(self.cpa_path)
         yaml_data["output_path"] = str(self.output_path)
         yaml_data["db_path"] = "/tmp/dhalsim/dhalsim.sqlite"
+        yaml_data["network_topology_type"] = self.network_topology_type
 
         # Add options from the config_file
         if "mininet_cli" in self.config_data.keys():

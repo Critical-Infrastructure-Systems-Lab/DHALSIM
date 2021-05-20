@@ -6,6 +6,9 @@ import pytest_mock
 
 from dhalsim.python2.control import AboveControl, BelowControl, TimeControl
 
+def test_python_version():
+    assert sys.version_info.major is 2
+    assert sys.version_info.minor is 7
 
 # @pytest.fixture
 # def mock_plc1():
