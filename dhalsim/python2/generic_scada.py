@@ -198,7 +198,7 @@ class GenericScada(SCADAServer):
         print('DEBUG: SCADA enters main_loop')
         while True:
             while self.get_sync():
-                pass
+                time.sleep(0.01)
 
             try:
                 results = []
