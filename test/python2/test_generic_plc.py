@@ -46,7 +46,8 @@ def yaml_file(tmpdir):
     dict = {
         "db_path": "/home/test/dhalsim.sqlite",
         "plcs": [{"name": "PLC1",
-                  "ip": "192.168.1.1",
+                  "local_ip": "192.168.1.1",
+                  "public_ip": "192.168.1.1",
                   "sensors": ["T0", ],
                   "actuators": ["P_RAW1", ],
                   "controls": [{"type": "Below",
@@ -56,7 +57,8 @@ def yaml_file(tmpdir):
                                 "action": "OPEN"}, ]
                   },
                  {"name": "PLC2",
-                  "ip": "192.168.1.2",
+                  "local_ip": "192.168.1.2",
+                  "public_ip": "192.168.1.2",
                   "sensors": ["T2", ],
                   "actuators": ["V_ER2i", ],
                   "controls": [{"type": "Above",
@@ -144,10 +146,11 @@ def test_generic_plc1_init(generic_plc1, magic_mock_init, yaml_file):
     # Assert same as plc yaml
     assert generic_plc1.intermediate_yaml == test_yaml
     # Assert intermediate_plc correct
-    assert generic_plc1.intermediate_plc == {"name": "PLC1", "ip": "192.168.1.1", "sensors": ["T0", ],
-                                             "actuators": ["P_RAW1", ], "controls": [
-            {"type": "Below", "dependant": "T2", "value": 0.16,
-             "actuator": "P_RAW1", "action": "OPEN"}, ]}
+    assert generic_plc1.intermediate_plc == {"name": "PLC1", "local_ip": "192.168.1.1",
+                                             "public_ip": "192.168.1.1", "sensors": ["T0", ],
+                                             "actuators": ["P_RAW1", ], "controls":
+                                                 [{"type": "Below", "dependant": "T2", "value": 0.16,
+                                                   "actuator": "P_RAW1", "action": "OPEN"}, ]}
     # Assert control generation
     assert len(generic_plc1.controls) == 1
     assert isinstance(generic_plc1.controls[0], BelowControl)
@@ -173,10 +176,11 @@ def test_generic_plc2_init(generic_plc2, magic_mock_init, yaml_file):
     # Assert same as plc yaml
     assert generic_plc2.intermediate_yaml == test_yaml
     # Assert intermediate_plc correct
-    assert generic_plc2.intermediate_plc == {"name": "PLC2", "ip": "192.168.1.2", "sensors": ["T2", ],
-                                             "actuators": ["V_ER2i", ], "controls": [
-            {"type": "Above", "dependant": "T2", "value": 0.32,
-             "actuator": "V_ER2i", "action": "CLOSED"}, ]}
+    assert generic_plc2.intermediate_plc == {"name": "PLC2", "local_ip": "192.168.1.2",
+                                             "public_ip": "192.168.1.2", "sensors": ["T2", ],
+                                             "actuators": ["V_ER2i", ], "controls":
+                                                 [{"type": "Above", "dependant": "T2", "value": 0.32,
+                                                   "actuator": "V_ER2i", "action": "CLOSED"}, ]}
     # Assert control generation
     assert len(generic_plc2.controls) == 1
     assert isinstance(generic_plc2.controls[0], AboveControl)
@@ -240,4 +244,3 @@ def test_generic_plc2_mainloop(generic_plc2, magic_mock_network):
                               call.set(('V_ER2i', 1), 0),
                               call.set_sync(1)]
     assert magic_mock_network.mock_calls == expected_network_calls
-
