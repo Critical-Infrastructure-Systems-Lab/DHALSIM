@@ -7,8 +7,7 @@ import yaml
 from mock import MagicMock, call
 from pathlib import Path
 
-from dhalsim.python2.control import *
-from dhalsim.python2.generic_plc import GenericPLC
+from dhalsim.python2.generic_scada import GenericScada
 
 
 @pytest.fixture
@@ -27,6 +26,14 @@ def magic_mock_init():
     mock = MagicMock()
     mock.do_super_construction.return_value = None
     mock.initialize_db.return_value = None
+    mock.touch.return_value = None
+    return mock
+
+
+@pytest.fixture
+def magic_mock_preloop():
+    mock = MagicMock()
+    mock.signal.return_value = None
     return mock
 
 
@@ -34,6 +41,9 @@ def magic_mock_init():
 def yaml_file(tmpdir):
     dict = {
         "db_path": "/home/test/dhalsim.sqlite",
+        "output_path": "/home/test/dhalsim/output",
+        "scada": {"name": "scada",
+                  "ip": "192.168.2.1"},
         "plcs": [{"name": "PLC1",
                   "ip": "192.168.1.1",
                   "sensors": ["T0", ],
@@ -54,6 +64,9 @@ def yaml_file(tmpdir):
                                 "actuator": "V_ER2i",
                                 "action": "CLOSED"}, ]
                   }, ],
+        "tanks": [{"name": "T0"}, {"name": "T2"}],
+        "pumps": [{"name": "P_RAW1"}],
+        "valves": [{"name": "V_ER2i"}],
     }
     file = tmpdir.join("intermediate.yaml")
     with file.open(mode='w') as intermediate_yaml:
@@ -64,26 +77,41 @@ def yaml_file(tmpdir):
 def patch_methods(magic_mock_init, magic_mock_preloop, magic_mock_network, mocker):
     # Init mocker patches
     mocker.patch(
-        'dhalsim.python2.generic_plc.GenericPLC.initialize_db',
+        'dhalsim.python2.generic_scada.GenericScada.initialize_db',
         magic_mock_init.initialize_db
     )
     mocker.patch(
-        'dhalsim.python2.generic_plc.GenericPLC.do_super_construction',
+        'dhalsim.python2.generic_scada.GenericScada.do_super_construction',
         magic_mock_init.do_super_construction
+    )
+    mocker.patch(
+        'pathlib.Path.touch',
+        magic_mock_init.touch
+    )
+    # Preloop mocker patches
+    mocker.patch(
+        'signal.signal',
+        magic_mock_preloop.signal
     )
     # Network mocker patches
     mocker.patch(
-        'dhalsim.python2.generic_plc.GenericPLC.receive',
+        'dhalsim.python2.generic_scada.GenericScada.receive',
         magic_mock_network.receive_multiple
     )
     mocker.patch(
-        'dhalsim.python2.generic_plc.GenericPLC.get_sync',
+        'dhalsim.python2.generic_scada.GenericScada.get_sync',
         magic_mock_network.get_sync
     )
     mocker.patch(
-        'dhalsim.python2.generic_plc.GenericPLC.set_sync',
+        'dhalsim.python2.generic_scada.GenericScada.set_sync',
         magic_mock_network.set_sync
     )
+
+
+@pytest.fixture
+def generic_scada(mocker, yaml_file, magic_mock_init, magic_mock_preloop, magic_mock_network):
+    patch_methods(magic_mock_init, magic_mock_preloop, magic_mock_network, mocker)
+    return GenericScada(Path(str(yaml_file)))
 
 
 def test_python_version():
@@ -91,3 +119,23 @@ def test_python_version():
     assert sys.version_info.minor is 7
 
 
+def test_generic_scada_init(generic_scada, magic_mock_init, yaml_file):
+    # Load test yaml
+    with yaml_file.open() as yaml_file_test:
+        test_yaml = yaml.load(yaml_file_test, Loader=yaml.FullLoader)
+    # Assert same as plc yaml
+    assert generic_scada.intermediate_yaml == test_yaml
+    # Assert intermediate_plc correct
+    assert str(generic_scada.output_path) == "/home/test/dhalsim/output/scada_values.csv"
+    # Assert plc data generation
+    assert generic_scada.plc_data == [('192.168.1.1', [('T0', 1), ('P_RAW1', 1)]),
+                                      ('192.168.1.2', [('T2', 1), ('V_ER2i', 1)])]
+    # Assert plc saved values generation
+    assert generic_scada.saved_values == [['T0', 'P_RAW1', 'T2', 'V_ER2i']]
+    # Assert proper function calls
+    expected_calls = [call.initialize_db(), call.touch(exist_ok=True),
+                      call.do_super_construction({'server': {
+                          'tags': (('T0', 1, 'REAL'), ('T2', 1, 'REAL'), ('P_RAW1', 1, 'REAL'), ('V_ER2i', 1, 'REAL')),
+                          'address': '192.168.2.1'}, 'name': 'enip', 'mode': 1},
+                          {'path': '/home/test/dhalsim.sqlite', 'name': 'plant'})]
+    assert magic_mock_init.mock_calls == expected_calls
