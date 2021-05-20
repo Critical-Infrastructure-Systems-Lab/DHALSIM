@@ -116,7 +116,7 @@ class GenericPLC(BasePLC):
 
         # Create server, real tags are generated
         plc_server = {
-            'address': self.intermediate_plc['ip'],
+            'address': self.intermediate_plc['local_ip'],
             'tags': generate_real_tags(plc_sensors,
                                        list(set(dependant_sensors) - set(plc_sensors)),
                                        self.intermediate_plc['actuators'])
@@ -161,7 +161,7 @@ class GenericPLC(BasePLC):
         sensors.extend(actuators)
 
         BasePLC.set_parameters(self, sensors, values, reader, lock,
-                               self.intermediate_plc['ip'])
+                               self.intermediate_plc['local_ip'])
         self.startup()
 
         time.sleep(sleep)
@@ -183,7 +183,7 @@ class GenericPLC(BasePLC):
             if i == self.yaml_index:
                 continue
             if tag in plc_data["sensors"] or tag in plc_data["actuators"]:
-                received = Decimal(self.receive((tag, 1), plc_data["ip"]))
+                received = Decimal(self.receive((tag, 1), plc_data["public_ip"]))
                 return received
         raise TagDoesNotExist(tag)
 
@@ -250,8 +250,6 @@ class GenericPLC(BasePLC):
         while True:
             while self.get_sync():
                 pass
-
-            self.local_time += 1
 
             for control in self.controls:
                 control.apply(self)

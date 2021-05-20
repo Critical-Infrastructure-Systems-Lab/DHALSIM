@@ -67,12 +67,11 @@ class GenericScada(SCADAServer):
     This class represents a scada. This scada knows what plcs it is collecting data from by reading the
     yaml file at intermediate_yaml_path and looking at the plcs.
     """
-
     def __init__(self, intermediate_yaml_path):
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
-        # connection to the database
+        # Cnnection to the database
         self.conn = sqlite3.connect(self.intermediate_yaml["db_path"])
         self.cur = self.conn.cursor()
 
@@ -88,7 +87,7 @@ class GenericScada(SCADAServer):
 
         # Create server, real tags are generated
         scada_server = {
-            'address': self.intermediate_yaml['scada']['ip'],
+            'address': self.intermediate_yaml['scada']['local_ip'],
             'tags': generate_real_tags(self.intermediate_yaml['tanks'],
                                        self.intermediate_yaml['pumps'],
                                        self.intermediate_yaml['valves'])
@@ -175,12 +174,18 @@ class GenericScada(SCADAServer):
         plcs = []
 
         for PLC in self.intermediate_yaml['plcs']:
+            if 'sensors' not in PLC:
+                PLC['sensors'] = list()
+
+            if 'actuators' not in PLC:
+                PLC['actuators'] = list()
+
             tags = []
 
             tags.extend(generate_tags(PLC['sensors']))
             tags.extend(generate_tags(PLC['actuators']))
 
-            plcs.append((PLC['ip'], tags))
+            plcs.append((PLC['public_ip'], tags))
 
         return plcs
 
