@@ -250,7 +250,7 @@ class GenericPLC(BasePLC):
         print('DEBUG: ' + self.intermediate_plc['name'] + ' enters main_loop')
         while True:
             while self.get_sync():
-                pass
+                time.sleep(0.01)
 
             for control in self.controls:
                 control.apply(self)

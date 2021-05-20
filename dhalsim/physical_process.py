@@ -246,7 +246,7 @@ class PhysicalPlant:
             self.conn.commit()
 
             while not self.get_plcs_ready():
-                pass
+                time.sleep(0.01)
 
             self.update_controls()
             eta = self.calculate_eta(start, master_time, iteration_limit)
