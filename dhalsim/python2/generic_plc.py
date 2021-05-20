@@ -8,7 +8,8 @@ from pathlib import Path
 
 import yaml
 
-from entities.attack import TimeAttack, TriggerBelowAttack, TriggerAboveAttack
+from basePLC import BasePLC
+from entities.attack import TimeAttack, TriggerBelowAttack, TriggerAboveAttack, TriggerBetweenAttack
 from entities.control import AboveControl, BelowControl, TimeControl
 
 
@@ -87,6 +88,10 @@ def create_attacks(attack_list):
             attacks.append(
                 TriggerBelowAttack(attack['name'], attack['actuators'], attack['command'], attack['sensor'],
                                    attack['value']))
+        elif attack['type'].lower() == "between":
+            attacks.append(
+                TriggerBetweenAttack(attack['name'], attack['actuators'], attack['command'], attack['sensor'],
+                                   attack['lower_value'], attack['upper_value']))
     return attacks
 
 

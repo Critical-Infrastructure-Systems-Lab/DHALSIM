@@ -50,8 +50,9 @@ class TimeAttack(Attack):
 
 class TriggerBelowAttack(Attack):
     """
-    Defines an attack that is executed on a certain trigger. A trigger is a tag going below a certain value
-    For example, we can define an attack that starts when a tank level drops below a given value
+    Defines an attack that is executed on a certain trigger. A trigger is a tag going below
+    a certain value.  For example, we can define an attack that starts when a tank level
+    drops below a given value
 
     :param name: The name of the attack
     :param actuators: The actuators that will be attacked
@@ -78,8 +79,9 @@ class TriggerBelowAttack(Attack):
 
 class TriggerAboveAttack(Attack):
     """
-    Defines an attack that is executed on a certain trigger. A trigger is a tag going above a certain value
-    For example, we can define an attack that starts when a tank level goes above a given value
+    Defines an attack that is executed on a certain trigger. A trigger is a tag going above
+    a certain value. For example, we can define an attack that starts when a tank level goes
+    above a given value
 
     :param name: The name of the attack
     :param actuators: The actuators that will be attacked
@@ -102,5 +104,36 @@ class TriggerAboveAttack(Attack):
         sensor_value = plc.get_tag(self.sensor)
         if sensor_value > self.value:
             print("Above attack applied")
+            for actuator in self.actuators:
+                plc.set_tag(actuator, self.command)
+
+class TriggerBetweenAttack(Attack):
+    """
+    Defines an attack that is executed on a certain trigger. A trigger is a tag having a value
+    in between two given values. For example, we can define an attack that starts when a tank
+    level sits in between two given values
+
+    :param name: The name of the attack
+    :param actuators: The actuators that will be attacked
+    :param command: The command to execute on the actuators
+    :param sensor: The tag that will be used as the trigger
+    :param value: The value that will be compared to the value of the trigger
+    """
+
+    def __init__(self, name, actuators, command, sensor, lower_value, upper_value):
+        super(TriggerBetweenAttack, self).__init__(name, actuators, command)
+        self.sensor = sensor
+        self.lower_value = lower_value
+        self.upper_value = upper_value
+
+    def apply(self, plc):
+        """
+        Applies the TriggerAttack when necessary
+
+        :param plc: The PLC that will apply the action
+        """
+        sensor_value = plc.get_tag(self.sensor)
+        if self.lower_value < sensor_value < self.upper_value:
+            print("Between attack applied")
             for actuator in self.actuators:
                 plc.set_tag(actuator, self.command)
