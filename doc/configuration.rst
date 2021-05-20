@@ -1,5 +1,5 @@
 Configuration
-=============
+=======================
 
 To run dhalsim, you will need a configuration yaml file. In the chapter every parameter is explained.
 
@@ -26,10 +26,45 @@ cpa_file
 ------------------------
 output_path
 ------------------------
+*This is an optional value with default*: :code:`output`
+
+This option represents the path to the folder in which output files (.pcap, .csv, etc.) will be
+created. The default is output and the path is relative to the configuration file.
+
 iterations
 ------------------------
+*This is an optional value with default*: duration / hydraulic time-step
+
+The iterations value represents for how many iterations you would like the water simulation to run.
+One iteration represents one hydraulic time-step.
+
 network_topology_type
-------------------------
+--------------------------------
+*This option is required*
+
+This option represents the mininet network topology that will be used. It has two options, :code:`simple` and :code:`complex`.
+
+If you use the :code:`simple` option, then a network topology will be generated that has all of the PLCs and the SCADA in one
+local network. The PLCs connect to one switch and the SCADA to another, and those switches then connect to one router.
+
+.. figure:: static/simple_topo.svg
+    :align: center
+    :alt: Diagram of simple topology
+    :figclass: align-center
+
+    Diagram of simple topology
+
+If you use the :code:`complex` option then a network topology will be generated that has all of the PLCs and the SCADA in their
+own independent network. They will all have a switch and a router, these then connect to a central router through their public ip
+addresses. This makes testing of attacks such as man in the middle more realistic.
+
+.. figure:: static/complex_topo.svg
+    :align: center
+    :alt: Diagram of complex topology
+    :figclass: align-center
+
+    Diagram of complex topology
+
 mininet_cli
 ------------------------
 If the :code:`mininet_cli` option is :code:`True`, then after the network is setup, the mininet CLI interface will start.
