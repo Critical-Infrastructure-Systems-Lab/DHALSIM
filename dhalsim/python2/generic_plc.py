@@ -76,7 +76,7 @@ def create_attacks(attack_list):
     """
     attacks = []
     for attack in attack_list:
-        attacks.append(DeviceAttack(attack['name'], attack['target'], attack['actuators'], attack['command'], attack['start'], attack['end']))
+        attacks.append(DeviceAttack(attack['name'], attack['actuators'], attack['command'], attack['start'], attack['end']))
     return attacks
 
 
