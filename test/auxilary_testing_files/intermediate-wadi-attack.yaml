@@ -46,13 +46,20 @@ plcs:
         actuator: P_RAW1
         action: closed
     attacks:
-      - actuators:
+      - name: "Close PRAW1 from iteration 5 to 10"
+        type: "Time"
+        actuators:
           - P_RAW1
-        command: close
-        end: 1000
-        name: plc_empty_tank_1
-        start: 600
-        target: PLC1
+        command: "closed"
+        start: 5
+        end: 10
+      - name: "Close PRAW1 when T2 < 0.16"
+        type: "Below"
+        actuators:
+          - P_RAW1
+        command: "closed"
+        sensor: "T2"
+        value: 0.16
   - name: PLC2
     sensors:
       - T2
