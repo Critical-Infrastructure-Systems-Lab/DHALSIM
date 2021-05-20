@@ -95,14 +95,14 @@ class GeneralCPS(MiniCPS):
         scada_cmd = ["python2", str(automatic_scada_path), str(self.intermediate_yaml)]
         self.scada_process = self.net.get('scada').popen(scada_cmd, stderr=sys.stderr, stdout=sys.stdout)
 
-        print("[*] Launched the PLCs and SCADA processes")
+        logger.info("[*] Launched the PLCs and SCADA processes")
 
         automatic_plant_path = Path(__file__).parent.absolute() / "automatic_plant.py"
 
         cmd = ["python2", str(automatic_plant_path), str(self.intermediate_yaml)]
         self.plant_process = self.net.get('plant').popen(cmd, stderr=sys.stderr, stdout=sys.stdout)
 
-        print("[ ] Simulating...")
+        logger.info("[ ] Simulating...")
         # We wait until the simulation ends
         while self.plant_process.poll() is None:
             pass
@@ -127,12 +127,11 @@ class GeneralCPS(MiniCPS):
         Terminate the plcs, physical process, mininet, and remaining processes that
         automatic run spawned.
         """
-        print("[*] Simulation finished")
+        logger.info("[*] Simulation finished")
         try:
             self.end_process(self.scada_process)
         except Exception, msg:
-            print("exception shutting down scada")
-            print(msg)
+            logger.error("Exception shutting down SCADA: " + msg)
 
         for plc_process in self.plc_processes:
             try:
@@ -142,7 +141,7 @@ class GeneralCPS(MiniCPS):
 
         if self.plant_process.poll() is None:
             self.end_process(self.plant_process)
-            print("Physical Simulation process terminated\n")
+            logger.info("Physical Simulation process terminated")
 
         cmd = 'sudo pkill -f "python2 -m cpppo.server.enip"'
         subprocess.call(cmd, shell=True, stderr=sys.stderr, stdout=sys.stdout)
@@ -152,8 +151,7 @@ class GeneralCPS(MiniCPS):
 
 
 def is_valid_file(parser_instance, arg):
-    """Verifies whether the intermediate yaml path is valid
-    """
+    """Verifies whether the intermediate yaml path is valid"""
     if not os.path.exists(arg):
         parser_instance.error(arg + " does not exist")
     else:

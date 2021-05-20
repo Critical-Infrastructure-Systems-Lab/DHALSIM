@@ -6,6 +6,7 @@ import signal
 import sys
 import time
 from pathlib import Path
+from py2_logger import logger
 
 import yaml
 from minicps.devices import SCADAServer
@@ -107,12 +108,12 @@ class GenericScada(SCADAServer):
             self.saved_values[0].extend(PLC['sensors'])
             self.saved_values[0].extend(PLC['actuators'])
 
-        # print "-----------DEBUG SCADA INIT-----------"
-        # print "state = " + str(state)
-        # print "scada_protocol = " + str(scada_protocol)
-        # print "plc_data = " + str(self.plc_data)
-        # print "output_format = " + str(self.saved_values)
-        # print "-----------DEBUG SCADA INIT-----------"
+        logger.debug("-----------DEBUG SCADA INIT-----------")
+        logger.debug("state = " + str(state))
+        logger.debug("scada_protocol = " + str(scada_protocol))
+        logger.debug("plc_data = " + str(self.plc_data))
+        logger.debug("output_format = " + str(self.saved_values))
+        logger.debug("-----------DEBUG SCADA INIT-----------")
 
         super(GenericScada, self).__init__(name='scada', state=state, protocol=scada_protocol)
 
@@ -122,7 +123,7 @@ class GenericScada(SCADAServer):
 
         :param sleep:  (Default value = 0.5) The time to sleep after setting everything up
         """
-        print('DEBUG: SCADA enters pre_loop')
+        logger.debug('DEBUG: SCADA enters pre_loop')
 
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
@@ -154,7 +155,7 @@ class GenericScada(SCADAServer):
         """
         Shutdown protocol for the scada, writes the output before exiting
         """
-        print 'DEBUG SCADA shutdown'
+        logger.debug("DEBUG SCADA shutdown")
         self.write_output()
         sys.exit(0)
 
@@ -195,7 +196,7 @@ class GenericScada(SCADAServer):
 
         :param sleep:  (Default value = 0.5) Not used
         """
-        print('DEBUG: SCADA enters main_loop')
+        logger.debug("SCADA enters main_loop")
         while True:
             while self.get_sync():
                 pass
@@ -204,11 +205,11 @@ class GenericScada(SCADAServer):
                 results = []
                 for plc_datum in self.plc_data:
                     plc_value = self.receive_multiple(plc_datum[1], plc_datum[0])
-                    # print "plc_value received by scada from ip: " + str(plc_datum[0]) + " is " + str(plc_value)
+                    logger.debug("plc_value received by scada from ip: " + str(plc_datum[0]) + " is " + str(plc_value))
                     results.extend(plc_value)
                 self.saved_values.append(results)
             except Exception, msg:
-                print(msg)
+                logger.error(msg)
                 continue
 
             self.set_sync(1)

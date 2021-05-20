@@ -5,6 +5,7 @@ import threading
 import time
 from decimal import Decimal
 from pathlib import Path
+from py2_logger import logger
 
 import yaml
 
@@ -97,7 +98,8 @@ class GenericPLC(BasePLC):
         self.intermediate_controls = self.intermediate_plc['controls']
 
         self.controls = create_controls(self.intermediate_controls)
-        # print(self.controls)
+        logger.debug(self.controls)
+
         # Create state from db values
         state = {
             'name': "plant",
@@ -128,9 +130,9 @@ class GenericPLC(BasePLC):
             'server': plc_server
         }
 
-        # print "DEBUG INIT: " + self.intermediate_plc['name']
-        # print "state = " + str(state)
-        # print "plc_protocol = " + str(plc_protocol)
+        logger.debug("INIT: " + self.intermediate_plc['name'])
+        logger.debug("state = " + str(state))
+        logger.debug("plc_protocol = " + str(plc_protocol))
 
         super(GenericPLC, self).__init__(name=self.intermediate_plc['name'],
                                          state=state, protocol=plc_protocol)
@@ -143,7 +145,7 @@ class GenericPLC(BasePLC):
         :param sleep:  (Default value = 0.5) The time to sleep after setting everything up
 
         """
-        print('DEBUG: ' + self.intermediate_plc['name'] + ' enters pre_loop')
+        logger.debug(self.intermediate_plc['name'] + ' enters pre_loop')
 
         reader = True
 
@@ -247,7 +249,7 @@ class GenericPLC(BasePLC):
         :param sleep:  (Default value = 0.5) Not used
 
         """
-        print('DEBUG: ' + self.intermediate_plc['name'] + ' enters main_loop')
+        logger.debug(self.intermediate_plc['name'] + ' enters main_loop')
         while True:
             while self.get_sync():
                 pass

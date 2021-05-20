@@ -42,7 +42,7 @@ class NodeControl:
         """
         This function stops the tcp dump and the plc process.
         """
-        print("Stopping Tcp dump process on PLC...")
+        logger.debug("Stopping Tcp dump process on PLC...")
         # self.process_tcp_dump.kill()
 
         self.process_tcp_dump.send_signal(signal.SIGINT)
@@ -52,7 +52,8 @@ class NodeControl:
         if self.process_tcp_dump.poll() is None:
             self.process_tcp_dump.kill()
 
-        print("Stopping PLC...")
+        logger.debug("Stopping PLC...")
+
         self.plc_process.send_signal(signal.SIGINT)
         self.plc_process.wait()
         if self.plc_process.poll() is None:

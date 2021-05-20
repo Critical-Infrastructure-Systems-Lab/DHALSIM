@@ -39,7 +39,7 @@ class ScadaControl:
         """
         This function stops the tcp dump and the plc process.
         """
-        print("Stopping Tcp dump process on SCADA...")
+        logger.debug("Stopping Tcp dump process on SCADA...")
 
         self.process_tcp_dump.send_signal(signal.SIGINT)
         self.process_tcp_dump.wait()
@@ -48,7 +48,7 @@ class ScadaControl:
         if self.process_tcp_dump.poll() is None:
             self.process_tcp_dump.kill()
 
-        print("Stopping SCADA...")
+        logger.debug("Stopping SCADA...")
         self.scada_process.send_signal(signal.SIGINT)
         self.scada_process.wait()
         if self.scada_process.poll() is None:
