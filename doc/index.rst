@@ -1,15 +1,11 @@
-.. dhalsim documentation master file, created by
-   sphinx-quickstart on Mon May  3 22:03:50 2021.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to DHALSIM's documentation!
 ===================================
-A Digital Twin for Water Distribution Systems. A work by the SUTD Resilient Water Systems Group and iTrust
+A Digital Twin for Water Distribution Systems. A work by the SUTD Resilient Water Systems Group and iTrust, along with an undergrad development team at TU Delft.
+This digital twin uses Mininet and MiniCPS to emulate the behavior of water distribution systems and the industrial control system controlling them.
 
-This digital twin uses Mininet and MiniCPS to emulate the behavior of water distribution systems and the industrial control system controlling them. WadiTwin uses the WNTR EPANET wrapper to simulate the behaviour of water distribution systems. In addition to physical data, the digital twin emulates the industrial network and also generates .pcap files with this network data.
+DHALSIM uses the WNTR EPANET wrapper to simulate the behaviour of water distribution systems. In addition to physical data, the digital twin emulates the industrial
+network and generates .pcap files with this network data. DHALSIM was presented in the ICSS Workshop in ACSAC'20.
 
-DHALSIM was presented in the ICSS Workshop in ACSAC'20.
 
 .. Installation
    -------------
