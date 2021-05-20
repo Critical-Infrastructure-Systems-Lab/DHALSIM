@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 import sqlite3
 from pathlib import Path
@@ -15,6 +16,9 @@ class DatabaseInitializer:
         self.db_path.touch(exist_ok=True)
 
     def write(self):
+        log = logging.getLogger(__name__)
+        log.info("Initializing database")
+
         with sqlite3.connect(self.db_path) as conn:
             cur = conn.cursor()
 

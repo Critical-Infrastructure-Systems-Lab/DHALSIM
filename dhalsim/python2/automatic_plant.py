@@ -26,14 +26,16 @@ class SimulationControl:
 
     def interrupt(self, sig, frame):
         """
-        This method is provided by the signal python library. We call the finish method that interrupts, terminates, or kills the simulation and exit
+        This method is provided by the signal python library. We call the finish method that interrupts, terminates,
+        or kills the simulation and exit
         """
         self.finish()
         sys.exit(1)
 
     def finish(self):
         """
-        All the subprocesses launched in this Digital Twin follow the same pattern to ensure that they finish before continuing with the finishing of the parent process
+        All the subprocesses launched in this Digital Twin follow the same pattern to ensure that they finish before
+        continuing with the finishing of the parent process
         """
         self.simulation.send_signal(signal.SIGINT)
         self.simulation.wait()
