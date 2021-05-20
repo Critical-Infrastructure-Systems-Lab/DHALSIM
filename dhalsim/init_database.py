@@ -16,8 +16,7 @@ class DatabaseInitializer:
         self.db_path.touch(exist_ok=True)
 
     def write(self):
-        log = logging.getLogger(__name__)
-        log.info("Initializing database")
+        logger.info("Initializing database")
 
         with sqlite3.connect(self.db_path) as conn:
             cur = conn.cursor()
@@ -122,16 +121,16 @@ class DatabaseInitializer:
         with sqlite3.connect(self.db_path) as conn:
             cur = conn.cursor()
             cur.execute("SELECT * FROM plant;")
-            print(cur.fetchall())
+            logger.debug(cur.fetchall())
             cur.execute("SELECT * FROM master_time;")
-            print(cur.fetchall())
+            logger.debug(cur.fetchall())
             cur.execute("SELECT * FROM sync;")
-            print(cur.fetchall())
+            logger.debug(cur.fetchall())
 
 
-def is_valid_file(parser, arg):
+def is_valid_file(file_parser, arg):
     if not os.path.exists(arg):
-        parser.error(arg + " does not exist")
+        file_parser.error(arg + " does not exist")
     else:
         return arg
 
