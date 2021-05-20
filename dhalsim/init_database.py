@@ -1,5 +1,5 @@
 import argparse
-import logging
+from dhalsim.py3_logger import logger
 import os
 import sqlite3
 from pathlib import Path

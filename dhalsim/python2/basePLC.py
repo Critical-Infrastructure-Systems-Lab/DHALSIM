@@ -1,3 +1,4 @@
+from py2_logger import logger
 import time
 from minicps.devices import PLC
 import csv

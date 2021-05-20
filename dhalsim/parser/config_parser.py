@@ -1,11 +1,9 @@
-import logging
+from dhalsim.py3_logger import logger
 from pathlib import Path
 
 import yaml
 
 from dhalsim.parser.input_parser import InputParser
-
-logger = logging.getLogger(__name__)
 
 
 class Error(Exception):

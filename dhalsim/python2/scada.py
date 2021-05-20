@@ -1,4 +1,5 @@
 from basePLC import BasePLC
+from py2_logger import logger
 from utils import SCADA_PROTOCOL, STATE
 from utils import PLC1_ADDR, PLC2_ADDR
 from utils import T0, T2, P_RAW1, V_PUB, V_ER2i

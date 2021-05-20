@@ -1,3 +1,4 @@
+from py2_logger import logger
 from abc import ABCMeta, abstractmethod
 
 
@@ -13,8 +14,7 @@ class Control:
     __metaclass__ = ABCMeta
 
     def __init__(self, actuator, action, value):
-        """Constructor method
-        """
+        """Constructor method"""
         self.actuator = actuator
         self.action = action
         self.value = value

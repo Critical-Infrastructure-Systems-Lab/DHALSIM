@@ -1,4 +1,5 @@
 import argparse
+from dhalsim.py3_logger import logger
 import os
 import signal
 

@@ -1,4 +1,3 @@
-import logging
 from pathlib import Path
 
 import wntr
@@ -7,8 +6,6 @@ from antlr4 import *
 
 from dhalsim.parser.antlr.controlsLexer import controlsLexer
 from dhalsim.parser.antlr.controlsParser import controlsParser
-
-logger = logging.getLogger(__name__)
 
 
 class Error(Exception):
