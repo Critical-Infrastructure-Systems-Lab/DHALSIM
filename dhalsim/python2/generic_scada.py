@@ -72,9 +72,8 @@ class GenericScada(SCADAServer):
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
-        # Cnnection to the database
-        self.conn = sqlite3.connect(self.intermediate_yaml["db_path"])
-        self.cur = self.conn.cursor()
+        # Initialize connection to the database
+        self.initialize_db()
 
         self.output_path = Path(self.intermediate_yaml["output_path"]) / "scada_values.csv"
 
@@ -115,7 +114,22 @@ class GenericScada(SCADAServer):
         logger.debug("output_format = " + str(self.saved_values))
         logger.debug("-----------DEBUG SCADA INIT-----------")
 
+        self.do_super_construction(scada_protocol, state)
+
+    def do_super_construction(self, scada_protocol, state):
+        """
+        Function that performs the super constructor call to SCADAServer
+        Introduced to better facilitate testing
+        """
         super(GenericScada, self).__init__(name='scada', state=state, protocol=scada_protocol)
+
+    def initialize_db(self):
+        """
+        Function that initializes PLC connection to the database
+        Introduced to better facilitate testing
+        """
+        self.conn = sqlite3.connect(self.intermediate_yaml["db_path"])
+        self.cur = self.conn.cursor()
 
     def pre_loop(self, sleep=0.5):
         """
@@ -148,7 +162,7 @@ class GenericScada(SCADAServer):
         :param flag: True for sync to 1, false for sync to 0
         """
         self.cur.execute("UPDATE sync SET flag=? WHERE name IS 'scada'",
-                         (int(flag), ))
+                         (int(flag),))
         self.conn.commit()
 
     def sigint_handler(self, sig, frame):
@@ -190,16 +204,17 @@ class GenericScada(SCADAServer):
 
         return plcs
 
-    def main_loop(self, sleep=0.5):
+    def main_loop(self, sleep=0.5, test_break=False):
         """
         The main loop of a PLC. In here all the controls will be applied.
 
         :param sleep:  (Default value = 0.5) Not used
+        :param test_break:  (Default value = False) used for unit testing, breaks the loop after one iteration
         """
         logger.debug("SCADA enters main_loop")
         while True:
             while self.get_sync():
-                pass
+                time.sleep(0.01)
 
             try:
                 results = []
@@ -214,6 +229,8 @@ class GenericScada(SCADAServer):
 
             self.set_sync(1)
 
+            if test_break:
+                break
 
 
 def is_valid_file(parser_instance, arg):
