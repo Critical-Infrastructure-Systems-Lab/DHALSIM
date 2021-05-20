@@ -1,7 +1,7 @@
 import sys
 import pytest
 
-from dhalsim.python2.entities.attack import *
+from dhalsim.python2.entities.attack import TimeAttack, TriggerBelowAttack, TriggerAboveAttack
 
 @pytest.fixture
 def time_attack():

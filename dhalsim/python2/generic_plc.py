@@ -1,13 +1,14 @@
 import argparse
 import os.path
-from basePLC import BasePLC
+import sqlite3
 import threading
 import time
-import sqlite3
 from decimal import Decimal
-import yaml
 from pathlib import Path
-from entities.attack import *
+
+import yaml
+
+from entities.attack import TimeAttack, TriggerBelowAttack, TriggerAboveAttack
 from entities.control import AboveControl, BelowControl, TimeControl
 
 
