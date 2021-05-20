@@ -55,9 +55,6 @@ def main():
     parser.add_argument('-o', '--output', dest='output_folder', metavar="FOLDER",
                         help='folder to put the output files', type=str)
     # TODO: Add another argument which dictates the logging level
-    logging_level = logging.INFO
-    logging_format = '%(asctime)s - %(levelname)s @ %(name)s: %(message)s'
-    logging.basicConfig(stream=sys.stdout, level=logging_level, format=logging_format)
 
     args = parser.parse_args()
 
