@@ -25,7 +25,6 @@ class ComplexTopo(Topo):
     intermediate yaml file. Then, it will use that file to create all the routers, switches
     and nodes. After that, iptables rules and routes will be setup.
 
-
     :param intermediate_yaml_path: The path to the intermediate yaml file. Here will also be writen to.
     :type intermediate_yaml_path: Path
     """
@@ -57,7 +56,6 @@ class ComplexTopo(Topo):
         These are then applied when building the topo
 
         :param data: the dict resulting from a dump of the intermediate yaml
-
         """
         plcs = data["plcs"]
         index = 1
@@ -92,7 +90,6 @@ class ComplexTopo(Topo):
         Build the topology. This make nodes for every router, switch, plc and scada
         and add links to connect them.
         """
-
         # -- PROVIDER NETWORK -- #
         provider_router = self.addNode('r0', cls=LinuxRouter, ip=self.router_ip + "/24")
 
@@ -116,7 +113,6 @@ class ComplexTopo(Topo):
 
         :param node: the data of the node to build the piece of the network for
         :param provider_router: the router to connect to
-
         """
         node_router = self.addNode(node['gateway_name'], cls=LinuxRouter,
                                    ip=node['public_ip'] + "/24")
@@ -138,7 +134,6 @@ class ComplexTopo(Topo):
 
         :param net: The initiated net to setup.
         :type net: Mininet
-
         """
         # Enable ip forwarding on provider router
         provider = net.get('r0')
@@ -160,7 +155,6 @@ class ComplexTopo(Topo):
         :type net: Mininet
         :param node_data:  the data of the node to setup the piece of the network for
         :param provider_router: the router this part of the network connects to
-
         """
         node = net.get(node_data['name'])
         gateway = net.get(node_data['gateway_name'])

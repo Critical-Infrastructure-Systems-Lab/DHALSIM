@@ -27,7 +27,6 @@ class SimpleTopo(Topo):
     intermediate yaml file. Then, it will use that file to create all the routers, switches
     and nodes. After that, iptables rules and routes will be setup.
 
-
     :param intermediate_yaml_path: The path to the intermediate yaml file. Here will also be writen to.
     :type intermediate_yaml_path: Path
     """
@@ -63,7 +62,6 @@ class SimpleTopo(Topo):
         These are then applied when building the topo
 
         :param data: the dict resulting from a dump of the intermediate yaml
-
         """
         for idx, plc in enumerate(plcs):
             plc_ip = "192.168.1." + str(idx + 1)
@@ -82,7 +80,6 @@ class SimpleTopo(Topo):
         Build the topology. This make nodes for every router, switch, plc and scada
         and add links to connect them.
         """
-
         # -- FIELD NETWORK -- #
         router_ip = self.router_ip + "/24"
         # Add a router to the network
@@ -122,9 +119,9 @@ class SimpleTopo(Topo):
     def setup_network(self, net):
         """
         Here all the rules are applied to make the routers function like routers
+
         :param net: The initiated net to setup.
         :type net: Mininet
-
         """
         # Enable forwarding on router r0
         net.get('r0').cmd('sysctl net.ipv4.ip_forward=1')

@@ -37,8 +37,7 @@ class ConfigParser:
     """
 
     def __init__(self, config_path: Path):
-        """Constructor method
-        """
+        """Constructor method"""
         self.config_path = config_path.absolute()
 
         logger.debug("config file: %s", str(config_path))
@@ -127,7 +126,8 @@ class ConfigParser:
 
     @property
     def network_topology_type(self):
-        """Load the type of topology. This is either `simple` or `complex`.
+        """
+        Load the type of topology. This is either `simple` or `complex`.
 
         :return: the type of the topology
         :rtype: str
