@@ -46,7 +46,7 @@ class BelowControl(Control):
         """
         dep_val = generic_plc.get_tag(self.dependant)
         generic_plc.logger.debug(
-            "Get " + str(self.dependant) + " from " + generic_plc.intermediate_plc["name"] + " result is " + dep_val)
+            "Get " + str(self.dependant) + " from " + generic_plc.intermediate_plc["name"] + " result is " + str(dep_val))
         if dep_val < self.value:
             generic_plc.set_tag(self.actuator, self.action)
             generic_plc.logger.debug(
