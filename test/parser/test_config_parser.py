@@ -1,11 +1,15 @@
 import sys
 from pathlib import Path
-
 import pytest
 import yaml
 
 from dhalsim.parser.config_parser import ConfigParser, EmptyConfigError, MissingValueError, \
     InvalidValueError, DuplicateValueError
+
+
+@pytest.fixture
+def wadi_config_yaml_path():
+    return Path("test/auxilary_testing_files/wadi_config.yaml")
 
 
 def test_python_version():
@@ -118,6 +122,17 @@ def test_cpa_data_path_not_found(tmpdir):
     with pytest.raises(FileNotFoundError):
         parser.cpa_data
 
+def test_config_parser_attacks(wadi_config_yaml_path):
+    ConfigParser(wadi_config_yaml_path).generate_intermediate_yaml()
+
+    with Path("/tmp/dhalsim/intermediate.yaml").open(mode='r') as written_file:
+        written_data = yaml.safe_load(written_file)
+
+    with Path("test/auxilary_testing_files/intermediate-wadi-attack.yaml").open(mode='r') as expectation:
+        expected_data = yaml.safe_load(expectation)
+
+    assert written_data['plcs'][0]['attacks'] == expected_data['plcs'][0]['attacks']
+    assert 'attacks' not in written_data['plcs'][1].keys()
 
 def test_cpa_data_duplicate_name(tmpdir):
     c = tmpdir.join("config.yaml")

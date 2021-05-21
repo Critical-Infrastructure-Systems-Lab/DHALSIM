@@ -9,7 +9,8 @@ from pathlib import Path
 import yaml
 
 from basePLC import BasePLC
-from control import AboveControl, BelowControl, TimeControl
+from entities.attack import TimeAttack, TriggerBelowAttack, TriggerAboveAttack, TriggerBetweenAttack
+from entities.control import AboveControl, BelowControl, TimeControl
 
 
 class Error(Exception):
@@ -70,6 +71,30 @@ def create_controls(controls_list):
     return ret
 
 
+def create_attacks(attack_list):
+    """This function will create an array of DeviceAttacks
+
+    :param attack_list: A list of attack dicts that need to be converted to DeviceAttacks
+    """
+    attacks = []
+    for attack in attack_list:
+        if attack['type'].lower() == "time":
+            attacks.append(TimeAttack(attack['name'], attack['actuators'], attack['command'], attack['start'], attack['end']))
+        elif attack['type'].lower() == "above":
+            attacks.append(
+                TriggerAboveAttack(attack['name'], attack['actuators'], attack['command'], attack['sensor'],
+                                   attack['value']))
+        elif attack['type'].lower() == "below":
+            attacks.append(
+                TriggerBelowAttack(attack['name'], attack['actuators'], attack['command'], attack['sensor'],
+                                   attack['value']))
+        elif attack['type'].lower() == "between":
+            attacks.append(
+                TriggerBetweenAttack(attack['name'], attack['actuators'], attack['command'], attack['sensor'],
+                                   attack['lower_value'], attack['upper_value']))
+    return attacks
+
+
 class GenericPLC(BasePLC):
     """This class represents a plc. This plc knows what it is connected to by reading the
     yaml file at intermediate_yaml_path and looking at index yaml_index in the plcs section.
@@ -91,10 +116,15 @@ class GenericPLC(BasePLC):
 
         # Initialize connection to database
         self.initialize_db()
-        intermediate_controls = self.intermediate_plc['controls']
 
-        self.controls = create_controls(intermediate_controls)
-        # print(self.controls)
+        self.intermediate_controls = self.intermediate_plc['controls']
+        self.controls = create_controls(self.intermediate_controls)
+
+        if 'attacks' in self.intermediate_plc.keys():
+            self.attacks = create_attacks(self.intermediate_plc['attacks'])
+        else:
+            self.attacks = []
+
         # Create state from db values
         state = {
             'name': "plant",
@@ -103,7 +133,7 @@ class GenericPLC(BasePLC):
 
         # Create list of dependant sensors
         dependant_sensors = []
-        for control in intermediate_controls:
+        for control in self.intermediate_controls:
             if control["type"] != "Time":
                 dependant_sensors.append(control["dependant"])
 
@@ -266,6 +296,9 @@ class GenericPLC(BasePLC):
 
             for control in self.controls:
                 control.apply(self)
+
+            for attack in self.attacks:
+                attack.apply(self)
 
             self.set_sync(1)
 

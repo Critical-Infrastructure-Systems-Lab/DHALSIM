@@ -2,15 +2,13 @@ import unittest
 from mock import MagicMock, call
 import sys
 import pytest
-import pytest_mock
 
-from dhalsim.python2.control import AboveControl, BelowControl, TimeControl
-from dhalsim.python2.generic_plc import GenericPLC
-from dhalsim.python2.basePLC import BasePLC
+from dhalsim.python2.entities.control import AboveControl, BelowControl, TimeControl
 
 def test_python_version():
     assert sys.version_info.major is 2
     assert sys.version_info.minor is 7
+
 
 @pytest.fixture
 def mock_plc1():

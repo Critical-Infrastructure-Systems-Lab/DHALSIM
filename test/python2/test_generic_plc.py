@@ -7,7 +7,7 @@ import yaml
 from mock import MagicMock, call
 from pathlib import Path
 
-from dhalsim.python2.control import *
+from dhalsim.python2.entities.control import AboveControl, BelowControl, TimeControl
 from dhalsim.python2.generic_plc import GenericPLC
 
 

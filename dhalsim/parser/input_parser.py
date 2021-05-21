@@ -1,10 +1,8 @@
 import logging
-from pathlib import Path
-
 import wntr
 import yaml
 from antlr4 import *
-
+from pathlib import Path
 from dhalsim.parser.antlr.controlsLexer import controlsLexer
 from dhalsim.parser.antlr.controlsParser import controlsParser
 
@@ -37,15 +35,12 @@ class InputParser:
     Class handling the parsing of .inp input files
 
     :param intermediate_yaml_path: The path of the inp file
-    :type intermediate_yaml_path: Path
     """
 
-    def __init__(self, intermediate_yaml_path: Path):
+    def __init__(self, intermediate_yaml):
         """Constructor method
         """
-        self.intermediate_yaml_path = intermediate_yaml_path
-        with self.intermediate_yaml_path.open(mode='r') as intermediate_yaml:
-            self.data = yaml.safe_load(intermediate_yaml)
+        self.data = intermediate_yaml
 
         for plc in self.data['plcs']:
             if 'sensors' not in plc:
@@ -77,9 +72,8 @@ class InputParser:
             self.data["iterations"] = int(self.data["time"][0]["duration"]
                                           / self.data["time"][1]["hydraulic_timestep"])
 
-        # Write to the yaml
-        with self.intermediate_yaml_path.open(mode='w') as intermediate_yaml:
-            yaml.safe_dump(self.data, intermediate_yaml)
+        # Return the YAML object
+        return self.data
 
     def generate_controls(self):
         """
