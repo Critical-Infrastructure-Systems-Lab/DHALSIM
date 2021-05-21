@@ -56,27 +56,16 @@ def main():
                         type=lambda x: is_valid_file(parser, x))
     parser.add_argument('-o', '--output', dest='output_folder', metavar="FOLDER",
                         help='folder to put the output files', type=str)
-    parser.add_argument('-l', dest='log_level',
-                        choices=['debug', 'info', 'warning', 'error', 'critical'],
-                        default='info')
+    # TODO: Add another argument which dictates the logging level
+    logging.getLogger().setLevel(logging.WARNING)
+    logging.getLogger('wntr').setLevel(logging.WARNING)
 
     args = parser.parse_args()
-
-    logging.basicConfig(stream=sys.stdout, level=logging.CRITICAL,
-                        format='%(asctime)s - %(levelname)s @ %(filename)s: %(message)s',
-                        datefmt='%H:%M:%S')
-
-    # Get user logging level
-    switcher = {'debug': logging.DEBUG, 'info': logging.INFO, 'warning': logging.WARNING,
-                'error': logging.ERROR, 'critical': logging.CRITICAL}
-
-    set_logger_level(switcher.get(args.log_level))
-    logging.getLogger('mininet').setLevel(logging.WARNING)
 
     config_file = Path(args.config_file)
     output_folder = Path(args.output_folder if args.output_folder else "output")
 
-    runner = Runner(config_file, output_folder, args.log_level)
+    runner = Runner(config_file, output_folder)
     runner.run()
 
 
