@@ -325,7 +325,6 @@ if __name__ == "__main__":
                         metavar="N")
 
     args = parser.parse_args()
-
     plc = GenericPLC(
         intermediate_yaml_path=Path(args.intermediate_yaml),
         yaml_index=args.index)

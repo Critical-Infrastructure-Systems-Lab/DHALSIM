@@ -87,7 +87,6 @@ class GeneralCPS(MiniCPS):
         automatic_plc_path = Path(__file__).parent.absolute() / "automatic_plc.py"
         for i, plc in enumerate(self.data["plcs"]):
             node = self.net.get(plc["name"])
-
             cmd = ["python2", str(automatic_plc_path), str(self.intermediate_yaml), str(i)]
             self.plc_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
 

@@ -72,10 +72,8 @@ class NodeControl:
         self.process_tcp_dump = self.start_tcpdump_capture()
 
         self.plc_process = self.start_plc()
-
         while self.plc_process.poll() is None:
             pass
-
         self.terminate()
 
     def start_tcpdump_capture(self):
@@ -97,10 +95,7 @@ class NodeControl:
         generic_plc_path = Path(__file__).parent.absolute() / "generic_plc.py"
 
         cmd = ["python2", str(generic_plc_path), str(self.intermediate_yaml), str(self.plc_index)]
-
-        # Output is not printed to console
-        f = open('/dev/null', 'w')
-        plc_process = subprocess.Popen(cmd, shell=False, stderr=f, stdout=f)
+        plc_process = subprocess.Popen(cmd, shell=False, stderr=sys.stdout, stdout=sys.stdout)
         return plc_process
 
 

@@ -90,9 +90,9 @@ class ScadaControl:
         generic_scada_path = Path(__file__).parent.absolute() / "generic_scada.py"
 
         # Output is not printed to console
-        f = open('/dev/null', 'w')
+        # f = open('/dev/null', 'w')
         cmd = ["python2", str(generic_scada_path), str(self.intermediate_yaml)]
-        scada_process = subprocess.Popen(cmd, shell=False, stderr=f, stdout=f)
+        scada_process = subprocess.Popen(cmd, shell=False, stderr=sys.stderr, stdout=sys.stdout)
         return scada_process
 
 
