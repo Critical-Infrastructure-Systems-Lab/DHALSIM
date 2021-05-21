@@ -1,0 +1,5 @@
+[CYBERNODES]
+; Name, Sensors, Actuators
+ PLC1, , P_RAW1 V_PUB
+ PLC2, T2, V_ER2i
+ SCADA, T2, P_RAW1 V_PUB V_ER2i

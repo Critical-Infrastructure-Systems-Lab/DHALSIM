@@ -1,0 +1,85 @@
+# This file is a template, and might need editing before it works on your project.
+# Official language image. Look for the different tagged releases at:
+# https://hub.docker.com/r/library/python/tags/
+
+# Change pip's cache directory to be inside the project directory since we can
+# only cache local items.
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+# Pip's cache doesn't store the python packages
+# https://pip.pypa.io/en/stable/reference/pip_install/#caching
+#
+# If you want to also cache the installed packages, you have to install
+# them in a virtualenv and cache it as well.
+cache:
+  key: ${CI_JOB_NAME}
+  paths:
+    - .cache/pip
+    - venv/
+    - minicps
+
+stages:
+  - test
+  - deploy
+
+test:3:
+  image: python:3.8
+  stage: test
+  script:
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install -e .[test]
+    - python -m pytest test --ignore=test/python2/ --color=yes -m "not integrationtest"
+
+test:2:
+  image: python:2.7
+  stage: test
+  script:
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install cpppo==4.0.4
+    - git clone https://github.com/afmurillo/minicps.git || git -C minicps pull
+    - pip install -e ./minicps
+    - pip install mininet
+    - pip install pyyaml
+    - pip install pytest
+    - pip install pytest-mock
+    - pip install mock
+    - pip install pathlib
+    - python -m pytest test/python2/ --color=yes -m "not integrationtest"
+
+pages:
+  image: python:3.8
+  stage: deploy
+  script:
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install -e .[doc]
+    - sphinx-build -b html doc public
+  artifacts:
+    paths:
+      - public
+  only:
+  - master
+
+
+#test:intergration:
+#  image: ubuntu:20.04
+#  stage: test
+#  cache:
+#    paths:
+#      - ~/mininet
+#      - ~/minicps
+#  script:
+#    - apt-get update
+#    - chmod +x install.sh
+#    - apt-get install -y sudo
+#    - ./install.sh
+#    - python2 -m pip install pyyaml pytest pytest-mock mock pathlib
+#    - python3 -m pip install -e .[test]
+#    - python2 -m pytest test/python2/ --color=yes -m "not integrationtest"
+#    - python3 -m pytest test --ignore=python2 --color=yes -m "not integrationtest"

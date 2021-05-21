@@ -1,0 +1,4 @@
+inp_file: minitown_map.inp
+cpa_file: minitown_cpa.yaml
+output_path: output
+iterations: 500

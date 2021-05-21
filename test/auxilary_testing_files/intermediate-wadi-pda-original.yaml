@@ -1,0 +1,122 @@
+inp_file: test/auxilary_testing_files/wadi_map_pda_original.inp
+iterations: 8640
+
+plcs:
+  - name: PLC1
+    sensors:
+      - T0
+    actuators:
+      - P_RAW1
+      - V_PUB
+    controls:
+      - type: below
+        dependant: T0
+        value: 0.256
+        actuator: V_PUB
+        action: open
+      - type: above
+        dependant: T0
+        value: 0.448
+        actuator: V_PUB
+        action: closed
+      - type: below
+        dependant: T0
+        value: 0.256
+        actuator: P_RAW1
+        action: closed
+      - type: below
+        dependant: T2
+        value: 0.16
+        actuator: P_RAW1
+        action: open
+      - type: above
+        dependant: T2
+        value: 0.32
+        actuator: P_RAW1
+        action: closed
+      - type: time
+        value: 0
+        actuator: V_PUB
+        action: open
+      - type: time
+        value: 0
+        actuator: P_RAW1
+        action: closed
+  - name: PLC2
+    sensors:
+      - T2
+    actuators:
+      - V_ER2i
+    controls:
+      - type: above
+        dependant: T2
+        value: 0.32
+        actuator: V_ER2i
+        action: closed
+      - type: below
+        dependant: T2
+        value: 0.16
+        actuator: V_ER2i
+        action: open
+      - type: time
+        value: 0
+        actuator: V_ER2i
+        action: closed
+
+actuators:
+  - name: P_RAW1
+    initial_state: open
+  - name: P_RAW2
+    initial_state: closed
+  - name: P_B2
+    initial_state: closed
+  - name: P_B1
+    initial_state: open
+  - name: V_Gi_G
+    initial_state: closed
+  - name: V_Gi_B
+    initial_state: open
+  - name: V_SWaT
+    initial_state: closed
+  - name: V_PUB
+    initial_state: open
+  - name: V_ER2i
+    initial_state: open
+  - name: V_ER2o
+    initial_state: open
+  - name: V_ER1i
+    initial_state: closed
+  - name: V_ER1o
+    initial_state: closed
+  - name: FCV_ER
+    initial_state: open
+  - name: FCV_RWin
+    initial_state: open
+  - name: '1'
+    initial_state: open
+  - name: '2'
+    initial_state: open
+  - name: '3'
+    initial_state: open
+  - name: '4'
+    initial_state: open
+  - name: '5'
+    initial_state: open
+  - name: '6'
+    initial_state: open
+  - name: '7'
+    initial_state: open
+  - name: '8'
+    initial_state: open
+  - name: '9'
+    initial_state: open
+  - name: '10'
+    initial_state: open
+  - name: '11'
+    initial_state: open
+  - name: '12'
+    initial_state: open
+
+time:
+  - duration: 518400.0
+  - hydraulic_timestep: 60.0

@@ -1,0 +1,23 @@
+device_attacks:
+  - name: "Close PRAW1 from iteration 5 to 10"
+    type: "Time"
+    actuators:
+      - P_RAW1
+    command: "closed"
+    start: 5
+    end: 10
+  - name: "Close PRAW1 when T2 < 0.16"
+    type: "Below"
+    actuators:
+      - P_RAW1
+    command: "closed"
+    sensor: "T2"
+    value: 0.16
+  - name: "Close PRAW1 when 0.10 < T2 < 0.16"
+    type: "Between"
+    actuators:
+      - P_RAW1
+    command: "closed"
+    sensor: "T2"
+    lower_value: 0.10
+    upper_value: 0.16
