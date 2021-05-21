@@ -133,7 +133,7 @@ class GenericPLC(BasePLC):
 
         # Create list of dependant sensors
         dependant_sensors = []
-        for control in intermediate_controls:
+        for control in self.intermediate_controls:
             if control["type"] != "Time":
                 dependant_sensors.append(control["dependant"])
 
