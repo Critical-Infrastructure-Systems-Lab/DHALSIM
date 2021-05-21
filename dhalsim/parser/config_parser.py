@@ -191,7 +191,10 @@ class ConfigParser:
     def generate_network_attacks(self, network_attacks):
         for network_attack in network_attacks:
             target = network_attack['target']
-            if target not in self.cpa_data['plcs']:
+            plcs = []
+            for plc in self.cpa_data.get("plcs"):
+                plcs.append(plc['name'])
+            if target not in plcs:
                 raise NoSuchPlc
         return network_attacks
 
@@ -226,8 +229,8 @@ class ConfigParser:
         if "iterations" in self.config_data.keys():
             yaml_data["iterations"] = self.config_data["iterations"]
 
-        if "network_attacks" in self.config_data.keys():
-            yaml_data["network_attacks"] = self.generate_network_attacks(self.config_data["network_attacks"])
+        if "network_attacks" in self.attacks_data.keys():
+            yaml_data["network_attacks"] = self.generate_network_attacks(self.attacks_data["network_attacks"])
 
         # Write values from IMP file into yaml file (controls, tanks/valves/initial values, etc.)
         yaml_data = InputParser(yaml_data).write()
