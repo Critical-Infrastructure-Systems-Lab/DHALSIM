@@ -88,6 +88,7 @@ def test_apply_false_BelowControl(below_fixture, mock_plc2):
     assert below_fixture.apply(mock_plc2) is None
     # Assert call.get tag called, and below value was false
     mock_plc2.get_tag.assert_called_with('testTank1')
+    mock_plc2.set_tag.assert_not_called()
 
 
 def test_apply_true_AboveControl(above_fixture, mock_plc2):
@@ -101,7 +102,7 @@ def test_apply_false_AboveControl(above_fixture, mock_plc1):
     assert above_fixture.apply(mock_plc1) is None
     # Assert call.get tag called, and above value was false
     mock_plc1.get_tag.assert_called_with('testTank2')
-
+    mock_plc1.set_tag.assert_not_called()
 
 def test_apply_true_TimeControl(time_fixture, mock_plc1):
     assert time_fixture.apply(mock_plc1) is None
@@ -114,3 +115,4 @@ def test_apply_false_TimeControl(time_fixture, mock_plc2):
     assert time_fixture.apply(mock_plc2) is None
     # Assert call.get tag called, and above value was true
     mock_plc2.get_master_clock.assert_called_with()
+    mock_plc2.set_tag.assert_not_called()

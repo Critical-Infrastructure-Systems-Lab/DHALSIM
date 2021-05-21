@@ -12,7 +12,7 @@ import sys
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from py3_logger import get_logger
+from dhalsim.py3_logger import get_logger
 
 import wntr
 import wntr.network.controls as controls
