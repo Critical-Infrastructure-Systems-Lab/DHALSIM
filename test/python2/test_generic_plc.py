@@ -44,6 +44,7 @@ def magic_mock_preloop():
 @pytest.fixture
 def yaml_file(tmpdir):
     dict = {
+        "log_level": "info",
         "db_path": "/home/test/dhalsim.sqlite",
         "plcs": [{"name": "PLC1",
                   "local_ip": "192.168.1.1",
