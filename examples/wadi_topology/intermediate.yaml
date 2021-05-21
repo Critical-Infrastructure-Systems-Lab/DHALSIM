@@ -1,217 +1,142 @@
-inp_file: /home/robert/dhalsim/examples/wadi_topology/wadi_map_newer.inp
+actuators:
+- initial_state: open
+  name: P_RAW1
+- initial_state: closed
+  name: P_RAW2
+- initial_state: closed
+  name: P_B2
+- initial_state: open
+  name: P_B1
+- initial_state: closed
+  name: V_Gi_G
+- initial_state: open
+  name: V_Gi_B
+- initial_state: closed
+  name: V_SWaT
+- initial_state: closed
+  name: V_PUB
+- initial_state: open
+  name: V_ER2i
+- initial_state: open
+  name: V_ER2o
+- initial_state: open
+  name: V_ER1i
+- initial_state: closed
+  name: V_ER1o
+- initial_state: open
+  name: FCV_ER
+- initial_state: open
+  name: FCV_RWin
+- initial_state: open
+  name: V1
+- initial_state: open
+  name: V2
+- initial_state: open
+  name: V3
+- initial_state: open
+  name: V4
+- initial_state: open
+  name: V5
+- initial_state: open
+  name: V6
+- initial_state: open
+  name: V7
+- initial_state: open
+  name: V8
+- initial_state: open
+  name: V9
+- initial_state: open
+  name: V10
+- initial_state: open
+  name: V11
+- initial_state: open
+  name: V12
 cpa_file: /home/robert/dhalsim/examples/wadi_topology/wadi_cpa.yaml
-db_path: /home/robert/dhalsim.sqlite
-
-output_path: /home/robert/dhalsim/output
-
-mininet_cli: False
-
-simulator: pdd
+db_path: /tmp/dhalsim/dhalsim.sqlite
+inp_file: /home/robert/dhalsim/examples/wadi_topology/wadi_map_newer.inp
 iterations: 500
-#iterations: 86400
-
-scada:
-    name: scada
-    ip: 192.168.2.1
-    interface: scada-eth0
-
+mininet_cli: false
+network_topology_type: complex
+output_path: /home/robert/dhalsim/examples/wadi_topology/output
 plcs:
-  - name: PLC1
-    ip: 192.168.1.1
-    mac: 11:22:33:44:55:01
-    interface: plc1-eth0
-    sensors:
-      - T0
-    actuators:
-      - P_RAW1
-      - V_PUB
-    controls:
-      - type: Below
-        dependant: T0
-        value: 0.256
-        actuator: V_PUB
-        action: OPEN
-      - type: Above
-        dependant: T0
-        value: 0.448
-        actuator: V_PUB
-        action: CLOSED
-      - type: Below
-        dependant: T0
-        value: 0.256
-        actuator: P_RAW1
-        action: CLOSED
-      - type: Below
-        dependant: T2
-        value: 0.16
-        actuator: P_RAW1
-        action: OPEN
-      - type: Above
-        dependant: T2
-        value: 0.32
-        actuator: P_RAW1
-        action: CLOSED
-#      - type: Time
-#        value: 0
-#        actuator: V_PUB
-#        action: OPEN
-#      - type: Time
-#        value: 0
-#        actuator: P_RAW1
-#        action: CLOSED
-  - name: PLC2
-    ip: 192.168.1.2
-    mac: 11:22:33:44:55:02
-    sensors:
-      - T2
-    actuators:
-      - V_ER2i
-    controls:
-#      - type: Time
-#        value: 0
-#        actuator: V_ER2i
-#        action: CLOSED
-      - type: Above
-        dependant: T2
-        value: 0.32
-        actuator: V_ER2i
-        action: CLOSED
-      - type: Below
-        dependant: T2
-        value: 0.16
-        actuator: V_ER2i
-        action: OPEN
-
-valves:
-  - name: V_PUB
-    initial_state: Closed
-  - name: V_ER1i
-    initial_state: Open
-  - name: V_ER1o
-    initial_state: Closed
-  - name: V_ER2i
-    initial_state: Closed
-  - name: V_ER2o
-    initial_state: Open
-  - name: V_Gi_G
-    initial_state: Closed
-  - name: V_Gi_B
-    initial_state: Open
-  - name: V_SWaT
-    initial_state: Closed
-  - name: FCV_ER
-    initial_state: Open
-  - name: FCV_RWin
-    initial_state: Open
-  - name: V1
-    initial_state: Open
-  - name: V2
-    initial_state: Open
-  - name: V3
-    initial_state: Open
-  - name: V4
-    initial_state: Open
-  - name: V5
-    initial_state: Open
-  - name: V6
-    initial_state: Open
-  - name: V7
-    initial_state: Open
-  - name: V8
-    initial_state: Open
-  - name: V9
-    initial_state: Open
-  - name: V10
-    initial_state: Open
-  - name: V11
-    initial_state: Open
-  - name: V12
-    initial_state: Open
-
-tanks:
-  - name: T1
-    initial_value: 0.3212883
-  - name: T2
-    initial_value: 0.1466138
-  - name: T0
-    initial_value: 0.5629288
-
-
-pumps:
-  - name: P_RAW1
-    initial_state: Closed
-  - name: P_RAW2
-    initial_state: Closed
-  - name: P_B1
-    initial_state: Open
-  - name: P_B2
-    initial_state: Closed
-
-#valves:
-#  - name: V_Gi_G
-#    initial_state: Closed
-#  - name: V_Gi_B
-#    initial_state: Open
-#  - name: V_SWaT
-#    initial_state: Closed
-#  - name: V_PUB
-#    initial_state: Closed
-#  - name: V_ER2i
-#    initial_state: Closed
-#  - name: V_ER2o
-#    initial_state: Open
-#  - name: V_ER1i
-#    initial_state: Open
-#  - name: V_ER1o
-#    initial_state: Closed
-#  - name: FCV_ER
-#    initial_state: Open
-#  - name: FCV_RWin
-#    initial_state: Open
-#  - name: V1
-#    initial_state: Open
-#  - name: V2
-#    initial_state: Open
-#  - name: V3
-#    initial_state: Open
-#  - name: V4
-#    initial_state: Open
-#  - name: V5
-#    initial_state: Open
-#  - name: V6
-#    initial_state: Open
-#  - name: V7
-#    initial_state: Open
-#  - name: V8
-#    initial_state: Open
-#  - name: V9
-#    initial_state: Open
-#  - name: V10
-#    initial_state: Open
-#  - name: V11
-#    initial_state: Open
-#  - name: V12
-#    initial_state: Open
-#
-#tanks: CAME FROM wadi_map_dda_run55.inp
-#  - name: T0
-#    initial_value: 0.5629288
-#  - name: T1
-#    initial_value: 0.3212883
-#  - name: T2
-#    initial_value: 0.1466138
-#
-#
-#pumps:
-#  - name: P_RAW1
-#    initial_state: Closed
-#  - name: P_RAW2
-#    initial_state: Closed
-#  - name: P_B1
-#    initial_state: Open
-#  - name: P_B2
-#    initial_state: Closed
-
+- actuators:
+  - P_RAW1
+  - V_PUB
+  controls:
+  - action: open
+    actuator: V_PUB
+    dependant: T0
+    type: below
+    value: 0.256
+  - action: closed
+    actuator: V_PUB
+    dependant: T0
+    type: above
+    value: 0.448
+  - action: closed
+    actuator: P_RAW1
+    dependant: T0
+    type: below
+    value: 0.256
+  - action: open
+    actuator: P_RAW1
+    dependant: T2
+    type: below
+    value: 0.16
+  - action: closed
+    actuator: P_RAW1
+    dependant: T2
+    type: above
+    value: 0.32
+  gateway_ip: 192.168.1.254
+  gateway_name: r1
+  interface: PLC1-eth0
+  local_ip: 192.168.1.1
+  mac: ee:84:14:40:27:1f
+  name: PLC1
+  provider_interface: r0-eth1
+  provider_ip: 10.0.1.254
+  public_ip: 10.0.1.1
+  sensors:
+  - T0
+  switch_name: s1
+- actuators:
+  - V_ER2i
+  controls:
+  - action: closed
+    actuator: V_ER2i
+    dependant: T2
+    type: above
+    value: 0.32
+  - action: open
+    actuator: V_ER2i
+    dependant: T2
+    type: below
+    value: 0.16
+  gateway_ip: 192.168.1.254
+  gateway_name: r2
+  interface: PLC2-eth0
+  local_ip: 192.168.1.1
+  mac: a2:80:bc:20:d3:c8
+  name: PLC2
+  provider_interface: r0-eth2
+  provider_ip: 10.0.2.254
+  public_ip: 10.0.2.1
+  sensors:
+  - T2
+  switch_name: s2
+scada:
+  gateway_ip: 192.168.1.254
+  gateway_name: r3
+  interface: scada-eth0
+  local_ip: 192.168.1.1
+  mac: c6:0e:ee:81:bb:39
+  name: scada
+  provider_interface: r0-eth3
+  provider_ip: 10.0.3.254
+  public_ip: 10.0.3.1
+  switch_name: s3
+simulator: pdd
 time:
-  - hydraulic_timestep: 0:01
-  - duration: 144:00
+- duration: 0.0
+- hydraulic_timestep: 60.0
