@@ -1,18 +1,22 @@
 import argparse
+import csv
 import os
 import signal
 import logging
+from decimal import Decimal
+
 import wntr
 import wntr.network.controls as controls
 import sqlite3
-import csv
 import sys
-import pandas as pd
-import yaml
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
 from py3_logger import get_logger
+
+import wntr
+import wntr.network.controls as controls
+import yaml
 
 
 class PhysicalPlant:
@@ -203,7 +207,8 @@ class PhysicalPlant:
     @staticmethod
     def calculate_eta(start, iteration, total):
         """
-        Calculates estimated time until finished simulation
+        Calculates estimated time until finished simulation.
+
         :start: start time
         :iteration: current iteration
         :total: total number of iterations
@@ -260,10 +265,29 @@ class PhysicalPlant:
                                (str(a_level), tank,))
                 self.conn.commit()
 
-            master_time = master_time + 1
+            # Update pumps in database
+            for pump in self.pump_list:
+                flow = Decimal(self.wn.get_link(pump).flow)
+                self.c.execute("UPDATE plant SET value = ? WHERE name = ?",
+                               (str(flow), pump+"F",))
+                self.conn.commit()
 
-            # TODO: This seems arbitrary.. We need to be sure all PLCs have executed their loop.
-            time.sleep(0.03)
+            # Update valve in database
+            for valve in self.valve_list:
+                flow = Decimal(self.wn.get_link(valve).flow)
+                self.c.execute("UPDATE plant SET value = ? WHERE name = ?",
+                               (str(flow), valve+"F",))
+                self.conn.commit()
+
+            # Update junction pressure:
+            for junction in self.junction_list:
+                level = Decimal(self.wn.get_node(junction).head - self.wn.get_node(junction).elevation)
+                # pressure = Decimal(self.wn.get_node(junction).pressure)
+                self.c.execute("UPDATE plant SET value = ? WHERE name = ?",
+                               (str(level), junction,))
+                self.conn.commit()
+
+            master_time = master_time + 1
 
         self.finish()
 

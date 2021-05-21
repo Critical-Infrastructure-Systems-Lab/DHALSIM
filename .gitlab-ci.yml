@@ -21,6 +21,7 @@ cache:
 
 stages:
   - test
+  - deploy
 
 test:3:
   image: python:3.8
@@ -49,6 +50,22 @@ test:2:
     - pip install mock
     - pip install pathlib
     - python -m pytest test/python2/ --color=yes -m "not integrationtest"
+
+pages:
+  image: python:3.8
+  stage: deploy
+  script:
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install -e .[doc]
+    - sphinx-build -b html doc public
+  artifacts:
+    paths:
+      - public
+  only:
+  - master
+
 
 #test:intergration:
 #  image: ubuntu:20.04

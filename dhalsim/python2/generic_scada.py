@@ -25,25 +25,27 @@ class InvalidControlValue(Error):
     """Raised when tag you are looking for does not exist"""
 
 
-def generate_real_tags(tanks, pumps, valves):
+def generate_real_tags(plcs):
     """
-    Generates real tags with all tanks, pumps, and values
+    Generates real tags with all sensors and actuators attached to pls in the network.
 
-    :param tanks: list of tanks
-    :param pumps: list of pumps
-    :param valves: list of valves
+    :param plcs: list of plcs
     """
     real_tags = []
 
-    for tank in tanks:
-        if tank != "":
-            real_tags.append((tank["name"], 1, 'REAL'))
-    for pump in pumps:
-        if pump != "":
-            real_tags.append((pump["name"], 1, 'REAL'))
-    for valve in valves:
-        if valve != "":
-            real_tags.append((valve["name"], 1, 'REAL'))
+    for plc in plcs:
+        if 'sensors' not in plc:
+            plc['sensors'] = list()
+
+        if 'actuators' not in plc:
+            plc['actuators'] = list()
+
+        for sensor in plc['sensors']:
+            if sensor != "":
+                real_tags.append((sensor, 1, 'REAL'))
+        for actuator in plc['actuators']:
+            if actuator != "":
+                real_tags.append((actuator, 1, 'REAL'))
 
     return tuple(real_tags)
 
@@ -90,9 +92,7 @@ class GenericScada(SCADAServer):
         # Create server, real tags are generated
         scada_server = {
             'address': self.intermediate_yaml['scada']['local_ip'],
-            'tags': generate_real_tags(self.intermediate_yaml['tanks'],
-                                       self.intermediate_yaml['pumps'],
-                                       self.intermediate_yaml['valves'])
+            'tags': generate_real_tags(self.intermediate_yaml['plcs'])
         }
 
         # Create protocol
@@ -106,6 +106,11 @@ class GenericScada(SCADAServer):
         self.saved_values = [[]]
 
         for PLC in self.intermediate_yaml['plcs']:
+            if 'sensors' not in PLC:
+                PLC['sensors'] = list()
+
+            if 'actuators' not in PLC:
+                PLC['actuators'] = list()
             self.saved_values[0].extend(PLC['sensors'])
             self.saved_values[0].extend(PLC['actuators'])
 
@@ -135,7 +140,7 @@ class GenericScada(SCADAServer):
 
     def pre_loop(self, sleep=0.5):
         """
-        The pre loop of a SCADA. In which setup actions are started
+        The pre loop of a SCADA. In which setup actions are started.
 
         :param sleep:  (Default value = 0.5) The time to sleep after setting everything up
         """
@@ -169,7 +174,7 @@ class GenericScada(SCADAServer):
 
     def sigint_handler(self, sig, frame):
         """
-        Shutdown protocol for the scada, writes the output before exiting
+        Shutdown protocol for the scada, writes the output before exiting.
         """
         self.logger.debug("DEBUG SCADA shutdown")
         self.write_output()
@@ -186,7 +191,7 @@ class GenericScada(SCADAServer):
     def generate_plcs(self):
         """
         Generates a list of tuples, the first part being the ip of a PLC,
-        and the second  being a list of tags attached to that plc
+        and the second  being a list of tags attached to that PLC.
         """
         plcs = []
 
@@ -237,7 +242,7 @@ class GenericScada(SCADAServer):
 
 def is_valid_file(parser_instance, arg):
     """
-    Verifies whether the intermediate yaml path is valid
+    Verifies whether the intermediate yaml path is valid.
 
     :param parser_instance: instance of argparser
     :param arg: the path to check

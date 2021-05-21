@@ -1,11 +1,15 @@
 import sys
 from pathlib import Path
-
 import pytest
 import yaml
 
 from dhalsim.parser.config_parser import ConfigParser, EmptyConfigError, MissingValueError, \
     InvalidValueError, DuplicateValueError
+
+
+@pytest.fixture
+def wadi_config_yaml_path():
+    return Path("test/auxilary_testing_files/wadi_config.yaml")
 
 
 def test_python_version():
@@ -118,6 +122,24 @@ def test_cpa_data_path_not_found(tmpdir):
     with pytest.raises(FileNotFoundError):
         parser.cpa_data
 
+def test_config_parser_attacks(wadi_config_yaml_path):
+    output = ConfigParser(wadi_config_yaml_path).generate_attacks({"plcs": [
+        {"name": "PLC1", "actuators": ["P_RAW1", "V_PUB"], "sensors": ["T0"]},
+        {"name": "PLC2", "actuators": ["V_ER2i"], "sensors": ["T2"]}
+    ]})
+
+    expected_output = {"plcs": [
+        {"name": "PLC1", "actuators": ["P_RAW1", "V_PUB"], "sensors": ["T0"], "attacks": [
+            {"name": "Close PRAW1 from iteration 5 to 10", "type": "Time",
+             "actuators": ["P_RAW1"], "command": "closed", "start": 5, "end": 10},
+            {"name": "Close PRAW1 when T2 < 0.16", "type": "Below",
+             "actuators": ["P_RAW1"], "command": "closed", "sensor": "T2", "value": 0.16}
+        ]},
+        {"name": "PLC2", "actuators": ["V_ER2i"], "sensors": ["T2"]}
+    ]}
+
+    assert output == expected_output
+    assert 'attacks' not in output['plcs'][1].keys()
 
 def test_cpa_data_duplicate_name(tmpdir):
     c = tmpdir.join("config.yaml")

@@ -1,28 +1,12 @@
 ---
-# Simulation initialization parameters.
-initial_custom_flag: "True"
-week_index: 0
-demand_patterns_path: "../../Demand_patterns/three_year_demands_ctown.csv" # that file was this one. the total demand pattern csv
-starting_demand_path: "../../Demand_patterns/starting_demand_points.csv" # that would be this file
-initial_tank_levels_path: "../../Demand_patterns/tank_initial_conditions.csv" #
-
-network_delay_path: "../../Demand_patterns/network_links_delay_small.csv"
-network_losses_path: "../../Demand_patterns/network_loss_small.csv"
-
-# EPANET inp file that will be represented in DHALSIM
-#epanet_topo_path: "../../Demand_patterns/ctown_map_with_controls.inp"
-epanet_topo_path: "ctown_map.inp"
-#epanet_topo_path: "ctown_map_with_controls.inp"
-epanet_cpa_path: "../../Demand_patterns/ctown.cpa"
-
 # General simulation parameters
-db_path: "ctown_db.sqlite"
+db_path: "/home/robert/dhalsim.sqlite"
 output_ground_truth_path: "physical_process.csv"
 duration_days: 1
-#duration_days: 1
-#duration_days: 10
-inp_file: "ctown_map.inp"
+#inp_file: "wadi_map_dda_run55.inp"
+inp_file: "wadi_map.inp"
 simulator: "pdd"
+week_index: 0
 
 # PLC dictionary output file
 # This is the output path of the epanet_parser script. A YAML file that synthetizes the control logc and PLC
@@ -50,5 +34,13 @@ simulation_type: "Single"
 # Using this flag also requires setting the value of attacks_path and attack_name.
 # The attack_name should be present in the attacks_path file
 run_attack: "False"
-attacks_path: "../../attack_repository/attack_description.yaml"
-attack_name: "network_empty_tank_1"
+#attacks_path: "../../attack_repository/wadi_attack_description.yaml"
+#attack_name: "wadi_network_empty_tank_1"
+device_attacks:
+  - name: "plc_empty_tank_1"
+    target: "PLC1"
+    actuators:
+      - P_RAW1
+    command: "close"
+    start: 600
+    end: 1000

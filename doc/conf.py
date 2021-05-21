@@ -29,8 +29,12 @@ import sphinx_rtd_theme
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    "sphinx_rtd_theme",
+    'sphinx_rtd_theme',
+    'sphinx-prompt',
+    'sphinx.ext.autosectionlabel',
 ]
+
+autodoc_mock_imports = ["thread", "topo", "basePLC", "control"]
 
 # Add any paths that contain templates here, relative to this directory.
 # templates_path = ['_templates']

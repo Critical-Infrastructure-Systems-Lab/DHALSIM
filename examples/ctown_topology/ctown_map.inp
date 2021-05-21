@@ -1090,40 +1090,40 @@
 
 [CONTROLS]
 ; ----------- Tank 1 ---------------
-;LINK          PU1 OPEN IF   NODE          T1            BELOW          4
-;LINK          PU1 CLOSED IF NODE          T1            ABOVE          6.3
+LINK          PU1 OPEN IF   NODE          T1            BELOW          4
+LINK          PU1 CLOSED IF NODE          T1            ABOVE          6.3
 
-;LINK          PU2 OPEN IF   NODE          T1            BELOW          1
-;LINK          PU2 CLOSED IF NODE          T1            ABOVE          4.5
+LINK          PU2 OPEN IF   NODE          T1            BELOW          1
+LINK          PU2 CLOSED IF NODE          T1            ABOVE          4.5
 
 ; ----------- Valve to T2 ---
-;LINK          V2 OPEN IF    NODE          T2            BELOW          .5
-;LINK          V2 CLOSED IF  NODE          T2            ABOVE          5.5
+LINK          V2 OPEN IF    NODE          T2            BELOW          .5
+LINK          V2 CLOSED IF  NODE          T2            ABOVE          5.5
 
 ; ----------- T3 ---
-;LINK          PU4 OPEN IF   NODE          T3            BELOW          3
-;LINK          PU4 CLOSED IF NODE          T3            ABOVE          5.3
+LINK          PU4 OPEN IF   NODE          T3            BELOW          3
+LINK          PU4 CLOSED IF NODE          T3            ABOVE          5.3
 
-;LINK          PU5 OPEN IF   NODE          T3            BELOW          1
-;LINK          PU5 CLOSED IF NODE          T3            ABOVE          3.5
+LINK          PU5 OPEN IF   NODE          T3            BELOW          1
+LINK          PU5 CLOSED IF NODE          T3            ABOVE          3.5
 
 ; ----------- T4 ---
-;LINK          PU6 OPEN IF   NODE          T4            BELOW          2
-;LINK          PU6 CLOSED IF NODE          T4            ABOVE          3.5
+LINK          PU6 OPEN IF   NODE          T4            BELOW          2
+LINK          PU6 CLOSED IF NODE          T4            ABOVE          3.5
 
-;LINK          PU7 OPEN IF   NODE          T4            BELOW          3
-;LINK          PU7 CLOSED IF NODE          T4            ABOVE          4.5
+LINK          PU7 OPEN IF   NODE          T4            BELOW          3
+LINK          PU7 CLOSED IF NODE          T4            ABOVE          4.5
 
 ; ----------- T5 ---
-;LINK          PU8 OPEN IF   NODE          T5            BELOW          1.5
-;LINK          PU8 CLOSED IF NODE          T5            ABOVE          4.5
+LINK          PU8 OPEN IF   NODE          T5            BELOW          1.5
+LINK          PU8 CLOSED IF NODE          T5            ABOVE          4.5
 
 ; ----------- T7 ---
-;LINK          PU10 OPEN IF  NODE          T7            BELOW          2.5
-;LINK          PU10 CLOSED IF              NODE          T7            ABOVE          4.8
+LINK          PU10 OPEN IF  NODE          T7            BELOW          2.5
+LINK          PU10 CLOSED IF              NODE          T7            ABOVE          4.8
 
-;LINK          PU11 OPEN IF  NODE          T7            BELOW          1
-;LINK          PU11 CLOSED IF              NODE          T7            ABOVE          3
+LINK          PU11 OPEN IF  NODE          T7            BELOW          1
+LINK          PU11 CLOSED IF              NODE          T7            ABOVE          3
 
 
 [RULES]

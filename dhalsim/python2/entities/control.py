@@ -1,6 +1,5 @@
-import logging
 from abc import ABCMeta, abstractmethod
-from py2_logger import get_logger
+
 
 # todo import genericPLC once completed
 
@@ -21,7 +20,8 @@ class Control:
 
     @abstractmethod
     def apply(self, generic_plc):
-        """Applies a control rule using a given PLC
+        """
+        Applies a control rule using a given PLC.
 
         :param generic_plc: the PLC that will apply the control actions
         """
@@ -29,7 +29,8 @@ class Control:
 
 
 class BelowControl(Control):
-    """Defines a BELOW control, which takes as a parameter a dependant
+    """
+    Defines a BELOW control, which takes as a parameter a dependant.
 
     :param dependant: value that the condition depends on (such as value of tank T0)
     """
@@ -44,10 +45,12 @@ class BelowControl(Control):
         :param generic_plc: the PLC that will apply the control actions
         """
         dep_val = generic_plc.get_tag(self.dependant)
-        # self.logger.debug("Get " + str(self.dependant) + " from " + generic_plc.intermediate_plc["name"] + " result is " + dep_val)
+        generic_plc.logger.debug(
+            "Get " + str(self.dependant) + " from " + generic_plc.intermediate_plc["name"] + " result is " + dep_val)
         if dep_val < self.value:
             generic_plc.set_tag(self.actuator, self.action)
-            # self.logger.debug(generic_plc.intermediate_plc["name"] + " applied " + str(self) + " because dep_val " + str(dep_val))
+            generic_plc.logger.debug(
+                generic_plc.intermediate_plc["name"] + " applied " + str(self) + " because dep_val " + str(dep_val))
 
     def __str__(self):
         return "Control if {dependant} < {value} then set {actuator} to {action}".format(
@@ -55,7 +58,8 @@ class BelowControl(Control):
 
 
 class AboveControl(Control):
-    """Defines a ABOVE control, which takes as a parameter a dependant
+    """
+    Defines a ABOVE control, which takes as a parameter a dependant.
 
     :param dependant: value that the condition depends on (such as value of tank T0)
     """
@@ -65,14 +69,16 @@ class AboveControl(Control):
         self.dependant = dependant
 
     def apply(self, generic_plc):
-        """Applies the ABOVE control rule using a given PLC
+        """
+        Applies the ABOVE control rule using a given PLC.
 
         :param generic_plc: the PLC that will apply the control actions
         """
         dep_val = generic_plc.get_tag(self.dependant)
         if dep_val > self.value:
             generic_plc.set_tag(self.actuator, self.action)
-            # self.logger.debug(generic_plc.intermediate_plc["name"] + " applied " + str(self) + " because dep_val " + str(dep_val))
+            generic_plc.logger.debug(
+                generic_plc.intermediate_plc["name"] + " applied " + str(self) + " because dep_val " + str(dep_val))
 
     def __str__(self):
         return "Control if {dependant} > {value} then set {actuator} to {action}".format(
@@ -80,7 +86,8 @@ class AboveControl(Control):
 
 
 class TimeControl(Control):
-    """Defines a TIME control, which takes no additional parameters
+    """
+    Defines a TIME control, which takes no additional parameters.
     """
 
     def apply(self, generic_plc):
@@ -91,7 +98,8 @@ class TimeControl(Control):
         curr_time = generic_plc.get_master_clock()
         if curr_time == self.value:
             generic_plc.set_tag(self.actuator, self.action)
-            # self.logger.debug(generic_plc.intermediate_plc["name"] + " applied " + str(self) + " because curr_time " + str(curr_time))
+            generic_plc.logger.debug(
+                generic_plc.intermediate_plc["name"] + " applied " + str(self) + " because curr_time " + str(curr_time))
 
     def __str__(self):
         return "Control if time = {value} then set {actuator} to {action}".format(

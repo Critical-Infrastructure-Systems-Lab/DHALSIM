@@ -11,7 +11,7 @@ from pathlib import Path
 
 class SimulationControl:
     """
-    Class representing the simulation process of a plant. All the automatic_plant.py have the same pattern
+    Class representing the simulation process of a plant. All the automatic_plant.py have the same pattern.
     """
 
     def __init__(self, intermediate_yaml):
@@ -28,7 +28,7 @@ class SimulationControl:
     def interrupt(self, sig, frame):
         """
         This method is provided by the signal python library. We call the finish method that interrupts, terminates,
-        or kills the simulation and exit
+        or kills the simulation and exit.
         """
         self.finish()
         sys.exit(1)
@@ -36,7 +36,7 @@ class SimulationControl:
     def finish(self):
         """
         All the subprocesses launched in this Digital Twin follow the same pattern to ensure that they finish before
-        continuing with the finishing of the parent process
+        continuing with the finishing of the parent process.
         """
         self.simulation.send_signal(signal.SIGINT)
         self.simulation.wait()
@@ -49,7 +49,9 @@ class SimulationControl:
         """
         This method uses a Python3.6 virtual environment where WNTR simulator is installed to run the simulation of a
         model. By default WNTR is run using the PDD model and the output file is a .csv file called
-        "physical_process.csv" :return: An object representing the simulation process
+        "physical_process.csv".
+
+        :return: An object representing the simulation process
         """
         physical_process_path = Path(__file__).parent.absolute().parent / "physical_process.py"
 

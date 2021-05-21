@@ -1,5 +1,8 @@
 inp_file: test/auxilary_testing_files/wadi_map_pda_original.inp
 iterations: 8640
+run_attack: True
+simulator: pdd
+mininet_cli: False
 
 plcs:
   - name: PLC1
@@ -42,6 +45,21 @@ plcs:
         value: 0
         actuator: P_RAW1
         action: closed
+    attacks:
+      - name: "Close PRAW1 from iteration 5 to 10"
+        type: "Time"
+        actuators:
+          - P_RAW1
+        command: "closed"
+        start: 5
+        end: 10
+      - name: "Close PRAW1 when T2 < 0.16"
+        type: "Below"
+        actuators:
+          - P_RAW1
+        command: "closed"
+        sensor: "T2"
+        value: 0.16
   - name: PLC2
     sensors:
       - T2
@@ -63,15 +81,7 @@ plcs:
         actuator: V_ER2i
         action: closed
 
-actuators:
-  - name: P_RAW1
-    initial_state: open
-  - name: P_RAW2
-    initial_state: closed
-  - name: P_B2
-    initial_state: closed
-  - name: P_B1
-    initial_state: open
+valves:
   - name: V_Gi_G
     initial_state: closed
   - name: V_Gi_B
@@ -115,6 +125,25 @@ actuators:
   - name: '11'
     initial_state: open
   - name: '12'
+    initial_state: open
+
+tanks:
+  - name: T1
+    initial_value: 0.3129975
+  - name: T2
+    initial_value: 0.2369489
+  - name: T0
+    initial_value: 0.4259549
+
+
+pumps:
+  - name: P_RAW1
+    initial_state: open
+  - name: P_RAW2
+    initial_state: closed
+  - name: P_B2
+    initial_state: closed
+  - name: P_B1
     initial_state: open
 
 time:
