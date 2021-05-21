@@ -28,6 +28,10 @@ class DuplicateValueError(Error):
     """Raised when there is a duplicate plc value in the cpa file"""
 
 
+class NoSuchPlc(Error):
+    """Raised when an attack targets a PLC that does not exist"""
+
+
 class ConfigParser:
     """
     Class handling the parsing of the input config data.
@@ -184,6 +188,13 @@ class ConfigParser:
                             break
         return yaml_data
 
+    def generate_network_attacks(self, network_attacks):
+        for network_attack in network_attacks:
+            target = network_attack['target']
+            if target not in self.cpa_data['plcs']:
+                raise NoSuchPlc
+        return network_attacks
+
     def generate_intermediate_yaml(self):
         """Writes the intermediate.yaml file to include all options specified in the config, the plc's and their
         data, and all valves/pumps/tanks etc.
@@ -214,6 +225,9 @@ class ConfigParser:
         # Note: if iterations not present then default value will be written in InputParser
         if "iterations" in self.config_data.keys():
             yaml_data["iterations"] = self.config_data["iterations"]
+
+        if "network_attacks" in self.config_data.keys():
+            yaml_data["network_attacks"] = self.generate_network_attacks(self.config_data["network_attacks"])
 
         # Write values from IMP file into yaml file (controls, tanks/valves/initial values, etc.)
         yaml_data = InputParser(yaml_data).write()
