@@ -171,6 +171,18 @@ class ConfigParser:
 
         return network_type.lower()
 
+    def generate_attacks(self, yaml_data):
+        if "run_attack" in self.config_data.keys() and self.config_data['run_attack']:
+            if 'device_attacks' in self.attacks_data.keys():
+                for device_attack in self.attacks_data['device_attacks']:
+                    for plc in yaml_data['plcs']:
+                        if set(device_attack['actuators']).issubset(set(plc['actuators'])):
+                            if 'attacks' not in plc.keys():
+                                plc['attacks'] = []
+                            plc['attacks'].append(device_attack)
+                            break
+        return yaml_data
+
     def generate_intermediate_yaml(self):
         """Writes the intermediate.yaml file to include all options specified in the config, the plc's and their
         data, and all valves/pumps/tanks etc
@@ -206,15 +218,7 @@ class ConfigParser:
         yaml_data = InputParser(yaml_data).write()
 
         # Parse the device attacks from the config file
-        if "run_attack" in self.config_data.keys() and self.config_data['run_attack']:
-            if 'device_attacks' in self.attacks_data.keys():
-                for device_attack in self.attacks_data['device_attacks']:
-                    for plc in yaml_data['plcs']:
-                        if set(device_attack['actuators']).issubset(set(plc['actuators'])):
-                            if 'attacks' not in plc.keys():
-                                plc['attacks'] = []
-                            plc['attacks'].append(device_attack)
-                            break
+        yaml_data = self.generate_attacks(yaml_data)
 
         # Write data to yaml file
         with self.yaml_path.open(mode='w') as intermediate_yaml:

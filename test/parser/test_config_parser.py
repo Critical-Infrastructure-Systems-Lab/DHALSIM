@@ -123,16 +123,23 @@ def test_cpa_data_path_not_found(tmpdir):
         parser.cpa_data
 
 def test_config_parser_attacks(wadi_config_yaml_path):
-    ConfigParser(wadi_config_yaml_path).generate_intermediate_yaml()
+    output = ConfigParser(wadi_config_yaml_path).generate_attacks({"plcs": [
+        {"name": "PLC1", "actuators": ["P_RAW1", "V_PUB"], "sensors": ["T0"]},
+        {"name": "PLC2", "actuators": ["V_ER2i"], "sensors": ["T2"]}
+    ]})
 
-    with Path("/tmp/dhalsim/intermediate.yaml").open(mode='r') as written_file:
-        written_data = yaml.safe_load(written_file)
+    expected_output = {"plcs": [
+        {"name": "PLC1", "actuators": ["P_RAW1", "V_PUB"], "sensors": ["T0"], "attacks": [
+            {"name": "Close PRAW1 from iteration 5 to 10", "type": "Time",
+             "actuators": ["P_RAW1"], "command": "closed", "start": 5, "end": 10},
+            {"name": "Close PRAW1 when T2 < 0.16", "type": "Below",
+             "actuators": ["P_RAW1"], "command": "closed", "sensor": "T2", "value": 0.16}
+        ]},
+        {"name": "PLC2", "actuators": ["V_ER2i"], "sensors": ["T2"]}
+    ]}
 
-    with Path("test/auxilary_testing_files/intermediate-wadi-attack.yaml").open(mode='r') as expectation:
-        expected_data = yaml.safe_load(expectation)
-
-    assert written_data['plcs'][0]['attacks'] == expected_data['plcs'][0]['attacks']
-    assert 'attacks' not in written_data['plcs'][1].keys()
+    assert output == expected_output
+    assert 'attacks' not in output['plcs'][1].keys()
 
 def test_cpa_data_duplicate_name(tmpdir):
     c = tmpdir.join("config.yaml")
