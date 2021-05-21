@@ -171,6 +171,12 @@ class ConfigParser:
         if "iterations" in self.config_data.keys():
             yaml_data["iterations"] = self.config_data["iterations"]
 
+        # Log level
+        if 'log_level' in self.config_data:
+            yaml_data['log_level'] = self.config_data['log_level']
+        else:
+            yaml_data['log_level'] = 'info'
+
         # Write data to yaml file
         with self.yaml_path.open(mode='w') as intermediate_yaml:
             yaml.safe_dump(yaml_data, intermediate_yaml)
