@@ -38,8 +38,6 @@ class InputParser:
 
     def __init__(self, intermediate_yaml_path: Path):
         """Constructor method"""
-        logging.getLogger('wntr').setLevel(logging.WARNING)
-
         self.intermediate_yaml_path = intermediate_yaml_path
         with self.intermediate_yaml_path.open(mode='r') as intermediate_yaml:
             self.data = yaml.safe_load(intermediate_yaml)

@@ -2,7 +2,8 @@ import yaml
 import sys
 import subprocess
 from os.path import expanduser
-from py2_logger import logger
+from py2_logger import get_logger
+
 
 class ExperimentInitializer:
 
@@ -10,6 +11,8 @@ class ExperimentInitializer:
 
         with open(config_file_path) as config_file:
             self.options = yaml.load(config_file, Loader=yaml.FullLoader)
+
+        self.logger = get_logger(self.intermediate_yaml['log_level'])
 
         # Simulation type is needed to handle week_index.
         if 'simulation_type' in self.options:
@@ -22,16 +25,16 @@ class ExperimentInitializer:
                     and 'initial_tank_levels_path' in self.options:
                 self.week_index = week_index
             else:
-                logger.critical("Batch mode configured, but no initial customization options are set, aborting.")
+                self.logger.critical("Batch mode configured, but no initial customization options are set, aborting.")
                 sys.exit(1)
         elif self.simulation_type == "Single":
             try:
                 self.week_index = int(self.options['week_index'])
             except KeyError:
-                logger.info("Missing week index parameter in yaml configuration file")
+                self.logger.info("Missing week index parameter in yaml configuration file")
 
         else:
-            logger.critical("Invalid simulation mode, supported values are 'Single' and 'Batch', aborting")
+            self.logger.critical("Invalid simulation mode, supported values are 'Single' and 'Batch', aborting")
             sys.exit(1)
 
         # complex_topology flag is going to define which topo instance we create
@@ -41,7 +44,7 @@ class ExperimentInitializer:
             elif self.options['complex_topology'] == 'False':
                 self.complex_topology = False
             else:
-                logger.critical("Complex_topology parameter has to be a boolean, aborting")
+                self.logger.critical("Complex_topology parameter has to be a boolean, aborting")
                 sys.exit(1)
         else:
             self.complex_topology = False
@@ -72,13 +75,13 @@ class ExperimentInitializer:
                 if 'attacks_path' in self.options:
                     self.attack_path = self.options['attacks_path']
                 else:
-                    logger.warning("Warning. Using default attack path ../../attack_repository/ctown.cpa")
+                    self.logger.warning("Warning. Using default attack path ../../attack_repository/ctown.cpa")
                     self.attack_path = '../../attack_repository/attack_description.yaml'
 
                 if 'attack_name' in self.options:
                     self.attack_name = self.options['attack_name']
                 else:
-                    logger.warning("Warning. Using default attack plc_empty_tank_1")
+                    self.logger.warning("Warning. Using default attack plc_empty_tank_1")
                     self.attack_name = 'plc_empty_tank_1'
             else:
                 self.run_attack = False
@@ -119,4 +122,6 @@ class ExperimentInitializer:
         """
         home_path = expanduser("~")
         wntr_environment_path = home_path + str('/wntr-experiments/bin/python')
-        parse_process = subprocess.call([wntr_environment_path, 'epanet_parser.py', '-i', self.epanet_file_path, '-a', self.cpa_file_path, '-o', 'plc_dicts.yaml'])
+        parse_process = subprocess.call(
+            [wntr_environment_path, 'epanet_parser.py', '-i', self.epanet_file_path, '-a', self.cpa_file_path, '-o',
+             'plc_dicts.yaml'])

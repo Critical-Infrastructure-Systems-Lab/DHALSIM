@@ -9,6 +9,7 @@ output_path: "output"
 iterations: 500
 network_topology_type: complex
 mininet_cli: False
+log_level: info
 #simulator: "pdd"
 #week_index: 0
 

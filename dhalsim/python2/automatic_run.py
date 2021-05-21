@@ -1,5 +1,5 @@
 import argparse
-from py2_logger import logger
+import logging
 import os
 import signal
 import subprocess
@@ -11,7 +11,7 @@ from minicps.mcps import MiniCPS
 from mininet.net import Mininet
 from mininet.cli import CLI
 from mininet.link import TCLink
-
+from py2_logger import get_logger
 from topo.simple_topo import SimpleTopo
 from topo.complex_topo import ComplexTopo
 
@@ -81,7 +81,6 @@ class GeneralCPS(MiniCPS):
         """
         This starts all the processes for plcs, etc.
         """
-
         self.plc_processes = []
 
         automatic_plc_path = Path(__file__).parent.absolute() / "automatic_plc.py"
@@ -95,14 +94,14 @@ class GeneralCPS(MiniCPS):
         scada_cmd = ["python2", str(automatic_scada_path), str(self.intermediate_yaml)]
         self.scada_process = self.net.get('scada').popen(scada_cmd, stderr=sys.stderr, stdout=sys.stdout)
 
-        logger.info("[*] Launched the PLCs and SCADA processes")
+        self.logger.info("Launched the PLCs and SCADA processes")
 
         automatic_plant_path = Path(__file__).parent.absolute() / "automatic_plant.py"
 
         cmd = ["python2", str(automatic_plant_path), str(self.intermediate_yaml)]
         self.plant_process = self.net.get('plant').popen(cmd, stderr=sys.stderr, stdout=sys.stdout)
 
-        logger.info("[ ] Simulating...")
+        self.logger.info("[ ] Simulating...")
         # We wait until the simulation ends
         while self.plant_process.poll() is None:
             pass
@@ -127,11 +126,11 @@ class GeneralCPS(MiniCPS):
         Terminate the plcs, physical process, mininet, and remaining processes that
         automatic run spawned.
         """
-        logger.info("[*] Simulation finished")
+        self.logger.info("Simulation finished")
         try:
             self.end_process(self.scada_process)
         except Exception, msg:
-            logger.error("Exception shutting down SCADA: " + str(msg))
+            self.logger.error("Exception shutting down SCADA: " + str(msg))
 
         for plc_process in self.plc_processes:
             try:
@@ -140,7 +139,7 @@ class GeneralCPS(MiniCPS):
                 continue
 
         if self.plant_process.poll() is None:
-            logger.info("Physical simulation process terminated")
+            self.logger.info("Physical simulation process terminated")
             self.end_process(self.plant_process)
 
         cmd = 'sudo pkill -f "python2 -m cpppo.server.enip"'

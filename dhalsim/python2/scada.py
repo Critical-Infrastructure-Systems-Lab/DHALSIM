@@ -1,5 +1,5 @@
 from basePLC import BasePLC
-from py2_logger import logger
+import logging
 from utils import SCADA_PROTOCOL, STATE
 from utils import PLC1_ADDR, PLC2_ADDR
 from utils import T0, T2, P_RAW1, V_PUB, V_ER2i
@@ -7,6 +7,7 @@ from datetime import datetime
 import signal
 import csv
 import sys
+
 
 class SCADAServer(BasePLC):
 
@@ -16,7 +17,7 @@ class SCADAServer(BasePLC):
             writer.writerows(self.saved_tank_levels)
 
     def sigint_handler(self, sig, frame):
-        logger.debug("SCADA shutdown")
+        self.logger.debug("SCADA shutdown")
         self.write_output()
         sys.exit(0)
 
@@ -35,7 +36,7 @@ class SCADAServer(BasePLC):
 
     def main_loop(self):
         """scada main loop."""
-        logger.debug("SCADA main loop")
+        self.logger.debug("SCADA main loop")
         while True:
 
             try:
@@ -46,14 +47,13 @@ class SCADAServer(BasePLC):
                 results.extend(plc2_values)
                 self.saved_tank_levels.append(results)
             except Exception, msg:
-                logger.error(msg)
+                self.logger.error(msg)
                 continue
 
 
 if __name__ == "__main__":
-
     scada = SCADAServer(
         name='scada',
         state=STATE,
         protocol=SCADA_PROTOCOL,
-        )
+    )

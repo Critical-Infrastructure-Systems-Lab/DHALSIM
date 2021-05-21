@@ -1,3 +1,4 @@
+import logging
 import os
 import subprocess
 import argparse
@@ -46,9 +47,9 @@ class SimulationControl:
 
     def start_simulation(self):
         """
-        This method uses a Python3.6 virtual environment where WNTR simulator is installed to run the simulation of a model.
-        By default WNTR is run using the PDD model and the output file is a .csv file called "physical_process.csv"
-        :return: An object representing the simulation process
+        This method uses a Python3.6 virtual environment where WNTR simulator is installed to run the simulation of a
+        model. By default WNTR is run using the PDD model and the output file is a .csv file called
+        "physical_process.csv" :return: An object representing the simulation process
         """
         physical_process_path = Path(__file__).parent.absolute().parent / "physical_process.py"
 

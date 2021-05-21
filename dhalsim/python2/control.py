@@ -1,6 +1,6 @@
-from py2_logger import logger
+import logging
 from abc import ABCMeta, abstractmethod
-
+from py2_logger import get_logger
 
 # todo import genericPLC once completed
 
@@ -44,10 +44,10 @@ class BelowControl(Control):
         :param generic_plc: the PLC that will apply the control actions
         """
         dep_val = generic_plc.get_tag(self.dependant)
-        # logger.debug("Get " + str(self.dependant) + " from " + generic_plc.intermediate_plc["name"] + " result is " + dep_val)
+        # self.logger.debug("Get " + str(self.dependant) + " from " + generic_plc.intermediate_plc["name"] + " result is " + dep_val)
         if dep_val < self.value:
             generic_plc.set_tag(self.actuator, self.action)
-            # logger.debug(generic_plc.intermediate_plc["name"] + " applied " + str(self) + " because dep_val " + str(dep_val))
+            # self.logger.debug(generic_plc.intermediate_plc["name"] + " applied " + str(self) + " because dep_val " + str(dep_val))
 
     def __str__(self):
         return "Control if {dependant} < {value} then set {actuator} to {action}".format(
@@ -72,7 +72,7 @@ class AboveControl(Control):
         dep_val = generic_plc.get_tag(self.dependant)
         if dep_val > self.value:
             generic_plc.set_tag(self.actuator, self.action)
-            # logger.debug(generic_plc.intermediate_plc["name"] + " applied " + str(self) + " because dep_val " + str(dep_val))
+            # self.logger.debug(generic_plc.intermediate_plc["name"] + " applied " + str(self) + " because dep_val " + str(dep_val))
 
     def __str__(self):
         return "Control if {dependant} > {value} then set {actuator} to {action}".format(
@@ -91,7 +91,7 @@ class TimeControl(Control):
         curr_time = generic_plc.get_master_clock()
         if curr_time == self.value:
             generic_plc.set_tag(self.actuator, self.action)
-            # logger.debug(generic_plc.intermediate_plc["name"] + " applied " + str(self) + " because curr_time " + str(curr_time))
+            # self.logger.debug(generic_plc.intermediate_plc["name"] + " applied " + str(self) + " because curr_time " + str(curr_time))
 
     def __str__(self):
         return "Control if time = {value} then set {actuator} to {action}".format(

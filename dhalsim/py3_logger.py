@@ -1,15 +1,14 @@
 import logging
 import sys
-from pathlib import Path
-
-import yaml
 
 
-def generate_logger(yaml_path: Path):
-    with yaml_path.open() as yaml_file:
-        yaml_data = yaml.load(yaml_file, Loader=yaml.FullLoader)
+def get_logger(logging_level: str):
+    switcher = {'debug': logging.DEBUG, 'info': logging.INFO, 'warning': logging.WARNING,
+                'error': logging.ERROR, 'critical': logging.CRITICAL}
 
-    logging_level = yaml_data['log_level']
+    log_level = switcher.get(logging_level)
+
     logging_format = '%(asctime)s - %(levelname)s @ %(filename)s: %(message)s'
-    logging.basicConfig(stream=sys.stdout, level=logging_level, format=logging_format, datefmt='%H:%M:%S')
+    logging.basicConfig(stream=sys.stdout, format=logging_format, datefmt='%H:%M:%S')
+    logging.getLogger('py3_logger').setLevel(log_level)
     return logging.getLogger('py3_logger')

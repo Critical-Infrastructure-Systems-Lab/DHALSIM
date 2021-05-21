@@ -1,4 +1,4 @@
-from py2_logger import logger
+import logging
 import time
 from minicps.devices import PLC
 import csv
@@ -22,7 +22,7 @@ class BasePLC(PLC):
                     try:
                         values.append(self.get(tag))
                     except Exception:
-                        logger.error("Exception trying to get the tag")
+                        self.logger.error("Exception trying to get the tag")
                         time.sleep(0.05)
                         continue
             self.send_multiple(self.tags, values, self.send_adddress)
@@ -37,7 +37,7 @@ class BasePLC(PLC):
         self.week_index = week_index
 
     def sigint_handler(self, sig, frame):
-        logger.debug('PLC shutdown')
+        self.logger.debug('PLC shutdown')
         self.reader = False
         sys.exit(0)
 

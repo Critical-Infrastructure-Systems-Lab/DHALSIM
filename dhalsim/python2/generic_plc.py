@@ -3,14 +3,13 @@ import os.path
 import sqlite3
 import threading
 import time
-from decimal import Decimal
-from pathlib import Path
-from py2_logger import logger
-
 import yaml
 
+from decimal import Decimal
+from pathlib import Path
 from basePLC import BasePLC
 from control import AboveControl, BelowControl, TimeControl
+from py2_logger import get_logger
 
 
 class Error(Exception):
@@ -82,6 +81,8 @@ class GenericPLC(BasePLC):
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
+        self.logger = get_logger(self.intermediate_yaml['log_level'])
+
         self.intermediate_plc = self.intermediate_yaml["plcs"][self.yaml_index]
 
         if 'sensors' not in self.intermediate_plc:
@@ -95,7 +96,7 @@ class GenericPLC(BasePLC):
         intermediate_controls = self.intermediate_plc['controls']
 
         self.controls = create_controls(intermediate_controls)
-        logger.debug(self.controls)
+        self.logger.debug(self.controls)
 
         # Create state from db values
         state = {
@@ -127,9 +128,9 @@ class GenericPLC(BasePLC):
             'server': plc_server
         }
 
-        logger.debug("INIT: " + self.intermediate_plc['name'])
-        logger.debug("state = " + str(state))
-        logger.debug("plc_protocol = " + str(plc_protocol))
+        self.logger.debug("INIT: " + self.intermediate_plc['name'])
+        self.logger.debug("state = " + str(state))
+        self.logger.debug("plc_protocol = " + str(plc_protocol))
 
         self.do_super_construction(plc_protocol, state)
 
@@ -157,7 +158,7 @@ class GenericPLC(BasePLC):
         :param sleep:  (Default value = 0.5) The time to sleep after setting everything up
 
         """
-        logger.debug(self.intermediate_plc['name'] + ' enters pre_loop')
+        self.logger.debug(self.intermediate_plc['name'] + ' enters pre_loop')
 
         reader = True
 
@@ -261,7 +262,7 @@ class GenericPLC(BasePLC):
         :param sleep:  (Default value = 0.5) Not used
         :param test_break:  (Default value = False) used for unit testing, breaks the loop after one iteration
         """
-        logger.debug(self.intermediate_plc['name'] + ' enters main_loop')
+        self.logger.debug(self.intermediate_plc['name'] + ' enters main_loop')
         while True:
             while self.get_sync():
                 time.sleep(0.01)

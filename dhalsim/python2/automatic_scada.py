@@ -1,5 +1,4 @@
 import argparse
-from py2_logger import logger
 import os
 import signal
 import subprocess
@@ -7,7 +6,7 @@ import sys
 from pathlib import Path
 
 import yaml
-
+from py2_logger import get_logger
 
 class ScadaControl:
     """
@@ -22,6 +21,8 @@ class ScadaControl:
 
         with self.intermediate_yaml.open(mode='r') as file:
             self.data = yaml.safe_load(file)
+
+        self.logger = get_logger(self.data['log_level'])
 
         self.output_path = Path(self.data["output_path"])
 
@@ -39,7 +40,7 @@ class ScadaControl:
         """
         This function stops the tcp dump and the plc process.
         """
-        logger.debug("Stopping Tcp dump process on SCADA...")
+        self.logger.debug("Stopping Tcp dump process on SCADA...")
 
         self.process_tcp_dump.send_signal(signal.SIGINT)
         self.process_tcp_dump.wait()
@@ -48,7 +49,7 @@ class ScadaControl:
         if self.process_tcp_dump.poll() is None:
             self.process_tcp_dump.kill()
 
-        logger.debug("Stopping SCADA...")
+        self.logger.debug("Stopping SCADA...")
         self.scada_process.send_signal(signal.SIGINT)
         self.scada_process.wait()
         if self.scada_process.poll() is None:

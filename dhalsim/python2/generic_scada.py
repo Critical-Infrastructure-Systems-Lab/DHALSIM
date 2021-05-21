@@ -6,10 +6,11 @@ import signal
 import sys
 import time
 from pathlib import Path
-from py2_logger import logger
+import logging
 
 import yaml
 from minicps.devices import SCADAServer
+from py2_logger import get_logger
 
 
 class Error(Exception):
@@ -72,6 +73,7 @@ class GenericScada(SCADAServer):
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
+        self.logger = get_logger(self.intermediate_yaml['log_level'])
         # Initialize connection to the database
         self.initialize_db()
 
@@ -107,12 +109,12 @@ class GenericScada(SCADAServer):
             self.saved_values[0].extend(PLC['sensors'])
             self.saved_values[0].extend(PLC['actuators'])
 
-        logger.debug("-----------DEBUG SCADA INIT-----------")
-        logger.debug("state = " + str(state))
-        logger.debug("scada_protocol = " + str(scada_protocol))
-        logger.debug("plc_data = " + str(self.plc_data))
-        logger.debug("output_format = " + str(self.saved_values))
-        logger.debug("-----------DEBUG SCADA INIT-----------")
+        self.logger.debug("-----------DEBUG SCADA INIT-----------")
+        self.logger.debug("state = " + str(state))
+        self.logger.debug("scada_protocol = " + str(scada_protocol))
+        self.logger.debug("plc_data = " + str(self.plc_data))
+        self.logger.debug("output_format = " + str(self.saved_values))
+        self.logger.debug("-----------DEBUG SCADA INIT-----------")
 
         self.do_super_construction(scada_protocol, state)
 
@@ -137,7 +139,7 @@ class GenericScada(SCADAServer):
 
         :param sleep:  (Default value = 0.5) The time to sleep after setting everything up
         """
-        logger.debug('DEBUG: SCADA enters pre_loop')
+        self.logger.debug('DEBUG: SCADA enters pre_loop')
 
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
@@ -169,7 +171,7 @@ class GenericScada(SCADAServer):
         """
         Shutdown protocol for the scada, writes the output before exiting
         """
-        logger.debug("DEBUG SCADA shutdown")
+        self.logger.debug("DEBUG SCADA shutdown")
         self.write_output()
         sys.exit(0)
 
@@ -211,7 +213,7 @@ class GenericScada(SCADAServer):
         :param sleep:  (Default value = 0.5) Not used
         :param test_break:  (Default value = False) used for unit testing, breaks the loop after one iteration
         """
-        logger.debug("SCADA enters main_loop")
+        self.logger.debug("SCADA enters main_loop")
         while True:
             while self.get_sync():
                 time.sleep(0.01)
@@ -220,11 +222,11 @@ class GenericScada(SCADAServer):
                 results = []
                 for plc_datum in self.plc_data:
                     plc_value = self.receive_multiple(plc_datum[1], plc_datum[0])
-                    logger.debug("plc_value received by scada from ip: " + str(plc_datum[0]) + " is " + str(plc_value))
+                    self.logger.debug("plc_value received by scada from ip: " + str(plc_datum[0]) + " is " + str(plc_value))
                     results.extend(plc_value)
                 self.saved_values.append(results)
             except Exception, msg:
-                logger.error(msg)
+                self.logger.error(msg)
                 continue
 
             self.set_sync(1)

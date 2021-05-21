@@ -1,10 +1,11 @@
 import argparse
-from py2_logger import logger
+import logging
 import os
 import signal
 import subprocess
 import sys
 from pathlib import Path
+from py2_logger import get_logger
 
 import yaml
 
@@ -24,6 +25,8 @@ class NodeControl:
         with self.intermediate_yaml.open(mode='r') as file:
             self.data = yaml.safe_load(file)
 
+        self.logger = get_logger(self.data['log_level'])
+
         self.output_path = Path(self.data["output_path"])
 
         self.process_tcp_dump = None
@@ -42,7 +45,7 @@ class NodeControl:
         """
         This function stops the tcp dump and the plc process.
         """
-        logger.debug("Stopping Tcp dump process on PLC...")
+        self.logger.debug("Stopping Tcp dump process on PLC...")
         # self.process_tcp_dump.kill()
 
         self.process_tcp_dump.send_signal(signal.SIGINT)
@@ -52,7 +55,7 @@ class NodeControl:
         if self.process_tcp_dump.poll() is None:
             self.process_tcp_dump.kill()
 
-        logger.debug("Stopping PLC...")
+        self.logger.debug("Stopping PLC...")
 
         self.plc_process.send_signal(signal.SIGINT)
         self.plc_process.wait()

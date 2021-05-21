@@ -1,4 +1,5 @@
-from dhalsim.py3_logger import logger
+import logging
+import sys
 from pathlib import Path
 
 import yaml
@@ -37,8 +38,6 @@ class ConfigParser:
     def __init__(self, config_path: Path):
         """Constructor method"""
         self.config_path = config_path.absolute()
-
-        logger.debug("config file: %s", str(config_path))
 
         # Load yaml data from config file
         with config_path.open(mode='r') as file:
@@ -173,7 +172,11 @@ class ConfigParser:
 
         # Log level
         if 'log_level' in self.config_data:
-            yaml_data['log_level'] = self.config_data['log_level']
+            if self.config_data['log_level'] in ['debug', 'info', 'warning', 'error', 'critical']:
+                yaml_data['log_level'] = self.config_data['log_level']
+            else:
+                #TODO
+                sys.exit(1)
         else:
             yaml_data['log_level'] = 'info'
 
