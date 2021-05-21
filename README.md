@@ -22,37 +22,3 @@ DHALSIM requires Python 2, which is no longer automatically installed on newer v
 ### Other dependencies
 
 Finally DHALSIM needs pathlib and pyyaml installed. Other dependencies can be automatically installed using ```sudo python3 -m pip install -e``` in the root of the repository.
-
-## DHALSIM Modes of use
-
-DHALSIM can be used in two ways: i) an automatic mode, ii) as an API to build and customize water distribution ICS topologies. 
-
-### DHALSIM Automatic Mode
-The automatic mode code is stored in the ICS_Topologies/general folder and uses the script "launch_dhalsim_experiment.sh" to launch a DHALSIM experiment. This script takes as a parameter the name of the topology to be used in the experiment. A topology is defined by the following files: i) an EPANET inp file, an epanetCPA file (only the cybernodes section is required), and a .yaml experiment configuration file. 
-The EPANET file describes the hydraulic mode; the epanetCPA file describes which PLC handles what sensor or actuator; the experiment .yaml configuration is used to configure the experiment, "ICS_topologies/enhanced_ctown_topology/c_town_config.yaml" and "ICS_topologies/general/ky3.yaml" are examples of these files. 
-When the script is launched, DHALSIM will read the EPANET and epanetCPA files and automatically build and launch a Mininet topology, using the experiment configuration defined in the .yaml file. After the exerpiment finishes, the results of the experiment will be stored in an "output" folder or "week_x" folder; this depends on the configurations defined in the .yaml file. 
-This is an experimental feature. For now, only the example topologies implemented in the subfolder ICS_topologies are tested.
- 
-### DHALSIM API
-The DHALSIM API can be used to build customized ICS topologies for a water distribution system. To create a custom topology, the following process should be realized:
-i) Create a different folder into ICS_Topologies
-ii) Copy the files: "automatic_run.py, automatic_plc.py, automatic_plant.py, basePLC.py, create_log_files.sh, copy_output.sh, ctown_nat.sh, init.py, kill_cppo.sh, physical_process.py, port_forward.sh, topo.py" into the new folder, these files would rarely need to be changed. "automatic_run" is the master script of the experiment. "automatic_plc" launches the tcp_dump process for a PLC node and its appropriate plc intance process. basePLC can be extended by a plc script to implement some functions automatically. "automatic_plant" and "physical_process" are scripts used to model the plant, physical_process requires an EPANET file to import a water network model.
-iii) Modify or create the necessary scripts. In most cases, this implies creating scripts for PLC and SCADA behavior and script to implement new attacks
-iv) Create an entry into the Makefile folder, or a script to launch the experiment (to create the experiment, the examples already present in the Makefile can be used as base)
-v) Launch the experiment
-
-## Repository Structure
-This repository is mainly composed of three folders:
-- Demand Patterns: This folder contains auxiliary files to create and use customized demand patterns for hydraulic topologies
-- ICS Topologies. This is the main folder, each subfolder represents a specific experiment using three topologies: minitown, c-town, and SUTD WADI
-- Jupyter Notebooks. This subfolder has visualization jupyter notebooks
-- Attack repository. This folder has scripts to launch mitm attacks
-
-### ICS Topologies
-This folder includes various subfolders. Each of this subfolders is an independent mininet and experiment topology. For all these folders, physical_process.py represents the physical process and each of the plcsX.py the behaviour of the PLCs. In addition the automatic_run.py file is used by mininet to launch the topologies and in some cases run the experiments automatically. At the end of the experiments and output folder will be created with both the physical and network data. 
-The Makefile file has entries to run each of the simulations. For example, ctown can be launched using:
-
-```make enhanced-ctown```
-
-### Attack Repository
-This folder has files to run two network attacks into the plcs and scada. Man in the middle attacks and Denial of Service Attacks

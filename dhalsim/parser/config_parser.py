@@ -56,7 +56,7 @@ class ConfigParser:
 
     @property
     def inp_path(self):
-        """Property for the path to the inp file
+        """Property for the path to the inp file.
 
         :return: absolute path to the inp file
         :rtype: Path
@@ -71,7 +71,7 @@ class ConfigParser:
 
     @property
     def cpa_path(self):
-        """Property for the path to the cpa file
+        """Property for the path to the cpa file.
 
         :return: absolute path to the cpa file
         :rtype: Path
@@ -86,8 +86,9 @@ class ConfigParser:
 
     @property
     def output_path(self):
-        """Property for the path to the output folder
-        ``output`` by default
+        """
+        Property for the path to the output folder.
+        ``output`` by default.
 
         :return: absolute path to the output folder
         :rtype: Path
@@ -115,7 +116,7 @@ class ConfigParser:
 
     @property
     def cpa_data(self):
-        """Property to load the yaml data from the cpa file
+        """Property to load the yaml data from the cpa file.
 
         :return: data from cpa file
         """
@@ -173,7 +174,7 @@ class ConfigParser:
 
     def generate_intermediate_yaml(self):
         """Writes the intermediate.yaml file to include all options specified in the config, the plc's and their
-        data, and all valves/pumps/tanks etc
+        data, and all valves/pumps/tanks etc.
 
         :return: the path to the yaml file
         :rtype: Path
