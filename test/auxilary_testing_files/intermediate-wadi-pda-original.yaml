@@ -63,7 +63,15 @@ plcs:
         actuator: V_ER2i
         action: closed
 
-valves:
+actuators:
+  - name: P_RAW1
+    initial_state: open
+  - name: P_RAW2
+    initial_state: closed
+  - name: P_B2
+    initial_state: closed
+  - name: P_B1
+    initial_state: open
   - name: V_Gi_G
     initial_state: closed
   - name: V_Gi_B
@@ -107,25 +115,6 @@ valves:
   - name: '11'
     initial_state: open
   - name: '12'
-    initial_state: open
-
-tanks:
-  - name: T1
-    initial_value: 0.3129975
-  - name: T2
-    initial_value: 0.2369489
-  - name: T0
-    initial_value: 0.4259549
-
-
-pumps:
-  - name: P_RAW1
-    initial_state: open
-  - name: P_RAW2
-    initial_state: closed
-  - name: P_B2
-    initial_state: closed
-  - name: P_B1
     initial_state: open
 
 time:

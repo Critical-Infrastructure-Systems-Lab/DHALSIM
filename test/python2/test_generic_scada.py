@@ -138,7 +138,7 @@ def test_generic_scada_init(generic_scada, magic_mock_scada_init, yaml_scada_fil
     # Assert proper function calls
     expected_calls = [call.initialize_db(), call.touch(exist_ok=True),
                       call.do_super_construction({'server': {
-                          'tags': (('T0', 1, 'REAL'), ('T2', 1, 'REAL'), ('P_RAW1', 1, 'REAL'), ('V_ER2i', 1, 'REAL')),
+                          'tags': (('T0', 1, 'REAL'), ('P_RAW1', 1, 'REAL'), ('T2', 1, 'REAL'), ('V_ER2i', 1, 'REAL')),
                           'address': '192.168.2.1'}, 'name': 'enip', 'mode': 1},
                           {'path': '/home/test/dhalsim.sqlite', 'name': 'plant'})]
     assert magic_mock_scada_init.mock_calls == expected_calls
