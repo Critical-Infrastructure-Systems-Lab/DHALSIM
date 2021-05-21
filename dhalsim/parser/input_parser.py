@@ -1,8 +1,10 @@
 import logging
+
 import wntr
 import yaml
 from antlr4 import *
 from pathlib import Path
+
 from dhalsim.parser.antlr.controlsLexer import controlsLexer
 from dhalsim.parser.antlr.controlsParser import controlsParser
 
@@ -19,7 +21,7 @@ class NoInpFileGiven(Error):
 
 def value_to_status(actuator_value):
     """
-    Translates int corresponding to actuator status
+    Translates int corresponding to actuator status.
 
     :param actuator_value: The value from the status.value of the actuator
     :type actuator_value: int
@@ -32,7 +34,7 @@ def value_to_status(actuator_value):
 
 class InputParser:
     """
-    Class handling the parsing of .inp input files
+    Class handling the parsing of .inp input files.
 
     :param intermediate_yaml_path: The path of the inp file
     """
@@ -59,7 +61,7 @@ class InputParser:
 
     def write(self):
         """
-        Writes all needed inp file sections into the intermediate_yaml
+        Writes all needed inp file sections into the intermediate_yaml.
         """
         # Generate PLC controls
         self.generate_controls()
@@ -78,7 +80,7 @@ class InputParser:
     def generate_controls(self):
         """
         Generates list of controls with their types, values, actuators, and
-        potentially dependant; then adds that to self.data to be written to the yaml
+        potentially dependant; then adds that to self.data to be written to the yaml.
         """
         input = FileStream(self.inp_file_path)
         tree = controlsParser(CommonTokenStream(controlsLexer(input))).controls()
@@ -120,7 +122,7 @@ class InputParser:
     def generate_times(self):
         """
         Generates duration and hydraulic timestep and adds to the
-        data to be written to the yaml file
+        data to be written to the yaml file.
         """
 
         # TODO Decide on the timestep (minutes or seconds?)
@@ -133,7 +135,7 @@ class InputParser:
     def generate_actuators_list(self):
         """
         Generates list of actuators with their initial states
-        and adds to the data to be written to the yaml file
+        and adds to the data to be written to the yaml file.
         """
 
         pumps = []

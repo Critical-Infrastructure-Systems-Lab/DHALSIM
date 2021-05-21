@@ -13,7 +13,8 @@ class Control:
     __metaclass__ = ABCMeta
 
     def __init__(self, actuator, action, value):
-        """Constructor method
+        """
+        Constructor method.
         """
         self.actuator = actuator
         self.action = action
@@ -21,7 +22,8 @@ class Control:
 
     @abstractmethod
     def apply(self, generic_plc):
-        """Applies a control rule using a given PLC
+        """
+        Applies a control rule using a given PLC.
 
         :param generic_plc: the PLC that will apply the control actions
         """
@@ -29,7 +31,8 @@ class Control:
 
 
 class BelowControl(Control):
-    """Defines a BELOW control, which takes as a parameter a dependant
+    """
+    Defines a BELOW control, which takes as a parameter a dependant.
 
     :param dependant: value that the condition depends on (such as value of tank T0)
     """
@@ -55,7 +58,8 @@ class BelowControl(Control):
 
 
 class AboveControl(Control):
-    """Defines a ABOVE control, which takes as a parameter a dependant
+    """
+    Defines a ABOVE control, which takes as a parameter a dependant.
 
     :param dependant: value that the condition depends on (such as value of tank T0)
     """
@@ -65,7 +69,8 @@ class AboveControl(Control):
         self.dependant = dependant
 
     def apply(self, generic_plc):
-        """Applies the ABOVE control rule using a given PLC
+        """
+        Applies the ABOVE control rule using a given PLC.
 
         :param generic_plc: the PLC that will apply the control actions
         """
@@ -80,7 +85,8 @@ class AboveControl(Control):
 
 
 class TimeControl(Control):
-    """Defines a TIME control, which takes no additional parameters
+    """
+    Defines a TIME control, which takes no additional parameters.
     """
 
     def apply(self, generic_plc):
