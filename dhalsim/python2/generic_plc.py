@@ -102,7 +102,6 @@ class GenericPLC(BasePLC):
 
     def __init__(self, intermediate_yaml_path, yaml_index):
         self.yaml_index = yaml_index
-        self.local_time = 0
 
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
@@ -115,9 +114,8 @@ class GenericPLC(BasePLC):
         if 'actuators' not in self.intermediate_plc:
             self.intermediate_plc['actuators'] = list()
 
-        # connection to the database
-        self.conn = sqlite3.connect(self.intermediate_yaml["db_path"])
-        self.cur = self.conn.cursor()
+        # Initialize connection to database
+        self.initialize_db()
 
         self.intermediate_controls = self.intermediate_plc['controls']
         self.controls = create_controls(self.intermediate_controls)
@@ -135,7 +133,7 @@ class GenericPLC(BasePLC):
 
         # Create list of dependant sensors
         dependant_sensors = []
-        for control in self.intermediate_controls:
+        for control in intermediate_controls:
             if control["type"] != "Time":
                 dependant_sensors.append(control["dependant"])
 
@@ -144,7 +142,7 @@ class GenericPLC(BasePLC):
 
         # Create server, real tags are generated
         plc_server = {
-            'address': self.intermediate_plc['ip'],
+            'address': self.intermediate_plc['local_ip'],
             'tags': generate_real_tags(plc_sensors,
                                        list(set(dependant_sensors) - set(plc_sensors)),
                                        self.intermediate_plc['actuators'])
@@ -161,8 +159,23 @@ class GenericPLC(BasePLC):
         # print "state = " + str(state)
         # print "plc_protocol = " + str(plc_protocol)
 
+        self.do_super_construction(plc_protocol, state)
+
+    def do_super_construction(self, plc_protocol, state):
+        """
+        Function that performs the super constructor call to basePLC
+        Introduced to better facilitate testing
+        """
         super(GenericPLC, self).__init__(name=self.intermediate_plc['name'],
                                          state=state, protocol=plc_protocol)
+
+    def initialize_db(self):
+        """
+        Function that initializes PLC connection to the database
+        Introduced to better facilitate testing
+        """
+        self.conn = sqlite3.connect(self.intermediate_yaml["db_path"])
+        self.cur = self.conn.cursor()
 
     def pre_loop(self, sleep=0.5):
         """
@@ -190,7 +203,7 @@ class GenericPLC(BasePLC):
         sensors.extend(actuators)
 
         BasePLC.set_parameters(self, sensors, values, reader, lock,
-                               self.intermediate_plc['ip'])
+                               self.intermediate_plc['local_ip'])
         self.startup()
 
         time.sleep(sleep)
@@ -211,7 +224,7 @@ class GenericPLC(BasePLC):
             if i == self.yaml_index:
                 continue
             if tag in plc_data["sensors"] or tag in plc_data["actuators"]:
-                received = Decimal(self.receive((tag, 1), plc_data["ip"]))
+                received = Decimal(self.receive((tag, 1), plc_data["public_ip"]))
                 return received
         raise TagDoesNotExist(tag)
 
@@ -269,19 +282,17 @@ class GenericPLC(BasePLC):
                          (int(flag), self.intermediate_plc["name"],))
         self.conn.commit()
 
-    def main_loop(self, sleep=0.5):
+    def main_loop(self, sleep=0.5, test_break=False):
         """
         The main loop of a PLC. In here all the controls will be applied.
 
         :param sleep:  (Default value = 0.5) Not used
-
+        :param test_break:  (Default value = False) used for unit testing, breaks the loop after one iteration
         """
         print('DEBUG: ' + self.intermediate_plc['name'] + ' enters main_loop')
         while True:
             while self.get_sync():
-                pass
-
-            self.local_time += 1
+                time.sleep(0.01)
 
             for control in self.controls:
                 control.apply(self)
@@ -291,6 +302,8 @@ class GenericPLC(BasePLC):
 
             self.set_sync(1)
 
+            if test_break:
+                break
             # time.sleep(0.05)
 
 

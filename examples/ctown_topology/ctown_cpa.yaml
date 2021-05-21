@@ -1,0 +1,61 @@
+plcs:
+  - name: PLC1 # PLC1, PU1F PU2F J280 J269 , PU1 PU2
+    sensors:
+      - PU1F
+      - PU2F
+      - J280
+      - J269
+    actuators:
+      - PU1
+      - PU2
+  - name: PLC2 # PLC2, T1,
+    sensors:
+      - T1
+  - name: PLC3 # PLC3, T2 V2F J300 J256 J289 J415 J14 J422 PU4F PU5F PU6F PU7F , V2 PU4 PU5 PU6 PU7
+    sensors:
+      - T2
+      - V2F
+      - J300
+      - J256
+      - J289
+      - J415
+      - J14
+      - J422
+      - PU4F
+      - PU5F
+      - PU6F
+      - PU7F
+    actuators:
+      - V2
+      - PU4
+      - PU5
+      - PU6
+      - PU7
+  - name: PLC4 # PLC4, T3,
+    sensors:
+      - T3
+  - name: PLC5 # PLC5, PU8F PU10F PU11F J302 J306 J307 J317, PU8 PU10 PU11
+    sensors:
+      - PU8F
+      - PU10F
+      - PU11F
+      - J302
+      - J306
+      - J307
+      - J317
+    actuators:
+      - PU8
+      - PU10
+      - PU11
+  - name: PLC6 # PLC6, T4,
+    sensors:
+      - T4
+  - name: PLC7 # PLC7, T5,
+    sensors:
+      - T5
+  - name: PLC8 # PLC8, T6,
+    sensors:
+      - T6
+  - name: PLC9 # PLC9, T7,
+    sensors:
+      - T7

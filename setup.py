@@ -17,11 +17,11 @@ setuptools.setup(
     install_requires=[
         'PyYAML',
         'antlr4-python3-runtime',
-        'mininet',
         'wntr',
+        'pandas'
     ],
     extras_require={
-        'test': ['pytest', 'pytest-mock', 'mock'],
+        'test': ['pytest', 'pytest-mock', 'mock', 'wget', 'netcat'],
         'doc': ['sphinx', 'sphinx-rtd-theme'],
     },
     python_requires=">=3.8",

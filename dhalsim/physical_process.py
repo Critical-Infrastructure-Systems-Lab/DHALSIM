@@ -2,6 +2,10 @@ import argparse
 import csv
 import os
 import signal
+from decimal import Decimal
+
+import wntr
+import wntr.network.controls as controls
 import sqlite3
 import sys
 import time
@@ -245,7 +249,7 @@ class PhysicalPlant:
             self.conn.commit()
 
             while not self.get_plcs_ready():
-                pass
+                time.sleep(0.01)
 
             self.update_controls()
             eta = self.calculate_eta(start, master_time, iteration_limit)
@@ -272,10 +276,29 @@ class PhysicalPlant:
                                (str(a_level), tank,))
                 self.conn.commit()
 
-            master_time = master_time + 1
+            # Update pumps in database
+            for pump in self.pump_list:
+                flow = Decimal(self.wn.get_link(pump).flow)
+                self.c.execute("UPDATE plant SET value = ? WHERE name = ?",
+                               (str(flow), pump+"F",))
+                self.conn.commit()
 
-            # TODO: This seems arbitrary.. We need to be sure all PLCs have executed their loop.
-            time.sleep(0.03)
+            # Update valve in database
+            for valve in self.valve_list:
+                flow = Decimal(self.wn.get_link(valve).flow)
+                self.c.execute("UPDATE plant SET value = ? WHERE name = ?",
+                               (str(flow), valve+"F",))
+                self.conn.commit()
+
+            # Update junction pressure:
+            for junction in self.junction_list:
+                level = Decimal(self.wn.get_node(junction).head - self.wn.get_node(junction).elevation)
+                # pressure = Decimal(self.wn.get_node(junction).pressure)
+                self.c.execute("UPDATE plant SET value = ? WHERE name = ?",
+                               (str(level), junction,))
+                self.conn.commit()
+
+            master_time = master_time + 1
 
         self.finish()
 
