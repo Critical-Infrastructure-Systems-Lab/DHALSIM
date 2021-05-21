@@ -1,0 +1,218 @@
+actuators:
+- initial_state: closed
+  name: PU1
+- initial_state: open
+  name: PU2
+- initial_state: closed
+  name: PU3
+- initial_state: closed
+  name: PU4
+- initial_state: closed
+  name: PU5
+- initial_state: closed
+  name: PU6
+- initial_state: closed
+  name: PU7
+- initial_state: closed
+  name: PU8
+- initial_state: closed
+  name: PU9
+- initial_state: closed
+  name: PU10
+- initial_state: closed
+  name: PU11
+- initial_state: open
+  name: v1
+- initial_state: open
+  name: V45
+- initial_state: open
+  name: V47
+- initial_state: closed
+  name: V2
+cpa_file: /home/robert/dhalsim/examples/ctown_topology/ctown_cpa.yaml
+db_path: /tmp/dhalsim/dhalsim.sqlite
+inp_file: /home/robert/dhalsim/examples/ctown_topology/ctown_map.inp
+iterations: 500
+mininet_cli: false
+network_topology_type: simple
+output_path: /home/robert/dhalsim/examples/ctown_topology/output
+plcs:
+- actuators:
+  - PU1
+  - PU2
+  controls:
+  - action: open
+    actuator: PU1
+    dependant: T1
+    type: below
+    value: 4.0
+  - action: closed
+    actuator: PU1
+    dependant: T1
+    type: above
+    value: 6.3
+  - action: open
+    actuator: PU2
+    dependant: T1
+    type: below
+    value: 1.0
+  - action: closed
+    actuator: PU2
+    dependant: T1
+    type: above
+    value: 4.5
+  name: PLC1
+  sensors:
+  - PU1F
+  - PU2F
+  - J280
+  - J269
+- actuators: []
+  controls: []
+  name: PLC2
+  sensors:
+  - T1
+- actuators:
+  - V2
+  - PU4
+  - PU5
+  - PU6
+  - PU7
+  controls:
+  - action: open
+    actuator: V2
+    dependant: T2
+    type: below
+    value: 0.5
+  - action: closed
+    actuator: V2
+    dependant: T2
+    type: above
+    value: 5.5
+  - action: open
+    actuator: PU4
+    dependant: T3
+    type: below
+    value: 3.0
+  - action: closed
+    actuator: PU4
+    dependant: T3
+    type: above
+    value: 5.3
+  - action: open
+    actuator: PU5
+    dependant: T3
+    type: below
+    value: 1.0
+  - action: closed
+    actuator: PU5
+    dependant: T3
+    type: above
+    value: 3.5
+  - action: open
+    actuator: PU6
+    dependant: T4
+    type: below
+    value: 2.0
+  - action: closed
+    actuator: PU6
+    dependant: T4
+    type: above
+    value: 3.5
+  - action: open
+    actuator: PU7
+    dependant: T4
+    type: below
+    value: 3.0
+  - action: closed
+    actuator: PU7
+    dependant: T4
+    type: above
+    value: 4.5
+  name: PLC3
+  sensors:
+  - T2
+  - V2F
+  - J300
+  - J256
+  - J289
+  - J415
+  - J14
+  - J422
+  - PU4F
+  - PU5F
+  - PU6F
+  - PU7F
+- actuators: []
+  controls: []
+  name: PLC4
+  sensors:
+  - T3
+- actuators:
+  - PU8
+  - PU10
+  - PU11
+  controls:
+  - action: open
+    actuator: PU8
+    dependant: T5
+    type: below
+    value: 1.5
+  - action: closed
+    actuator: PU8
+    dependant: T5
+    type: above
+    value: 4.5
+  - action: open
+    actuator: PU10
+    dependant: T7
+    type: below
+    value: 2.5
+  - action: closed
+    actuator: PU10
+    dependant: T7
+    type: above
+    value: 4.8
+  - action: open
+    actuator: PU11
+    dependant: T7
+    type: below
+    value: 1.0
+  - action: closed
+    actuator: PU11
+    dependant: T7
+    type: above
+    value: 3.0
+  name: PLC5
+  sensors:
+  - PU8F
+  - PU10F
+  - PU11F
+  - J302
+  - J306
+  - J307
+  - J317
+- actuators: []
+  controls: []
+  name: PLC6
+  sensors:
+  - T4
+- actuators: []
+  controls: []
+  name: PLC7
+  sensors:
+  - T5
+- actuators: []
+  controls: []
+  name: PLC8
+  sensors:
+  - T6
+- actuators: []
+  controls: []
+  name: PLC9
+  sensors:
+  - T7
+simulator: pdd
+time:
+- duration: 86400.0
+- hydraulic_timestep: 300.0

@@ -100,6 +100,21 @@ class ConfigParser:
         return path
 
     @property
+    def attacks_path(self):
+        """
+        Property to load attacks from the attacks file specified in the config file
+
+        :return: data from the attack file1
+        """
+        path = self.config_data.get("attacks_path")
+        if not path:
+            raise MissingValueError("Attack file not in config file")
+        path = (self.config_path.parent / path).absolute()
+        if not path.is_file():
+            raise FileNotFoundError(str(path) + " is not a file")
+        return path
+
+    @property
     def cpa_data(self):
         """Property to load the yaml data from the cpa file.
 
@@ -124,6 +139,18 @@ class ConfigParser:
         if len(plc_list) != len(set(plc_list)):
             raise DuplicateValueError
         return cpa
+
+    @property
+    def attacks_data(self):
+        """
+        Property to load attacks from the attacks file specified in the config file
+
+        :return: data from the attack file1
+        """
+        with self.attacks_path.open(mode='r') as attacks_description:
+            attacks = yaml.safe_load(attacks_description)
+
+        return attacks
 
     @property
     def network_topology_type(self):
@@ -166,19 +193,32 @@ class ConfigParser:
             yaml_data["mininet_cli"] = self.config_data["mininet_cli"]
         else:
             yaml_data["mininet_cli"] = False
+
         if "simulator" in self.config_data.keys():
             yaml_data["simulator"] = self.config_data["simulator"]
         else:
             yaml_data["simulator"] = "pdd"
+
         # Note: if iterations not present then default value will be written in InputParser
         if "iterations" in self.config_data.keys():
             yaml_data["iterations"] = self.config_data["iterations"]
 
+        # Write values from IMP file into yaml file (controls, tanks/valves/initial values, etc.)
+        yaml_data = InputParser(yaml_data).write()
+
+        # Parse the device attacks from the config file
+        if "run_attack" in self.config_data.keys() and self.config_data['run_attack']:
+            if 'device_attacks' in self.attacks_data.keys():
+                for device_attack in self.attacks_data['device_attacks']:
+                    for plc in yaml_data['plcs']:
+                        if set(device_attack['actuators']).issubset(set(plc['actuators'])):
+                            if 'attacks' not in plc.keys():
+                                plc['attacks'] = []
+                            plc['attacks'].append(device_attack)
+                            break
+
         # Write data to yaml file
         with self.yaml_path.open(mode='w') as intermediate_yaml:
             yaml.safe_dump(yaml_data, intermediate_yaml)
-
-        # Write values from IMP file into yaml file (controls, tanks/valves/initial values, etc.)
-        InputParser(self.yaml_path).write()
 
         return self.yaml_path

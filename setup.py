@@ -18,6 +18,7 @@ setuptools.setup(
         'PyYAML',
         'antlr4-python3-runtime',
         'wntr',
+        'pandas'
     ],
     extras_require={
         'test': ['pytest', 'pytest-mock', 'mock', 'wget', 'netcat'],

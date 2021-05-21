@@ -35,13 +35,13 @@ def test_python_version():
     assert sys.version_info.major is 3
 
 
-def test_node_and_time_controls(tmpdir, inp_path, written_intermediate_yaml, filled_yaml_path):
-    InputParser(written_intermediate_yaml).write()
+def test_node_and_time_controls(tmpdir, written_intermediate_yaml, filled_yaml_path):
+    with written_intermediate_yaml.open(mode='r') as intermediate_yaml:
+        original_data = yaml.safe_load(intermediate_yaml)
 
-    with tmpdir.join("intermediate.yaml").open(mode='r') as intermediate_yaml:
-        dump = yaml.safe_load(intermediate_yaml)
+    filled_data = InputParser(original_data).write()
 
     with filled_yaml_path.open(mode='r') as expectation:
         expected = yaml.safe_load(expectation)
 
-    assert dump == expected
+    assert filled_data == expected
