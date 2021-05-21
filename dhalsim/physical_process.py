@@ -1,5 +1,4 @@
 import argparse
-from dhalsim.py3_logger import logger
 import os
 import signal
 import logging
@@ -13,6 +12,7 @@ import yaml
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
+from py3_logger import get_logger
 
 
 class PhysicalPlant:
@@ -27,6 +27,8 @@ class PhysicalPlant:
 
         with self.intermediate_yaml.open(mode='r') as file:
             self.data = yaml.safe_load(file)
+
+        self.logger = get_logger(self.data['log_level'])
 
         try:
             self.ground_truth_path = Path(self.data["output_path"]) / "ground_truth.csv"
@@ -77,19 +79,19 @@ class PhysicalPlant:
             simulator_string = self.data['simulator']
 
             if simulator_string == 'pdd':
-                logger.info('Running simulation using PDD')
+                self.logger.info('Running simulation using PDD')
                 self.wn.options.hydraulic.demand_model = 'PDD'
             elif simulator_string == 'dd':
-                logger.info('Running simulation using DD')
+                self.logger.info('Running simulation using DD')
             else:
-                logger.critical('Invalid simulation mode, exiting...')
+                self.logger.critical('Invalid simulation mode, exiting...')
                 sys.exit(1)
 
             self.sim = wntr.sim.WNTRSimulator(self.wn)
 
-            logger.info("Starting simulation for " + str(self.data['inp_file']) + " topology ")
+            self.logger.info("Starting simulation for " + str(self.data['inp_file']) + " topology ")
         except KeyError as e:
-            logger.critical("An incorrect YAML file has been supplied: " + str(e))
+            self.logger.critical("An incorrect YAML file has been supplied: " + str(e))
             sys.exit(1)
 
     def get_node_list_by_type(self, a_list, a_type):
@@ -229,8 +231,8 @@ class PhysicalPlant:
 
         iteration_limit = self.data["iterations"]
 
-        logger.info("Simulation will run for " + str(iteration_limit) + " iterations")
-        logger.info("Hydraulic timestep is " + str(self.wn.options.time.hydraulic_timestep))
+        self.logger.info("Simulation will run for " + str(iteration_limit) + " iterations")
+        self.logger.info("Hydraulic timestep is " + str(self.wn.options.time.hydraulic_timestep))
 
         while master_time <= iteration_limit:
             self.c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(master_time),))
@@ -244,8 +246,9 @@ class PhysicalPlant:
 
             self.update_controls()
             eta = self.calculate_eta(start, master_time, iteration_limit)
-            logger.info("Iteration %d out of %d. Estimated remaining time: %s" % (
+            self.logger.info("Iteration %d out of %d. Estimated remaining time: %s" % (
                 master_time, iteration_limit, eta))
+
             results = self.sim.run_sim(convergence_error=True)
             values_list = self.register_results(results)
             self.results_list.append(values_list)
@@ -266,10 +269,12 @@ class PhysicalPlant:
 
     def interrupt(self, sig, frame):
         self.finish()
+        self.logger.info("Simulation ended")
         sys.exit(0)
 
     def finish(self):
         self.write_results(self.results_list)
+        self.logger.info("Simulation finished")
         sys.exit(0)
 
 

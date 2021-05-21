@@ -1,7 +1,4 @@
 import argparse
-import logging
-
-from dhalsim.py3_logger import logger
 import os.path
 import signal
 import subprocess
@@ -56,9 +53,6 @@ def main():
                         type=lambda x: is_valid_file(parser, x))
     parser.add_argument('-o', '--output', dest='output_folder', metavar="FOLDER",
                         help='folder to put the output files', type=str)
-    # TODO: Add another argument which dictates the logging level
-    logging.getLogger().setLevel(logging.WARNING)
-    logging.getLogger('wntr').setLevel(logging.WARNING)
 
     args = parser.parse_args()
 

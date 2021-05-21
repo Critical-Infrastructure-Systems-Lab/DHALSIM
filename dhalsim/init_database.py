@@ -1,9 +1,8 @@
 import argparse
-from dhalsim.py3_logger import logger
 import os
 import sqlite3
 from pathlib import Path
-
+from dhalsim.py3_logger import get_logger
 import yaml
 
 
@@ -12,12 +11,14 @@ class DatabaseInitializer:
         self.intermediate_yaml = intermediate_yaml
         with intermediate_yaml.open(mode='r') as file:
             self.data = yaml.safe_load(file)
+
+        self.logger = get_logger(self.data['log_level'])
         self.db_path = Path(self.data["db_path"])
         self.db_path.touch(exist_ok=True)
+        self.logger.info("Initializing database")
+
 
     def write(self):
-        logger.info("Initializing database")
-
         with sqlite3.connect(self.db_path) as conn:
             cur = conn.cursor()
 
@@ -121,11 +122,11 @@ class DatabaseInitializer:
         with sqlite3.connect(self.db_path) as conn:
             cur = conn.cursor()
             cur.execute("SELECT * FROM plant;")
-            logger.debug(cur.fetchall())
+            self.logger.debug(cur.fetchall())
             cur.execute("SELECT * FROM master_time;")
-            logger.debug(cur.fetchall())
+            self.logger.debug(cur.fetchall())
             cur.execute("SELECT * FROM sync;")
-            logger.debug(cur.fetchall())
+            self.logger.debug(cur.fetchall())
 
 
 def is_valid_file(file_parser, arg):
