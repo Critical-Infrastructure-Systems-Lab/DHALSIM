@@ -4,8 +4,6 @@ import sys
 import pytest
 
 from dhalsim.python2.entities.control import AboveControl, BelowControl, TimeControl
-from dhalsim.python2.generic_plc import GenericPLC
-from dhalsim.python2.basePLC import BasePLC
 
 def test_python_version():
     assert sys.version_info.major is 2

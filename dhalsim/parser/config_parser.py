@@ -151,6 +151,7 @@ class ConfigParser:
 
         return attacks
 
+    @property
     def network_topology_type(self):
         """
         Load the type of topology. This is either `simple` or `complex`.
