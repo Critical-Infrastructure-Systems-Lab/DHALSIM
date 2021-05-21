@@ -21,7 +21,7 @@ cache:
 
 stages:
   - test
-  - doc
+  - deploy
 
 test:3:
   image: python:3.8
@@ -53,7 +53,7 @@ test:2:
 
 pages:
   image: python:3.8
-  stage: doc
+  stage: deploy
   script:
     - pip install virtualenv
     - virtualenv venv
