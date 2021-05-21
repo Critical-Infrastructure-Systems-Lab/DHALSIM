@@ -36,6 +36,7 @@ class GeneralCPS(MiniCPS):
         with self.intermediate_yaml.open(mode='r') as file:
             self.data = yaml.safe_load(file)
 
+        self.logger = get_logger(self.data['log_level'])
         # Create directory output path
         try:
             os.makedirs(str(Path(self.data["output_path"])))
