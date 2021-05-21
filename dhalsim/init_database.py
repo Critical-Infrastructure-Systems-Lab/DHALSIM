@@ -51,7 +51,13 @@ class DatabaseInitializer:
             for plc in self.data["plcs"]:
                 cur.execute("INSERT INTO sync (name, flag) VALUES (?, 0);",
                             (plc["name"],))
+
             cur.execute("INSERT INTO sync (name, flag) VALUES ('scada', 0);")
+
+            if "network_attacks" in self.data:
+                for attacker in self.data["network_attacks"]:
+                    cur.execute("INSERT INTO sync (name, flag) VALUES (?, 0);",
+                                (attacker["name"],))
             conn.commit()
 
     def drop(self):
