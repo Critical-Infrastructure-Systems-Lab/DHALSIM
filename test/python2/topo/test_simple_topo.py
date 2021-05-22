@@ -118,6 +118,7 @@ def test_links_endpoints(topo_fixture):
 @pytest.mark.integrationtest
 @pytest.mark.parametrize("host1, host2",
                          [("r0", "PLC1"), ("r0", "PLC2"), ("r0", "scada")])
+@pytest.mark.flaky(max_runs=3)
 def test_ping(net, host1, host2):
     assert net.ping(hosts=[net.get(host1), net.get(host2)]) == 0.0
 
@@ -140,6 +141,7 @@ def test_number_of_links(net):
                          [("PLC1", "r0", "192.168.1.1"), ("PLC2", "r0", "192.168.1.2"),
                           # ("PLC1", "PLC2", "192.168.1.1"), ("PLC2", "PLC1", "192.168.1.2"),
                           ("PLC1", "scada", "192.168.1.1"), ("PLC2", "scada", "192.168.1.2")])
+@pytest.mark.flaky(max_runs=3)
 def test_reachability(net, server, client, server_ip):
     net.get(server).cmd("echo 'test' | netcat -l 44818 &")
     time.sleep(0.1)

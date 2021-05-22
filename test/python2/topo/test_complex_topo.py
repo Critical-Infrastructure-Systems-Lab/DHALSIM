@@ -42,6 +42,7 @@ def net(topo):
 @pytest.mark.parametrize("host1, host2",
                          [("r0", "r1"), ("r0", "r2"), ("r0", "r3"), ("r1", "PLC1"), ("r2", "PLC2"),
                           ("r3", "scada")])
+@pytest.mark.flaky(max_runs=3)
 def test_ping(net, host1, host2):
     assert net.ping(hosts=[net.get(host1), net.get(host2)]) == 0.0
 
@@ -65,6 +66,7 @@ def test_number_of_links(net):
                          [("PLC1", "r0", "10.0.1.1"), ("PLC2", "r0", "10.0.2.1"),
                           ("PLC1", "PLC2", "10.0.1.1"), ("PLC2", "PLC1", "10.0.2.1"),
                           ("PLC1", "scada", "10.0.1.1"), ("PLC2", "scada", "10.0.2.1")])
+@pytest.mark.flaky(max_runs=3)
 def test_reachability(net, server, client, server_ip):
     net.get(server).cmd("echo 'test' | netcat -l 44818 &")
     time.sleep(0.1)
