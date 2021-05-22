@@ -103,7 +103,7 @@ class ComplexTopo(Topo):
                     raise NoSuchPlc("The target plc {name} does not exist".format(name=attack['target']))
                 attack['local_ip'] = "192.168.1." + str(index)
                 attack['public_ip'] = target['public_ip']
-                attack['provider_ip'] = target['public_ip']
+                attack['provider_ip'] = target['provider_ip']
                 attack['mac'] = Mininet.randMac()
                 attack['interface'] = attack['name'] + "-eth0"
                 attack['provider_interface'] = target['provider_interface']

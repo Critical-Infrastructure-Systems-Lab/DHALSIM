@@ -21,14 +21,14 @@ def unmodified_dict():
 
 @pytest.fixture
 def filled_dict():
-    return {'scada': {'interface': 'scada-eth0', 'local_ip': '192.168.2.1', 'name': 'scada',
-                      'public_ip': '192.168.2.1'},
-            'plcs': [{'public_ip': '192.168.1.1', 'mac': '00:1D:9C:C7:B0:70', 'name': 'PLC1',
-                      'local_ip': '192.168.1.1', 'interface': 'PLC1-eth0',
-                      'gateway': '192.168.1.254'},
-                     {'public_ip': '192.168.1.2', 'mac': '00:1D:9C:C7:B0:70', 'name': 'PLC2',
-                      'local_ip': '192.168.1.2', 'interface': 'PLC2-eth0',
-                      'gateway': '192.168.1.254'}]}
+    return {'scada': {'interface': 'scada-eth0', 'local_ip': '192.168.2.1', 'name': 'scada', 'public_ip': '192.168.2.1',
+                      'switch_name': 's2', 'gateway_name': 'r0', 'gateway_ip': '192.168.2.254'}, 'plcs': [
+        {'public_ip': '192.168.1.1', 'mac': '00:1D:9C:C7:B0:70', 'name': 'PLC1', 'local_ip': '192.168.1.1',
+         'interface': 'PLC1-eth0', 'gateway': '192.168.1.254', 'switch_name': 's1', 'gateway_name': 'r0',
+         'gateway_ip': '192.168.1.254'},
+        {'public_ip': '192.168.1.2', 'mac': '00:1D:9C:C7:B0:70', 'name': 'PLC2', 'local_ip': '192.168.1.2',
+         'interface': 'PLC2-eth0', 'gateway': '192.168.1.254', 'switch_name': 's1', 'gateway_name': 'r0',
+         'gateway_ip': '192.168.1.254'}]}
 
 
 @pytest.fixture
