@@ -176,19 +176,27 @@ class ConfigParser:
 
         return network_type.lower()
 
-    def generate_attacks(self, yaml_data):
-        if "run_attack" in self.config_data.keys() and self.config_data['run_attack']:
-            if 'device_attacks' in self.attacks_data.keys():
-                for device_attack in self.attacks_data['device_attacks']:
-                    for plc in yaml_data['plcs']:
-                        if set(device_attack['actuators']).issubset(set(plc['actuators'])):
-                            if 'attacks' not in plc.keys():
-                                plc['attacks'] = []
-                            plc['attacks'].append(device_attack)
-                            break
+    def generate_device_attacks(self, yaml_data):
+        """
+        This function will add device attacks to the appropriate PLCs in the intermediate yaml
+
+        :param yaml_data: The YAML data without the device attacks
+        """
+        for device_attack in self.attacks_data['device_attacks']:
+            for plc in yaml_data['plcs']:
+                if set(device_attack['actuators']).issubset(set(plc['actuators'])):
+                    if 'attacks' not in plc.keys():
+                        plc['attacks'] = []
+                    plc['attacks'].append(device_attack)
+                    break
         return yaml_data
 
     def generate_network_attacks(self, network_attacks):
+        """
+        This function will add device attacks to the appropriate PLCs in the intermediate yaml
+
+        :param network_attacks: The YAML data of the network attacks
+        """
         for network_attack in network_attacks:
             target = network_attack['target']
             plcs = []
@@ -229,14 +237,16 @@ class ConfigParser:
         if "iterations" in self.config_data.keys():
             yaml_data["iterations"] = self.config_data["iterations"]
 
-        if "network_attacks" in self.attacks_data.keys():
-            yaml_data["network_attacks"] = self.generate_network_attacks(self.attacks_data["network_attacks"])
-
         # Write values from IMP file into yaml file (controls, tanks/valves/initial values, etc.)
         yaml_data = InputParser(yaml_data).write()
 
         # Parse the device attacks from the config file
-        yaml_data = self.generate_attacks(yaml_data)
+        if "run_attack" in self.config_data.keys() and self.config_data['run_attack']:
+            if self.attacks_data is not None:
+                if 'device_attacks' in self.attacks_data.keys():
+                    yaml_data = self.generate_device_attacks(yaml_data)
+                if "network_attacks" in self.attacks_data.keys():
+                    yaml_data["network_attacks"] = self.generate_network_attacks(self.attacks_data["network_attacks"])
 
         # Write data to yaml file
         with self.yaml_path.open(mode='w') as intermediate_yaml:
