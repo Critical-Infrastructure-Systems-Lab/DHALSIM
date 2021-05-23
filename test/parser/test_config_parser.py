@@ -123,7 +123,7 @@ def test_cpa_data_path_not_found(tmpdir):
         parser.cpa_data
 
 def test_config_parser_attacks(wadi_config_yaml_path):
-    output = ConfigParser(wadi_config_yaml_path).generate_attacks({"plcs": [
+    output = ConfigParser(wadi_config_yaml_path).generate_device_attacks({"plcs": [
         {"name": "PLC1", "actuators": ["P_RAW1", "V_PUB"], "sensors": ["T0"]},
         {"name": "PLC2", "actuators": ["V_ER2i"], "sensors": ["T2"]}
     ]})
