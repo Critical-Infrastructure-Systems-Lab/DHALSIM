@@ -2,6 +2,7 @@ import logging
 import sys
 from pathlib import Path
 
+import pandas as pd
 import yaml
 
 from dhalsim.parser.input_parser import InputParser
@@ -37,6 +38,7 @@ class ConfigParser:
 
     def __init__(self, config_path: Path):
         """Constructor method"""
+        self.batch_index = None
         self.config_path = config_path.absolute()
 
         # Load yaml data from config file
@@ -170,14 +172,14 @@ class ConfigParser:
         return network_type.lower()
 
     @property
-    def batch_mode(self):
+    def batch_mode_value(self):
         """
         Load the batch mode boolean. This is either `true` or `false`.
 
         :return: boolean of batch mode
         :rtype: boolean
         """
-        if not "batch_mode" in self.config_data:
+        if "batch_mode" not in self.config_data:
             return False
 
         batch_mode = self.config_data["batch_mode"]
@@ -186,6 +188,21 @@ class ConfigParser:
             raise InvalidValueError("batch_mode must be a boolean (true or false)")
 
         return batch_mode
+
+    @property
+    def initial_values_path(self):
+        """
+        Property to load attacks from the attacks file specified in the config file
+
+        :return: data from the attack file
+        """
+        path = self.config_data.get("initial_values")
+        if not path:
+            raise MissingValueError("initial values file not in config file.")
+        path = (self.config_path.parent / path).absolute()
+        if not path.is_file():
+            raise FileNotFoundError(str(path) + " is not a file.")
+        return path
 
     def generate_attacks(self, yaml_data):
         if "run_attack" in self.config_data.keys() and self.config_data['run_attack']:
@@ -214,7 +231,10 @@ class ConfigParser:
         yaml_data["output_path"] = str(self.output_path)
         yaml_data["db_path"] = "/tmp/dhalsim/dhalsim.sqlite"
         yaml_data["network_topology_type"] = self.network_topology_type
-        yaml_data["batch_mode"] = self.batch_mode
+        yaml_data["batch_mode"] = self.batch_mode_value
+        if yaml_data["batch_mode"]:
+            yaml_data["initial_values_path"] = str(self.initial_values_path)
+            yaml_data["batch_index"] = self.batch_index
 
         # Add options from the config_file
         if "mininet_cli" in self.config_data.keys():

@@ -33,6 +33,12 @@ class Runner():
     def run(self):
         config_parser = ConfigParser(self.config_file)
 
+        batch_mode = config_parser.batch_mode_value
+
+        # TODO: batch index for multiple batch runs
+        if batch_mode:
+            config_parser.batch_index = 2
+
         intermediate_yaml_path = config_parser.generate_intermediate_yaml()
         db_initializer = DatabaseInitializer(intermediate_yaml_path)
 

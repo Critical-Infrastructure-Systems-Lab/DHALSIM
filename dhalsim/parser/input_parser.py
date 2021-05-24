@@ -1,3 +1,4 @@
+import pandas as pd
 import wntr
 from antlr4 import *
 
@@ -62,6 +63,9 @@ class InputParser:
         self.generate_actuators_list()
         # Generate list of times
         self.generate_times()
+        # Generate initial values if batch mode is true
+        if self.data["batch_mode"]:
+            self.generate_initial_values()
         # Add iterations if not existing
         if "iterations" not in self.data.keys():
             self.data["iterations"] = int(self.data["time"][0]["duration"]
@@ -146,3 +150,17 @@ class InputParser:
         # Append valves to pumps
         pumps.extend(valves)
         self.data['actuators'] = pumps
+
+    def generate_initial_values(self):
+        """Generates all tanks with their initial values if running in batch mode"""
+
+        initial_values = []
+        for index, x in enumerate(self.wn.tanks()):
+            initial_tank_levels = pd.read_csv(self.data["initial_values_path"])
+            initial_values.append(
+                {
+                    "name": initial_tank_levels.columns[index],
+                    "value": float(initial_tank_levels.iloc[self.data["batch_index"], index])
+                }
+            )
+        self.data['initial_values'] = initial_values

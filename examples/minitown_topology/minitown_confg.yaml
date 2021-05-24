@@ -2,7 +2,8 @@ inp_file: minitown_map.inp
 cpa_file: minitown_cpa.yaml
 output_path: output
 iterations: 500
+log_level: info
 
 #Batch Mode
-batch_mode: false
+batch_mode: true
 initial_values: initial_tank.csv
