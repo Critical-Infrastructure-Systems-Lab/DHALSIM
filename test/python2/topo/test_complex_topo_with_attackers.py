@@ -74,8 +74,9 @@ def test_number_of_links(net):
                           ('PLC1', 'attack2', '10.0.1.1'), ('PLC2', 'attack2', '192.168.1.1'),
                           ('PLC1', 'attack3', '192.168.1.1'), ('PLC2', 'attack3', '10.0.2.1'),
                           ('PLC1', 'attack4', '10.0.1.1'), ('PLC2', 'attack4', '10.0.2.1')])
+@pytest.mark.flaky(max_runs=3)
 def test_reachability(net, server, client, server_ip):
-    net.get(server).cmd("echo 'test' | netcat -l 44818 &")
+    net.get(server).cmd("echo 'test' | nc -q1 -l 44818 &")
     time.sleep(0.1)
     response = net.get(client).cmd("wget -qO - {ip}:44818".format(ip=server_ip))
     assert response.rstrip() == 'test'

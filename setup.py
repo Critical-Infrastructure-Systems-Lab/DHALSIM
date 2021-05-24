@@ -21,7 +21,7 @@ setuptools.setup(
         'pandas'
     ],
     extras_require={
-        'test': ['pytest', 'pytest-mock', 'mock', 'wget', 'netcat', 'flaky', 'netaddr'],
+        'test': ['pytest', 'pytest-mock', 'mock', 'wget', 'flaky', 'netaddr'],
         'doc': ['sphinx', 'sphinx-rtd-theme', 'sphinx-prompt'],
     },
     python_requires=">=3.8",
