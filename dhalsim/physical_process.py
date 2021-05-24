@@ -208,7 +208,7 @@ class PhysicalPlant:
     def calculate_eta(start: datetime, iteration: int, total: int):
         """
         Calculates estimated time until finished simulation. Only calculates estimated remaining
-        time if it has run enough iterations (more than 10%) to make an accurate estimation.
+        time if it has run enough iterations (more than 10) to make an accurate estimation.
 
         :param start: start time of simulation
         :type start: datetime
@@ -220,12 +220,12 @@ class PhysicalPlant:
         """
         diff = datetime.now() - start
         if iteration == total:
-            return "Estimated remaining time:", timedelta(seconds=0), "."
-        if iteration < total / 10:
-            return "Sampling estimated remaining time..."
+            return "Estimated remaining time:" + str(timedelta(seconds=0)) + "."
+        if iteration < 10:
+            return "Sampling for {rest} more iterations...".format(rest=10-iteration)
         diff_seconds = diff.days.real * 24 * 3600 + diff.seconds.real
         remaining_time = timedelta(seconds=(diff_seconds / (float(iteration / float(total))) - diff.total_seconds()))
-        return "Estimated remaining time: " + str(remaining_time).split(".")[0] + "."
+        return "Estimated time remaining: " + str(remaining_time).split(".")[0] + "."
 
     def get_plcs_ready(self):
         self.c.execute("""SELECT count(*)
