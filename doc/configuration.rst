@@ -15,6 +15,8 @@ Example:
     mininet_cli: False
     log_level: info
     simulator: pdd
+    run_attack: True
+    attacks_path: "wadi_attacks.yaml"
 
 In the following sections, every entry is explained.
 

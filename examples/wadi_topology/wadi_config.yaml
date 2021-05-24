@@ -5,11 +5,12 @@
 #duration_days: 1
 inp_file: "wadi_map_newer.inp"
 cpa_file: "wadi_cpa.yaml"
+network_topology_type: complex
 output_path: "output"
 iterations: 500
-network_topology_type: complex
 mininet_cli: False
 log_level: info
+simulator: pdd
 # Setting this to debug will also print WNTR and MiniCPS output
 #simulator: "pdd"
 #week_index: 0
