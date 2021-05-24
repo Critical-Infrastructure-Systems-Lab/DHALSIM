@@ -122,6 +122,7 @@ def test_cpa_data_path_not_found(tmpdir):
     with pytest.raises(FileNotFoundError):
         parser.cpa_data
 
+
 def test_config_parser_attacks(wadi_config_yaml_path):
     output = ConfigParser(wadi_config_yaml_path).generate_attacks({"plcs": [
         {"name": "PLC1", "actuators": ["P_RAW1", "V_PUB"], "sensors": ["T0"]},
@@ -140,6 +141,7 @@ def test_config_parser_attacks(wadi_config_yaml_path):
 
     assert output == expected_output
     assert 'attacks' not in output['plcs'][1].keys()
+
 
 def test_cpa_data_duplicate_name(tmpdir):
     c = tmpdir.join("config.yaml")
@@ -178,3 +180,32 @@ def test_invalid_network_topology(tmpdir):
     parser = ConfigParser(Path(c))
     with pytest.raises(InvalidValueError):
         parser.network_topology_type
+
+
+def test_default_batch_mode(tmpdir):
+    c = tmpdir.join("config.yaml")
+    c.write("something: else")
+    parser = ConfigParser(Path(c))
+    assert parser.batch_mode is False
+
+
+def test_true_batch_mode(tmpdir):
+    c = tmpdir.join("config.yaml")
+    c.write("batch_mode: true")
+    parser = ConfigParser(Path(c))
+    assert parser.batch_mode is True
+
+
+def test_false_batch_mode(tmpdir):
+    c = tmpdir.join("config.yaml")
+    c.write("batch_mode: false")
+    parser = ConfigParser(Path(c))
+    assert parser.batch_mode is False
+
+
+def test_invalid_batch_mode(tmpdir):
+    c = tmpdir.join("config.yaml")
+    c.write("batch_mode: nottrueorfalse")
+    parser = ConfigParser(Path(c))
+    with pytest.raises(InvalidValueError):
+        parser.batch_mode

@@ -169,6 +169,24 @@ class ConfigParser:
 
         return network_type.lower()
 
+    @property
+    def batch_mode(self):
+        """
+        Load the batch mode boolean. This is either `true` or `false`.
+
+        :return: boolean of batch mode
+        :rtype: boolean
+        """
+        if not "batch_mode" in self.config_data:
+            return False
+
+        batch_mode = self.config_data["batch_mode"]
+
+        if type(batch_mode) != bool:
+            raise InvalidValueError("batch_mode must be a boolean (true or false)")
+
+        return batch_mode
+
     def generate_attacks(self, yaml_data):
         if "run_attack" in self.config_data.keys() and self.config_data['run_attack']:
             if 'device_attacks' in self.attacks_data.keys():
@@ -196,6 +214,7 @@ class ConfigParser:
         yaml_data["output_path"] = str(self.output_path)
         yaml_data["db_path"] = "/tmp/dhalsim/dhalsim.sqlite"
         yaml_data["network_topology_type"] = self.network_topology_type
+        yaml_data["batch_mode"] = self.batch_mode
 
         # Add options from the config_file
         if "mininet_cli" in self.config_data.keys():
