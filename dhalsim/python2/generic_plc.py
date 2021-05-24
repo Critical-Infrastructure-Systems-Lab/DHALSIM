@@ -3,12 +3,12 @@ import os.path
 import sqlite3
 import threading
 import time
-from decimal import Decimal
-from pathlib import Path
-
 import yaml
 
+from decimal import Decimal
+from pathlib import Path
 from basePLC import BasePLC
+from py2_logger import get_logger
 from entities.attack import TimeAttack, TriggerBelowAttack, TriggerAboveAttack, TriggerBetweenAttack
 from entities.control import AboveControl, BelowControl, TimeControl
 
@@ -107,6 +107,8 @@ class GenericPLC(BasePLC):
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
+        self.logger = get_logger(self.intermediate_yaml['log_level'])
+
         self.intermediate_plc = self.intermediate_yaml["plcs"][self.yaml_index]
 
         if 'sensors' not in self.intermediate_plc:
@@ -156,10 +158,6 @@ class GenericPLC(BasePLC):
             'server': plc_server
         }
 
-        # print "DEBUG INIT: " + self.intermediate_plc['name']
-        # print "state = " + str(state)
-        # print "plc_protocol = " + str(plc_protocol)
-
         self.do_super_construction(plc_protocol, state)
 
     def do_super_construction(self, plc_protocol, state):
@@ -185,7 +183,7 @@ class GenericPLC(BasePLC):
 
         :param sleep:  (Default value = 0.5) The time to sleep after setting everything up
         """
-        print('DEBUG: ' + self.intermediate_plc['name'] + ' enters pre_loop')
+        self.logger.debug(self.intermediate_plc['name'] + ' enters pre_loop')
 
         reader = True
 
@@ -289,7 +287,7 @@ class GenericPLC(BasePLC):
         :param sleep:  (Default value = 0.5) Not used
         :param test_break:  (Default value = False) used for unit testing, breaks the loop after one iteration
         """
-        print('DEBUG: ' + self.intermediate_plc['name'] + ' enters main_loop')
+        self.logger.debug(self.intermediate_plc['name'] + ' enters main_loop')
         while True:
             while self.get_sync():
                 time.sleep(0.01)
@@ -323,7 +321,6 @@ if __name__ == "__main__":
                         metavar="N")
 
     args = parser.parse_args()
-
     plc = GenericPLC(
         intermediate_yaml_path=Path(args.intermediate_yaml),
         yaml_index=args.index)

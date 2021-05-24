@@ -2,6 +2,7 @@ import argparse
 import csv
 import os
 import signal
+import logging
 from decimal import Decimal
 
 import wntr
@@ -11,6 +12,7 @@ import sys
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
+from dhalsim.py3_logger import get_logger
 
 import wntr
 import wntr.network.controls as controls
@@ -20,6 +22,8 @@ import yaml
 class PhysicalPlant:
 
     def __init__(self, intermediate_yaml):
+        logging.getLogger('wntr').setLevel(logging.WARNING)
+
         signal.signal(signal.SIGINT, self.interrupt)
         signal.signal(signal.SIGTERM, self.interrupt)
 
@@ -27,6 +31,8 @@ class PhysicalPlant:
 
         with self.intermediate_yaml.open(mode='r') as file:
             self.data = yaml.safe_load(file)
+
+        self.logger = get_logger(self.data['log_level'])
 
         try:
             self.ground_truth_path = Path(self.data["output_path"]) / "ground_truth.csv"
@@ -77,20 +83,20 @@ class PhysicalPlant:
             simulator_string = self.data['simulator']
 
             if simulator_string == 'pdd':
-                print('Running simulation using PDD')
+                self.logger.info("Running simulation using PDD.")
                 self.wn.options.hydraulic.demand_model = 'PDD'
             elif simulator_string == 'dd':
-                print('Running simulation using DD')
+                self.logger.info("Running simulation using DD.")
             else:
-                print('Invalid simulation mode, exiting...')
+                self.logger.critical('Invalid simulation mode, exiting.')
                 sys.exit(1)
 
             self.sim = wntr.sim.WNTRSimulator(self.wn)
 
-            print("Starting simulation for " + str(self.data['inp_file']) + " topology ")
+            self.logger.info("Starting simulation for " + str(self.data['inp_file']) + " topology.")
         except KeyError as e:
-            print("ERROR: An incorrect YAML file has been supplied: " + str(e))
-            sys.exit(0)
+            self.logger.critical("An incorrect YAML file has been supplied: " + str(e))
+            sys.exit(1)
 
     def get_node_list_by_type(self, a_list, a_type):
         result = []
@@ -230,8 +236,9 @@ class PhysicalPlant:
 
         iteration_limit = self.data["iterations"]
 
-        print("Simulation will run for", iteration_limit, "iterations")
-        print("Hydraulic timestep is", self.wn.options.time.hydraulic_timestep)
+        self.logger.info("Simulation will run for " + str(iteration_limit) + " iterations.")
+        self.logger.info("Hydraulic timestep is " + str(self.wn.options.time.hydraulic_timestep)
+                         + ".")
 
         while master_time <= iteration_limit:
             self.c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(master_time),))
@@ -245,21 +252,12 @@ class PhysicalPlant:
 
             self.update_controls()
             eta = self.calculate_eta(start, master_time, iteration_limit)
-            print("Iteration %d out of %d. Estimated remaining time: %s" % (
-                master_time, iteration_limit, eta))
+            self.logger.info("Iteration %d out of %d. Estimated remaining time: %s" % (
+                master_time, iteration_limit, eta) + ".")
 
             results = self.sim.run_sim(convergence_error=True)
             values_list = self.register_results(results)
             self.results_list.append(values_list)
-
-            # Fetch master_time
-            # query = "SELECT * FROM master_time"
-            # execute = self.c.execute(query)
-            # self.conn.commit()
-
-            # master_time = int(execute.fetchall()[0][1]) + 1
-
-            # Update master_time
 
             # Update tanks in database
             for tank in self.tank_list:
@@ -298,16 +296,18 @@ class PhysicalPlant:
 
     def interrupt(self, sig, frame):
         self.finish()
+        self.logger.info("Simulation ended.")
         sys.exit(0)
 
     def finish(self):
         self.write_results(self.results_list)
+        self.logger.info("Simulation finished.")
         sys.exit(0)
 
 
 def is_valid_file(test_parser, arg):
     if not os.path.exists(arg):
-        test_parser.error(arg + " does not exist")
+        test_parser.error(arg + " does not exist.")
     else:
         return arg
 

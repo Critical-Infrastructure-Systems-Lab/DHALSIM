@@ -40,6 +40,7 @@ def magic_mock_scada_preloop():
 @pytest.fixture
 def yaml_scada_file(tmpdir):
     dict = {
+        "log_level": "info",
         "db_path": "/home/test/dhalsim.sqlite",
         "output_path": "/home/test/dhalsim/output",
         "scada": {"name": "scada",

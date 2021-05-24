@@ -2,6 +2,8 @@ import yaml
 import sys
 import subprocess
 from os.path import expanduser
+from py2_logger import get_logger
+
 
 class ExperimentInitializer:
 
@@ -10,37 +12,39 @@ class ExperimentInitializer:
         with open(config_file_path) as config_file:
             self.options = yaml.load(config_file, Loader=yaml.FullLoader)
 
+        self.logger = get_logger(self.intermediate_yaml['log_level'])
+
         # Simulation type is needed to handle week_index.
         if 'simulation_type' in self.options:
             self.simulation_type = self.options['simulation_type']
         else:
-            self.simulation_type = "Single"
+            self.simulation_type = 'Single'
 
-        if self.simulation_type == "Batch":
+        if self.simulation_type == 'Batch':
             if 'initial_custom_flag' in self.options and 'demand_patterns_path' in self.options and 'starting_demand_path' \
                     and 'initial_tank_levels_path' in self.options:
                 self.week_index = week_index
             else:
-                print 'Batch mode configured, but no initial customization options are set, aborting.'
+                self.logger.critical("Batch mode configured, but no initial customization options are set, aborting.")
                 sys.exit(1)
         elif self.simulation_type == "Single":
             try:
                 self.week_index = int(self.options['week_index'])
             except KeyError:
-                print 'Missing week index parameter in yaml configuration file'
+                self.logger.info("Missing week index parameter in yaml configuration file.")
 
         else:
-            print 'Invalid simulation mode, supported values are "Single" and "Batch", aborting'
+            self.logger.critical("Invalid simulation mode, supported values are 'Single' and 'Batch', aborting.")
             sys.exit(1)
 
         # complex_topology flag is going to define which topo instance we create
         if 'complex_topology' in self.options:
-            if self.options['complex_topology'] == "True":
+            if self.options['complex_topology'] == 'True':
                 self.complex_topology = True
-            elif self.options['complex_topology'] == "False":
+            elif self.options['complex_topology'] == 'False':
                 self.complex_topology = False
             else:
-                print 'complex_topology parameter has to bee a bolean, aborting'
+                self.logger.critical("Complex_topology parameter has to be a boolean, aborting.")
                 sys.exit(1)
         else:
             self.complex_topology = False
@@ -52,32 +56,32 @@ class ExperimentInitializer:
         if 'epanet_topo_path' in self.options:
             self.epanet_file_path = self.options['epanet_topo_path']
         else:
-            self.epanet_file_path = "../../Demand_patterns/ctown_map_with_controls.inp"
+            self.epanet_file_path = '../../Demand_patterns/ctown_map_with_controls.inp'
 
         if 'epanet_cpa_path' in self.options:
             self.cpa_file_path = self.options['epanet_cpa_path']
         else:
-            self.cpa_file_path = "../../Demand_patterns/ctown.cpa"
+            self.cpa_file_path = '../../Demand_patterns/ctown.cpa'
 
         if 'plc_dict_path' in self.options:
             self.plc_dict_path = self.options['plc_dict_path']
         else:
-            self.plc_dict_path = "plc_dicts.yaml"
+            self.plc_dict_path = 'plc_dicts.yaml'
 
         if 'run_attack' in self.options:
-            if self.options['run_attack'] == "True":
+            if self.options['run_attack'] == 'True':
                 self.run_attack = True
 
                 if 'attacks_path' in self.options:
                     self.attack_path = self.options['attacks_path']
                 else:
-                    print 'Warning. Using default attack path ../../attack_repository/ctown.cpa'
+                    self.logger.warning("Warning. Using default attack path ../../attack_repository/ctown.cpa.")
                     self.attack_path = '../../attack_repository/attack_description.yaml'
 
                 if 'attack_name' in self.options:
                     self.attack_name = self.options['attack_name']
                 else:
-                    print 'Warning. Using default attack plc_empty_tank_1'
+                    self.logger.warning("Warning. Using default attack plc_empty_tank_1.")
                     self.attack_name = 'plc_empty_tank_1'
             else:
                 self.run_attack = False
@@ -118,5 +122,7 @@ class ExperimentInitializer:
         :return:
         """
         home_path = expanduser("~")
-        wntr_environment_path = home_path + str("/wntr-experiments/bin/python")
-        parse_process = subprocess.call([wntr_environment_path, 'epanet_parser.py', '-i', self.epanet_file_path, '-a', self.cpa_file_path, '-o', 'plc_dicts.yaml'])
+        wntr_environment_path = home_path + str('/wntr-experiments/bin/python')
+        parse_process = subprocess.call(
+            [wntr_environment_path, 'epanet_parser.py', '-i', self.epanet_file_path, '-a', self.cpa_file_path, '-o',
+             'plc_dicts.yaml'])

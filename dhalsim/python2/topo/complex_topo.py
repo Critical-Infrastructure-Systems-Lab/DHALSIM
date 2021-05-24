@@ -85,7 +85,7 @@ class ComplexTopo(Topo):
         scada['switch_name'] = "s" + str(index)
         scada['gateway_ip'] = self.local_router_ips
 
-    def build(self, *args, **params ):
+    def build(self, *args, **params):
         """
         Build the topology. This make nodes for every router, switch, plc and scada
         and add links to connect them.
