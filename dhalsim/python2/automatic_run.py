@@ -36,7 +36,12 @@ class GeneralCPS(MiniCPS):
             self.data = yaml.safe_load(file)
 
         self.logger = get_logger(self.data['log_level'])
-        logging.getLogger('mininet').setLevel(logging.WARNING)
+
+        if self.data['log_level'] == 'debug':
+            logging.getLogger('mininet').setLevel(logging.DEBUG)
+        else:
+            logging.getLogger('mininet').setLevel(logging.WARNING)
+
         # Create directory output path
         try:
             os.makedirs(str(Path(self.data["output_path"])))
