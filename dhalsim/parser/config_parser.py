@@ -217,8 +217,7 @@ class ConfigParser:
             if self.config_data['log_level'] in ['debug', 'info', 'warning', 'error', 'critical']:
                 yaml_data['log_level'] = self.config_data['log_level']
             else:
-                #TODO
-                sys.exit(1)
+                raise InvalidValueError("Invalid log_level value")
         else:
             yaml_data['log_level'] = 'info'
 

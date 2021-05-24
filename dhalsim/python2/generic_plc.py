@@ -158,10 +158,6 @@ class GenericPLC(BasePLC):
             'server': plc_server
         }
 
-        self.logger.debug("INIT: " + self.intermediate_plc['name'])
-        self.logger.debug("state = " + str(state))
-        self.logger.debug("plc_protocol = " + str(plc_protocol))
-
         self.do_super_construction(plc_protocol, state)
 
     def do_super_construction(self, plc_protocol, state):

@@ -83,9 +83,9 @@ class NodeControl:
         pcap = self.output_path / (self.this_plc_data["interface"] + '.pcap')
 
         # Output is not printed to console
-        f = open('/dev/null', 'w')
+        no_output = open('/dev/null', 'w')
         tcp_dump = subprocess.Popen(['tcpdump', '-i', self.this_plc_data["interface"], '-w',
-                                     str(pcap)], shell=False, stderr=f, stdout=f)
+                                     str(pcap)], shell=False, stderr=no_output, stdout=no_output)
         return tcp_dump
 
     def start_plc(self):
@@ -95,13 +95,13 @@ class NodeControl:
         generic_plc_path = Path(__file__).parent.absolute() / "generic_plc.py"
 
         if self.data['log_level'] == 'debug':
-            f = sys.stderr
-            g = sys.stdout
+            err_put = sys.stderr
+            out_put = sys.stdout
         else:
-            f = open('/dev/null', 'w')
-            g = open('/dev/null', 'w')
+            err_put = open('/dev/null', 'w')
+            out_put = open('/dev/null', 'w')
         cmd = ["python2", str(generic_plc_path), str(self.intermediate_yaml), str(self.plc_index)]
-        plc_process = subprocess.Popen(cmd, shell=False, stderr=f, stdout=g)
+        plc_process = subprocess.Popen(cmd, shell=False, stderr=err_put, stdout=out_put)
         return plc_process
 
 

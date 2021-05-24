@@ -114,13 +114,6 @@ class GenericScada(SCADAServer):
             self.saved_values[0].extend(PLC['sensors'])
             self.saved_values[0].extend(PLC['actuators'])
 
-        self.logger.debug("-----------DEBUG SCADA INIT-----------")
-        self.logger.debug("state = " + str(state))
-        self.logger.debug("scada_protocol = " + str(scada_protocol))
-        self.logger.debug("plc_data = " + str(self.plc_data))
-        self.logger.debug("output_format = " + str(self.saved_values))
-        self.logger.debug("-----------DEBUG SCADA INIT-----------")
-
         self.do_super_construction(scada_protocol, state)
 
     def do_super_construction(self, scada_protocol, state):
@@ -144,7 +137,7 @@ class GenericScada(SCADAServer):
 
         :param sleep:  (Default value = 0.5) The time to sleep after setting everything up
         """
-        self.logger.debug('DEBUG: SCADA enters pre_loop')
+        self.logger.debug('SCADA enters pre_loop')
 
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
@@ -176,7 +169,7 @@ class GenericScada(SCADAServer):
         """
         Shutdown protocol for the scada, writes the output before exiting.
         """
-        self.logger.debug("DEBUG SCADA shutdown")
+        self.logger.debug("SCADA shutdown")
         self.write_output()
         sys.exit(0)
 
@@ -227,7 +220,7 @@ class GenericScada(SCADAServer):
                 results = []
                 for plc_datum in self.plc_data:
                     plc_value = self.receive_multiple(plc_datum[1], plc_datum[0])
-                    self.logger.debug("plc_value received by scada from ip: " + str(plc_datum[0]) + " is " + str(plc_value))
+                    self.logger.debug("PLC value received by SCADA from IP: " + str(plc_datum[0]) + " is " + str(plc_value))
                     results.extend(plc_value)
                 self.saved_values.append(results)
             except Exception, msg:
