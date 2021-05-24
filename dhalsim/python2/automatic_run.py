@@ -128,7 +128,7 @@ class GeneralCPS(MiniCPS):
         print("[*] Simulation finished")
         try:
             self.end_process(self.scada_process)
-        except Exception, msg:
+        except Exception as msg:
             print("exception shutting down scada")
             print(msg)
 

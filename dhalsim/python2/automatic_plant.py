@@ -1,66 +1,55 @@
-import os
-import subprocess
 import argparse
+import os
 import signal
-import sys
-from os.path import expanduser
-import shlex
+import subprocess
 from pathlib import Path
 
+from automatic_node import NodeControl
 
-class SimulationControl:
+
+class PlantControl(NodeControl):
     """
-    Class representing the simulation process of a plant. All the automatic_plant.py have the same pattern.
+    This class is started for a plant. It starts a simulation process.
     """
 
     def __init__(self, intermediate_yaml):
-        signal.signal(signal.SIGINT, self.interrupt)
-        signal.signal(signal.SIGTERM, self.interrupt)
+        super(PlantControl, self).__init__(intermediate_yaml)
 
-        self.intermediate_yaml = intermediate_yaml
+        self.simulation_process = None
 
-        self.simulation = self.start_simulation()
-
-        while self.simulation.poll() is None:
-            pass
-
-    def interrupt(self, sig, frame):
+    def terminate(self):
         """
-        This method is provided by the signal python library. We call the finish method that interrupts, terminates,
-        or kills the simulation and exit.
+        This function stops the physical process (child of this process).
         """
-        self.finish()
-        sys.exit(1)
+        print("Stopping physical process...")
+        self.simulation_process.send_signal(signal.SIGINT)
+        self.simulation_process.wait()
+        if self.simulation_process.poll() is None:
+            self.simulation_process.terminate()
+        if self.simulation_process.poll() is None:
+            self.simulation_process.kill()
 
-    def finish(self):
+    def main(self):
         """
-        All the subprocesses launched in this Digital Twin follow the same pattern to ensure that they finish before
-        continuing with the finishing of the parent process.
-        """
-        self.simulation.send_signal(signal.SIGINT)
-        self.simulation.wait()
-        if self.simulation.poll() is None:
-            self.simulation.terminate()
-        if self.simulation.poll() is None:
-            self.simulation.kill()
-
-    def start_simulation(self):
-        """
-        This method uses a Python3.6 virtual environment where WNTR simulator is installed to run the simulation of a
-        model. By default WNTR is run using the PDD model and the output file is a .csv file called
-        "physical_process.csv".
-
-        :return: An object representing the simulation process
+        This function starts the physical process and then waits for the physical
+        process to finish.
         """
         physical_process_path = Path(__file__).parent.absolute().parent / "physical_process.py"
 
         cmd = ["python3", str(physical_process_path), str(self.intermediate_yaml)]
 
-        simulation = subprocess.Popen(cmd)
-        return simulation
+        self.simulation_process = subprocess.Popen(cmd)
+
+        while self.simulation_process.poll() is None:
+            pass
+
+        self.terminate()
 
 
 def is_valid_file(file_parser, arg):
+    """
+    Verifies whether the intermediate yaml path is valid.
+    """
     if not os.path.exists(arg):
         file_parser.error(arg + " does not exist")
     else:
@@ -74,5 +63,5 @@ if __name__ == "__main__":
                         type=lambda x: is_valid_file(parser, x))
 
     args = parser.parse_args()
-
-    simulation_control = SimulationControl(Path(args.intermediate_yaml))
+    plant_control = PlantControl(Path(args.intermediate_yaml))
+    plant_control.main()
