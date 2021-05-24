@@ -1,7 +1,10 @@
 import yaml
 import sqlite3
 
-class SyncedAttack():
+from abc import ABCMeta
+
+
+class SyncedAttack(metaclass=ABCMeta):
     def __init__(self, intermediate_yaml_path, yaml_index):
         self.yaml_index = yaml_index
 
@@ -39,5 +42,13 @@ class SyncedAttack():
         :param sleep:  (Default value = 0.05) Currently not used
         """
         while True:
+            self.attack_step()
             self.set_sync(1)
             # time.sleep(sleep)
+
+    def attack_step(self):
+        """
+        This function is the function that will run for every iteration.
+        This function needs to be overwritten
+        """
+        print("This function should be overwritten!")
