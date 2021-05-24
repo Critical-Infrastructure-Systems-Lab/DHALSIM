@@ -2,6 +2,7 @@ import argparse
 import csv
 import os
 import signal
+import logging
 from decimal import Decimal
 
 import wntr
@@ -11,6 +12,7 @@ import sys
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
+from dhalsim.py3_logger import get_logger
 
 import wntr
 import wntr.network.controls as controls
@@ -20,6 +22,8 @@ import yaml
 class PhysicalPlant:
 
     def __init__(self, intermediate_yaml):
+        logging.getLogger('wntr').setLevel(logging.WARNING)
+
         signal.signal(signal.SIGINT, self.interrupt)
         signal.signal(signal.SIGTERM, self.interrupt)
 
@@ -27,6 +31,8 @@ class PhysicalPlant:
 
         with self.intermediate_yaml.open(mode='r') as file:
             self.data = yaml.safe_load(file)
+
+        self.logger = get_logger(self.data['log_level'])
 
         try:
             self.ground_truth_path = Path(self.data["output_path"]) / "ground_truth.csv"
@@ -77,20 +83,20 @@ class PhysicalPlant:
             simulator_string = self.data['simulator']
 
             if simulator_string == 'pdd':
-                print('Running simulation using PDD')
+                self.logger.info("Running simulation using PDD.")
                 self.wn.options.hydraulic.demand_model = 'PDD'
             elif simulator_string == 'dd':
-                print('Running simulation using DD')
+                self.logger.info("Running simulation using DD.")
             else:
-                print('Invalid simulation mode, exiting...')
+                self.logger.critical('Invalid simulation mode, exiting.')
                 sys.exit(1)
 
             self.sim = wntr.sim.WNTRSimulator(self.wn)
 
-            print("Starting simulation for " + str(self.data['inp_file']) + " topology ")
+            self.logger.info("Starting simulation for " + str(self.data['inp_file']) + " topology.")
         except KeyError as e:
-            print("ERROR: An incorrect YAML file has been supplied: " + str(e))
-            sys.exit(0)
+            self.logger.critical("An incorrect YAML file has been supplied: " + str(e))
+            sys.exit(1)
 
     def get_node_list_by_type(self, a_list, a_type):
         result = []
@@ -199,20 +205,27 @@ class PhysicalPlant:
             writer.writerows(results)
 
     @staticmethod
-    def calculate_eta(start, iteration, total):
+    def calculate_eta(start: datetime, iteration: int, total: int):
         """
-        Calculates estimated time until finished simulation.
+        Calculates estimated time until finished simulation. Only calculates estimated remaining
+        time if it has run enough iterations (more than 10) to make an accurate estimation.
 
-        :start: start time
-        :iteration: current iteration
-        :total: total number of iterations
+        :param start: start time of simulation
+        :type start: datetime
+        :param iteration: current iteration
+        :type iteration: int
+        :param total: total numer of iterations
+        :type total: int
+        :rtype: str
         """
         diff = datetime.now() - start
-        if iteration == round(total):
-            return timedelta(seconds=0)
-        return timedelta(seconds=(diff.days.real * 24 * 3600 + diff.seconds.real
-                                  / (float(iteration / float(round(total))) + 0.000001)
-                                  - diff.total_seconds()))
+        if iteration == total:
+            return "Estimated remaining time:" + str(timedelta(seconds=0)) + "."
+        if iteration < 10:
+            return "Sampling for {rest} more iterations...".format(rest=10-iteration)
+        diff_seconds = diff.days.real * 24 * 3600 + diff.seconds.real
+        remaining_time = timedelta(seconds=(diff_seconds / (float(iteration / float(total))) - diff.total_seconds()))
+        return "Estimated time remaining: " + str(remaining_time).split(".")[0] + "."
 
     def get_plcs_ready(self):
         self.c.execute("""SELECT count(*)
@@ -225,41 +238,32 @@ class PhysicalPlant:
         # We want to simulate only 1 hydraulic timestep each time MiniCPS processes the simulation data
         self.wn.options.time.duration = self.wn.options.time.hydraulic_timestep
 
-        master_time = 0
+        master_time = -1
         start = datetime.now()
 
         iteration_limit = self.data["iterations"]
 
-        print("Simulation will run for", iteration_limit, "iterations")
-        print("Hydraulic timestep is", self.wn.options.time.hydraulic_timestep)
+        self.logger.info("Simulation will run for {x} iterations.".format(x=str(iteration_limit)))
+        self.logger.info("Hydraulic timestep is {timestep}.".format(
+            timestep=str(self.wn.options.time.hydraulic_timestep)))
 
-        while master_time <= iteration_limit:
+        while master_time < iteration_limit:
             self.c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(master_time),))
             self.conn.commit()
 
-            self.c.execute("UPDATE sync SET flag=0")
-            self.conn.commit()
+            # Increment master time
+            master_time = master_time + 1
 
             while not self.get_plcs_ready():
                 time.sleep(0.01)
 
             self.update_controls()
             eta = self.calculate_eta(start, master_time, iteration_limit)
-            print("Iteration %d out of %d. Estimated remaining time: %s" % (
-                master_time, iteration_limit, eta))
+            self.logger.info("Iteration %d out of %d. %s" % (master_time, iteration_limit, eta))
 
             results = self.sim.run_sim(convergence_error=True)
             values_list = self.register_results(results)
             self.results_list.append(values_list)
-
-            # Fetch master_time
-            # query = "SELECT * FROM master_time"
-            # execute = self.c.execute(query)
-            # self.conn.commit()
-
-            # master_time = int(execute.fetchall()[0][1]) + 1
-
-            # Update master_time
 
             # Update tanks in database
             for tank in self.tank_list:
@@ -290,22 +294,26 @@ class PhysicalPlant:
                                (str(level), junction,))
                 self.conn.commit()
 
-            master_time = master_time + 1
+            # Set sync flags for nodes
+            self.c.execute("UPDATE sync SET flag=0")
+            self.conn.commit()
 
         self.finish()
 
     def interrupt(self, sig, frame):
         self.finish()
+        self.logger.info("Simulation ended.")
         sys.exit(0)
 
     def finish(self):
         self.write_results(self.results_list)
+        self.logger.info("Simulation finished.")
         sys.exit(0)
 
 
 def is_valid_file(test_parser, arg):
     if not os.path.exists(arg):
-        test_parser.error(arg + " does not exist")
+        test_parser.error(arg + " does not exist.")
     else:
         return arg
 

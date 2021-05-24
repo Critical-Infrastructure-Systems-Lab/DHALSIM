@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 import signal
 import subprocess
@@ -11,6 +12,7 @@ from mininet.net import Mininet
 from mininet.cli import CLI
 from mininet.link import TCLink
 
+from py2_logger import get_logger
 from topo.simple_topo import SimpleTopo
 from topo.complex_topo import ComplexTopo
 
@@ -33,6 +35,13 @@ class GeneralCPS(MiniCPS):
 
         with self.intermediate_yaml.open(mode='r') as file:
             self.data = yaml.safe_load(file)
+
+        self.logger = get_logger(self.data['log_level'])
+
+        if self.data['log_level'] == 'debug':
+            logging.getLogger('mininet').setLevel(logging.DEBUG)
+        else:
+            logging.getLogger('mininet').setLevel(logging.WARNING)
 
         # Create directory output path
         try:
@@ -80,19 +89,21 @@ class GeneralCPS(MiniCPS):
         """
         This starts all the processes for plcs, etc.
         """
-
         self.plc_processes = []
         if "plcs" in self.data:
             automatic_plc_path = Path(__file__).parent.absolute() / "automatic_plc.py"
             for i, plc in enumerate(self.data["plcs"]):
                 node = self.net.get(plc["name"])
-
                 cmd = ["python2", str(automatic_plc_path), str(self.intermediate_yaml), str(i)]
                 self.plc_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
+
+        self.logger.info("Launched the PLCs processes.")
 
         automatic_scada_path = Path(__file__).parent.absolute() / "automatic_scada.py"
         scada_cmd = ["python2", str(automatic_scada_path), str(self.intermediate_yaml)]
         self.scada_process = self.net.get('scada').popen(scada_cmd, stderr=sys.stderr, stdout=sys.stdout)
+
+        self.logger.info("Launched the SCADA process.")
 
         if "network_attacks" in self.data:
             automatic_attacker_path = Path(__file__).parent.absolute() / "automatic_attacker.py"
@@ -102,14 +113,14 @@ class GeneralCPS(MiniCPS):
                 cmd = ["python2", str(automatic_attacker_path), str(self.intermediate_yaml), str(i)]
                 self.plc_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
 
-        print("[*] Launched the PLCs, SCADA and attacker processes")
+        self.logger.info("Launched the attackers processes.")
 
         automatic_plant_path = Path(__file__).parent.absolute() / "automatic_plant.py"
 
         cmd = ["python2", str(automatic_plant_path), str(self.intermediate_yaml)]
         self.plant_process = self.net.get('plant').popen(cmd, stderr=sys.stderr, stdout=sys.stdout)
 
-        print("[ ] Simulating...")
+        self.logger.info("Simulating...")
         # We wait until the simulation ends
         while self.plant_process.poll() is None:
             pass
@@ -134,12 +145,11 @@ class GeneralCPS(MiniCPS):
         Terminate the plcs, physical process, mininet, and remaining processes that
         automatic run spawned.
         """
-        print("[*] Simulation finished")
+        self.logger.info("Simulation finished.")
         try:
             self.end_process(self.scada_process)
         except Exception as msg:
-            print("exception shutting down scada")
-            print(msg)
+            self.logger.error("Exception shutting down SCADA: " + str(msg))
 
         for plc_process in self.plc_processes:
             try:
@@ -148,8 +158,8 @@ class GeneralCPS(MiniCPS):
                 continue
 
         if self.plant_process.poll() is None:
+            self.logger.info("Physical simulation process terminated.")
             self.end_process(self.plant_process)
-            print("Physical Simulation process terminated\n")
 
         cmd = 'sudo pkill -f "python2 -m cpppo.server.enip"'
         subprocess.call(cmd, shell=True, stderr=sys.stderr, stdout=sys.stdout)
@@ -159,11 +169,9 @@ class GeneralCPS(MiniCPS):
 
 
 def is_valid_file(parser_instance, arg):
-    """
-    Verifies whether the intermediate yaml path is valid.
-    """
+    """Verifies whether the intermediate yaml path is valid"""
     if not os.path.exists(arg):
-        parser_instance.error(arg + " does not exist")
+        parser_instance.error(arg + " does not exist.")
     else:
         return arg
 

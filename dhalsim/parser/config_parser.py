@@ -1,11 +1,10 @@
 import logging
+import sys
 from pathlib import Path
 
 import yaml
 
 from dhalsim.parser.input_parser import InputParser
-
-logger = logging.getLogger(__name__)
 
 
 class Error(Exception):
@@ -44,8 +43,6 @@ class ConfigParser:
         """Constructor method"""
         self.config_path = config_path.absolute()
 
-        logger.debug("config file: %s", str(config_path))
-
         # Load yaml data from config file
         with config_path.open(mode='r') as file:
             self.config_data = yaml.load(file, Loader=yaml.FullLoader)
@@ -67,10 +64,10 @@ class ConfigParser:
         """
         path = self.config_data.get("inp_file")
         if not path:
-            raise MissingValueError("inp_file not in config file")
+            raise MissingValueError("inp_file not in config file.")
         path = (self.config_path.parent / path).absolute()
         if not path.is_file():
-            raise FileNotFoundError(str(path) + " is not a file")
+            raise FileNotFoundError(str(path) + " is not a file.")
         return path
 
     @property
@@ -82,10 +79,10 @@ class ConfigParser:
         """
         path = self.config_data.get("cpa_file")
         if not path:
-            raise MissingValueError("cpa_file not in config file")
+            raise MissingValueError("cpa_file not in config file.")
         path = (self.config_path.parent / path).absolute()
         if not path.is_file():
-            raise FileNotFoundError(str(path) + " is not a file")
+            raise FileNotFoundError(str(path) + " is not a file.")
         return path
 
     @property
@@ -112,10 +109,10 @@ class ConfigParser:
         """
         path = self.config_data.get("attacks_path")
         if not path:
-            raise MissingValueError("Attack file not in config file")
+            raise MissingValueError("Attack file not in config file.")
         path = (self.config_path.parent / path).absolute()
         if not path.is_file():
-            raise FileNotFoundError(str(path) + " is not a file")
+            raise FileNotFoundError(str(path) + " is not a file.")
         return path
 
     @property
@@ -130,13 +127,13 @@ class ConfigParser:
         # Verification of plc data
         plcs = cpa.get("plcs")
         if not plcs:
-            raise MissingValueError("PLCs section not present in cpa_file")
+            raise MissingValueError("PLCs section not present in cpa_file.")
 
         # Check for plc names (and check for duplicates)
         plc_list = []
         for plc in plcs:
             if not plc.get("name"):
-                raise MissingValueError("PLC in cpa file missing a name")
+                raise MissingValueError("PLC in cpa file missing a name.")
             else:
                 plc_list.append(plc.get("name"))
 
@@ -170,9 +167,9 @@ class ConfigParser:
         network_type = self.config_data["network_topology_type"]
 
         if type(network_type) != str:
-            raise InvalidValueError("network_topology_type must be simple or complex")
+            raise InvalidValueError("network_topology_type must be simple or complex.")
         if network_type.lower() != "simple" and network_type.lower() != "complex":
-            raise InvalidValueError("network_topology_type must be simple or complex")
+            raise InvalidValueError("network_topology_type must be simple or complex.")
 
         return network_type.lower()
 
@@ -236,6 +233,15 @@ class ConfigParser:
         # Note: if iterations not present then default value will be written in InputParser
         if "iterations" in self.config_data.keys():
             yaml_data["iterations"] = self.config_data["iterations"]
+
+        # Log level
+        if 'log_level' in self.config_data:
+            if self.config_data['log_level'] in ['debug', 'info', 'warning', 'error', 'critical']:
+                yaml_data['log_level'] = self.config_data['log_level']
+            else:
+                raise InvalidValueError("Invalid log_level value.")
+        else:
+            yaml_data['log_level'] = 'info'
 
         # Write values from IMP file into yaml file (controls, tanks/valves/initial values, etc.)
         yaml_data = InputParser(yaml_data).write()

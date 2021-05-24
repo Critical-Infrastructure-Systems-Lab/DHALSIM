@@ -1,3 +1,4 @@
+import logging
 import time
 from minicps.devices import PLC
 import csv
@@ -21,15 +22,13 @@ class BasePLC(PLC):
                     try:
                         values.append(self.get(tag))
                     except Exception:
-                        print
-                        "Exception trying to get the tag"
+                        self.logger.error("Exception trying to get the tag.")
                         time.sleep(0.05)
                         continue
             self.send_multiple(self.tags, values, self.send_adddress)
             time.sleep(0.05)
 
     def set_parameters(self, tags, values, reader, lock, send_address, week_index=0):
-
         self.tags = tags
         self.values = values
         self.reader = reader
@@ -38,7 +37,7 @@ class BasePLC(PLC):
         self.week_index = week_index
 
     def sigint_handler(self, sig, frame):
-        print('DEBUG plc shutdown')
+        self.logger.debug('PLC shutdown commencing.')
         self.reader = False
         sys.exit(0)
 
