@@ -63,6 +63,7 @@ class GeneralCPS(MiniCPS):
         self.plc_processes = None
         self.scada_process = None
         self.plant_process = None
+        self.attacker_processes = None
 
         self.automatic_start()
 
@@ -81,19 +82,27 @@ class GeneralCPS(MiniCPS):
         """
 
         self.plc_processes = []
+        if "plcs" in self.data:
+            automatic_plc_path = Path(__file__).parent.absolute() / "automatic_plc.py"
+            for i, plc in enumerate(self.data["plcs"]):
+                node = self.net.get(plc["name"])
 
-        automatic_plc_path = Path(__file__).parent.absolute() / "automatic_plc.py"
-        for i, plc in enumerate(self.data["plcs"]):
-            node = self.net.get(plc["name"])
-
-            cmd = ["python2", str(automatic_plc_path), str(self.intermediate_yaml), str(i)]
-            self.plc_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
+                cmd = ["python2", str(automatic_plc_path), str(self.intermediate_yaml), str(i)]
+                self.plc_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
 
         automatic_scada_path = Path(__file__).parent.absolute() / "automatic_scada.py"
         scada_cmd = ["python2", str(automatic_scada_path), str(self.intermediate_yaml)]
         self.scada_process = self.net.get('scada').popen(scada_cmd, stderr=sys.stderr, stdout=sys.stdout)
 
-        print("[*] Launched the PLCs and SCADA processes")
+        if "network_attacks" in self.data:
+            automatic_attacker_path = Path(__file__).parent.absolute() / "automatic_attacker.py"
+            for i, attacker in enumerate(self.data["network_attacks"]):
+                node = self.net.get(attacker["name"])
+
+                cmd = ["python2", str(automatic_attacker_path), str(self.intermediate_yaml), str(i)]
+                self.plc_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
+
+        print("[*] Launched the PLCs, SCADA and attacker processes")
 
         automatic_plant_path = Path(__file__).parent.absolute() / "automatic_plant.py"
 
