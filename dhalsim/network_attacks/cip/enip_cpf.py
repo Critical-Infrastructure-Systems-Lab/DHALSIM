@@ -24,7 +24,7 @@ import struct
 
 from scapy import all as scapy_all
 
-import utils
+from . import utils
 
 
 class CPF_SequencedAddressItem(scapy_all.Packet):

@@ -32,8 +32,8 @@ import sys
 
 from scapy import all as scapy_all
 
-import enip_tcp
-import utils
+from . import enip_tcp
+from . import utils
 
 
 class CIP_RespSingleAttribute(scapy_all.Packet):
