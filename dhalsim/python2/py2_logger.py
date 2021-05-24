@@ -15,7 +15,8 @@ def get_logger(logging_level):
     py2_logger = logging.getLogger('py2_logger')
     # Configure logger level
     py2_handler = logging.StreamHandler(stream=sys.stdout)
-    logging_format = logging.Formatter('%(asctime)s - %(levelname)s @ %(filename)s: %(message)s')
+    logging_format = logging.Formatter('%(asctime)s - %(levelname)s @ %(filename)s: %(message)s',
+                                       '%H:%M:%S')
     py2_handler.setFormatter(logging_format)
     py2_logger.addHandler(py2_handler)
     # Set level of logger
