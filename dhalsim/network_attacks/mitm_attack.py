@@ -1,13 +1,13 @@
 import argparse
 import os
 import threading
-import fnfqueue
-
 from pathlib import Path
+
+import fnfqueue
+from scapy.layers.inet import IP, TCP
 
 from dhalsim.network_attacks.utilities import launch_arp_poison, restore_arp
 from synced_attack import SyncedAttack
-
 
 class MitmAttack(SyncedAttack):
     """
@@ -24,15 +24,16 @@ class MitmAttack(SyncedAttack):
 
     def __init__(self, intermediate_yaml_path: Path, yaml_index: int):
         super().__init__(intermediate_yaml_path, yaml_index)
+        os.system('sysctl net.ipv4.ip_forward=1')
         self.queue = fnfqueue.Connection()
         self.state = 0
         self.q = None
         self.thread = None
+        self.run_thread = False
 
     def setup(self):
-        print("ATTACKER SETTING UP 🔧")
         # Add the iptables rules
-        os.system('iptables -t mangle -A PREROUTING -p tcp --dport 44818 -j NFQUEUE --queue-num 1')
+        os.system('iptables -t mangle -A PREROUTING -p tcp -j NFQUEUE --queue-num 1')
         os.system('iptables -A FORWARD -p icmp -j DROP')
         os.system('iptables -A INPUT -p icmp -j DROP')
         os.system('iptables -A OUTPUT -p icmp -j DROP')
@@ -42,40 +43,53 @@ class MitmAttack(SyncedAttack):
         try:
             self.q = self.queue.bind(1)
             self.q.set_mode(fnfqueue.MAX_PAYLOAD, fnfqueue.COPY_PACKET)
-            self.thread = threading.Thread(target=self.packet_thread_function()).start()
         except PermissionError:
             print("Permission Error. Am I running as root?")
 
+        self.run_thread = True
+        self.thread = threading.Thread(target=self.packet_thread_function)
+        self.thread.start()
+
     def packet_thread_function(self):
-        print("Thread starting 🔀")
-        while True:
+        while self.run_thread:
             try:
                 for packet in self.queue:
-                    #TODO The actual mitm stuff
-                    print("Packet: ", packet)
-                    print("Packet dict: ", packet.__dict__)
-                    print("Packet payload: ", packet.payload)
+                    # TODO The actual mitm stuff
+                    packet2 = IP(packet.payload)
+                    print("MITM 💻:", "Packet 📦:", "source:", packet2[IP].src.ljust(16), str(packet2[TCP].sport).ljust(6), "   destination:",
+                          packet2[IP].dst.ljust(16), str(packet2[TCP].dport).ljust(6), )
+
                     packet.mangle()
+
             except fnfqueue.BufferOverflowException:
                 print("Buffer Overflow in a MITM attack!")
 
+    def interrupt(self):
+        if self.state == 1:
+            self.teardown()
+
     def teardown(self):
         # Delete iptables rules
-        os.system('iptables -t mangle -D PREROUTING  -p tcp --dport 44818 -j NFQUEUE --queue-num 1')
+        os.system('iptables -t mangle -D PREROUTING -p tcp -j NFQUEUE --queue-num 1')
         os.system('iptables -D FORWARD -p icmp -j DROP')
         os.system('iptables -D INPUT -p icmp -j DROP')
         os.system('iptables -D OUTPUT -p icmp -j DROP')
 
         restore_arp("192.168.1.1", "192.168.1.254")
 
-        self.thread.exit()
+        print("test1")
+
+        self.run_thread = False
+        print("test2")
+
+        self.thread.join()
+        print("test3")
 
     def attack_step(self):
-        print("Attacker gets clock:", self.get_master_clock())
         if self.state == 0:
             if self.intermediate_attack["start"] <= self.get_master_clock() <= self.intermediate_attack["end"]:
-                self.setup()
                 self.state = 1
+                self.setup()
         elif self.state == 1:
             if not self.intermediate_attack["start"] <= self.get_master_clock() <= self.intermediate_attack["end"]:
                 self.teardown()

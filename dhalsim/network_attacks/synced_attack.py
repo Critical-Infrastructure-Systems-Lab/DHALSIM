@@ -1,23 +1,38 @@
+import signal
 import sqlite3
+import sys
 import time
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
 
 import yaml
 
+from dhalsim.py3_logger import get_logger
+
 
 class SyncedAttack(metaclass=ABCMeta):
     def __init__(self, intermediate_yaml_path: Path, yaml_index: int):
+        signal.signal(signal.SIGINT, self.sigint_handler)
+        signal.signal(signal.SIGTERM, self.sigint_handler)
+
         self.yaml_index = yaml_index
 
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
+
+        self.logger = get_logger(self.intermediate_yaml['log_level'])
 
         # Get the attack that we are from the intermediate YAML
         self.intermediate_attack = self.intermediate_yaml["network_attacks"][self.yaml_index]
 
         # Initialize database connection
         self.initialize_db()
+
+    def sigint_handler(self, sig, frame):
+        """Interrupt handler for attacker being stoped"""
+        self.logger.debug("{name} attacker shutdown".format(name=self.intermediate_attack["name"]))
+        self.interrupt()
+        sys.exit(0)
 
     def initialize_db(self):
         """
@@ -64,6 +79,7 @@ class SyncedAttack(metaclass=ABCMeta):
         """
         while True:
             while self.get_sync():
+                # print(pd.read_sql_query("SELECT * FROM sync;", self.conn))
                 time.sleep(0.01)
 
             self.attack_step()
@@ -74,5 +90,11 @@ class SyncedAttack(metaclass=ABCMeta):
     def attack_step(self):
         """
         This function is the function that will run for every iteration.
-        This function needs to be overwritten
+        This function needs to be overwritten.
+        """
+
+    def interrupt(self):
+        """
+        This function is the function that will bee called when there is a interrupt.
+        This function needs to be if you want to do any cleanup on a interrupt.
         """
