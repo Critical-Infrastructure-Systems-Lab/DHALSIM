@@ -1,7 +1,7 @@
 import yaml
 import sqlite3
 
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 
 
 class SyncedAttack(metaclass=ABCMeta):
@@ -46,9 +46,9 @@ class SyncedAttack(metaclass=ABCMeta):
             self.set_sync(1)
             # time.sleep(sleep)
 
+    @abstractmethod
     def attack_step(self):
         """
         This function is the function that will run for every iteration.
         This function needs to be overwritten
         """
-        print("This function should be overwritten!")
