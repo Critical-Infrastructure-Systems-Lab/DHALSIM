@@ -5,8 +5,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-from py2_logger import get_logger
 from automatic_node import NodeControl
+from py2_logger import get_logger
 
 
 class PlcControl(NodeControl):

@@ -5,6 +5,7 @@ import subprocess
 from pathlib import Path
 
 from automatic_node import NodeControl
+from py2_logger import get_logger
 
 
 class PlantControl(NodeControl):
@@ -15,13 +16,15 @@ class PlantControl(NodeControl):
     def __init__(self, intermediate_yaml):
         super(PlantControl, self).__init__(intermediate_yaml)
 
+        self.logger = get_logger(self.data['log_level'])
+
         self.simulation_process = None
 
     def terminate(self):
         """
         This function stops the physical process (child of this process).
         """
-        print("Stopping physical process...")
+        self.logger.debug("Stopping plant.")
         self.simulation_process.send_signal(signal.SIGINT)
         self.simulation_process.wait()
         if self.simulation_process.poll() is None:
@@ -42,8 +45,6 @@ class PlantControl(NodeControl):
 
         while self.simulation_process.poll() is None:
             pass
-
-        self.terminate()
 
 
 def is_valid_file(parser_instance, arg):
