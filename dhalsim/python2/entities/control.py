@@ -50,7 +50,8 @@ class BelowControl(Control):
         if dep_val < self.value:
             generic_plc.set_tag(self.actuator, self.action)
             generic_plc.logger.debug(
-                generic_plc.intermediate_plc["name"] + " applied " + str(self) + " because dep_val " + str(dep_val))
+                generic_plc.intermediate_plc["name"] + " applied " + str(self) +
+                " because dep_val " + str(dep_val) + ".")
 
     def __str__(self):
         return "Control if {dependant} < {value} then set {actuator} to {action}".format(

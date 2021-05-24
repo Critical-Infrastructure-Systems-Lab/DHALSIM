@@ -14,6 +14,13 @@ class Attack:
         self.command = command
 
     @abstractmethod
+    def __str__(self):
+        """Returns a to string for the current object"""
+        return "{type} \"{name}\" commencing, executing command {command} on actuators" \
+               " {actuators}.".format(type=self.__class__.__name__, name=self.name,
+                                      command=self.command, actuators=self.actuators)
+
+    @abstractmethod
     def apply(self, plc):
         """Applies an attack rule using a given PLC
 
@@ -38,6 +45,11 @@ class TimeAttack(Attack):
         self.start = start
         self.end = end
 
+    def __str__(self):
+        return super(TimeAttack, self).__str__() + " Triggered because {start} iterations have" \
+                                                   " occured. Ends at {end} iterations.".format(
+            start=self.start, end=self.end)
+
     def apply(self, plc):
         """Applies the Device Attack on a given PLC
 
@@ -45,7 +57,7 @@ class TimeAttack(Attack):
         """
         curr_time = plc.get_master_clock()
         if self.start <= curr_time <= self.end:
-            plc.logger.debug("Time attack applied")
+            plc.logger.debug(self.__str__())
             for actuator in self.actuators:
                 plc.set_tag(actuator, self.command)
 
@@ -68,6 +80,11 @@ class TriggerBelowAttack(Attack):
         self.sensor = sensor
         self.value = value
 
+    def __str__(self):
+        return super(TriggerBelowAttack, self).__str__() + " Triggered because sensor {sensor}" \
+                                                           " fell below {value}."\
+            .format(sensor=self.sensor, value=self.value)
+
     def apply(self, plc):
         """
         Applies the TriggerAttack when necessary
@@ -76,7 +93,7 @@ class TriggerBelowAttack(Attack):
         """
         sensor_value = plc.get_tag(self.sensor)
         if sensor_value < self.value:
-            plc.logger.debug("Below attack applied")
+            plc.logger.debug(self.__str__())
             for actuator in self.actuators:
                 plc.set_tag(actuator, self.command)
 
@@ -99,6 +116,11 @@ class TriggerAboveAttack(Attack):
         self.sensor = sensor
         self.value = value
 
+    def __str__(self):
+        return super(TriggerAboveAttack, self).__str__() + " Triggered because sensor {sensor}" \
+                                                           " fell above {value}."\
+            .format(sensor=self.sensor, value=self.value)
+
     def apply(self, plc):
         """
         Applies the TriggerAttack when necessary
@@ -107,7 +129,7 @@ class TriggerAboveAttack(Attack):
         """
         sensor_value = plc.get_tag(self.sensor)
         if sensor_value > self.value:
-            plc.logger.debug("Above attack applied")
+            plc.logger.debug(self.__str__())
             for actuator in self.actuators:
                 plc.set_tag(actuator, self.command)
 
@@ -131,6 +153,11 @@ class TriggerBetweenAttack(Attack):
         self.lower_value = lower_value
         self.upper_value = upper_value
 
+    def __str__(self):
+        return super(TriggerBetweenAttack, self).__str__() + " Triggered because sensor {sensor}" \
+                                                             " fell between {lower} and {upper}"\
+            .format(sensor=self.sensor, lower=self.lower_value, upper=self.upper_value)
+
     def apply(self, plc):
         """
         Applies the TriggerAttack when necessary
@@ -139,6 +166,6 @@ class TriggerBetweenAttack(Attack):
         """
         sensor_value = plc.get_tag(self.sensor)
         if self.lower_value < sensor_value < self.upper_value:
-            plc.logger.debug("Between attack applied")
+            plc.logger.debug(self.__str__())
             for actuator in self.actuators:
                 plc.set_tag(actuator, self.command)
