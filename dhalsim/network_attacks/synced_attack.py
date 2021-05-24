@@ -32,19 +32,16 @@ class SyncedAttack(metaclass=ABCMeta):
         :param flag: True for sync to 1, false for sync to 0
         """
         self.cur.execute("UPDATE sync SET flag=? WHERE name IS ?",
-                         (int(flag), self.intermediate_plc["name"],))
+                         (int(flag), self.intermediate_attack["name"],))
         self.conn.commit()
 
     def main_loop(self, sleep=0.05):
         """
         The main loop of an attack.
-
-        :param sleep:  (Default value = 0.05) Currently not used
         """
         while True:
             self.attack_step()
             self.set_sync(1)
-            # time.sleep(sleep)
 
     @abstractmethod
     def attack_step(self):
