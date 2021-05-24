@@ -58,12 +58,12 @@ class AttackerControl(NodeControl):
 
     def start_attack(self):
         """Start a attack process."""
-        # generic_plc_path = Path(__file__).parent.absolute() / "generic_plc.py"
-        #
-        # cmd = ["python2", str(generic_plc_path), str(self.intermediate_yaml), str(self.attacker_index)]
-        #
-        # plc_process = subprocess.Popen(cmd, shell=False, stderr=sys.stderr, stdout=sys.stdout)
-        # return plc_process
+        generic_plc_path = Path(__file__).parent.parent.absolute() / "network_attacks" / "mitm_attack.py"
+
+        cmd = ["python3", str(generic_plc_path), str(self.intermediate_yaml), str(self.attacker_index)]
+
+        plc_process = subprocess.Popen(cmd, shell=False, stderr=sys.stderr, stdout=sys.stdout)
+        return plc_process
 
 
 def is_valid_file(parser_instance, arg):
