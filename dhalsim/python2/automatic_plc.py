@@ -94,8 +94,14 @@ class NodeControl:
         """
         generic_plc_path = Path(__file__).parent.absolute() / "generic_plc.py"
 
+        if self.data['log_level'] == 'debug':
+            f = sys.stderr
+            g = sys.stdout
+        else:
+            f = open('/dev/null', 'w')
+            g = open('/dev/null', 'w')
         cmd = ["python2", str(generic_plc_path), str(self.intermediate_yaml), str(self.plc_index)]
-        plc_process = subprocess.Popen(cmd, shell=False, stderr=sys.stdout, stdout=sys.stdout)
+        plc_process = subprocess.Popen(cmd, shell=False, stderr=f, stdout=g)
         return plc_process
 
 

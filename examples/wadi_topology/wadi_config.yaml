@@ -9,7 +9,8 @@ output_path: "output"
 iterations: 500
 network_topology_type: complex
 mininet_cli: False
-log_level: debug
+log_level: info
+# Setting this to debug will also print WNTR and MiniCPS output
 #simulator: "pdd"
 #week_index: 0
 

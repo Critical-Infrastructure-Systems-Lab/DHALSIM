@@ -45,7 +45,7 @@ class TimeAttack(Attack):
         """
         curr_time = plc.get_master_clock()
         if self.start <= curr_time <= self.end:
-            plc.logger.info("Time attack applied")
+            plc.logger.debug("Time attack applied")
             for actuator in self.actuators:
                 plc.set_tag(actuator, self.command)
 
@@ -76,7 +76,7 @@ class TriggerBelowAttack(Attack):
         """
         sensor_value = plc.get_tag(self.sensor)
         if sensor_value < self.value:
-            plc.logger.info("Below attack applied")
+            plc.logger.debug("Below attack applied")
             for actuator in self.actuators:
                 plc.set_tag(actuator, self.command)
 
@@ -107,7 +107,7 @@ class TriggerAboveAttack(Attack):
         """
         sensor_value = plc.get_tag(self.sensor)
         if sensor_value > self.value:
-            plc.logger.info("Above attack applied")
+            plc.logger.debug("Above attack applied")
             for actuator in self.actuators:
                 plc.set_tag(actuator, self.command)
 
@@ -139,6 +139,6 @@ class TriggerBetweenAttack(Attack):
         """
         sensor_value = plc.get_tag(self.sensor)
         if self.lower_value < sensor_value < self.upper_value:
-            plc.logger.info("Between attack applied")
+            plc.logger.debug("Between attack applied")
             for actuator in self.actuators:
                 plc.set_tag(actuator, self.command)

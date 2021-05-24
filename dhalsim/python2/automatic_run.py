@@ -101,7 +101,7 @@ class GeneralCPS(MiniCPS):
         cmd = ["python2", str(automatic_plant_path), str(self.intermediate_yaml)]
         self.plant_process = self.net.get('plant').popen(cmd, stderr=sys.stderr, stdout=sys.stdout)
 
-        self.logger.info("[ ] Simulating...")
+        self.logger.info("Simulating...")
         # We wait until the simulation ends
         while self.plant_process.poll() is None:
             pass

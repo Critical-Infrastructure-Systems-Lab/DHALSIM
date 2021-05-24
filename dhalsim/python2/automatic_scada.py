@@ -8,6 +8,7 @@ from pathlib import Path
 import yaml
 from py2_logger import get_logger
 
+
 class ScadaControl:
     """
     This class is started for a scada. It starts a tcpdump and a scada process.
@@ -89,10 +90,14 @@ class ScadaControl:
         """
         generic_scada_path = Path(__file__).parent.absolute() / "generic_scada.py"
 
-        # Output is not printed to console
-        # f = open('/dev/null', 'w')
+        if self.data['log_level'] == 'debug':
+            f = sys.stderr
+            g = sys.stdout
+        else:
+            f = open('/dev/null', 'w')
+            g = open('/dev/null', 'w')
         cmd = ["python2", str(generic_scada_path), str(self.intermediate_yaml)]
-        scada_process = subprocess.Popen(cmd, shell=False, stderr=sys.stderr, stdout=sys.stdout)
+        scada_process = subprocess.Popen(cmd, shell=False, stderr=f, stdout=g)
         return scada_process
 
 
