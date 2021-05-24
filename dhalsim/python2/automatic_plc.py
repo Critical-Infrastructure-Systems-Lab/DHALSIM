@@ -45,7 +45,7 @@ class NodeControl:
         """
         This function stops the tcp dump and the plc process.
         """
-        self.logger.debug("Stopping Tcp dump process on PLC...")
+        self.logger.debug("Stopping TCP dump process on PLC.")
         # self.process_tcp_dump.kill()
 
         self.process_tcp_dump.send_signal(signal.SIGINT)
@@ -55,7 +55,7 @@ class NodeControl:
         if self.process_tcp_dump.poll() is None:
             self.process_tcp_dump.kill()
 
-        self.logger.debug("Stopping PLC...")
+        self.logger.debug("Stopping PLC.")
 
         self.plc_process.send_signal(signal.SIGINT)
         self.plc_process.wait()
@@ -107,7 +107,7 @@ class NodeControl:
 
 def is_valid_file(parser_instance, arg):
     if not os.path.exists(arg):
-        parser_instance.error(arg + " does not exist")
+        parser_instance.error(arg + " does not exist.")
     else:
         return arg
 

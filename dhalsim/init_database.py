@@ -16,7 +16,7 @@ class DatabaseInitializer:
         self.logger = get_logger(self.data['log_level'])
         self.db_path = Path(self.data["db_path"])
         self.db_path.touch(exist_ok=True)
-        self.logger.info("Initializing database")
+        self.logger.info("Initializing database.")
 
 
     def write(self):
@@ -75,7 +75,7 @@ class DatabaseInitializer:
 
 def is_valid_file(file_parser, arg):
     if not os.path.exists(arg):
-        file_parser.error(arg + " does not exist")
+        file_parser.error(arg + " does not exist.")
     else:
         return arg
 

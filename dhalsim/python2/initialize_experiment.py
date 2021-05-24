@@ -31,10 +31,10 @@ class ExperimentInitializer:
             try:
                 self.week_index = int(self.options['week_index'])
             except KeyError:
-                self.logger.info("Missing week index parameter in yaml configuration file")
+                self.logger.info("Missing week index parameter in yaml configuration file.")
 
         else:
-            self.logger.critical("Invalid simulation mode, supported values are 'Single' and 'Batch', aborting")
+            self.logger.critical("Invalid simulation mode, supported values are 'Single' and 'Batch', aborting.")
             sys.exit(1)
 
         # complex_topology flag is going to define which topo instance we create
@@ -44,7 +44,7 @@ class ExperimentInitializer:
             elif self.options['complex_topology'] == 'False':
                 self.complex_topology = False
             else:
-                self.logger.critical("Complex_topology parameter has to be a boolean, aborting")
+                self.logger.critical("Complex_topology parameter has to be a boolean, aborting.")
                 sys.exit(1)
         else:
             self.complex_topology = False
@@ -75,13 +75,13 @@ class ExperimentInitializer:
                 if 'attacks_path' in self.options:
                     self.attack_path = self.options['attacks_path']
                 else:
-                    self.logger.warning("Warning. Using default attack path ../../attack_repository/ctown.cpa")
+                    self.logger.warning("Warning. Using default attack path ../../attack_repository/ctown.cpa.")
                     self.attack_path = '../../attack_repository/attack_description.yaml'
 
                 if 'attack_name' in self.options:
                     self.attack_name = self.options['attack_name']
                 else:
-                    self.logger.warning("Warning. Using default attack plc_empty_tank_1")
+                    self.logger.warning("Warning. Using default attack plc_empty_tank_1.")
                     self.attack_name = 'plc_empty_tank_1'
             else:
                 self.run_attack = False

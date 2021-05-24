@@ -41,7 +41,7 @@ class ScadaControl:
         """
         This function stops the tcp dump and the plc process.
         """
-        self.logger.debug("Stopping Tcp dump process on SCADA...")
+        self.logger.debug("Stopping TCP dump process on SCADA.")
 
         self.process_tcp_dump.send_signal(signal.SIGINT)
         self.process_tcp_dump.wait()
@@ -50,7 +50,7 @@ class ScadaControl:
         if self.process_tcp_dump.poll() is None:
             self.process_tcp_dump.kill()
 
-        self.logger.debug("Stopping SCADA...")
+        self.logger.debug("Stopping SCADA.")
         self.scada_process.send_signal(signal.SIGINT)
         self.scada_process.wait()
         if self.scada_process.poll() is None:
@@ -106,7 +106,7 @@ def is_valid_file(parser_instance, arg):
     Verifies whether the intermediate yaml path is valid.
     """
     if not os.path.exists(arg):
-        parser_instance.error(arg + " does not exist")
+        parser_instance.error(arg + " does not exist.")
     else:
         return arg
 

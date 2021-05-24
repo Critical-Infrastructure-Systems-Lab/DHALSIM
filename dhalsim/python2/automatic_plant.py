@@ -62,7 +62,7 @@ class SimulationControl:
 
 def is_valid_file(parser_instance, arg):
     if not os.path.exists(arg):
-        parser_instance.error(arg + " does not exist")
+        parser_instance.error(arg + " does not exist.")
     else:
         return arg
 

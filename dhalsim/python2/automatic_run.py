@@ -99,7 +99,7 @@ class GeneralCPS(MiniCPS):
         scada_cmd = ["python2", str(automatic_scada_path), str(self.intermediate_yaml)]
         self.scada_process = self.net.get('scada').popen(scada_cmd, stderr=sys.stderr, stdout=sys.stdout)
 
-        self.logger.info("Launched the PLCs and SCADA processes")
+        self.logger.info("Launched the PLCs and SCADA processes.")
 
         automatic_plant_path = Path(__file__).parent.absolute() / "automatic_plant.py"
 
@@ -131,7 +131,7 @@ class GeneralCPS(MiniCPS):
         Terminate the plcs, physical process, mininet, and remaining processes that
         automatic run spawned.
         """
-        self.logger.info("Simulation finished")
+        self.logger.info("Simulation finished.")
         try:
             self.end_process(self.scada_process)
         except Exception, msg:
@@ -144,7 +144,7 @@ class GeneralCPS(MiniCPS):
                 continue
 
         if self.plant_process.poll() is None:
-            self.logger.info("Physical simulation process terminated")
+            self.logger.info("Physical simulation process terminated.")
             self.end_process(self.plant_process)
 
         cmd = 'sudo pkill -f "python2 -m cpppo.server.enip"'
@@ -157,7 +157,7 @@ class GeneralCPS(MiniCPS):
 def is_valid_file(parser_instance, arg):
     """Verifies whether the intermediate yaml path is valid"""
     if not os.path.exists(arg):
-        parser_instance.error(arg + " does not exist")
+        parser_instance.error(arg + " does not exist.")
     else:
         return arg
 

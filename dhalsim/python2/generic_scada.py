@@ -220,7 +220,8 @@ class GenericScada(SCADAServer):
                 results = []
                 for plc_datum in self.plc_data:
                     plc_value = self.receive_multiple(plc_datum[1], plc_datum[0])
-                    self.logger.debug("PLC value received by SCADA from IP: " + str(plc_datum[0]) + " is " + str(plc_value))
+                    self.logger.debug("PLC value received by SCADA from IP: " + str(plc_datum[0])
+                                      + " is " + str(plc_value) + ".")
                     results.extend(plc_value)
                 self.saved_values.append(results)
             except Exception, msg:
@@ -241,7 +242,7 @@ def is_valid_file(parser_instance, arg):
     :param arg: the path to check
     """
     if not os.path.exists(arg):
-        parser_instance.error(arg + " does not exist")
+        parser_instance.error(arg + " does not exist.")
     else:
         return arg
 

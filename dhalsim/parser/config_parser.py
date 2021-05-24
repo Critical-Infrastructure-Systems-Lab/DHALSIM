@@ -60,10 +60,10 @@ class ConfigParser:
         """
         path = self.config_data.get("inp_file")
         if not path:
-            raise MissingValueError("inp_file not in config file")
+            raise MissingValueError("inp_file not in config file.")
         path = (self.config_path.parent / path).absolute()
         if not path.is_file():
-            raise FileNotFoundError(str(path) + " is not a file")
+            raise FileNotFoundError(str(path) + " is not a file.")
         return path
 
     @property
@@ -75,10 +75,10 @@ class ConfigParser:
         """
         path = self.config_data.get("cpa_file")
         if not path:
-            raise MissingValueError("cpa_file not in config file")
+            raise MissingValueError("cpa_file not in config file.")
         path = (self.config_path.parent / path).absolute()
         if not path.is_file():
-            raise FileNotFoundError(str(path) + " is not a file")
+            raise FileNotFoundError(str(path) + " is not a file.")
         return path
 
     @property
@@ -105,10 +105,10 @@ class ConfigParser:
         """
         path = self.config_data.get("attacks_path")
         if not path:
-            raise MissingValueError("Attack file not in config file")
+            raise MissingValueError("Attack file not in config file.")
         path = (self.config_path.parent / path).absolute()
         if not path.is_file():
-            raise FileNotFoundError(str(path) + " is not a file")
+            raise FileNotFoundError(str(path) + " is not a file.")
         return path
 
     @property
@@ -123,13 +123,13 @@ class ConfigParser:
         # Verification of plc data
         plcs = cpa.get("plcs")
         if not plcs:
-            raise MissingValueError("PLCs section not present in cpa_file")
+            raise MissingValueError("PLCs section not present in cpa_file.")
 
         # Check for plc names (and check for duplicates)
         plc_list = []
         for plc in plcs:
             if not plc.get("name"):
-                raise MissingValueError("PLC in cpa file missing a name")
+                raise MissingValueError("PLC in cpa file missing a name.")
             else:
                 plc_list.append(plc.get("name"))
 
@@ -163,9 +163,9 @@ class ConfigParser:
         network_type = self.config_data["network_topology_type"]
 
         if type(network_type) != str:
-            raise InvalidValueError("network_topology_type must be simple or complex")
+            raise InvalidValueError("network_topology_type must be simple or complex.")
         if network_type.lower() != "simple" and network_type.lower() != "complex":
-            raise InvalidValueError("network_topology_type must be simple or complex")
+            raise InvalidValueError("network_topology_type must be simple or complex.")
 
         return network_type.lower()
 
@@ -217,7 +217,7 @@ class ConfigParser:
             if self.config_data['log_level'] in ['debug', 'info', 'warning', 'error', 'critical']:
                 yaml_data['log_level'] = self.config_data['log_level']
             else:
-                raise InvalidValueError("Invalid log_level value")
+                raise InvalidValueError("Invalid log_level value.")
         else:
             yaml_data['log_level'] = 'info'
 

@@ -83,17 +83,17 @@ class PhysicalPlant:
             simulator_string = self.data['simulator']
 
             if simulator_string == 'pdd':
-                self.logger.info('Running simulation using PDD')
+                self.logger.info("Running simulation using PDD.")
                 self.wn.options.hydraulic.demand_model = 'PDD'
             elif simulator_string == 'dd':
-                self.logger.info('Running simulation using DD')
+                self.logger.info("Running simulation using DD.")
             else:
-                self.logger.critical('Invalid simulation mode, exiting...')
+                self.logger.critical('Invalid simulation mode, exiting.')
                 sys.exit(1)
 
             self.sim = wntr.sim.WNTRSimulator(self.wn)
 
-            self.logger.info("Starting simulation for " + str(self.data['inp_file']) + " topology ")
+            self.logger.info("Starting simulation for " + str(self.data['inp_file']) + " topology.")
         except KeyError as e:
             self.logger.critical("An incorrect YAML file has been supplied: " + str(e))
             sys.exit(1)
@@ -236,8 +236,9 @@ class PhysicalPlant:
 
         iteration_limit = self.data["iterations"]
 
-        self.logger.info("Simulation will run for " + str(iteration_limit) + " iterations")
-        self.logger.info("Hydraulic timestep is " + str(self.wn.options.time.hydraulic_timestep))
+        self.logger.info("Simulation will run for " + str(iteration_limit) + " iterations.")
+        self.logger.info("Hydraulic timestep is " + str(self.wn.options.time.hydraulic_timestep)
+                         + ".")
 
         while master_time <= iteration_limit:
             self.c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(master_time),))
@@ -252,7 +253,7 @@ class PhysicalPlant:
             self.update_controls()
             eta = self.calculate_eta(start, master_time, iteration_limit)
             self.logger.info("Iteration %d out of %d. Estimated remaining time: %s" % (
-                master_time, iteration_limit, eta))
+                master_time, iteration_limit, eta) + ".")
 
             results = self.sim.run_sim(convergence_error=True)
             values_list = self.register_results(results)
@@ -293,18 +294,18 @@ class PhysicalPlant:
 
     def interrupt(self, sig, frame):
         self.finish()
-        self.logger.info("Simulation ended")
+        self.logger.info("Simulation ended.")
         sys.exit(0)
 
     def finish(self):
         self.write_results(self.results_list)
-        self.logger.info("Simulation finished")
+        self.logger.info("Simulation finished.")
         sys.exit(0)
 
 
 def is_valid_file(test_parser, arg):
     if not os.path.exists(arg):
-        test_parser.error(arg + " does not exist")
+        test_parser.error(arg + " does not exist.")
     else:
         return arg
 

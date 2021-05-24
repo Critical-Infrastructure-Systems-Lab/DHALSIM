@@ -11,7 +11,7 @@ from dhalsim.parser.config_parser import ConfigParser
 
 def is_valid_file(parser, arg):
     if not os.path.exists(arg):
-        parser.error(arg + " does not exist")
+        parser.error(arg + " does not exist.")
     else:
         return arg
 
