@@ -225,7 +225,7 @@ class PhysicalPlant:
         # We want to simulate only 1 hydraulic timestep each time MiniCPS processes the simulation data
         self.wn.options.time.duration = self.wn.options.time.hydraulic_timestep
 
-        master_time = 0
+        master_time = -1
         start = datetime.now()
 
         iteration_limit = self.data["iterations"]
@@ -237,8 +237,8 @@ class PhysicalPlant:
             self.c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(master_time),))
             self.conn.commit()
 
-            self.c.execute("UPDATE sync SET flag=0")
-            self.conn.commit()
+            # Increment master time
+            master_time = master_time + 1
 
             while not self.get_plcs_ready():
                 time.sleep(0.01)
@@ -290,7 +290,9 @@ class PhysicalPlant:
                                (str(level), junction,))
                 self.conn.commit()
 
-            master_time = master_time + 1
+            # Set sync flags for nodes
+            self.c.execute("UPDATE sync SET flag=0")
+            self.conn.commit()
 
         self.finish()
 

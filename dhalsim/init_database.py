@@ -49,9 +49,9 @@ class DatabaseInitializer:
             );""")
 
             for plc in self.data["plcs"]:
-                cur.execute("INSERT INTO sync (name, flag) VALUES (?, 0);",
+                cur.execute("INSERT INTO sync (name, flag) VALUES (?, 1);",
                             (plc["name"],))
-            cur.execute("INSERT INTO sync (name, flag) VALUES ('scada', 0);")
+            cur.execute("INSERT INTO sync (name, flag) VALUES ('scada', 1);")
             conn.commit()
 
     def drop(self):
