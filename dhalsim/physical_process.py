@@ -205,20 +205,27 @@ class PhysicalPlant:
             writer.writerows(results)
 
     @staticmethod
-    def calculate_eta(start, iteration, total):
+    def calculate_eta(start: datetime, iteration: int, total: int):
         """
-        Calculates estimated time until finished simulation.
+        Calculates estimated time until finished simulation. Only calculates estimated remaining
+        time if it has run enough iterations (more than 10%) to make an accurate estimation.
 
-        :start: start time
-        :iteration: current iteration
-        :total: total number of iterations
+        :param start: start time of simulation
+        :type start: datetime
+        :param iteration: current iteration
+        :type iteration: int
+        :param total: total numer of iterations
+        :type total: int
+        :rtype: str
         """
         diff = datetime.now() - start
-        if iteration == round(total):
-            return timedelta(seconds=0)
-        return timedelta(seconds=(diff.days.real * 24 * 3600 + diff.seconds.real
-                                  / (float(iteration / float(round(total))) + 0.000001)
-                                  - diff.total_seconds()))
+        if iteration == total:
+            return "Estimated remaining time:", timedelta(seconds=0), "."
+        if iteration < total / 10:
+            return "Sampling estimated remaining time..."
+        diff_seconds = diff.days.real * 24 * 3600 + diff.seconds.real
+        remaining_time = timedelta(seconds=(diff_seconds / (float(iteration / float(total))) - diff.total_seconds()))
+        return "Estimated remaining time: " + str(remaining_time).split(".")[0] + "."
 
     def get_plcs_ready(self):
         self.c.execute("""SELECT count(*)
@@ -236,11 +243,11 @@ class PhysicalPlant:
 
         iteration_limit = self.data["iterations"]
 
-        self.logger.info("Simulation will run for " + str(iteration_limit) + " iterations.")
-        self.logger.info("Hydraulic timestep is " + str(self.wn.options.time.hydraulic_timestep)
-                         + ".")
+        self.logger.info("Simulation will run for {x} iterations.".format(x=str(iteration_limit)))
+        self.logger.info("Hydraulic timestep is {timestep}.".format(
+            timestep=str(self.wn.options.time.hydraulic_timestep)))
 
-        while master_time <= iteration_limit:
+        while master_time < iteration_limit:
             self.c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(master_time),))
             self.conn.commit()
 
@@ -252,8 +259,7 @@ class PhysicalPlant:
 
             self.update_controls()
             eta = self.calculate_eta(start, master_time, iteration_limit)
-            self.logger.info("Iteration %d out of %d. Estimated remaining time: %s" % (
-                master_time, iteration_limit, eta) + ".")
+            self.logger.info("Iteration %d out of %d. %s" % (master_time, iteration_limit, eta))
 
             results = self.sim.run_sim(convergence_error=True)
             values_list = self.register_results(results)
