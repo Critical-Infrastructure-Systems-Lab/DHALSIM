@@ -1,9 +1,11 @@
 import argparse
+import logging
 import os
 import signal
 import subprocess
 import sys
 from pathlib import Path
+from py2_logger import get_logger
 
 import yaml
 
@@ -23,6 +25,8 @@ class NodeControl:
         with self.intermediate_yaml.open(mode='r') as file:
             self.data = yaml.safe_load(file)
 
+        self.logger = get_logger(self.data['log_level'])
+
         self.output_path = Path(self.data["output_path"])
 
         self.process_tcp_dump = None
@@ -41,7 +45,7 @@ class NodeControl:
         """
         This function stops the tcp dump and the plc process.
         """
-        print("Stopping Tcp dump process on PLC...")
+        self.logger.debug("Stopping TCP dump process on PLC.")
         # self.process_tcp_dump.kill()
 
         self.process_tcp_dump.send_signal(signal.SIGINT)
@@ -51,7 +55,8 @@ class NodeControl:
         if self.process_tcp_dump.poll() is None:
             self.process_tcp_dump.kill()
 
-        print("Stopping PLC...")
+        self.logger.debug("Stopping PLC.")
+
         self.plc_process.send_signal(signal.SIGINT)
         self.plc_process.wait()
         if self.plc_process.poll() is None:
@@ -67,10 +72,8 @@ class NodeControl:
         self.process_tcp_dump = self.start_tcpdump_capture()
 
         self.plc_process = self.start_plc()
-
         while self.plc_process.poll() is None:
             pass
-
         self.terminate()
 
     def start_tcpdump_capture(self):
@@ -78,8 +81,11 @@ class NodeControl:
         Start a tcp dump.
         """
         pcap = self.output_path / (self.this_plc_data["interface"] + '.pcap')
+
+        # Output is not printed to console
+        no_output = open('/dev/null', 'w')
         tcp_dump = subprocess.Popen(['tcpdump', '-i', self.this_plc_data["interface"], '-w',
-                                     str(pcap)], shell=False)
+                                     str(pcap)], shell=False, stderr=no_output, stdout=no_output)
         return tcp_dump
 
     def start_plc(self):
@@ -88,15 +94,20 @@ class NodeControl:
         """
         generic_plc_path = Path(__file__).parent.absolute() / "generic_plc.py"
 
+        if self.data['log_level'] == 'debug':
+            err_put = sys.stderr
+            out_put = sys.stdout
+        else:
+            err_put = open('/dev/null', 'w')
+            out_put = open('/dev/null', 'w')
         cmd = ["python2", str(generic_plc_path), str(self.intermediate_yaml), str(self.plc_index)]
-
-        plc_process = subprocess.Popen(cmd, shell=False, stderr=sys.stderr, stdout=sys.stdout)
+        plc_process = subprocess.Popen(cmd, shell=False, stderr=err_put, stdout=out_put)
         return plc_process
 
 
 def is_valid_file(parser_instance, arg):
     if not os.path.exists(arg):
-        parser_instance.error(arg + " does not exist")
+        parser_instance.error(arg + " does not exist.")
     else:
         return arg
 

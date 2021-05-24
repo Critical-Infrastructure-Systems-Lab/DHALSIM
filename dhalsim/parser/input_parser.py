@@ -1,14 +1,8 @@
-import logging
-
 import wntr
-import yaml
 from antlr4 import *
-from pathlib import Path
 
 from dhalsim.parser.antlr.controlsLexer import controlsLexer
 from dhalsim.parser.antlr.controlsParser import controlsParser
-
-logger = logging.getLogger(__name__)
 
 
 class Error(Exception):
@@ -36,12 +30,11 @@ class InputParser:
     """
     Class handling the parsing of .inp input files.
 
-    :param intermediate_yaml_path: The path of the inp file
+    :param intermediate_yaml: The intermediate yaml file
     """
 
     def __init__(self, intermediate_yaml):
-        """Constructor method
-        """
+        """Constructor method"""
         self.data = intermediate_yaml
 
         for plc in self.data['plcs']:

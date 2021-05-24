@@ -1,7 +1,8 @@
+import yaml
+
 from mininet.topo import Topo
 from mininet.node import Node
 from mininet.net import Mininet
-import yaml
 
 
 class LinuxRouter(Node):
@@ -32,7 +33,6 @@ class SimpleTopo(Topo):
     """
 
     def __init__(self, intermediate_yaml_path):
-
         # Set variables
         self.router_ip = "192.168.1.254"
         self.supervisor_ip = "192.168.2.254"
