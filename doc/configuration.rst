@@ -16,11 +16,13 @@ Example with all options:
     log_level: info
     simulator: pdd
     run_attack: True
-    attacks_path: "wadi_attacks.yaml"
+    attacks_path: "attacks.yaml"
     batch_mode: false
-    initial_values: initial_tank_wadi.csv
+    initial_tank_values: initial_tank.csv
     network_loss: true
-    network_loss_data: losses_wadi.csv
+    network_loss_data: losses.csv
+    network_delay: false
+    network_delay_data: delays.csv
 
 In the following sections, every entry is explained.
 
@@ -155,17 +157,17 @@ files with initial tank conditions, demand patterns, and network losses to simul
 :code:`batch_iterations` number of times. (**NOTE, NONE OF THIS WORKS YET, JUST INITIAL VALUES**)
 :code:`batch_mode` should be a boolean.
 
-initial_values
+initial_tank_values
 ------------------------
 *This is mandatory when batch mode is*: :code:`True`
 
-The :code:`initial_values` provides the name of the :code:`.csv` files with initial tank values for batch mode simulation. Each column should be a tank
+The :code:`initial_tank_values` provides the name of the :code:`.csv` files with initial tank values for batch mode simulation. Each column should be a tank
 with rows being initial values for each simulation. If you want to only provide initial values for some tanks, then you can do that and the remaining
 tanks will use the default initial value from the :code:`.inp` file.
 
 An example would look like this :
 
-.. csv-table:: initial_values
+.. csv-table:: initial_tank_values
    :header: "tank_1", "tank_2", "tank_3"
    :widths: 5, 5, 5
 
@@ -199,3 +201,30 @@ An example would look like this :
     0.02,0.45,0.17
     0.03,0.46,0.18
     0.04,0.47,0.19
+
+network_delay
+------------------------
+*This is an optional value with default*: :code:`False`
+
+If the :code:`network_delay` option is :code:`True`, then the network simulation will run using network delays. This means you can provide a :code:`.csv`
+file with network delays to simulate under non-perfect network conditions. If :code:`batch_mode` is :code:`False`, then the network delays used will be the first
+row in the CSV. If :code:`batch_mode` is :code:`True` then it will use the same index as the tank levels, demand patterns, etc.
+:code:`network_delay` should be a boolean.
+
+network_delay_data
+------------------------
+*This is mandatory when network loss is*: :code:`True`
+
+The :code:`network_delay_data` provides the name of the :code:`.csv` file with network delay values for the simulation. Each column should be a router
+with rows being the delay values. If you want to only provide delays for some routers, then you can do that and the remaining
+routers will use the default value (none).
+
+An example would look like this :
+
+.. csv-table:: network_delay_data
+   :header: "r0", "r1", "r2"
+   :widths: 5, 5, 5
+
+    22.02,42.45,17.17
+    22.03,42.46,17.18
+    22.04,42.47,17.19

@@ -226,13 +226,13 @@ class ConfigParser:
         return network_delay
 
     @property
-    def initial_values_path(self):
+    def initial_tank_values_path(self):
         """
         Property to load initial tank values path
         """
-        path = self.config_data.get("initial_values")
+        path = self.config_data.get("initial_tank_values")
         if not path:
-            raise MissingValueError("initial values file not in config file.")
+            raise MissingValueError("initial tank values file not in config file.")
         path = (self.config_path.parent / path).absolute()
         if not path.is_file():
             raise FileNotFoundError(str(path) + " is not a file.")
@@ -294,7 +294,7 @@ class ConfigParser:
         # Add batch mode parameters
         yaml_data["batch_mode"] = self.batch_mode_value
         if yaml_data["batch_mode"]:
-            yaml_data["initial_values_path"] = str(self.initial_values_path)
+            yaml_data["initial_tank_values_path"] = str(self.initial_tank_values_path)
             yaml_data["batch_index"] = self.batch_index
         # Add network loss parameters
         yaml_data["network_loss"] = self.network_loss_value

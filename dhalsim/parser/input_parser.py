@@ -65,7 +65,7 @@ class InputParser:
         self.generate_times()
         # Generate initial values if batch mode is true
         if self.data["batch_mode"]:
-            self.generate_initial_values()
+            self.generate_initial_tank_values()
         # Generate network loss values if network loss is true
         if self.data["network_loss"]:
             self.generate_network_losses()
@@ -157,11 +157,11 @@ class InputParser:
         pumps.extend(valves)
         self.data['actuators'] = pumps
 
-    def generate_initial_values(self):
+    def generate_initial_tank_values(self):
         """Generates all tanks with their initial values if running in batch mode"""
 
         initial_values = {}
-        initial_tank_levels = pd.read_csv(self.data["initial_values_path"])
+        initial_tank_levels = pd.read_csv(self.data["initial_tank_values_path"])
         # For all columns in csv
         for index in range(len(initial_tank_levels.columns)):
             name = initial_tank_levels.columns[index]
@@ -169,7 +169,7 @@ class InputParser:
             initial_values[str(name)] = \
                 float(initial_tank_levels.iloc[self.data["batch_index"], index])
 
-        self.data['initial_values'] = initial_values
+        self.data['initial_tank_values'] = initial_values
 
     def generate_network_losses(self):
         """Generates list of routers with their network losses from the input csv"""
