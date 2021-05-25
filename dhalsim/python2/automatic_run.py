@@ -105,13 +105,13 @@ class GeneralCPS(MiniCPS):
 
         self.logger.info("Launched the SCADA process.")
 
+        self.attacker_processes = []
         if "network_attacks" in self.data:
             automatic_attacker_path = Path(__file__).parent.absolute() / "automatic_attacker.py"
             for i, attacker in enumerate(self.data["network_attacks"]):
                 node = self.net.get(attacker["name"])
-
                 cmd = ["python2", str(automatic_attacker_path), str(self.intermediate_yaml), str(i)]
-                self.plc_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
+                self.attacker_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
 
         self.logger.info("Launched the attackers processes.")
 
@@ -120,7 +120,8 @@ class GeneralCPS(MiniCPS):
         cmd = ["python2", str(automatic_plant_path), str(self.intermediate_yaml)]
         self.plant_process = self.net.get('plant').popen(cmd, stderr=sys.stderr, stdout=sys.stdout)
 
-        self.logger.info("Simulating...")
+        self.logger.info("Launched the plant processes.")
+
         # We wait until the simulation ends
         while self.plant_process.poll() is None:
             pass
@@ -146,20 +147,32 @@ class GeneralCPS(MiniCPS):
         automatic run spawned.
         """
         self.logger.info("Simulation finished.")
-        try:
-            self.end_process(self.scada_process)
-        except Exception as msg:
-            self.logger.error("Exception shutting down SCADA: " + str(msg))
+
+        if self.scada_process.poll() is None:
+            try:
+                self.end_process(self.scada_process)
+            except Exception as msg:
+                self.logger.error("Exception shutting down SCADA: " + str(msg))
 
         for plc_process in self.plc_processes:
-            try:
-                self.end_process(plc_process)
-            except:
-                continue
+            if plc_process.poll() is None:
+                try:
+                    self.end_process(plc_process)
+                except Exception as msg:
+                    self.logger.error("Exception shutting down plc: " + str(msg))
+
+        for attacker in self.attacker_processes:
+            if attacker.poll() is None:
+                try:
+                    self.end_process(attacker)
+                except Exception as msg:
+                    self.logger.error("Exception shutting down attacker: " + str(msg))
 
         if self.plant_process.poll() is None:
-            self.logger.info("Physical simulation process terminated.")
-            self.end_process(self.plant_process)
+            try:
+                self.end_process(self.plant_process)
+            except Exception as msg:
+                self.logger.error("Exception shutting down plant_process: " + str(msg))
 
         cmd = 'sudo pkill -f "python2 -m cpppo.server.enip"'
         subprocess.call(cmd, shell=True, stderr=sys.stderr, stdout=sys.stdout)
