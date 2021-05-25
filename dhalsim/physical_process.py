@@ -5,6 +5,7 @@ import signal
 import logging
 from decimal import Decimal
 
+import progressbar
 import wntr
 import wntr.network.controls as controls
 import sqlite3
@@ -204,29 +205,6 @@ class PhysicalPlant:
             writer = csv.writer(f)
             writer.writerows(results)
 
-    @staticmethod
-    def calculate_eta(start: datetime, iteration: int, total: int):
-        """
-        Calculates estimated time until finished simulation. Only calculates estimated remaining
-        time if it has run enough iterations (more than 10) to make an accurate estimation.
-
-        :param start: start time of simulation
-        :type start: datetime
-        :param iteration: current iteration
-        :type iteration: int
-        :param total: total numer of iterations
-        :type total: int
-        :rtype: str
-        """
-        diff = datetime.now() - start
-        if iteration == total:
-            return "Estimated remaining time:" + str(timedelta(seconds=0)) + "."
-        if iteration < 10:
-            return "Sampling for {rest} more iterations...".format(rest=10-iteration)
-        diff_seconds = diff.days.real * 24 * 3600 + diff.seconds.real
-        remaining_time = timedelta(seconds=(diff_seconds / (float(iteration / float(total))) - diff.total_seconds()))
-        return "Estimated time remaining: " + str(remaining_time).split(".")[0] + "."
-
     def get_plcs_ready(self):
         self.c.execute("""SELECT count(*)
                         FROM sync
@@ -239,13 +217,15 @@ class PhysicalPlant:
         self.wn.options.time.duration = self.wn.options.time.hydraulic_timestep
 
         master_time = -1
-        start = datetime.now()
 
         iteration_limit = self.data["iterations"]
 
         self.logger.info("Simulation will run for {x} iterations.".format(x=str(iteration_limit)))
         self.logger.info("Hydraulic timestep is {timestep}.".format(
             timestep=str(self.wn.options.time.hydraulic_timestep)))
+
+        p_bar = progressbar.ProgressBar(max_value=iteration_limit)
+        p_bar.start()
 
         while master_time < iteration_limit:
             self.c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(master_time),))
@@ -258,8 +238,8 @@ class PhysicalPlant:
                 time.sleep(0.01)
 
             self.update_controls()
-            eta = self.calculate_eta(start, master_time, iteration_limit)
-            self.logger.info("Iteration %d out of %d. %s" % (master_time, iteration_limit, eta))
+            self.logger.debug("Iteration %d out of %d." % (master_time, iteration_limit))
+            p_bar.update(master_time)
 
             results = self.sim.run_sim(convergence_error=True)
             values_list = self.register_results(results)
