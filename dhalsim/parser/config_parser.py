@@ -208,6 +208,24 @@ class ConfigParser:
         return network_loss
 
     @property
+    def network_delay_value(self):
+        """
+        Load the network_delay boolean. This is either `true` or `false`.
+
+        :return: boolean of network_delay
+        :rtype: boolean
+        """
+        if "network_delay" not in self.config_data:
+            return False
+
+        network_delay = self.config_data["network_delay"]
+
+        if type(network_delay) != bool:
+            raise InvalidValueError("network_delay must be a boolean (true or false)")
+
+        return network_delay
+
+    @property
     def initial_values_path(self):
         """
         Property to load initial tank values path
@@ -228,6 +246,19 @@ class ConfigParser:
         path = self.config_data.get("network_loss_data")
         if not path:
             raise MissingValueError("network loss file not in config file.")
+        path = (self.config_path.parent / path).absolute()
+        if not path.is_file():
+            raise FileNotFoundError(str(path) + " is not a file.")
+        return path
+
+    @property
+    def network_delay_path(self):
+        """
+        Property to load network loss values path
+        """
+        path = self.config_data.get("network_delay_data")
+        if not path:
+            raise MissingValueError("network delay file not in config file.")
         path = (self.config_path.parent / path).absolute()
         if not path.is_file():
             raise FileNotFoundError(str(path) + " is not a file.")
@@ -260,13 +291,19 @@ class ConfigParser:
         yaml_data["output_path"] = str(self.output_path)
         yaml_data["db_path"] = "/tmp/dhalsim/dhalsim.sqlite"
         yaml_data["network_topology_type"] = self.network_topology_type
+        # Add batch mode parameters
         yaml_data["batch_mode"] = self.batch_mode_value
         if yaml_data["batch_mode"]:
             yaml_data["initial_values_path"] = str(self.initial_values_path)
             yaml_data["batch_index"] = self.batch_index
+        # Add network loss parameters
         yaml_data["network_loss"] = self.network_loss_value
         if yaml_data["network_loss"]:
             yaml_data["network_loss_data"] = str(self.network_loss_path)
+        # Add network delay parameters
+        yaml_data["network_delay"] = self.network_delay_value
+        if yaml_data["network_delay"]:
+            yaml_data["network_delay_data"] = str(self.network_delay_path)
 
         # Add options from the config_file
         if "mininet_cli" in self.config_data.keys():
