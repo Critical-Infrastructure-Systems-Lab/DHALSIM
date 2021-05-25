@@ -3,7 +3,7 @@ Configuration
 
 To run DHALSIM, you will need a configuration yaml file. In this chapter every parameter is explained.
 
-Example:
+Example with all options:
 
 .. code-block:: yaml
 
@@ -19,6 +19,8 @@ Example:
     attacks_path: "wadi_attacks.yaml"
     batch_mode: false
     initial_values: initial_tank_wadi.csv
+    network_loss: true
+    network_loss_data: losses_wadi.csv
 
 In the following sections, every entry is explained.
 
@@ -155,7 +157,7 @@ files with initial tank conditions, demand patterns, and network losses to simul
 
 initial_values
 ------------------------
-*This is mandatory when batch mode is * :code:`True`
+*This is mandatory when batch mode is*: :code:`True`
 
 The :code:`initial_values` provides the name of the :code:`.csv` files with initial tank values for batch mode simulation. Each column should be a tank
 with rows being initial values for each simulation. If you want to only provide initial values for some tanks, then you can do that and the remaining
@@ -170,3 +172,30 @@ An example would look like this :
     1.02,2.45,3.17
     4.02,5.45,6.17
     7.02,8.45,9.17
+
+network_loss
+------------------------
+*This is an optional value with default*: :code:`False`
+
+If the :code:`network_loss` option is :code:`True`, then the network simulation will run using network losses. This means you can provide a :code:`.csv`
+file with network losses to simulate under non-perfect network conditions. If :code:`batch_mode` is :code:`False`, then the network losses used will be the first
+row in the CSV. If :code:`batch_mode` is :code:`True` then it will use the same index as the tank levels, demand patterns, etc.
+:code:`network_loss` should be a boolean.
+
+network_loss_data
+------------------------
+*This is mandatory when network loss is*: :code:`True`
+
+The :code:`network_loss_data` provides the name of the :code:`.csv` file with network loss values for the simulation. Each column should be a router
+with rows being the loss values. If you want to only provide losses for some routers, then you can do that and the remaining
+routers will use the default value (none).
+
+An example would look like this :
+
+.. csv-table:: network_loss_data
+   :header: "r0", "r1", "r2"
+   :widths: 5, 5, 5
+
+    0.02,0.45,0.17
+    0.03,0.46,0.18
+    0.04,0.47,0.19
