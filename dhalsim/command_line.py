@@ -37,7 +37,7 @@ class Runner():
 
         # TODO: batch index for multiple batch runs
         if batch_mode:
-            config_parser.batch_index = 2
+            config_parser.batch_index = 3
 
         intermediate_yaml_path = config_parser.generate_intermediate_yaml()
         db_initializer = DatabaseInitializer(intermediate_yaml_path)
