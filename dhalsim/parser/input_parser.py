@@ -155,11 +155,9 @@ class InputParser:
         """Generates all tanks with their initial values if running in batch mode"""
 
         initial_values = {}
-        for index, x in enumerate(self.wn.tanks()):
-            initial_tank_levels = pd.read_csv(self.data["initial_values_path"])
-            # If we have fewer columns than tanks in the network
-            if len(initial_tank_levels.columns) == index:
-                break
+        initial_tank_levels = pd.read_csv(self.data["initial_values_path"])
+        for index in range(len(initial_tank_levels.columns)):
+            print(str(initial_tank_levels.columns[index]))
             initial_values[str(initial_tank_levels.columns[index])] = \
                 float(initial_tank_levels.iloc[self.data["batch_index"], index])
 
