@@ -15,6 +15,8 @@ def inp_path(tmpdir):
 def initial_dict(inp_path):
     return {"inp_file": str(inp_path),
             "batch_mode": False,
+            "network_loss": False,
+            "network_delay": False,
             "plcs": [{"name": "PLC1", "actuators": ["P_RAW1", "V_PUB"], "sensors": ["T0"]},
                      {"name": "PLC2", "actuators": ["V_ER2i"], "sensors": ["T2"]}]}
 

@@ -215,6 +215,6 @@ def test_initial_values_path_good(tmpdir):
     c = tmpdir.join("config.yaml")
     initial_values = tmpdir.join("test.yaml")
     initial_values.write("TANK\n5\n10")
-    c.write("batch_mode: true\ninitial_values: test.yaml")
+    c.write("batch_mode: true\ninitial_tank_values: test.yaml")
     parser = ConfigParser(Path(c))
-    assert str(parser.initial_values_path) == str(tmpdir.join("test.yaml"))
+    assert str(parser.initial_tank_values_path) == str(tmpdir.join("test.yaml"))
