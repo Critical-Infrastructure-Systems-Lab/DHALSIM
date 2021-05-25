@@ -17,6 +17,7 @@ setuptools.setup(
     install_requires=[
         'PyYAML',
         'antlr4-python3-runtime==4.7.2',
+        'progressbar2'
         'wntr',
         'pandas'
     ],

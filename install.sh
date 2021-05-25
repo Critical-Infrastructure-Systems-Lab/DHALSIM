@@ -25,7 +25,6 @@ sudo python2 -m pip install .
 ## Installing other DHALSIM dependencies
 sudo pip install pathlib
 sudo pip install pyyaml
-sudo pip3 install progressbar2
 
 # Mininet from source
 cd ~
