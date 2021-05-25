@@ -1,6 +1,7 @@
 import argparse
 import os
 import threading
+import ctypes
 from pathlib import Path
 
 import fnfqueue
@@ -8,6 +9,40 @@ from scapy.layers.inet import IP, TCP
 
 from dhalsim.network_attacks.utilities import launch_arp_poison, restore_arp
 from synced_attack import SyncedAttack
+
+class PacketThread(threading.Thread):
+    def __init__(self, queue):
+        threading.Thread.__init__(self)
+        self.queue = queue
+
+    def run(self):
+        try:
+            for packet in self.queue:
+                # TODO The actual mitm stuff
+                packet2 = IP(packet.payload)
+                print("MITM 💻:", "Packet 📦:", "source:", packet2[IP].src.ljust(16), str(packet2[TCP].sport).ljust(6),
+                      "   destination:",
+                      packet2[IP].dst.ljust(16), str(packet2[TCP].dport).ljust(6), )
+
+                packet.mangle()
+
+        except fnfqueue.BufferOverflowException:
+            print("Buffer Overflow in a MITM attack!")
+
+    def get_id(self):
+        # returns id of the respective thread
+        if hasattr(self, '_thread_id'):
+            return self._thread_id
+        for id, thread in threading._active.items():
+            if thread is self:
+                return id
+
+    def stop_thread(self):
+        thread_id = self.get_id()
+        res = ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, ctypes.py_object(SystemExit))
+        if res > 1:
+            ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, 0)
+            print('Exception raise failure')
 
 class MitmAttack(SyncedAttack):
     """
@@ -46,23 +81,25 @@ class MitmAttack(SyncedAttack):
         except PermissionError:
             print("Permission Error. Am I running as root?")
 
-        self.run_thread = True
+        # self.run_thread = True
         self.thread = threading.Thread(target=self.packet_thread_function)
         self.thread.start()
 
+        # self.thread = PacketThread(self.queue)
+        # self.thread.start()
+
     def packet_thread_function(self):
-        while self.run_thread:
-            try:
-                for packet in self.queue:
-                    # TODO The actual mitm stuff
-                    packet2 = IP(packet.payload)
-                    print("MITM 💻:", "Packet 📦:", "source:", packet2[IP].src.ljust(16), str(packet2[TCP].sport).ljust(6), "   destination:",
-                          packet2[IP].dst.ljust(16), str(packet2[TCP].dport).ljust(6), )
+        try:
+            for packet in self.queue:
+                # TODO The actual mitm stuff
+                packet2 = IP(packet.payload)
+                print("MITM 💻:", "Packet 📦:", "source:", packet2[IP].src.ljust(16), str(packet2[TCP].sport).ljust(6), "   destination:",
+                      packet2[IP].dst.ljust(16), str(packet2[TCP].dport).ljust(6), )
 
-                    packet.mangle()
+                packet.mangle()
 
-            except fnfqueue.BufferOverflowException:
-                print("Buffer Overflow in a MITM attack!")
+        except fnfqueue.BufferOverflowException:
+            print("Buffer Overflow in a MITM attack!")
 
     def interrupt(self):
         if self.state == 1:
@@ -79,7 +116,9 @@ class MitmAttack(SyncedAttack):
 
         print("test1")
 
-        self.run_thread = False
+        # self.run_thread = False
+        # self.thread.stop_thread()
+        self.queue.close()
         print("test2")
 
         self.thread.join()
