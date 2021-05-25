@@ -12,7 +12,7 @@ mininet_cli: False
 log_level: info
 simulator: pdd
 
-batch_mode: false
+batch_mode: true
 initial_values: initial_tank_wadi.csv
 
 network_loss: false

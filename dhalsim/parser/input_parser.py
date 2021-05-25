@@ -66,9 +66,12 @@ class InputParser:
         # Generate initial values if batch mode is true
         if self.data["batch_mode"]:
             self.generate_initial_values()
-        # Generate initial values if batch mode is true
+        # Generate network loss values if network loss is true
         if self.data["network_loss"]:
             self.generate_network_losses()
+        # Generate network delay values if network delay is true
+        if self.data["network_delay"]:
+            self.generate_network_delays()
         # Add iterations if not existing
         if "iterations" not in self.data.keys():
             self.data["iterations"] = int(self.data["time"][0]["duration"]
@@ -182,3 +185,18 @@ class InputParser:
                 float(network_loss_data.iloc[data_index, index])
 
         self.data['network_loss_values'] = network_loss
+
+    def generate_network_delays(self):
+        """Generates list of routers with their network delays from the input csv"""
+
+        network_delay = {}
+        network_delay_data = pd.read_csv(self.data["network_delay_data"])
+        # For all columns in csv
+        for index in range(len(network_delay_data.columns)):
+            name = network_delay_data.columns[index]
+            # Insert tank : value into data
+            data_index = self.data["batch_index"] if self.data["batch_mode"] else 0
+            network_delay[str(name)] = \
+                float(network_delay_data.iloc[data_index, index])
+
+        self.data['network_delay_values'] = network_delay
