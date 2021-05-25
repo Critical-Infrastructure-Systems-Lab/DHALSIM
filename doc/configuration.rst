@@ -17,6 +17,8 @@ Example:
     simulator: pdd
     run_attack: True
     attacks_path: "wadi_attacks.yaml"
+    batch_mode: false
+    initial_values: initial_tank_wadi.csv
 
 In the following sections, every entry is explained.
 
@@ -142,3 +144,29 @@ The simulator option in the config file represents the demand model used by the 
 The valid options are :code:`PDD` and :code:`DD`. This value is then passed to the
 `WNTR hydraulic demand model option <https://wntr.readthedocs.io/en/latest/hydraulics.html>`_.
 
+batch_mode
+------------------------
+*This is an optional value with default*: :code:`False`
+
+If the :code:`batch_mode` option is :code:`True`, then the simulation will be running in batch mode. This means you can provide :code:`.csv`
+files with initial tank conditions, demand patterns, and network losses to simulate under different conditions. The full simulation will run
+:code:`batch_iterations` number of times. (**NOTE, NONE OF THIS WORKS YET, JUST INITIAL VALUES**)
+:code:`batch_mode` should be a boolean.
+
+initial_values
+------------------------
+*This is mandatory when batch mode is * :code:`True`
+
+The :code:`initial_values` provides the name of the :code:`.csv` files with initial tank values for batch mode simulation. Each column should be a tank
+with rows being initial values for each simulation. If you want to only provide initial values for some tanks, then you can do that and the remaining
+tanks will use the default initial value from the :code:`.inp` file.
+
+An example would look like this :
+
+.. csv-table:: initial_values
+   :header: "tank_1", "tank_2", "tank_3"
+   :widths: 5, 5, 5
+
+    1.02,2.45,3.17
+    4.02,5.45,6.17
+    7.02,8.45,9.17
