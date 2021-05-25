@@ -66,6 +66,9 @@ class InputParser:
         # Generate initial values if batch mode is true
         if self.data["batch_mode"]:
             self.generate_initial_values()
+        # Generate initial values if batch mode is true
+        if self.data["network_loss"]:
+            self.generate_network_losses()
         # Add iterations if not existing
         if "iterations" not in self.data.keys():
             self.data["iterations"] = int(self.data["time"][0]["duration"]
@@ -156,9 +159,26 @@ class InputParser:
 
         initial_values = {}
         initial_tank_levels = pd.read_csv(self.data["initial_values_path"])
+        # For all columns in csv
         for index in range(len(initial_tank_levels.columns)):
-            print(str(initial_tank_levels.columns[index]))
-            initial_values[str(initial_tank_levels.columns[index])] = \
+            name = initial_tank_levels.columns[index]
+            # Insert tank : value into data
+            initial_values[str(name)] = \
                 float(initial_tank_levels.iloc[self.data["batch_index"], index])
 
         self.data['initial_values'] = initial_values
+
+    def generate_network_losses(self):
+        """Generates list of routers with their network losses from the input csv"""
+
+        network_loss = {}
+        network_loss_data = pd.read_csv(self.data["network_loss_data"])
+        # For all columns in csv
+        for index in range(len(network_loss_data.columns)):
+            name = network_loss_data.columns[index]
+            # Insert tank : value into data
+            data_index = self.data["batch_index"] if self.data["batch_mode"] else 0
+            network_loss[str(name)] = \
+                float(network_loss_data.iloc[data_index, index])
+
+        self.data['network_loss_values'] = network_loss

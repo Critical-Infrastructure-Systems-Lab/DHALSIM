@@ -15,6 +15,9 @@ simulator: pdd
 batch_mode: true
 initial_values: initial_tank_wadi.csv
 
+network_loss: true
+network_loss_data: losses_wadi.csv
+
 # Setting this to debug will also print WNTR and MiniCPS output
 #simulator: "pdd"
 #week_index: 0

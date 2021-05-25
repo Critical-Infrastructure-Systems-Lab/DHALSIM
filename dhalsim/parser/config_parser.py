@@ -144,7 +144,7 @@ class ConfigParser:
         """
         Property to load attacks from the attacks file specified in the config file
 
-        :return: data from the attack file1
+        :return: data from the attack file
         """
         with self.attacks_path.open(mode='r') as attacks_description:
             attacks = yaml.safe_load(attacks_description)
@@ -190,15 +190,44 @@ class ConfigParser:
         return batch_mode
 
     @property
+    def network_loss_value(self):
+        """
+        Load the network_loss boolean. This is either `true` or `false`.
+
+        :return: boolean of network_loss
+        :rtype: boolean
+        """
+        if "network_loss" not in self.config_data:
+            return False
+
+        network_loss = self.config_data["network_loss"]
+
+        if type(network_loss) != bool:
+            raise InvalidValueError("network_loss must be a boolean (true or false)")
+
+        return network_loss
+
+    @property
     def initial_values_path(self):
         """
-        Property to load attacks from the attacks file specified in the config file
-
-        :return: data from the attack file
+        Property to load initial tank values path
         """
         path = self.config_data.get("initial_values")
         if not path:
             raise MissingValueError("initial values file not in config file.")
+        path = (self.config_path.parent / path).absolute()
+        if not path.is_file():
+            raise FileNotFoundError(str(path) + " is not a file.")
+        return path
+
+    @property
+    def network_loss_path(self):
+        """
+        Property to load network loss values path
+        """
+        path = self.config_data.get("network_loss_data")
+        if not path:
+            raise MissingValueError("network loss file not in config file.")
         path = (self.config_path.parent / path).absolute()
         if not path.is_file():
             raise FileNotFoundError(str(path) + " is not a file.")
@@ -235,6 +264,9 @@ class ConfigParser:
         if yaml_data["batch_mode"]:
             yaml_data["initial_values_path"] = str(self.initial_values_path)
             yaml_data["batch_index"] = self.batch_index
+        yaml_data["network_loss"] = self.network_loss_value
+        if yaml_data["network_loss"]:
+            yaml_data["network_loss_data"] = str(self.network_loss_path)
 
         # Add options from the config_file
         if "mininet_cli" in self.config_data.keys():
