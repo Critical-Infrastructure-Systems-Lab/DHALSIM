@@ -1,3 +1,4 @@
+import codecs
 import struct
 import sys
 
@@ -56,11 +57,17 @@ def translate_payload_to_float(raw_payload):
     :param raw_payload: The payload to convert
     """
     # Handle endianness with the payload
-    ordered_payload = raw_payload[5] + raw_payload[4] + raw_payload[3] + raw_payload[2]
+    print("raw_payload: ", raw_payload)
+    print("type(raw_payload): ", type(raw_payload))
+    print("raw_payload[5:6]: ", raw_payload[5:6])
+    print("type(raw_payload[5:6]): ", type(raw_payload[5:6]))
+    ordered_payload = raw_payload[6:7] +  raw_payload[5:6] + raw_payload[4:5] + raw_payload[3:4] + raw_payload[2:3] + raw_payload[1:2] + raw_payload[0:1]
+    print("ordered_payload: ", ordered_payload)
+    print("type(ordered_payload): ", type(ordered_payload))
     # Encode as HEX
-    hex_value = ordered_payload.encode("hex")
+    # hex_value = ordered_payload.encode("hex")
     # Convert HEX into float
-    float_value = struct.unpack('!f', hex_value.decode('hex'))[0]
+    float_value = struct.unpack('!f', ordered_payload)[0]
     return float_value
 
 
@@ -75,7 +82,7 @@ def translate_float_to_payload(float_value, header_0, header_1):
     # Convert to hex again
     hex_value = hex(struct.unpack('<I', struct.pack('<f', float_value))[0])
     # Decode as string
-    string_decode = hex_value[2:].decode("hex")
+    string_decode = codecs.decode(hex_value[2:], 'hex')
     # Re arrange for endianness. This is a string
     payload = header_0 + header_1 + string_decode[-1] + string_decode[-2] + string_decode[-3] + string_decode[0]
     return payload
