@@ -224,7 +224,8 @@ class PhysicalPlant:
         self.logger.info("Hydraulic timestep is {timestep}.".format(
             timestep=str(self.wn.options.time.hydraulic_timestep)))
 
-        p_bar = progressbar.ProgressBar(max_value=iteration_limit)
+        widgets = [' [', progressbar.Timer(), ' - ', progressbar.SimpleProgress(), '] ', progressbar.Bar(), ' [', progressbar.ETA(), '] ', ]
+        p_bar = progressbar.ProgressBar(max_value=iteration_limit, widgets=widgets)
         p_bar.start()
 
         while master_time < iteration_limit:
