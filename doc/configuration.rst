@@ -7,8 +7,8 @@ Example with all options:
 
 .. code-block:: yaml
 
-    inp_file: wadi_map.inp
-    cpa_file: wadi_cpa.yaml
+    inp_file: map.inp
+    cpa_file: cpa.yaml
     network_topology_type: complex
     output_path: output
     iterations: 500
@@ -19,6 +19,7 @@ Example with all options:
     attacks_path: "attacks.yaml"
     batch_mode: false
     initial_tank_values: initial_tank.csv
+    demand_patterns: demand_patterns/
     network_loss: true
     network_loss_data: losses.csv
     network_delay: false
@@ -138,6 +139,7 @@ mininet_cli
 
 If the :code:`mininet_cli` option is :code:`True`, then after the network is setup, the mininet CLI interface will start.
 See the `mininet tutorial on the CLI <http://mininet.org/walkthrough/#part-3-mininet-command-line-interface-cli-commands>`_ for more information
+
 :code:`mininet_cli` should be a boolean.
 
 simulator
@@ -155,13 +157,14 @@ batch_mode
 If the :code:`batch_mode` option is :code:`True`, then the simulation will be running in batch mode. This means you can provide :code:`.csv`
 files with initial tank conditions, demand patterns, and network losses to simulate under different conditions. The full simulation will run
 :code:`batch_iterations` number of times. (**NOTE, NONE OF THIS WORKS YET, JUST INITIAL VALUES**)
+
 :code:`batch_mode` should be a boolean.
 
 initial_tank_values
 ------------------------
 *This is mandatory when batch mode is*: :code:`True`
 
-The :code:`initial_tank_values` provides the name of the :code:`.csv` files with initial tank values for batch mode simulation. Each column should be a tank
+The :code:`initial_tank_values` field provides the name of the :code:`.csv` files with initial tank values for batch mode simulation. Each column should be a tank
 with rows being initial values for each simulation. If you want to only provide initial values for some tanks, then you can do that and the remaining
 tanks will use the default initial value from the :code:`.inp` file.
 
@@ -175,6 +178,26 @@ An example would look like this :
     4.02,5.45,6.17
     7.02,8.45,9.17
 
+demand_patterns
+------------------------
+*This is mandatory when batch mode is*: :code:`True`
+
+The :code:`demand_patterns` field provides the path to a folder containing demand patterns for different batch simulations. The demand patterns are defined in a
+:code:`.csv` file with the name convention :code:`number.csv` where :code:`number` is the number of the batch for which you want those demand patterns to be used.
+For example for the first batch you would have :code:`0.csv`, then :code:`1.csv`, etc.
+
+The :code:`.csv` will contain the consumer name as the header, with the different demand values for the simulation as the rows
+
+An example would look like this :
+
+.. csv-table:: initial_demand_patterns
+   :header: "Consumer01", "Consumer02"
+   :widths: 10, 10
+
+    21.02,28.45
+    42.02,55.45
+    17.02,18.45
+
 network_loss
 ------------------------
 *This is an optional value with default*: :code:`False`
@@ -182,13 +205,14 @@ network_loss
 If the :code:`network_loss` option is :code:`True`, then the network simulation will run using network losses. This means you can provide a :code:`.csv`
 file with network losses to simulate under non-perfect network conditions. If :code:`batch_mode` is :code:`False`, then the network losses used will be the first
 row in the CSV. If :code:`batch_mode` is :code:`True` then it will use the same index as the tank levels, demand patterns, etc.
+
 :code:`network_loss` should be a boolean.
 
 network_loss_data
 ------------------------
 *This is mandatory when network loss is*: :code:`True`
 
-The :code:`network_loss_data` provides the name of the :code:`.csv` file with network loss values for the simulation. Each column should be a plc/scada
+The :code:`network_loss_data` field provides the name of the :code:`.csv` file with network loss values for the simulation. Each column should be a plc/scada
 with rows being the loss values (where each value is a percentage from 0-100). If you want to only provide losses for some nodes, then you can do that and the remaining
 nodes will use the default value (none). Note that the plc name must be the same as in the :code:`.cpa` file, and the scada name must be 'scada'.
 
@@ -209,15 +233,18 @@ network_delay
 If the :code:`network_delay` option is :code:`True`, then the network simulation will run using network delays. This means you can provide a :code:`.csv`
 file with network delays to simulate under non-perfect network conditions. If :code:`batch_mode` is :code:`False`, then the network delays used will be the first
 row in the CSV. If :code:`batch_mode` is :code:`True` then it will use the same index as the tank levels, demand patterns, etc.
+
 :code:`network_delay` should be a boolean.
 
 network_delay_data
 ------------------------
 *This is mandatory when network loss is*: :code:`True`
 
-The :code:`network_delay_data` provides the name of the :code:`.csv` file with network delay values for the simulation. Each column should be a plc/scada
+The :code:`network_delay_data` field provides the name of the :code:`.csv` file with network delay values for the simulation. Each column should be a plc/scada
 with rows being the delay values (where each value is the delay in milliseconds). If you want to only provide delays for some nodes, then you can do that and the remaining
-nodes will use the default value (none). Note that the plc name must be the same as in the :code:`.cpa` file, and the scada name must be 'scada'.
+nodes will use the default value (none).
+
+Note that the plc name must be the same as in the :code:`.cpa` file, and the scada name must be 'scada'.
 
 An example would look like this :
 
