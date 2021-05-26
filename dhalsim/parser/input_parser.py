@@ -197,6 +197,6 @@ class InputParser:
             # Insert tank : value into data
             data_index = self.data["batch_index"] if self.data["batch_mode"] else 0
             network_delay[str(name)] = \
-                float(network_delay_data.iloc[data_index, index])
+                str(network_delay_data.iloc[data_index, index]) + "ms"
 
         self.data['network_delay_values'] = network_delay

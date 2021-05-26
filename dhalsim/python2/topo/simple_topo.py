@@ -98,7 +98,7 @@ class SimpleTopo(Topo):
                     mac=plc['mac'],
                     ip=plc['local_ip'] + "/24",
                     defaultRoute=gateway)
-                self.addLink(switch, plc_node, intfName2=plc['interface'])
+                self.add_node_link(switch, plc_node, plc)
 
         # -- SUPERVISOR NETWORK -- #
         supervisor_ip = self.supervisor_ip + "/24"
@@ -111,10 +111,27 @@ class SimpleTopo(Topo):
         # Add a scada to the network
         scada = self.addHost('scada', ip=self.data['scada']['local_ip'] + "/24", defaultRoute=supervisor_gateway)
         # Add a link between the switch and the scada
-        self.addLink(supervisor_switch, scada, intfName2=self.data['scada']['interface'])
+        self.add_node_link(supervisor_switch, scada, self.data['scada'])
 
         # -- PLANT -- #
         self.addHost('plant')
+
+    def add_node_link(self, switch, node, yaml_node_data):
+        """
+        This function adds the link between the node and its switch,
+        and configures network losses/delays as nececarry
+
+        :param switch: The switch to link
+        :param node: The node to link
+        :param yaml_node_data: The yaml data for the given node
+        """
+        # TODO: figure out which of these parameters are necessary
+        link_params = dict(bw=1000, delay="0ms", loss=0, max_queue_size=1000, use_htb=True)
+        if self.data['network_delay']:
+            link_params['delay'] = self.data['network_delay_values'][yaml_node_data['name']]
+        if self.data['network_loss']:
+            link_params['loss'] = self.data['network_loss_values'][yaml_node_data['name']]
+        self.addLink(switch, node, intfName2=yaml_node_data['interface'], **link_params)
 
     def setup_network(self, net):
         """
