@@ -161,7 +161,7 @@ class InputParser:
         """Generates all tanks with their initial values if running in batch mode"""
 
         initial_values = {}
-        initial_tank_levels = pd.read_csv(self.data["initial_tank_values_path"])
+        initial_tank_levels = pd.read_csv(self.data["initial_tank_data"])
         # For all columns in csv
         for index in range(len(initial_tank_levels.columns)):
             name = initial_tank_levels.columns[index]

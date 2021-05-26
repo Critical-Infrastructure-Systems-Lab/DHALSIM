@@ -53,31 +53,18 @@ class ConfigParser:
         self.yaml_path = Path("/tmp/dhalsim/intermediate.yaml")
         self.yaml_path.parent.mkdir(parents=True, exist_ok=True)
 
-    @property
-    def inp_path(self):
-        """Property for the path to the inp file.
+    def get_path(self, path_input):
+        """
+        Function that returns a given path if it exists
 
-        :return: absolute path to the inp file
+        :param path_input: Path that should be returned
+        :type path_input: str
+        :return: absolute path to the file
         :rtype: Path
         """
-        path = self.config_data.get("inp_file")
+        path = self.config_data.get(path_input)
         if not path:
-            raise MissingValueError("inp_file not in config file.")
-        path = (self.config_path.parent / path).absolute()
-        if not path.is_file():
-            raise FileNotFoundError(str(path) + " is not a file.")
-        return path
-
-    @property
-    def cpa_path(self):
-        """Property for the path to the cpa file.
-
-        :return: absolute path to the cpa file
-        :rtype: Path
-        """
-        path = self.config_data.get("cpa_file")
-        if not path:
-            raise MissingValueError("cpa_file not in config file.")
+            raise MissingValueError(path_input + " not in config file.")
         path = (self.config_path.parent / path).absolute()
         if not path.is_file():
             raise FileNotFoundError(str(path) + " is not a file.")
@@ -99,27 +86,12 @@ class ConfigParser:
         return path
 
     @property
-    def attacks_path(self):
-        """
-        Property to load attacks from the attacks file specified in the config file
-
-        :return: data from the attack file1
-        """
-        path = self.config_data.get("attacks_path")
-        if not path:
-            raise MissingValueError("Attack file not in config file.")
-        path = (self.config_path.parent / path).absolute()
-        if not path.is_file():
-            raise FileNotFoundError(str(path) + " is not a file.")
-        return path
-
-    @property
     def cpa_data(self):
         """Property to load the yaml data from the cpa file.
 
         :return: data from cpa file
         """
-        with self.cpa_path.open() as file:
+        with self.get_path("cpa_file").open() as file:
             cpa = yaml.load(file, Loader=yaml.FullLoader)
 
         # Verification of plc data
@@ -146,7 +118,7 @@ class ConfigParser:
 
         :return: data from the attack file
         """
-        with self.attacks_path.open(mode='r') as attacks_description:
+        with self.get_path("attacks_path").open(mode='r') as attacks_description:
             attacks = yaml.safe_load(attacks_description)
 
         return attacks
@@ -171,98 +143,22 @@ class ConfigParser:
 
         return network_type.lower()
 
-    @property
-    def batch_mode_value(self):
+    def get_value(self, config_str):
         """
-        Load the batch mode boolean. This is either `true` or `false`.
+        Load the config_boolean. This is either `true` or `false`.
 
-        :return: boolean of batch mode
+        :return: boolean of config_boolean
         :rtype: boolean
         """
-        if "batch_mode" not in self.config_data:
+        if config_str not in self.config_data:
             return False
 
-        batch_mode = self.config_data["batch_mode"]
+        config_boolean = self.config_data[config_str]
 
-        if type(batch_mode) != bool:
+        if type(config_boolean) != bool:
             raise InvalidValueError("batch_mode must be a boolean (true or false)")
 
-        return batch_mode
-
-    @property
-    def network_loss_value(self):
-        """
-        Load the network_loss boolean. This is either `true` or `false`.
-
-        :return: boolean of network_loss
-        :rtype: boolean
-        """
-        if "network_loss" not in self.config_data:
-            return False
-
-        network_loss = self.config_data["network_loss"]
-
-        if type(network_loss) != bool:
-            raise InvalidValueError("network_loss must be a boolean (true or false)")
-
-        return network_loss
-
-    @property
-    def network_delay_value(self):
-        """
-        Load the network_delay boolean. This is either `true` or `false`.
-
-        :return: boolean of network_delay
-        :rtype: boolean
-        """
-        if "network_delay" not in self.config_data:
-            return False
-
-        network_delay = self.config_data["network_delay"]
-
-        if type(network_delay) != bool:
-            raise InvalidValueError("network_delay must be a boolean (true or false)")
-
-        return network_delay
-
-    @property
-    def initial_tank_values_path(self):
-        """
-        Property to load initial tank values path
-        """
-        path = self.config_data.get("initial_tank_values")
-        if not path:
-            raise MissingValueError("initial tank values file not in config file.")
-        path = (self.config_path.parent / path).absolute()
-        if not path.is_file():
-            raise FileNotFoundError(str(path) + " is not a file.")
-        return path
-
-    @property
-    def network_loss_path(self):
-        """
-        Property to load network loss values path
-        """
-        path = self.config_data.get("network_loss_data")
-        if not path:
-            raise MissingValueError("network loss file not in config file.")
-        path = (self.config_path.parent / path).absolute()
-        if not path.is_file():
-            raise FileNotFoundError(str(path) + " is not a file.")
-        return path
-
-    @property
-    def network_delay_path(self):
-        """
-        Property to load network loss values path
-        """
-        path = self.config_data.get("network_delay_data")
-        if not path:
-            raise MissingValueError("network delay file not in config file.")
-        path = (self.config_path.parent / path).absolute()
-        if not path.is_file():
-            raise FileNotFoundError(str(path) + " is not a file.")
-        return path
+        return config_boolean
 
     def generate_attacks(self, yaml_data):
         if "run_attack" in self.config_data.keys() and self.config_data['run_attack']:
@@ -286,30 +182,26 @@ class ConfigParser:
         # Begin with PLC data specified in CPA file
         yaml_data = self.cpa_data
         # Add path and database information
-        yaml_data["inp_file"] = str(self.inp_path)
-        yaml_data["cpa_file"] = str(self.cpa_path)
+        yaml_data["inp_file"] = str(self.get_path("inp_file"))
+        yaml_data["cpa_file"] = str(self.get_path("cpa_file"))
         yaml_data["output_path"] = str(self.output_path)
         yaml_data["db_path"] = "/tmp/dhalsim/dhalsim.sqlite"
         yaml_data["network_topology_type"] = self.network_topology_type
         # Add batch mode parameters
-        yaml_data["batch_mode"] = self.batch_mode_value
+        yaml_data["batch_mode"] = self.get_value("batch_mode")
         if yaml_data["batch_mode"]:
-            yaml_data["initial_tank_values_path"] = str(self.initial_tank_values_path)
+            yaml_data["initial_tank_data"] = str(self.get_path("initial_tank_data"))
             yaml_data["batch_index"] = self.batch_index
         # Add network loss parameters
-        yaml_data["network_loss"] = self.network_loss_value
+        yaml_data["network_loss"] = self.get_value("network_loss")
         if yaml_data["network_loss"]:
-            yaml_data["network_loss_data"] = str(self.network_loss_path)
+            yaml_data["network_loss_data"] = str(self.get_path("network_loss_data"))
         # Add network delay parameters
-        yaml_data["network_delay"] = self.network_delay_value
+        yaml_data["network_delay"] = self.get_value("network_delay")
         if yaml_data["network_delay"]:
-            yaml_data["network_delay_data"] = str(self.network_delay_path)
-
-        # Add options from the config_file
-        if "mininet_cli" in self.config_data.keys():
-            yaml_data["mininet_cli"] = self.config_data["mininet_cli"]
-        else:
-            yaml_data["mininet_cli"] = False
+            yaml_data["network_delay_data"] = str(self.get_path("network_delay_data"))
+        # Mininet cli parameter
+        yaml_data["mininet_cli"] = self.get_value("mininet_cli")
 
         if "simulator" in self.config_data.keys():
             yaml_data["simulator"] = self.config_data["simulator"]

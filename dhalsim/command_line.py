@@ -33,7 +33,7 @@ class Runner():
     def run(self):
         config_parser = ConfigParser(self.config_file)
 
-        batch_mode = config_parser.batch_mode_value
+        batch_mode = config_parser.get_value("batch_mode")
 
         # TODO: batch index for multiple batch runs
         if batch_mode:
