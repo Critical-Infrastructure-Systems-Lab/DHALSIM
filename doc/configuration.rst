@@ -188,14 +188,14 @@ network_loss_data
 ------------------------
 *This is mandatory when network loss is*: :code:`True`
 
-The :code:`network_loss_data` provides the name of the :code:`.csv` file with network loss values for the simulation. Each column should be a router
-with rows being the loss values. If you want to only provide losses for some routers, then you can do that and the remaining
-routers will use the default value (none).
+The :code:`network_loss_data` provides the name of the :code:`.csv` file with network loss values for the simulation. Each column should be a plc/scada
+with rows being the loss values. If you want to only provide losses for some nodes, then you can do that and the remaining
+nodes will use the default value (none).
 
 An example would look like this :
 
 .. csv-table:: network_loss_data
-   :header: "r0", "r1", "r2"
+   :header: "PLC1", "PLC2", "scada"
    :widths: 5, 5, 5
 
     0.02,0.45,0.17
@@ -215,14 +215,14 @@ network_delay_data
 ------------------------
 *This is mandatory when network loss is*: :code:`True`
 
-The :code:`network_delay_data` provides the name of the :code:`.csv` file with network delay values for the simulation. Each column should be a router
-with rows being the delay values. If you want to only provide delays for some routers, then you can do that and the remaining
-routers will use the default value (none).
+The :code:`network_delay_data` provides the name of the :code:`.csv` file with network delay values for the simulation. Each column should be a plc/scada
+with rows being the delay values. If you want to only provide delays for some nodes, then you can do that and the remaining
+nodes will use the default value (none).
 
 An example would look like this :
 
 .. csv-table:: network_delay_data
-   :header: "r0", "r1", "r2"
+   :header: "PLC1", "PLC2", "scada"
    :widths: 5, 5, 5
 
     22.02,42.45,17.17
