@@ -5,7 +5,7 @@
 #duration_days: 1
 inp_file: "wadi_map_newer.inp"
 cpa_file: "wadi_cpa.yaml"
-network_topology_type: simple
+network_topology_type: complex
 output_path: "output"
 iterations: 500
 mininet_cli: false

@@ -125,7 +125,31 @@ class ComplexTopo(Topo):
         self.addLink(node_router, provider_router, intfName2=node['provider_interface'],
                      params2={'ip': node['provider_ip'] + "/24"})
         self.addLink(node_switch, node_router, params2={'ip': node['gateway_ip'] + "/24"})
-        self.addLink(node_node, node_switch, intfName=node['interface'])
+        self.add_node_switch_link(node_node, node_switch, node)
+
+    def add_node_switch_link(self, node, switch, yaml_node_data):
+        """
+        This function adds the link between the node and its switch,
+        and configures network losses/delays as nececarry
+
+        :param switch: The switch to link
+        :param node: The node to link
+        :param yaml_node_data: The yaml data for the given node
+        """
+        # TODO: figure out which of these parameters are necessary
+        link_params = dict(bw=1000, delay="0ms", loss=0, max_queue_size=1000, use_htb=True)
+        # If delays enabled
+        if self.data['network_delay']:
+            # If delay value for this node defined
+            if self.data['network_delay_values'][yaml_node_data['name']]:
+                link_params['delay'] = self.data['network_delay_values'][yaml_node_data['name']]
+        # If losses enabled
+        if self.data['network_loss']:
+            # If loss value for this node defined
+            if self.data['network_loss_values'][yaml_node_data['name']]:
+                link_params['loss'] = self.data['network_loss_values'][yaml_node_data['name']]
+        # Add link with network parameters
+        self.addLink(node, switch, intfName=yaml_node_data['interface'], **link_params)
 
     def setup_network(self, net):
         """

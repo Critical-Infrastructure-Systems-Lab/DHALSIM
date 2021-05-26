@@ -189,7 +189,7 @@ network_loss_data
 *This is mandatory when network loss is*: :code:`True`
 
 The :code:`network_loss_data` provides the name of the :code:`.csv` file with network loss values for the simulation. Each column should be a plc/scada
-with rows being the loss values. If you want to only provide losses for some nodes, then you can do that and the remaining
+with rows being the loss values (where each value is a percentage from 0-100). If you want to only provide losses for some nodes, then you can do that and the remaining
 nodes will use the default value (none). Note that the plc name must be the same as in the :code:`.cpa` file, and the scada name must be 'scada'.
 
 An example would look like this :
@@ -216,7 +216,7 @@ network_delay_data
 *This is mandatory when network loss is*: :code:`True`
 
 The :code:`network_delay_data` provides the name of the :code:`.csv` file with network delay values for the simulation. Each column should be a plc/scada
-with rows being the delay values. If you want to only provide delays for some nodes, then you can do that and the remaining
+with rows being the delay values (where each value is the delay in milliseconds). If you want to only provide delays for some nodes, then you can do that and the remaining
 nodes will use the default value (none). Note that the plc name must be the same as in the :code:`.cpa` file, and the scada name must be 'scada'.
 
 An example would look like this :
