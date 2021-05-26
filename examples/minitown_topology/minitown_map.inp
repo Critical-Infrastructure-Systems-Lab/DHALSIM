@@ -6,8 +6,29 @@
 ;NFLOURS    Value
 ;PRESS_DRIVEN    Ref.press   Tresh.press
  J421            	37.09       	15.04425    	DMA1_pat        	;
-
-...
+; NFLOURS     	1
+; PRESS_DRIVEN	14.276	-1.0
+ J332            	44.18       	8.609582    	DMA1_pat        	;
+; NFLOURS     	1
+; PRESS_DRIVEN	14.276	-1.0
+ J156            	56.16       	21.7867     	DMA1_pat        	;
+; NFLOURS     	1
+; PRESS_DRIVEN	14.276	-1.0
+ J39             	45.88       	62.41494    	DMA1_pat        	;
+; NFLOURS     	1
+; PRESS_DRIVEN	14.276	-1.0
+ J269            	56          	0           	                	;
+; NFLOURS     	1
+; PRESS_DRIVEN	14.276	-1.0
+ J273            	56          	0           	                	;
+; NFLOURS     	1
+; PRESS_DRIVEN	14.276	-1.0
+ J280            	56          	0           	                	;
+; NFLOURS     	1
+; PRESS_DRIVEN	14.276	-1.0
+ J285            	56          	0           	                	;
+; NFLOURS     	1
+; PRESS_DRIVEN	14.276	-1.0
 
 [RESERVOIRS]
 ;ID              	Head        	Pattern
@@ -20,13 +41,36 @@
 [PIPES]
 ;ID              	Node1           	Node2           	Length      	Diameter    	Roughness   	MinorLoss   	Status
 ; SIZINGDATA	 Bulk coeff. 	Wall coeff. 	Diam. Zone   	Material    	Is Sizable  	D. Coeff.   	Demand Patt 	Loss Coeff. 	Loss Patt
-
-...
+ P15             	J39             	TANK            	395.29      	406         	90.48302    	0           	open  	;
+; SIZINGDATA      	""          	""          	0           	            	Yes         	1.0         	""          	1.0         	""          	;Used in Network Sizing
+ P310            	J269            	J156            	9           	610         	87.26803    	0           	open  	;
+; SIZINGDATA      	""          	""          	0           	            	Yes         	1.0         	""          	1.0         	""          	;Used in Network Sizing
+ P316            	R1              	J280            	11.62       	610         	70.45195    	0           	open  	;
+; SIZINGDATA      	""          	""          	0           	            	Yes         	1.0         	""          	1.0         	""          	;Used in Network Sizing
+ P320            	J273            	J269            	11.47       	610         	76.51881    	0           	open  	;
+; SIZINGDATA      	""          	""          	0           	            	Yes         	1.0         	""          	1.0         	""          	;Used in Network Sizing
+ P322            	J280            	J285            	11.5        	610         	89.43312    	0           	open  	;
+; SIZINGDATA      	""          	""          	0           	            	Yes         	1.0         	""          	1.0         	""          	;Used in Network Sizing
+ New82           	J156            	J421            	4296.2      	433.2777    	110         	0           	open  	;
+; SIZINGDATA      	""          	""          	0           	            	Yes         	1.0         	""          	1.0         	""          	;Used in Network Sizing
+ New95           	J332            	J39             	698.54      	228.8557    	110         	0           	open  	;
+; SIZINGDATA      	""          	""          	0           	            	Yes         	1.0         	""          	1.0         	""          	;Used in Network Sizing
+ New110          	J156            	J332            	5910.1      	146.4083    	110         	0           	open  	;
+; SIZINGDATA      	""          	""          	0           	            	Yes         	1.0         	""          	1.0         	""          	;Used in Network Sizing
+ New112          	J421            	J332            	2527.37     	90.10659    	110         	0           	open  	;
+; SIZINGDATA      	""          	""          	0           	            	Yes         	1.0         	""          	1.0         	""          	;Used in Network Sizing
+ New113          	J421            	J39             	3205.47     	551.204     	110         	0           	open  	;
+; SIZINGDATA      	""          	""          	0           	            	Yes         	1.0         	""          	1.0         	""          	;Used in Network Sizing
 
 [PUMPS]
 ;ID              	Node1           	Node2           	Parameters
  PUMP1           	J285            	J273            	HEAD 8	;
  PUMP2           	J280            	J269            	HEAD 8	;
+
+[VALVES]
+;ID              	Node1           	Node2           	Diameter    	Type	Setting     	MinorLoss
+
+[TAGS]
 
 [DEMANDS]
 ;Junction        	Demand      	Pattern         	Category
