@@ -21,10 +21,10 @@ class LinuxRouter(Node):
     def config(self, **params):
         super(LinuxRouter, self).config(**params)
         # Enable forwarding on the router
-        self.cmd('sysctl net.ipv4.ip_foward=1')
+        self.cmd('sysctl net.ipv4.ip_forward=1')
 
     def terminate(self):
-        self.cmd('sysctl net.ipv4.ip_foward=0')
+        self.cmd('sysctl net.ipv4.ip_forward=0')
 
 
 class SimpleTopo(Topo):
