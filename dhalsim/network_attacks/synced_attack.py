@@ -25,6 +25,14 @@ class SyncedAttack(metaclass=ABCMeta):
         # Get the attack that we are from the intermediate YAML
         self.intermediate_attack = self.intermediate_yaml["network_attacks"][self.yaml_index]
 
+        # Get the PLC which is the target of this attack
+        for plc in self.intermediate_yaml['plcs']:
+            if plc['name'] == self.intermediate_attack['target']:
+                self.intermediate_plc = plc
+
+        self.attacker_ip = self.intermediate_attack['local_ip']
+        self.target_plc_ip = self.intermediate_plc['local_ip']
+
         # Initialize database connection
         self.initialize_db()
 
