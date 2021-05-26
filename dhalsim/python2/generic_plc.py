@@ -3,14 +3,15 @@ import os.path
 import sqlite3
 import threading
 import time
-import yaml
-
 from decimal import Decimal
 from pathlib import Path
+
+import yaml
+
 from basePLC import BasePLC
-from py2_logger import get_logger
 from entities.attack import TimeAttack, TriggerBelowAttack, TriggerAboveAttack, TriggerBetweenAttack
 from entities.control import AboveControl, BelowControl, TimeControl
+from py2_logger import get_logger
 
 
 class Error(Exception):
@@ -79,7 +80,8 @@ def create_attacks(attack_list):
     attacks = []
     for attack in attack_list:
         if attack['type'].lower() == "time":
-            attacks.append(TimeAttack(attack['name'], attack['actuators'], attack['command'], attack['start'], attack['end']))
+            attacks.append(
+                TimeAttack(attack['name'], attack['actuators'], attack['command'], attack['start'], attack['end']))
         elif attack['type'].lower() == "above":
             attacks.append(
                 TriggerAboveAttack(attack['name'], attack['actuators'], attack['command'], attack['sensor'],
@@ -91,7 +93,7 @@ def create_attacks(attack_list):
         elif attack['type'].lower() == "between":
             attacks.append(
                 TriggerBetweenAttack(attack['name'], attack['actuators'], attack['command'], attack['sensor'],
-                                   attack['lower_value'], attack['upper_value']))
+                                     attack['lower_value'], attack['upper_value']))
     return attacks
 
 
@@ -158,6 +160,12 @@ class GenericPLC(BasePLC):
             'server': plc_server
         }
 
+        # create cache
+        self.cache = {}
+
+        for tag in set(dependant_sensors) - set(plc_sensors):
+            self.cache[tag] = Decimal(0)
+
         self.do_super_construction(plc_protocol, state)
 
     def do_super_construction(self, plc_protocol, state):
@@ -219,13 +227,34 @@ class GenericPLC(BasePLC):
         if tag in self.intermediate_plc["sensors"] or tag in self.intermediate_plc["actuators"]:
             return Decimal(self.get((tag, 1)))
 
+        for cached_tag in self.cache:
+            if tag == cached_tag:
+                print("GET FROM CACHE", self.intermediate_plc["name"], tag, self.cache[tag])
+                return self.cache[tag]
+
+        self.logger.warning("Cache miss in {plc} for tag {tag}".format(plc=self.intermediate_plc["name"], tag=tag))
+
         for i, plc_data in enumerate(self.intermediate_yaml["plcs"]):
             if i == self.yaml_index:
                 continue
             if tag in plc_data["sensors"] or tag in plc_data["actuators"]:
                 received = Decimal(self.receive((tag, 1), plc_data["public_ip"]))
                 return received
+
         raise TagDoesNotExist(tag)
+
+    def update_cache(self):
+        for cached_tag in self.cache:
+            for i, plc_data in enumerate(self.intermediate_yaml["plcs"]):
+                if i == self.yaml_index:
+                    continue
+                if cached_tag in plc_data["sensors"] or cached_tag in plc_data["actuators"]:
+                    try:
+                        received = Decimal(self.receive((cached_tag, 1), plc_data["public_ip"]))
+                        self.cache[cached_tag] = received
+                    except Exception as e:
+                        self.logger.debug("{plc} receive {tag} from {ip} failed with exception '{e}'".format(
+                            plc=self.intermediate_plc["name"], tag=cached_tag, ip=plc_data["public_ip"], e=str(e)))
 
     def set_tag(self, tag, value):
         """
@@ -291,6 +320,8 @@ class GenericPLC(BasePLC):
         while True:
             while self.get_sync():
                 time.sleep(0.01)
+
+            self.update_cache()
 
             for control in self.controls:
                 control.apply(self)
