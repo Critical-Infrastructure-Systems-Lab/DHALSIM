@@ -224,9 +224,11 @@ class PhysicalPlant:
         self.logger.info("Hydraulic timestep is {timestep}.".format(
             timestep=str(self.wn.options.time.hydraulic_timestep)))
 
-        widgets = [' [', progressbar.Timer(), ' - ', progressbar.SimpleProgress(), '] ', progressbar.Bar(), ' [', progressbar.ETA(), '] ', ]
-        p_bar = progressbar.ProgressBar(max_value=iteration_limit, widgets=widgets)
-        p_bar.start()
+        if self.data['log_level'] is not 'debug':
+            widgets = [' [', progressbar.Timer(), ' - ', progressbar.SimpleProgress(), '] ',
+                       progressbar.Bar(), ' [', progressbar.ETA(), '] ', ]
+            p_bar = progressbar.ProgressBar(max_value=iteration_limit, widgets=widgets)
+            p_bar.start()
 
         while master_time < iteration_limit:
             self.c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(master_time),))
@@ -239,8 +241,10 @@ class PhysicalPlant:
                 time.sleep(0.01)
 
             self.update_controls()
+
             self.logger.debug("Iteration %d out of %d." % (master_time, iteration_limit))
-            p_bar.update(master_time)
+            if self.data['log_level'] is not 'debug':
+                p_bar.update(master_time)
 
             results = self.sim.run_sim(convergence_error=True)
             values_list = self.register_results(results)
