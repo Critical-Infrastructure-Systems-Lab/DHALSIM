@@ -47,7 +47,7 @@ def restore_arp(ip1, ip2):
     packet = ARP(op=2, pdst=ip1, hwdst=mac1, psrc=ip2, hwsrc=mac2)
     send(packet, verbose=False)
 
-    packet = ARP(op=2, pdst=ip1, hwdst=mac2, psrc=ip1, hwsrc=mac1)
+    packet = ARP(op=2, pdst=ip2, hwdst=mac2, psrc=ip1, hwsrc=mac1)
     send(packet, verbose=False)
 
 def translate_payload_to_float(raw_payload):
