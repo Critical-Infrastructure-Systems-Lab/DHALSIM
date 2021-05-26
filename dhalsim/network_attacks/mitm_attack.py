@@ -89,10 +89,17 @@ class MitmAttack(SyncedAttack):
             print('ERROR enip _receive: ', error)
 
     def update_tags_dict(self):
+        # Acquire the lock
+        self.dict_lock.acquire()
+
         self.receive_original_tags()
 
+        # Overwrites the tags that we are spoofing
         for tag in self.intermediate_attack['tags']:
             self.tags[tag['tag']] = tag['value']
+
+        # Release the lock
+        self.dict_lock.release()
 
     def make_client_cmd(self) -> List[str]:
         cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip.client', '--print', '--address',
@@ -105,7 +112,6 @@ class MitmAttack(SyncedAttack):
 
     def cpppo_thread(self):
         while self.run_thread:
-            self.update_tags_dict()
             cmd = self.make_client_cmd()
 
             print("MITM 💻:", "client:", cmd)
@@ -138,7 +144,8 @@ class MitmAttack(SyncedAttack):
                 self.state = 1
                 self.setup()
         elif self.state == 1:
-
+            # Update the tags dictionary once per attack step
+            self.update_tags_dict()
             if not self.intermediate_attack["start"] <= self.get_master_clock() <= self.intermediate_attack["end"]:
                 self.teardown()
                 self.state = 2
