@@ -86,6 +86,23 @@ class ConfigParser:
         return path
 
     @property
+    def demand_patterns(self):
+        """
+        Function that returns path to demand pattern csv
+
+        :return: absolute path to the demand pattern csv
+        :rtype: Path
+        """
+        path = self.config_data.get('demand_patterns')
+        if not path:
+            raise MissingValueError("demand_patterns not in config file.")
+        path = str(path) + str(self.batch_index) + ".csv"
+        path = (self.config_path.parent / path).absolute()
+        if not path.is_file():
+            raise FileNotFoundError(str(path) + " is not a file.")
+        return path
+
+    @property
     def cpa_data(self):
         """Property to load the yaml data from the cpa file.
 
@@ -191,6 +208,7 @@ class ConfigParser:
         yaml_data["batch_mode"] = self.get_value("batch_mode")
         if yaml_data["batch_mode"]:
             yaml_data["initial_tank_data"] = str(self.get_path("initial_tank_data"))
+            yaml_data["demand_patterns_data"] = str(self.demand_patterns)
             yaml_data["batch_index"] = self.batch_index
         # Add network loss parameters
         yaml_data["network_loss"] = self.get_value("network_loss")

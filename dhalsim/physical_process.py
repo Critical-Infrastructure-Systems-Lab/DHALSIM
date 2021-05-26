@@ -308,7 +308,7 @@ class PhysicalPlant:
         sys.exit(0)
 
     def set_initial_values(self):
-        """Sets custom initial values for tanks in the WNTR simulation"""
+        """Sets custom initial values for tanks and demand patterns in the WNTR simulation"""
         for tank in self.tank_list:
             if str(tank) in self.data["initial_tank_values"]:
                 value = self.data["initial_tank_values"][str(tank)]
