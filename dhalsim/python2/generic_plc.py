@@ -229,7 +229,6 @@ class GenericPLC(BasePLC):
 
         for cached_tag in self.cache:
             if tag == cached_tag:
-                print("GET FROM CACHE", self.intermediate_plc["name"], tag, self.cache[tag])
                 return self.cache[tag]
 
         self.logger.warning("Cache miss in {plc} for tag {tag}".format(plc=self.intermediate_plc["name"], tag=tag))

