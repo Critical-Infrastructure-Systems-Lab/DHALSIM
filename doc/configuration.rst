@@ -125,9 +125,9 @@ log_level
 DHALSIM uses Python's built-in :code:`logging` module to log events. Using the `log_level` attribute in the configuration file, one can change the severity level of events that should be reported by DHALSIM. There are five different logging levels that are accepted, with each logging level also printing the logs of a higher priority. For example, setting `log_level` to `warning`, will log all `warning`, `error`, and `critical` statements to the console.
 
 * :code:`debug`
-    * Debug is a special kind of logging level: this will print all debug statements of DHALSIM, as well as all logs printed by MiniCPS and mininet. Since MiniCPS uses print statements as their logging system, MiniCPS will not use proper logging as we have implemented it.
+    * Debug is a special kind of logging level: this will print all debug statements of DHALSIM, as well as all logs printed by MiniCPS and mininet. Since MiniCPS uses print statements as their logging system, MiniCPS will not be able to make use of our logging system.
 * :code:`info`
-    * Info will log DHALSIM info statements to the console. This is the default value for log_level and is recommended for use of DHALSIM.
+    * Info will log DHALSIM info statements to the console. This is the default value for log_level and is recommended for normal use of DHALSIM.
 * :code:`warning`
 * :code:`error`
 * :code:`critical`
