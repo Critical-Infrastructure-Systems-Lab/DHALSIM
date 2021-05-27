@@ -86,6 +86,56 @@ class ConfigParser:
         return path
 
     @property
+    def inp_file(self):
+        """
+        Property for the path to the inp file.
+
+        :return: absolute path to the inp file
+        :rtype: Path
+        """
+        return self.get_path("inp_file")
+
+    @property
+    def cpa_file(self):
+        """
+        Property for the path to the cpa file.
+
+        :return: absolute path to the cpa file
+        :rtype: Path
+        """
+        return self.get_path("cpa_file")
+
+    @property
+    def initial_tank_data(self):
+        """
+        Property for the path to the initial tank data file.
+
+        :return: absolute path to the initial tank data file
+        :rtype: Path
+        """
+        return self.get_path("initial_tank_data")
+
+    @property
+    def network_loss_data(self):
+        """
+        Property for the path to the network loss data file.
+
+        :return: absolute path to the inp file
+        :rtype: Path
+        """
+        return self.get_path("network_loss_data")
+
+    @property
+    def network_delay_data(self):
+        """
+        Property for the path to the network delay data file.
+
+        :return: absolute path to the inp file
+        :rtype: Path
+        """
+        return self.get_path("network_delay_data")
+
+    @property
     def demand_patterns(self):
         """
         Function that returns path to demand pattern csv
@@ -162,9 +212,9 @@ class ConfigParser:
 
     def get_value(self, config_str):
         """
-        Load the config_boolean. This is either `true` or `false`.
+        Load the config_str. This is either `true` or `false`.
 
-        :return: boolean of config_boolean
+        :return: boolean of config_str
         :rtype: boolean
         """
         if config_str not in self.config_data:
@@ -176,6 +226,46 @@ class ConfigParser:
             raise InvalidValueError("batch_mode must be a boolean (true or false)")
 
         return config_boolean
+
+    @property
+    def batch_mode(self):
+        """
+        Load the batch mode boolean. This is either `true` or `false`.
+
+        :return: boolean of batch mode boolean
+        :rtype: boolean
+        """
+        return self.get_value("batch_mode")
+
+    @property
+    def network_loss(self):
+        """
+        Load the network loss boolean. This is either `true` or `false`.
+
+        :return: boolean of network loss
+        :rtype: boolean
+        """
+        return self.get_value("network_loss")
+
+    @property
+    def network_delay(self):
+        """
+        Load the network delay boolean. This is either `true` or `false`.
+
+        :return: boolean of network delay
+        :rtype: boolean
+        """
+        return self.get_value("network_delay")
+
+    @property
+    def mininet_cli(self):
+        """
+        Load the mininet cli boolean. This is either `true` or `false`.
+
+        :return: boolean of mininet cli
+        :rtype: boolean
+        """
+        return self.get_value("mininet_cli")
 
     def generate_attacks(self, yaml_data):
         if "run_attack" in self.config_data.keys() and self.config_data['run_attack']:
@@ -199,27 +289,27 @@ class ConfigParser:
         # Begin with PLC data specified in CPA file
         yaml_data = self.cpa_data
         # Add path and database information
-        yaml_data["inp_file"] = str(self.get_path("inp_file"))
-        yaml_data["cpa_file"] = str(self.get_path("cpa_file"))
+        yaml_data["inp_file"] = str(self.inp_file)
+        yaml_data["cpa_file"] = str(self.cpa_file)
         yaml_data["output_path"] = str(self.output_path)
         yaml_data["db_path"] = "/tmp/dhalsim/dhalsim.sqlite"
         yaml_data["network_topology_type"] = self.network_topology_type
         # Add batch mode parameters
-        yaml_data["batch_mode"] = self.get_value("batch_mode")
+        yaml_data["batch_mode"] = self.batch_mode
         if yaml_data["batch_mode"]:
-            yaml_data["initial_tank_data"] = str(self.get_path("initial_tank_data"))
+            yaml_data["initial_tank_data"] = str(self.initial_tank_data)
             yaml_data["demand_patterns_data"] = str(self.demand_patterns)
             yaml_data["batch_index"] = self.batch_index
         # Add network loss parameters
-        yaml_data["network_loss"] = self.get_value("network_loss")
+        yaml_data["network_loss"] = self.network_loss
         if yaml_data["network_loss"]:
-            yaml_data["network_loss_data"] = str(self.get_path("network_loss_data"))
+            yaml_data["network_loss_data"] = str(self.network_loss_data)
         # Add network delay parameters
-        yaml_data["network_delay"] = self.get_value("network_delay")
+        yaml_data["network_delay"] = self.network_delay
         if yaml_data["network_delay"]:
-            yaml_data["network_delay_data"] = str(self.get_path("network_delay_data"))
+            yaml_data["network_delay_data"] = str(self.network_delay_data)
         # Mininet cli parameter
-        yaml_data["mininet_cli"] = self.get_value("mininet_cli")
+        yaml_data["mininet_cli"] = self.mininet_cli
 
         if "simulator" in self.config_data.keys():
             yaml_data["simulator"] = self.config_data["simulator"]
