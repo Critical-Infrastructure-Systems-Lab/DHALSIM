@@ -27,7 +27,7 @@ def test_imp_path_good(tmpdir):
     inp_file.write("some: thing")
     c.write("inp_file: test.inp")
     parser = ConfigParser(Path(c))
-    assert str(parser.get_path("inp_file")) == str(tmpdir.join("test.inp"))
+    assert str(parser.inp_file) == str(tmpdir.join("test.inp"))
 
 
 def test_imp_path_missing(tmpdir):
@@ -35,7 +35,7 @@ def test_imp_path_missing(tmpdir):
     c.write("something: else")
     parser = ConfigParser(Path(c))
     with pytest.raises(MissingValueError):
-        parser.get_path("inp_file")
+        parser.inp_file
 
 
 def test_imp_path_not_found(tmpdir):
@@ -43,7 +43,7 @@ def test_imp_path_not_found(tmpdir):
     c.write("inp_file: test.inp")
     parser = ConfigParser(Path(c))
     with pytest.raises(FileNotFoundError):
-        parser.get_path("inp_file")
+        parser.inp_file
 
 
 def test_empty_config(tmpdir):
@@ -59,7 +59,7 @@ def test_cpa_path_good(tmpdir):
     inp_file.write("plcs:\n - name: test")
     c.write("cpa_file: test.yaml")
     parser = ConfigParser(Path(c))
-    assert str(parser.get_path("cpa_file")) == str(tmpdir.join("test.yaml"))
+    assert str(parser.cpa_file) == str(tmpdir.join("test.yaml"))
 
 
 def test_cpa_path_missing(tmpdir):
@@ -67,7 +67,7 @@ def test_cpa_path_missing(tmpdir):
     c.write("something: else")
     parser = ConfigParser(Path(c))
     with pytest.raises(MissingValueError):
-        parser.get_path("cpa_file")
+        parser.cpa_file
 
 
 def test_cpa_path_not_found(tmpdir):
@@ -75,7 +75,7 @@ def test_cpa_path_not_found(tmpdir):
     c.write("cpa_file: test.yaml")
     parser = ConfigParser(Path(c))
     with pytest.raises(FileNotFoundError):
-        parser.get_path("cpa_file")
+        parser.cpa_file
 
 
 def test_cpa_data_path_good(tmpdir):
@@ -186,21 +186,21 @@ def test_default_batch_mode(tmpdir):
     c = tmpdir.join("config.yaml")
     c.write("something: else")
     parser = ConfigParser(Path(c))
-    assert parser.get_value("batch_mode") is False
+    assert parser.batch_mode is False
 
 
 def test_true_batch_mode(tmpdir):
     c = tmpdir.join("config.yaml")
     c.write("batch_mode: true")
     parser = ConfigParser(Path(c))
-    assert parser.get_value("batch_mode") is True
+    assert parser.batch_mode is True
 
 
 def test_false_batch_mode(tmpdir):
     c = tmpdir.join("config.yaml")
     c.write("batch_mode: false")
     parser = ConfigParser(Path(c))
-    assert parser.get_value("batch_mode") is False
+    assert parser.batch_mode is False
 
 
 def test_invalid_batch_mode(tmpdir):
@@ -208,7 +208,7 @@ def test_invalid_batch_mode(tmpdir):
     c.write("batch_mode: nottrueorfalse")
     parser = ConfigParser(Path(c))
     with pytest.raises(InvalidValueError):
-        parser.get_value("batch_mode")
+        parser.batch_mode
 
 
 def test_initial_values_path_good(tmpdir):
@@ -217,4 +217,4 @@ def test_initial_values_path_good(tmpdir):
     initial_values.write("TANK\n5\n10")
     c.write("batch_mode: true\ninitial_tank_data: test.yaml")
     parser = ConfigParser(Path(c))
-    assert str(parser.get_path("initial_tank_data")) == str(tmpdir.join("test.yaml"))
+    assert str(parser.initial_tank_data) == str(tmpdir.join("test.yaml"))
