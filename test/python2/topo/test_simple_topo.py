@@ -105,14 +105,14 @@ def test_links_endpoints(topo_fixture):
     assert topo_fixture.links()[1][0] == 's1'
     assert topo_fixture.links()[1][1] == 'r0'
     # Link from switch 1 to PLC1
-    assert topo_fixture.links()[2][0] == 's2'
-    assert topo_fixture.links()[2][1] == 'scada'
+    assert topo_fixture.links()[2][1] == 's2'
+    assert topo_fixture.links()[2][0] == 'scada'
     # Link from switch 1 to PLC2
-    assert topo_fixture.links()[3][0] == 's1'
-    assert topo_fixture.links()[3][1] == 'PLC1'
+    assert topo_fixture.links()[3][1] == 's1'
+    assert topo_fixture.links()[3][0] == 'PLC1'
     # Link from switch 2 to scada
-    assert topo_fixture.links()[4][0] == 's1'
-    assert topo_fixture.links()[4][1] == 'PLC2'
+    assert topo_fixture.links()[4][1] == 's1'
+    assert topo_fixture.links()[4][0] == 'PLC2'
 
 
 @pytest.mark.integrationtest

@@ -139,7 +139,7 @@ class SimpleTopo(Topo):
                     mac=plc['mac'],
                     ip=plc['local_ip'] + "/24",
                     defaultRoute=gateway)
-                self.addLink(switch, plc_node, intfName2=plc['interface'])
+                self.add_node_switch_link(plc_node, switch, plc)
 
         # -- SUPERVISOR NETWORK -- #
         supervisor_ip = self.supervisor_ip + "/24"
@@ -152,7 +152,7 @@ class SimpleTopo(Topo):
         # Add a scada to the network
         scada = self.addHost('scada', ip=self.data['scada']['local_ip'] + "/24", defaultRoute=supervisor_gateway)
         # Add a link between the switch and the scada
-        self.addLink(supervisor_switch, scada, intfName2=self.data['scada']['interface'])
+        self.add_node_switch_link(scada, supervisor_switch, self.data['scada'])
 
         # -- ATACKERS -- #
         if 'network_attacks' in self.data.keys():
@@ -167,6 +167,30 @@ class SimpleTopo(Topo):
 
         # -- PLANT -- #
         self.addHost('plant')
+
+    def add_node_switch_link(self, node, switch, yaml_node_data):
+        """
+        This function adds the link between the node and its switch,
+        and configures network losses/delays as nececarry
+
+        :param switch: The switch to link
+        :param node: The node to link
+        :param yaml_node_data: The yaml data for the given node
+        """
+        # TODO: figure out which of these parameters are necessary
+        link_params = dict(bw=1000, delay="0ms", loss=0, max_queue_size=1000, use_htb=True)
+        # If delays enabled
+        if 'network_delay_data' in self.data:
+            # If delay value for this node defined
+            if self.data['network_delay_values'][yaml_node_data['name']]:
+                link_params['delay'] = self.data['network_delay_values'][yaml_node_data['name']]
+        # If losses enabled
+        if 'network_loss_data' in self.data:
+            # If loss value for this node defined
+            if self.data['network_loss_values'][yaml_node_data['name']]:
+                link_params['loss'] = self.data['network_loss_values'][yaml_node_data['name']]
+        # Add link with network parameters
+        self.addLink(node, switch, intfName=yaml_node_data['interface'], **link_params)
 
     def setup_network(self, net):
         """

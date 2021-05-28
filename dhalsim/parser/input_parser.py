@@ -1,3 +1,4 @@
+import pandas as pd
 import wntr
 from antlr4 import *
 
@@ -62,6 +63,15 @@ class InputParser:
         self.generate_actuators_list()
         # Generate list of times
         self.generate_times()
+        # Generate initial values if batch mode is true
+        if 'initial_tank_data' in self.data:
+            self.generate_initial_tank_values()
+        # Generate network loss values if network loss is true
+        if 'network_loss_data' in self.data:
+            self.generate_network_losses()
+        # Generate network delay values if network delay is true
+        if 'network_delay_data' in self.data:
+            self.generate_network_delays()
         # Add iterations if not existing
         if "iterations" not in self.data.keys():
             self.data["iterations"] = int(self.data["time"][0]["duration"]
@@ -146,3 +156,48 @@ class InputParser:
         # Append valves to pumps
         pumps.extend(valves)
         self.data['actuators'] = pumps
+
+    def generate_initial_tank_values(self):
+        """Generates all tanks with their initial values if running in batch mode"""
+
+        initial_values = {}
+        initial_tank_levels = pd.read_csv(self.data["initial_tank_data"])
+        # For all columns in csv
+        for index in range(len(initial_tank_levels.columns)):
+            name = initial_tank_levels.columns[index]
+            # Insert tank value into data
+            data_index = self.data["batch_index"] if self.data["batch_mode"] else 0
+            initial_values[str(name)] = \
+                float(initial_tank_levels.iloc[data_index, index])
+
+        self.data['initial_tank_values'] = initial_values
+
+    def generate_network_losses(self):
+        """Generates list of routers with their network losses from the input csv"""
+
+        network_loss = {}
+        network_loss_data = pd.read_csv(self.data["network_loss_data"])
+        # For all columns in csv
+        for index in range(len(network_loss_data.columns)):
+            name = network_loss_data.columns[index]
+            # Insert loss  value into data
+            data_index = self.data["batch_index"] if self.data["batch_mode"] else 0
+            network_loss[str(name)] = \
+                float(network_loss_data.iloc[data_index, index])
+
+        self.data['network_loss_values'] = network_loss
+
+    def generate_network_delays(self):
+        """Generates list of routers with their network delays from the input csv"""
+
+        network_delay = {}
+        network_delay_data = pd.read_csv(self.data["network_delay_data"])
+        # For all columns in csv
+        for index in range(len(network_delay_data.columns)):
+            name = network_delay_data.columns[index]
+            # Insert tank : value into data
+            data_index = self.data["batch_index"] if self.data["batch_mode"] else 0
+            network_delay[str(name)] = \
+                str(network_delay_data.iloc[data_index, index]) + "ms"
+
+        self.data['network_delay_values'] = network_delay
