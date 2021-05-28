@@ -15,7 +15,6 @@ Example:
     mininet_cli: False
     log_level: info
     simulator: pdd
-    run_attack: True
     attacks_path: "wadi_attacks.yaml"
 
 In the following sections, every entry is explained.
@@ -141,4 +140,13 @@ simulator
 The simulator option in the config file represents the demand model used by the WNTR simulation.
 The valid options are :code:`PDD` and :code:`DD`. This value is then passed to the
 `WNTR hydraulic demand model option <https://wntr.readthedocs.io/en/latest/hydraulics.html>`_.
+
+attacks_path
+------------------------
+*This is an optional value*
+
+This is the path, relative to the config file, to the attacks YAML file.
+The contents of this file are described in the :ref:`Attacks` section.
+If this option is left out, or commented out, the simulation will run without attacks.
+
 
