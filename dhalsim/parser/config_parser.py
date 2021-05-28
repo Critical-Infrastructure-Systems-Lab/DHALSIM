@@ -226,8 +226,8 @@ class ConfigParser:
             network_attack["trigger"]["type"] = network_attack["trigger"]["type"].lower()
 
             if network_attack["trigger"]["type"] == 'time':
-                if "begin" not in network_attack["trigger"]:
-                    raise MissingValueError("No begin time specified for network attack {name}".format(name=network_attack["name"]))
+                if "start" not in network_attack["trigger"]:
+                    raise MissingValueError("No start time specified for network attack {name}".format(name=network_attack["name"]))
                 if "end" not in network_attack["trigger"]:
                     raise MissingValueError("No end time specified for network attack {name}".format(name=network_attack["name"]))
             elif network_attack["trigger"]["type"] == 'between':

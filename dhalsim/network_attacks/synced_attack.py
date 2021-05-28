@@ -1,5 +1,6 @@
 import signal
 import sqlite3
+import subprocess
 import sys
 import time
 from abc import ABCMeta, abstractmethod
@@ -11,6 +12,21 @@ from dhalsim.py3_logger import get_logger
 
 
 class SyncedAttack(metaclass=ABCMeta):
+    """
+    This class can be used to make an attack script. It provides a lot of useful function.
+    It has a function that is called on every iteration of the simulation.
+    It also processes the trigger of this attack. It sets the `state` to 1 and calls :meth:`~dhalsim.network_attacks.synced_attack.SyncedAttack.setup` when the
+    attack should go from not running to running. It sets the `state` to 0 and calls :meth:`~dhalsim.network_attacks.synced_attack.SyncedAttack.teardown`when the
+    attack should go from  running to not running.
+
+    :param intermediate_yaml_path: The path to the intermediate yaml file.
+    This is where all the information is that a attacker needs to know.
+    :type intermediate_yaml_path: Path
+    :param yaml_index: The intermediate yaml has a list of network attacks.
+    This number is the index of this attack.
+    :type yaml_index: int
+    """
+
     def __init__(self, intermediate_yaml_path: Path, yaml_index: int):
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
@@ -32,6 +48,8 @@ class SyncedAttack(metaclass=ABCMeta):
 
         self.attacker_ip = self.intermediate_attack['local_ip']
         self.target_plc_ip = self.intermediate_plc['local_ip']
+
+        self.state = 0
 
         # Initialize database connection
         self.initialize_db()
@@ -66,7 +84,8 @@ class SyncedAttack(metaclass=ABCMeta):
 
         :return: False if physical process wants the attack to do a iteration, True if not.
         """
-        self.cur.execute("SELECT flag FROM sync WHERE name IS ?", (self.intermediate_attack["name"],))
+        self.cur.execute("SELECT flag FROM sync WHERE name IS ?",
+                         (self.intermediate_attack["name"],))
         flag = bool(self.cur.fetchone()[0])
         return flag
 
@@ -90,6 +109,16 @@ class SyncedAttack(metaclass=ABCMeta):
                 # print(pd.read_sql_query("SELECT * FROM sync;", self.conn))
                 time.sleep(0.01)
 
+            run = self.check_trigger()
+            if self.state == 0:
+                if run:
+                    self.state = 1
+                    self.setup()
+            elif self.state == 1:
+                if not run:
+                    self.state = 0
+                    self.teardown()
+
             self.attack_step()
 
             self.set_sync(1)
@@ -99,6 +128,22 @@ class SyncedAttack(metaclass=ABCMeta):
         """
         This function is the function that will run for every iteration.
         This function needs to be overwritten.
+        """
+
+    @abstractmethod
+    def setup(self):
+        """
+        This function sets up an attack
+        This should be called when an attack should run, for example when
+        a trigger triggers
+        """
+
+    @abstractmethod
+    def teardown(self):
+        """
+        This function stops the attack correctly
+        This should be called when attack should stop, for example when a
+        trigger is not met anymore
         """
 
     def interrupt(self):

@@ -31,7 +31,6 @@ class MitmAttack(SyncedAttack):
         super().__init__(intermediate_yaml_path, yaml_index)
         os.system('sysctl net.ipv4.ip_forward=1')
         self.queue = fnfqueue.Connection()
-        self.state = 0
         self.thread = None
         self.server = None
         self.run_thread = False
@@ -69,7 +68,8 @@ class MitmAttack(SyncedAttack):
     def receive_original_tags(self):
         request_tags = self.intermediate_plc['actuators'] + self.intermediate_plc['sensors']
 
-        cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip.client', '--print', '--address', str(self.target_plc_ip) + ":44818"]
+        cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip.client', '--print', '--address',
+               str(self.target_plc_ip) + ":44818"]
 
         for tag in request_tags:
             cmd.append(str(tag) + ':1')
@@ -158,16 +158,8 @@ class MitmAttack(SyncedAttack):
         self.thread.join()
 
     def attack_step(self):
-        if self.state == 0:
-            if self.intermediate_attack["start"] <= self.get_master_clock() <= self.intermediate_attack["end"]:
-                self.state = 1
-                self.setup()
-        elif self.state == 1:
-            # Update the tags dictionary once per attack step
+        if self.state == 1:
             self.update_tags_dict()
-            if not self.intermediate_attack["start"] <= self.get_master_clock() <= self.intermediate_attack["end"]:
-                self.teardown()
-                self.state = 2
 
 
 def is_valid_file(parser_instance, arg):
@@ -182,7 +174,8 @@ if __name__ == "__main__":
     parser.add_argument(dest="intermediate_yaml",
                         help="intermediate yaml file", metavar="FILE",
                         type=lambda x: is_valid_file(parser, x))
-    parser.add_argument(dest="index", help="Index of the network attack in intermediate yaml", type=int,
+    parser.add_argument(dest="index", help="Index of the network attack in intermediate yaml",
+                        type=int,
                         metavar="N")
 
     args = parser.parse_args()
