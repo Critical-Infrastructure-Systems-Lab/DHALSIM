@@ -26,11 +26,11 @@ device_attacks:
 network_attacks:
   - name: "test1"
     type: mitm
-    start: 10
-    end: 15
+    trigger:
+      type: Time
+      start: 5
+      end: 10
     tags:
-      - tag: T0
-        value: 0.1
       - tag: T2
         value: 0.2
-    target: PLC1
+    target: PLC2

@@ -234,6 +234,7 @@ class ConfigParser:
                         plc['attacks'] = []
                     plc['attacks'].append(device_attack)
                     break
+        return yaml_data
 
 
     def get_boolean(self, config_str, default_value):
