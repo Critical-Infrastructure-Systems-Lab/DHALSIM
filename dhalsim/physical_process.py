@@ -5,6 +5,7 @@ import signal
 import logging
 from decimal import Decimal
 
+import pandas as pd
 import progressbar
 import wntr
 import wntr.network.controls as controls
@@ -91,6 +92,9 @@ class PhysicalPlant:
             else:
                 self.logger.critical('Invalid simulation mode, exiting.')
                 sys.exit(1)
+
+            # Set initial physical conditions
+            self.set_initial_values()
 
             self.sim = wntr.sim.WNTRSimulator(self.wn)
 
@@ -224,7 +228,7 @@ class PhysicalPlant:
         self.logger.info("Hydraulic timestep is {timestep}.".format(
             timestep=str(self.wn.options.time.hydraulic_timestep)))
 
-        if self.data['log_level'] is not 'debug':
+        if self.data['log_level'] != 'debug':
             widgets = [' [', progressbar.Timer(), ' - ', progressbar.SimpleProgress(), '] ',
                        progressbar.Bar(), ' [', progressbar.ETA(), '] ', ]
             p_bar = progressbar.ProgressBar(max_value=iteration_limit, widgets=widgets)
@@ -243,7 +247,7 @@ class PhysicalPlant:
             self.update_controls()
 
             self.logger.debug("Iteration %d out of %d." % (master_time, iteration_limit))
-            if self.data['log_level'] is not 'debug':
+            if self.data['log_level'] != 'debug':
                 p_bar.update(master_time)
 
             results = self.sim.run_sim(convergence_error=True)
@@ -294,6 +298,30 @@ class PhysicalPlant:
         self.write_results(self.results_list)
         self.logger.info("Simulation finished.")
         sys.exit(0)
+
+    def set_initial_values(self):
+        """Sets custom initial values for tanks and demand patterns in the WNTR simulation"""
+
+        if "initial_tank_values" in self.data:
+            # Initial tank values
+            for tank in self.tank_list:
+                if str(tank) in self.data["initial_tank_values"]:
+                    value = self.data["initial_tank_values"][str(tank)]
+                    self.logger.debug("Setting tank " + tank + " initial value to " + str(value))
+                    self.wn.get_node(tank).init_level = value
+                else:
+                    self.logger.debug("Tank " + tank + " has no specified initial values, using default...")
+
+        if "demand_patterns_data" in self.data:
+            # Demand patterns for batch
+            demands = pd.read_csv(self.data["demand_patterns_data"])
+            for name, pat in self.wn.patterns():
+                if name in demands:
+                    self.logger.debug("Setting demands for " + name +
+                                      " to demands defined at: " + self.data["demand_patterns_data"])
+                    pat.multipliers = demands[name].values.tolist()
+                else:
+                    self.logger.debug("Consumer " + name + " has no demands defined, using default...")
 
 
 def is_valid_file(test_parser, arg):

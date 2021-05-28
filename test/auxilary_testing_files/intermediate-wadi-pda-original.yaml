@@ -1,6 +1,8 @@
 inp_file: test/auxilary_testing_files/wadi_map_pda_original.inp
 iterations: 8640
-
+batch_mode: false
+network_delay: False
+network_loss: False
 plcs:
   - name: PLC1
     sensors:
