@@ -9,7 +9,7 @@ network_topology_type: complex
 output_path: "output/"
 iterations: 3
 mininet_cli: false
-log_level: debug
+log_level: info
 simulator: pdd
 
 batch_simulations: 3
