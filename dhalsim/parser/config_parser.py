@@ -30,6 +30,9 @@ class DuplicateValueError(Error):
 class NoSuchPlc(Error):
     """Raised when an attack targets a PLC that does not exist"""
 
+class NoSuchTag(Error):
+    """Raised when an attack targets a tag the target PLC does not have"""
+
 
 class ConfigParser:
     """
@@ -209,7 +212,7 @@ class ConfigParser:
             if "target" not in network_attack:
                 raise MissingValueError("No target specified for network attack {name}".format(name=network_attack["name"]))
             target = network_attack['target']
-            plcs = []
+            target_plc = None
             for plc in self.cpa_data.get("plcs"):
                 if plc['name'] == target:
                     target_plc = plc

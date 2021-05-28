@@ -67,7 +67,98 @@ class SyncedAttack(metaclass=ABCMeta):
         self.conn = sqlite3.connect(self.intermediate_yaml["db_path"])
         self.cur = self.conn.cursor()
 
-    def get_master_clock(self):
+    def receive_tag(self, tag: str) -> float:
+        """
+        This function will receive a given tag from its corresponding PLC
+
+        When the corresponding PLC is the PLC that we are targeting with our attack , we perform
+        a receive on the local PLC IP address. Otherwise, the receive will be performed on the public
+        IP address of the PLC.
+
+        :param tag: The tag we want to receive
+        :return: The value of the tag
+        """
+        target_plc = None
+
+        for plc in self.intermediate_yaml['plcs']:
+            if tag in plc['actuators'] + plc['sensors']:
+                target_plc = plc
+                break
+
+        cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip.client', '--print', '--address']
+        if target_plc['name'] == self.intermediate_plc['name']:
+            cmd.append(str(target_plc['local_ip']) + ":44818")
+        else:
+            cmd.append(str(target_plc['public_ip']) + ":44818")
+        cmd.append(f"{tag}:1")
+
+        try:
+            client = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE)
+
+            # client.communicate is blocking
+            raw_out = client.communicate()
+
+            # Value is stored as first tuple element between a pair of square brackets
+            word = raw_out[0]
+            value = word[(word.find(b'[') + 1):word.find(b']')]
+            return float(value)
+
+        except Exception as error:
+            print('ERROR enip _receive: ', error.with_traceback())
+
+    def check_trigger(self) -> bool:
+        """
+        Check if the trigger given is satisfied
+        A trigger looks like this for a trigger basted on time:
+        .. code-block:: yaml
+            trigger:
+              type: time
+              start: 15
+              end: 40
+        A trigger looks like one of these for a trigger basted on a sensor value:
+        .. code-block:: yaml
+            trigger:
+              type: above
+              sensor: TANK
+              value: 0.16
+        .. code-block:: yaml
+            trigger:
+              type: below
+              sensor: TANK
+              value: 0.16
+        .. code-block:: yaml
+            trigger:
+              type: between
+              sensor: T2
+              lower_value: 0.10
+              upper_value: 0.16
+        :return:
+        """
+        if self.intermediate_attack['trigger']['type'] == "time":
+            start = self.intermediate_attack['trigger']['start']
+            end = self.intermediate_attack['trigger']['end']
+            if start <= self.get_master_clock() <= end:
+                return True
+            else:
+                return False
+        elif self.intermediate_attack['trigger']['type'] == "above":
+            value = self.intermediate_attack['trigger']['value']
+            sensor_value = self.receive_tag(self.intermediate_attack['trigger']['sensor'])
+            print("sensor_value:", sensor_value, ", value:", value)
+            return sensor_value >= value
+        elif self.intermediate_attack['trigger']['type'] == "below":
+            value = self.intermediate_attack['trigger']['value']
+            sensor_value = self.receive_tag(self.intermediate_attack['trigger']['sensor'])
+            return sensor_value <= value
+        elif self.intermediate_attack['trigger']['type'] == "between":
+            lower_value = self.intermediate_attack['trigger']['lower_value']
+            upper_value = self.intermediate_attack['trigger']['upper_value']
+            sensor_value = self.receive_tag(self.intermediate_attack['trigger']['sensor'])
+            return lower_value <= sensor_value <= upper_value
+        else:
+            return False
+
+    def get_master_clock(self) -> int:
         """
         Get the value of the master clock of the physical process through the database.
 
