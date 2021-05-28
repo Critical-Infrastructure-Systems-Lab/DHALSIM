@@ -191,24 +191,24 @@ def test_default_batch_mode(tmpdir):
 
 def test_true_batch_mode(tmpdir):
     c = tmpdir.join("config.yaml")
-    c.write("batch_mode: true")
+    c.write("batch_simulations: 12")
     parser = ConfigParser(Path(c))
     assert parser.batch_mode is True
 
 
 def test_false_batch_mode(tmpdir):
     c = tmpdir.join("config.yaml")
-    c.write("batch_mode: false")
+    c.write("something: else")
     parser = ConfigParser(Path(c))
     assert parser.batch_mode is False
 
 
 def test_invalid_batch_mode(tmpdir):
     c = tmpdir.join("config.yaml")
-    c.write("batch_mode: nottrueorfalse")
+    c.write("batch_simulations: notanumber")
     parser = ConfigParser(Path(c))
     with pytest.raises(InvalidValueError):
-        parser.batch_mode
+        parser.batch_simulations
 
 
 def test_initial_values_path_good(tmpdir):

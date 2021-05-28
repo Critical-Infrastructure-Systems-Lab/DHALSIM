@@ -108,6 +108,8 @@ output_path
 This option represents the path to the folder in which output files (.pcap, .csv, etc.) will be
 created. The default is output and the path is relative to the configuration file.
 
+Note: if you run in batch mode, subfolders will automatically be created of the form :code:`output_path/batch_number`
+
 iterations
 ------------------------
 *This is an optional value with default*: duration / hydraulic time-step
