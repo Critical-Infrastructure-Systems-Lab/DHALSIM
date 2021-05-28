@@ -20,9 +20,7 @@ Example with all options:
     batch_mode: True
     initial_tank_values: initial_tank.csv
     demand_patterns: demand_patterns/
-    network_loss: true
     network_loss_data: losses.csv
-    network_delay: false
     network_delay_data: delays.csv
 
 In the following sections, every entry is explained.
