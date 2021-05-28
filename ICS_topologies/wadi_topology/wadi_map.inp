@@ -1745,6 +1745,10 @@
  Quality            	Chlorine mg/L
  Diffusivity        	0
  Tolerance          	0.01
+ DEMAND MODEL           PDA
+ MINIMUM PRESSURE       0
+ REQUIRED PRESSURE      20
+ PRESSURE EXPONENT      0.5
 
 [COORDINATES]
 ;Node            	X-Coord         	Y-Coord

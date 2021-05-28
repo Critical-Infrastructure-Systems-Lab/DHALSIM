@@ -31,10 +31,24 @@ class PhysicalPlant:
         else:
             self.attack_flag = False
 
+        # Use of prepared statements
+        self._name = 'ctown'
+        self._path = config_options['db_path']
+        self._value = 'value'
+        self._what = ()
+
+        self._init_what()
+
+        if not self._what:
+            raise ValueError('Primary key not found.')
+        else:
+            self._init_get_query()
+            self._init_set_query()
+
         # connection to the database
         self.db_path = config_options['db_path']
-        self.conn = sqlite3.connect(self.db_path)
-        self.c = self.conn.cursor()
+        #self.conn = sqlite3.connect(self.db_path)
+        #self.c = self.conn.cursor()
 
         self.output_path = config_options['output_ground_truth_path']
         self.simulation_days = int(config_options['duration_days'])
@@ -111,6 +125,77 @@ class PhysicalPlant:
         #self.sim = wntr.sim.EpanetSimulator(self.wn) # This is called only once
 
         print("Starting simulation for " + str(config_options['inp_file']) + " topology ")
+
+    def _init_what(self):
+        """Save a ordered tuple of pk field names in self._what."""
+
+        # https://sqlite.org/pragma.html#pragma_table_info
+        query = "PRAGMA table_info(%s)" % self._name
+        # print "DEBUG query: ", query
+
+        with sqlite3.connect(self._path) as conn:
+            try:
+                cursor = conn.cursor()
+                cursor.execute(query)
+                table_info = cursor.fetchall()
+                # print "DEBUG table_info: ", table_info
+
+                # last tuple element
+                pks = []
+                for field in table_info:
+                    if field[-1] > 0:
+                        # print 'DEBUG pk field: ', field
+                        pks.append(field)
+
+                if not pks:
+                    print "ERROR: please provide at least 1 primary key"
+                else:
+                    # sort by pk order
+                    pks.sort(key=lambda x: x[5])
+                    # print 'DEBUG sorted pks: ', pks
+
+                    what_list = []
+                    for pk in pks:
+                        what_list.append(pk[1])
+                    # print 'DEBUG what list: ', what_list
+
+                    self._what = tuple(what_list)
+                    # print 'DEBUG self._what: ', self._what
+
+            except sqlite3.Error, e:
+                print('ERROR: %s: ' % e.args[0])
+
+    def _init_set_query(self):
+        """Use prepared statements."""
+
+        set_query = 'UPDATE %s SET %s = ? WHERE %s = ?' % (
+            self._name,
+            self._value,
+            self._what[0])
+
+        # for composite pk
+        for pk in self._what[1:]:
+            set_query += ' AND %s = ?' % (
+                pk)
+
+        print 'DEBUG set_query:', set_query
+        self._set_query = set_query
+
+    def _init_get_query(self):
+        """Use prepared statement."""
+
+        get_query = 'SELECT %s FROM %s WHERE %s = ?' % (
+            self._value,
+            self._name,
+            self._what[0])
+
+        # for composite pk
+        for pk in self._what[1:]:
+            get_query += ' AND %s = ?' % (
+                pk)
+
+        print 'DEBUG get_query:', get_query
+        self._get_query = get_query
 
     def load_config(self, config_path):
         """
@@ -246,17 +331,14 @@ class PhysicalPlant:
             else:
                 values_list.extend([self.wn.get_link(valve).status.value])
 
+        attack1 = 0
+        attack2 = 0
+
         try:
-            rows = self.c.execute("SELECT value FROM ctown WHERE name = 'ATT_1'").fetchall()
-            self.conn.commit()
-            attack1 = int(rows[0][0])
-            rows = self.c.execute("SELECT value FROM ctown WHERE name = 'ATT_2'").fetchall()
-            self.conn.commit()
-            attack2 = int(rows[0][0])
-        except Exception:
-            print("Warning DB locked")
-            attack1 = 0
-            attack2 = 0
+            attack1 = int(self.get_from_db('ATT_1'))
+            attack2 = int(self.get_from_db('ATT_2'))
+        except Exception as e :
+            print("Warning exception acessing DB " + str(e))
 
         values_list.extend([attack1, attack2])
 
@@ -278,21 +360,18 @@ class PhysicalPlant:
             self.update_control(control)
 
     def get_actuator_state(self, actuator):
+
         actuator_dict = {}
 
         act_name = '\'' + actuator + '\''
         actuator_dict['name'] = actuator
-        rows_1 = self.c.execute('SELECT value FROM ctown WHERE name = ' + act_name).fetchall()
-        self.conn.commit()
-        actuator_dict['status'] = int(rows_1[0][0])
+        actuator_dict['status'] = int(self.get_from_db(act_name))
 
         return actuator_dict
 
     def update_control(self, control):
         act_name = '\'' + control['name'] + '\''
-        rows_1 = self.c.execute('SELECT value FROM ctown WHERE name = ' + act_name).fetchall()
-        self.conn.commit()
-        new_status = int(rows_1[0][0])
+        new_status = int(self.get_from_db(act_name))
 
         control['value'] = new_status
 
@@ -318,6 +397,44 @@ class PhysicalPlant:
                 self.attack_start = int(attack['start'])
                 self.attack_end = int(attack['end'])
                 self.attack_type = attack['type']
+
+    def set_to_db(self, what, value):
+        """Returns setted value.
+        ``value``'s type is not checked, the client has to specify the correct
+        one.
+        what_list overwrites the given what tuple,
+        eg new what tuple: ``(value, what[0], what[1], ...)``
+        """
+        what_list = [value]
+
+        for pk in what:
+            what_list.append(pk)
+
+        what = tuple(what_list)
+        # print 'DEBUG set what: ', what
+
+        with sqlite3.connect(self._path) as conn:
+            try:
+                cursor = conn.cursor()
+                cursor.execute(self._set_query, what)
+                conn.commit()
+                return value
+
+            except sqlite3.Error, e:
+                print('_set ERROR: %s: ' % e.args[0])
+
+    def get_from_db(self, what):
+        """Returns the first element of the result tuple."""
+
+        with sqlite3.connect(self.db_path) as conn:
+            try:
+                cursor = conn.cursor()
+                cursor.execute(self._get_query, what)
+                record = cursor.fetchone()
+                return record[0]
+
+            except sqlite3.Error, e:
+                print('_get ERROR: %s: ' % e.args[0])
 
     def main(self):
         # We want to simulate only 1 hydraulic timestep each time MiniCPS processes the simulation data
@@ -372,54 +489,41 @@ class PhysicalPlant:
                 for tank in self.tank_list:
                     tank_name = '\'' + tank + '\''
                     a_level = self.wn.get_node(tank).level
-                    query = "UPDATE ctown SET value = " + str(a_level) + " WHERE name = " + tank_name
-                    self.c.execute(query)  # UPDATE TANKS IN THE DATABASE
-                    self.conn.commit()
+                    self.set_to_db(tank_name, a_level)
 
                 # Update pump flow
                 for pump in self.pump_list:
                     a_flowrate = Decimal(self.wn.get_link(pump).flow)
-                    pump_name ='\'' + pump + 'F' + '\''
-                    query = "UPDATE ctown SET value = " + str(a_flowrate) + " WHERE name = " + pump_name
-                    self.c.execute(query)  # UPDATE PUMP FLOWS IN THE DATABASE
-                    self.conn.commit()
+                    pump_name ='\'' + pump + a_flowrate + '\''
+                    self.set_to_db(pump_name, a_flowrate)
 
                 # Update valve flow
                 for valve in self.valve_list:
                     a_flowrate = Decimal(self.wn.get_link(valve).flow)
                     valve_name ='\'' + valve + 'F' + '\''
-                    query = "UPDATE ctown SET value = " + str(a_flowrate) + " WHERE name = " + valve_name
-                    self.c.execute(query)  # UPDATE VALVE FLOWS IN THE DATABASE
-                    self.conn.commit()
+                    self.set_to_db(valve_name, a_flowrate)
 
                 # Update the SCADA junctions
                 for junction in self.scada_junction_list:
                     junction_name = '\'' + junction + '\''
                     a_level = Decimal(self.wn.get_node(junction).head - self.wn.get_node(junction).elevation)
-                    query = "UPDATE ctown SET value = " + str(a_level) + " WHERE name = " + junction_name
-                    self.c.execute(query)  # UPDATE JUNCTION PRESSURE DATABASE
-                    self.conn.commit()
+                    self.set_to_db(junction_name, a_level)
 
-                query = "UPDATE ctown SET value = 0 WHERE name = 'CONTROL'"
-                self.c.execute(query)  # UPDATE CONTROL value for the PLCs to apply control
-                self.conn.commit()
+                self.set_to_db('CONTROL', 0)
 
                 # For concealment attacks, we need more stages in the attack
                 if self.attack_flag and (self.attack_type == "device_attack" or self.attack_type == "network_attack"):
                     if self.attack_start <= master_time < self.attack_end:
-                        query = "UPDATE ctown SET value = " + str(1) + " WHERE name = 'ATT_2'"
-                        self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to launch attack
-                        self.conn.commit()
+                        self.set_to_db('ATT_2', 1)
                     else:
-                        query = "UPDATE ctown SET value = " + str(0) + " WHERE name = 'ATT_2'"
-                        self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to stop attack
-                        self.conn.commit()
+                        self.set_to_db('ATT_2', 0)
 
             except Exception:
                 print("Warning, skipping an iteration")
                 continue
 
         self.write_results(self.results_list)
+
 
 if __name__ == "__main__":
     simulation = PhysicalPlant()

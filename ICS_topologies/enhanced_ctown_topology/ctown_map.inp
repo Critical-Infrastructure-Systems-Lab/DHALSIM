@@ -1180,6 +1180,10 @@
  Quality            	NONE mg/L
  Diffusivity        	1.000000
  Tolerance          	0.01000000
+ DEMAND MODEL           PDA
+ MINIMUM PRESSURE       0
+ REQUIRED PRESSURE      20
+ PRESSURE EXPONENT      0.5
 
 [COORDINATES]
 ;Node            	X-Coord         	Y-Coord
