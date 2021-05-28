@@ -224,6 +224,12 @@ class PhysicalPlant:
 
         iteration_limit = self.data["iterations"]
 
+        self.logger.debug("Temporary file location: " + str(Path(self.data["db_path"]).parent))
+
+        if 'batch_index' in self.data:
+            self.logger.info("Running batch simulation {x} out of {y}.".format(x=self.data['batch_index'] + 1,
+                                                                               y=self.data['batch_simulations']))
+
         self.logger.info("Simulation will run for {x} iterations.".format(x=str(iteration_limit)))
         self.logger.info("Hydraulic timestep is {timestep}.".format(
             timestep=str(self.wn.options.time.hydraulic_timestep)))
