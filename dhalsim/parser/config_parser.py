@@ -406,7 +406,7 @@ class ConfigParser:
         yaml_data = InputParser(yaml_data).write()
 
         # Parse the device attacks from the config file
-        if "run_attack" in self.config_data.keys() and self.config_data['run_attack']:
+        if "attacks_path" in self.config_data.keys():
             if self.attacks_data is not None:
                 if 'device_attacks' in self.attacks_data.keys():
                     yaml_data = self.generate_device_attacks(yaml_data)
