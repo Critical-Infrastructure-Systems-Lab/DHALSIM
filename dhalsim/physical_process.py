@@ -228,7 +228,7 @@ class PhysicalPlant:
         self.logger.info("Hydraulic timestep is {timestep}.".format(
             timestep=str(self.wn.options.time.hydraulic_timestep)))
 
-        if self.data['log_level'] is not 'debug':
+        if self.data['log_level'] != 'debug':
             widgets = [' [', progressbar.Timer(), ' - ', progressbar.SimpleProgress(), '] ',
                        progressbar.Bar(), ' [', progressbar.ETA(), '] ', ]
             p_bar = progressbar.ProgressBar(max_value=iteration_limit, widgets=widgets)
@@ -247,7 +247,7 @@ class PhysicalPlant:
             self.update_controls()
 
             self.logger.debug("Iteration %d out of %d." % (master_time, iteration_limit))
-            if self.data['log_level'] is not 'debug':
+            if self.data['log_level'] != 'debug':
                 p_bar.update(master_time)
 
             results = self.sim.run_sim(convergence_error=True)

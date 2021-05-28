@@ -16,8 +16,7 @@ def test_python_version():
 
 @pytest.fixture
 def unmodified_yaml(tmpdir):
-    dict = {"network_loss": False, "network_delay": False,
-            "plcs": [{"name": "PLC1", }, {"name": "PLC2", }, ], }
+    dict = {"plcs": [{"name": "PLC1", }, {"name": "PLC2", }, ], }
     file = tmpdir.join("intermediate.yaml")
     with file.open(mode='w') as intermediate_yaml:
         yaml.dump(dict, intermediate_yaml)

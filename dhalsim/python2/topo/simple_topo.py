@@ -128,12 +128,12 @@ class SimpleTopo(Topo):
         # TODO: figure out which of these parameters are necessary
         link_params = dict(bw=1000, delay="0ms", loss=0, max_queue_size=1000, use_htb=True)
         # If delays enabled
-        if self.data['network_delay']:
+        if 'network_delay_data' in self.data:
             # If delay value for this node defined
             if self.data['network_delay_values'][yaml_node_data['name']]:
                 link_params['delay'] = self.data['network_delay_values'][yaml_node_data['name']]
         # If losses enabled
-        if self.data['network_loss']:
+        if 'network_loss_data' in self.data:
             # If loss value for this node defined
             if self.data['network_loss_values'][yaml_node_data['name']]:
                 link_params['loss'] = self.data['network_loss_values'][yaml_node_data['name']]

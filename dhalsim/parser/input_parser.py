@@ -64,13 +64,13 @@ class InputParser:
         # Generate list of times
         self.generate_times()
         # Generate initial values if batch mode is true
-        if self.data["initial_tank_data"]:
+        if 'initial_tank_data' in self.data:
             self.generate_initial_tank_values()
         # Generate network loss values if network loss is true
-        if self.data["network_loss_data"]:
+        if 'network_loss_data' in self.data:
             self.generate_network_losses()
         # Generate network delay values if network delay is true
-        if self.data["network_delay_data"]:
+        if 'network_delay_data' in self.data:
             self.generate_network_delays()
         # Add iterations if not existing
         if "iterations" not in self.data.keys():
@@ -165,9 +165,10 @@ class InputParser:
         # For all columns in csv
         for index in range(len(initial_tank_levels.columns)):
             name = initial_tank_levels.columns[index]
-            # Insert tank : value into data
+            # Insert tank value into data
+            data_index = self.data["batch_index"] if self.data["batch_mode"] else 0
             initial_values[str(name)] = \
-                float(initial_tank_levels.iloc[self.data["batch_index"], index])
+                float(initial_tank_levels.iloc[data_index, index])
 
         self.data['initial_tank_values'] = initial_values
 
@@ -179,7 +180,7 @@ class InputParser:
         # For all columns in csv
         for index in range(len(network_loss_data.columns)):
             name = network_loss_data.columns[index]
-            # Insert tank : value into data
+            # Insert loss  value into data
             data_index = self.data["batch_index"] if self.data["batch_mode"] else 0
             network_loss[str(name)] = \
                 float(network_loss_data.iloc[data_index, index])

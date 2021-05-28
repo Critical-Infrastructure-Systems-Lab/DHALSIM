@@ -16,14 +16,12 @@ def test_python_version():
 
 @pytest.fixture
 def unmodified_dict():
-    return {"network_loss": False, "network_delay": False,
-            "plcs": [{"name": "PLC1", }, {"name": "PLC2", }, ], }
+    return {"plcs": [{"name": "PLC1", }, {"name": "PLC2", }, ], }
 
 
 @pytest.fixture
 def filled_dict():
-    return {"network_loss": False, "network_delay": False,
-            'scada': {'interface': 'scada-eth0', 'local_ip': '192.168.2.1', 'name': 'scada',
+    return {'scada': {'interface': 'scada-eth0', 'local_ip': '192.168.2.1', 'name': 'scada',
                       'public_ip': '192.168.2.1'},
             'plcs': [{'public_ip': '192.168.1.1', 'mac': '00:1D:9C:C7:B0:70', 'name': 'PLC1',
                       'local_ip': '192.168.1.1', 'interface': 'PLC1-eth0',

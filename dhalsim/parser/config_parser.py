@@ -79,9 +79,9 @@ class ConfigParser:
         :return: absolute path to the output folder
         :rtype: Path
         """
-        path = self.config_data.get("output_path")
+        path = self.config_data.get('output_path')
         if not path:
-            path = "output"
+            path = 'output'
         path = (self.config_path.parent / path).absolute()
         return path
 
@@ -93,7 +93,7 @@ class ConfigParser:
         :return: absolute path to the inp file
         :rtype: Path
         """
-        return self.get_path("inp_file")
+        return self.get_path('inp_file')
 
     @property
     def cpa_file(self):
@@ -103,7 +103,7 @@ class ConfigParser:
         :return: absolute path to the cpa file
         :rtype: Path
         """
-        return self.get_path("cpa_file")
+        return self.get_path('cpa_file')
 
     @property
     def initial_tank_data(self):
@@ -113,7 +113,7 @@ class ConfigParser:
         :return: absolute path to the initial tank data file
         :rtype: Path
         """
-        return self.get_path("initial_tank_data")
+        return self.get_path('initial_tank_data')
 
     @property
     def network_loss_data(self):
@@ -123,7 +123,7 @@ class ConfigParser:
         :return: absolute path to the inp file
         :rtype: Path
         """
-        return self.get_path("network_loss_data")
+        return self.get_path('network_loss_data')
 
     @property
     def network_delay_data(self):
@@ -133,7 +133,7 @@ class ConfigParser:
         :return: absolute path to the inp file
         :rtype: Path
         """
-        return self.get_path("network_delay_data")
+        return self.get_path('network_delay_data')
 
     @property
     def demand_patterns(self):
@@ -146,7 +146,11 @@ class ConfigParser:
         path = self.config_data.get('demand_patterns')
         if not path:
             raise MissingValueError("demand_patterns not in config file.")
-        path = str(path) + str(self.batch_index) + ".csv"
+
+        # If running in batch mode, then have to use batch index in name
+        if self.batch_mode:
+            path = str(path) + str(self.batch_index) + '.csv'
+
         path = (self.config_path.parent / path).absolute()
         if not path.is_file():
             raise FileNotFoundError(str(path) + " is not a file.")
@@ -158,21 +162,21 @@ class ConfigParser:
 
         :return: data from cpa file
         """
-        with self.get_path("cpa_file").open() as file:
+        with self.get_path('cpa_file').open() as file:
             cpa = yaml.load(file, Loader=yaml.FullLoader)
 
         # Verification of plc data
-        plcs = cpa.get("plcs")
+        plcs = cpa.get('plcs')
         if not plcs:
             raise MissingValueError("PLCs section not present in cpa_file.")
 
         # Check for plc names (and check for duplicates)
         plc_list = []
         for plc in plcs:
-            if not plc.get("name"):
+            if not plc.get('name'):
                 raise MissingValueError("PLC in cpa file missing a name.")
             else:
-                plc_list.append(plc.get("name"))
+                plc_list.append(plc.get('name'))
 
         if len(plc_list) != len(set(plc_list)):
             raise DuplicateValueError
@@ -185,7 +189,7 @@ class ConfigParser:
 
         :return: data from the attack file
         """
-        with self.get_path("attacks_path").open(mode='r') as attacks_description:
+        with self.get_path('attacks_path').open(mode='r') as attacks_description:
             attacks = yaml.safe_load(attacks_description)
 
         return attacks
@@ -198,14 +202,14 @@ class ConfigParser:
         :return: the type of the topology
         :rtype: str
         """
-        if not "network_topology_type" in self.config_data:
-            return "simple"
+        if not 'network_topology_type' in self.config_data:
+            return 'simple'
 
         network_type = self.config_data["network_topology_type"]
 
         if type(network_type) != str:
             raise InvalidValueError("network_topology_type must be simple or complex.")
-        if network_type.lower() != "simple" and network_type.lower() != "complex":
+        if network_type.lower() != 'simple' and network_type.lower() != 'complex':
             raise InvalidValueError("network_topology_type must be simple or complex.")
 
         return network_type.lower()
@@ -235,7 +239,7 @@ class ConfigParser:
         :return: boolean of batch mode boolean
         :rtype: boolean
         """
-        return self.get_value("batch_mode")
+        return self.get_value('batch_mode')
 
     @property
     def mininet_cli(self):
@@ -248,7 +252,7 @@ class ConfigParser:
         return self.get_value("mininet_cli")
 
     def generate_attacks(self, yaml_data):
-        if "run_attack" in self.config_data.keys() and self.config_data['run_attack']:
+        if 'run_attack' in self.config_data.keys() and self.config_data['run_attack']:
             if 'device_attacks' in self.attacks_data.keys():
                 for device_attack in self.attacks_data['device_attacks']:
                     for plc in yaml_data['plcs']:
@@ -269,37 +273,37 @@ class ConfigParser:
         # Begin with PLC data specified in CPA file
         yaml_data = self.cpa_data
         # Add path and database information
-        yaml_data["inp_file"] = str(self.inp_file)
-        yaml_data["cpa_file"] = str(self.cpa_file)
-        yaml_data["output_path"] = str(self.output_path)
-        yaml_data["db_path"] = "/tmp/dhalsim/dhalsim.sqlite"
-        yaml_data["network_topology_type"] = self.network_topology_type
+        yaml_data['inp_file'] = str(self.inp_file)
+        yaml_data['cpa_file'] = str(self.cpa_file)
+        yaml_data['output_path'] = str(self.output_path)
+        yaml_data['db_path'] = "/tmp/dhalsim/dhalsim.sqlite"
+        yaml_data['network_topology_type'] = self.network_topology_type
         # Add batch mode parameters
-        yaml_data["batch_mode"] = self.batch_mode
-        if yaml_data["batch_mode"]:
-            yaml_data["batch_index"] = self.batch_index
+        yaml_data['batch_mode'] = self.batch_mode
+        if yaml_data['batch_mode']:
+            yaml_data['batch_index'] = self.batch_index
         # Initial physical values
-        if "initial_tank_data" in self.config_data.keys():
-            yaml_data["initial_tank_data"] = str(self.initial_tank_data)
-        if "demand_patterns" in self.config_data.keys():
-            yaml_data["demand_patterns_data"] = str(self.demand_patterns)
+        if 'initial_tank_data' in self.config_data:
+            yaml_data['initial_tank_data'] = str(self.initial_tank_data)
+        if 'demand_patterns' in self.config_data:
+            yaml_data['demand_patterns_data'] = str(self.demand_patterns)
         # Add network loss parameters
-        if "network_loss_data" in self.config_data.keys():
-            yaml_data["network_loss_data"] = str(self.network_loss_data)
+        if 'network_loss_data' in self.config_data:
+            yaml_data['network_loss_data'] = str(self.network_loss_data)
         # Add network delay parameters
-        if "network_delay_data" in self.config_data.keys():
-            yaml_data["network_delay_data"] = str(self.network_delay_data)
+        if 'network_delay_data' in self.config_data:
+            yaml_data['network_delay_data'] = str(self.network_delay_data)
         # Mininet cli parameter
-        yaml_data["mininet_cli"] = self.mininet_cli
+        yaml_data['mininet_cli'] = self.mininet_cli
 
-        if "simulator" in self.config_data.keys():
-            yaml_data["simulator"] = self.config_data["simulator"]
+        if 'simulator' in self.config_data:
+            yaml_data['simulator'] = self.config_data['simulator']
         else:
-            yaml_data["simulator"] = "pdd"
+            yaml_data['simulator'] = 'pdd'
 
         # Note: if iterations not present then default value will be written in InputParser
-        if "iterations" in self.config_data.keys():
-            yaml_data["iterations"] = self.config_data["iterations"]
+        if 'iterations' in self.config_data:
+            yaml_data['iterations'] = self.config_data['iterations']
 
         # Log level
         if 'log_level' in self.config_data:

@@ -12,9 +12,10 @@ mininet_cli: false
 log_level: info
 simulator: pdd
 
-batch_mode: true
+batch_mode: false
 initial_tank_data: initial_tank_wadi.csv
-demand_patterns: demand_patterns/
+#demand_patterns: demand_patterns/
+demand_patterns: demand_patterns/3.csv
 
 network_loss_data: losses_wadi.csv
 
