@@ -93,8 +93,8 @@ class PhysicalPlant:
                 self.logger.critical('Invalid simulation mode, exiting.')
                 sys.exit(1)
 
-            if self.data["batch_mode"]:
-                self.set_initial_values()
+            # Set initial physical conditions
+            self.set_initial_values()
 
             self.sim = wntr.sim.WNTRSimulator(self.wn)
 
@@ -301,23 +301,27 @@ class PhysicalPlant:
 
     def set_initial_values(self):
         """Sets custom initial values for tanks and demand patterns in the WNTR simulation"""
-        # Initial tank values
-        for tank in self.tank_list:
-            if str(tank) in self.data["initial_tank_values"]:
-                value = self.data["initial_tank_values"][str(tank)]
-                self.logger.debug("Setting tank " + tank + " initial value to " + str(value))
-                self.wn.get_node(tank).init_level = value
-            else:
-                self.logger.debug("Tank " + tank + " has no specified initial values, using default...")
-        # Demand patterns for batch
-        demands = pd.read_csv(self.data["demand_patterns_data"])
-        for name, pat in self.wn.patterns():
-            if name in demands:
-                self.logger.debug("Setting demands for " + name +
-                                  " to demands defined at: " + self.data["demand_patterns_data"])
-                pat.multipliers = demands[name].values.tolist()
-            else:
-                self.logger.debug("Consumer " + name + " has no demands defined, using default...")
+
+        if "initial_tank_values" in self.data:
+            # Initial tank values
+            for tank in self.tank_list:
+                if str(tank) in self.data["initial_tank_values"]:
+                    value = self.data["initial_tank_values"][str(tank)]
+                    self.logger.debug("Setting tank " + tank + " initial value to " + str(value))
+                    self.wn.get_node(tank).init_level = value
+                else:
+                    self.logger.debug("Tank " + tank + " has no specified initial values, using default...")
+
+        if "demand_patterns_data" in self.data:
+            # Demand patterns for batch
+            demands = pd.read_csv(self.data["demand_patterns_data"])
+            for name, pat in self.wn.patterns():
+                if name in demands:
+                    self.logger.debug("Setting demands for " + name +
+                                      " to demands defined at: " + self.data["demand_patterns_data"])
+                    pat.multipliers = demands[name].values.tolist()
+                else:
+                    self.logger.debug("Consumer " + name + " has no demands defined, using default...")
 
 
 def is_valid_file(test_parser, arg):

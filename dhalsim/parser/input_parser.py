@@ -64,13 +64,13 @@ class InputParser:
         # Generate list of times
         self.generate_times()
         # Generate initial values if batch mode is true
-        if self.data["batch_mode"]:
+        if self.data["initial_tank_data"]:
             self.generate_initial_tank_values()
         # Generate network loss values if network loss is true
-        if self.data["network_loss"]:
+        if self.data["network_loss_data"]:
             self.generate_network_losses()
         # Generate network delay values if network delay is true
-        if self.data["network_delay"]:
+        if self.data["network_delay_data"]:
             self.generate_network_delays()
         # Add iterations if not existing
         if "iterations" not in self.data.keys():

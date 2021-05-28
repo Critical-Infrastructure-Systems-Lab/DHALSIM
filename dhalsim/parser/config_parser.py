@@ -238,26 +238,6 @@ class ConfigParser:
         return self.get_value("batch_mode")
 
     @property
-    def network_loss(self):
-        """
-        Load the network loss boolean. This is either `true` or `false`.
-
-        :return: boolean of network loss
-        :rtype: boolean
-        """
-        return self.get_value("network_loss")
-
-    @property
-    def network_delay(self):
-        """
-        Load the network delay boolean. This is either `true` or `false`.
-
-        :return: boolean of network delay
-        :rtype: boolean
-        """
-        return self.get_value("network_delay")
-
-    @property
     def mininet_cli(self):
         """
         Load the mininet cli boolean. This is either `true` or `false`.
@@ -297,16 +277,17 @@ class ConfigParser:
         # Add batch mode parameters
         yaml_data["batch_mode"] = self.batch_mode
         if yaml_data["batch_mode"]:
-            yaml_data["initial_tank_data"] = str(self.initial_tank_data)
-            yaml_data["demand_patterns_data"] = str(self.demand_patterns)
             yaml_data["batch_index"] = self.batch_index
+        # Initial physical values
+        if "initial_tank_data" in self.config_data.keys():
+            yaml_data["initial_tank_data"] = str(self.initial_tank_data)
+        if "demand_patterns" in self.config_data.keys():
+            yaml_data["demand_patterns_data"] = str(self.demand_patterns)
         # Add network loss parameters
-        yaml_data["network_loss"] = self.network_loss
-        if yaml_data["network_loss"]:
+        if "network_loss_data" in self.config_data.keys():
             yaml_data["network_loss_data"] = str(self.network_loss_data)
         # Add network delay parameters
-        yaml_data["network_delay"] = self.network_delay
-        if yaml_data["network_delay"]:
+        if "network_delay_data" in self.config_data.keys():
             yaml_data["network_delay_data"] = str(self.network_delay_data)
         # Mininet cli parameter
         yaml_data["mininet_cli"] = self.mininet_cli

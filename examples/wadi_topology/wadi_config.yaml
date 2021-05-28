@@ -16,10 +16,8 @@ batch_mode: true
 initial_tank_data: initial_tank_wadi.csv
 demand_patterns: demand_patterns/
 
-network_loss: false
 network_loss_data: losses_wadi.csv
 
-network_delay: false
 network_delay_data: delays_wadi.csv
 
 # Setting this to debug will also print WNTR and MiniCPS output

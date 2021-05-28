@@ -156,7 +156,7 @@ batch_mode
 
 If the :code:`batch_mode` option is :code:`True`, then the simulation will be running in batch mode. This means you can provide :code:`.csv`
 files with initial tank conditions, demand patterns, and network losses to simulate under different conditions. The full simulation will run
-:code:`batch_iterations` number of times. (**NOTE, NONE OF THIS WORKS YET, JUST INITIAL VALUES**)
+:code:`batch_simulations` number of times. (**NOTE, NONE OF THIS WORKS YET, JUST INITIAL VALUES**)
 
 :code:`batch_mode` should be a boolean.
 
