@@ -33,17 +33,19 @@ class Runner():
     def run(self):
         config_parser = ConfigParser(self.config_file)
 
-        # TODO: batch index for multiple batch runs
         if config_parser.batch_mode:
-            config_parser.batch_index = 2
+            for batch_index in range(config_parser.batch_simulations):
+                config_parser.batch_index = batch_index
+                self.run_simulation(config_parser)
+        else:
+            self.run_simulation(config_parser)
 
+    def run_simulation(self, config_parser):
         intermediate_yaml_path = config_parser.generate_intermediate_yaml()
         db_initializer = DatabaseInitializer(intermediate_yaml_path)
-
         db_initializer.drop()
         db_initializer.write()
         db_initializer.print()
-
         automatic_run_path = Path(__file__).parent.absolute() / "python2" / "automatic_run.py"
         self.automatic_run = subprocess.Popen(
             ["python2", str(automatic_run_path), str(intermediate_yaml_path)])

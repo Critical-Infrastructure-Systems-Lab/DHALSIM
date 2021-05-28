@@ -7,15 +7,15 @@ inp_file: "wadi_map_newer.inp"
 cpa_file: "wadi_cpa.yaml"
 network_topology_type: complex
 output_path: "output/"
-iterations: 500
+iterations: 3
 mininet_cli: false
-log_level: info
+log_level: debug
 simulator: pdd
 
 batch_simulations: 3
 initial_tank_data: initial_tank_wadi.csv
-#demand_patterns: demand_patterns/
-demand_patterns: demand_patterns/2.csv
+demand_patterns: demand_patterns/
+#demand_patterns: demand_patterns/2.csv
 
 network_loss_data: losses_wadi.csv
 
