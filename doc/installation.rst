@@ -21,13 +21,9 @@ DHALSIM can also be installed manually for other Ubuntu versions. To this end yo
 
 Python and pip
 ~~~~~~~~~~~~~~~~~~~~~~~~
-DHALSIM requires Python 2, which is no longer automatically installed on newer versions of Ubuntu. Python 2 can be installed using
+DHALSIM requires Python 2, which is no longer automatically installed on newer versions of Ubuntu. Python 2 can be installed using ``sudo apt install python2``. You can get pip for Python 2 by ``curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py`` and subsequently ``sudo python2 get-pip.py``.
 
-``sudo apt install python2``. You can get pip for Python 2 by ``curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py``
-
-and subsequently ``sudo python2 get-pip.py``.
-
-Python 3 and ``python3-pip`` is also required.
+Python 3 and ``python3-pip`` are also required.
 
 Mininet and MiniCPS installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
