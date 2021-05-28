@@ -841,15 +841,15 @@
 [PUMPS]
 ;ID              	Node1           	Node2           	Parameters
  PU1             	J285            	J273            	HEAD 8	;
- PU2             	J280            	J269            	HEAD 8	;
+ PU2             	J280            	J269            	HEAD 8	; scada junction
  PU3             	J276            	J274            	HEAD 8	;
  PU4             	J299            	J292            	HEAD 9	;
- PU5             	J300            	J256            	HEAD 9	;
- PU6             	J289            	J415            	HEAD 10	;
+ PU5             	J300            	J256            	HEAD 9	; scada junction
+ PU6             	J289            	J415            	HEAD 10	; scada junction
  PU7             	J290            	J291            	HEAD 10	;
  PU8             	J301            	J304            	HEAD 9	;
- PU9             	J302            	J306            	HEAD 9	;
- PU10            	J307            	J317            	HEAD 11	;
+ PU9             	J302            	J306            	HEAD 9	; scada junction
+ PU10            	J307            	J317            	HEAD 11	; scada junction
  PU11            	J309            	J323            	HEAD 11	;
 
 [VALVES]
@@ -857,7 +857,7 @@
  v1              	J35             	J88             	203.2       	PRV 	40          	0.0000      	;
  V45             	J253            	J130            	152.4       	PRV 	40          	0.0000      	;
  V47             	J129            	J169            	101.6       	PRV 	40          	0.0000      	;
- V2              	J14             	J422            	254         	TCV 	0           	0           	;
+ V2              	J14             	J422            	254         	TCV 	0           	0           	; scada junction
 
 [TAGS]
 

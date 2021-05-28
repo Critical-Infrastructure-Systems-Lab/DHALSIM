@@ -6,6 +6,10 @@ import pandas as pd
 import yaml
 from decimal import Decimal
 from datetime import datetime
+from utils import T1, T2, T3, T4, T5, T6, T7, PU1, PU2, PU1F, PU2F
+from utils import V2, PU3, PU4, PU5, PU6, PU7, PU8, PU9, PU10, PU11
+from utils import V2F, PU3F, PU4F, PU5F, PU6F, PU7F, PU8F, PU9F, PU10F, PU11F
+from utils import J280, J269, J300, J256, J289, J415, J14, J422, J302, J306, J307, J317, ATT_1, ATT_2
 
 sys.path.insert(1, sys.path[0] + '/epynet/scripts')
 
@@ -38,13 +42,28 @@ class PhysicalPlant:
         else:
             self.attack_flag = False
 
+        # Use of prepared statements
+        self._name = 'ctown'
+        self._path = config_options['db_path']
+        self._value = 'value'
+        self._what = ()
+
+        self._init_what()
+
+        if not self._what:
+            raise ValueError('Primary key not found.')
+        else:
+            self._init_get_query()
+            self._init_set_query()
+
         # connection to the database
         self.db_path = config_options['db_path']
-        self.conn = sqlite3.connect(self.db_path)
-        self.c = self.conn.cursor()
+        #self.conn = sqlite3.connect(self.db_path)
+        #self.c = self.conn.cursor()
 
         self.output_path = config_options['output_ground_truth_path']
         self.simulation_days = int(config_options['duration_days'])
+        print("Days: " + str(self.simulation_days))
 
         # Create the network
         inp_file = config_options['inp_file']
@@ -88,6 +107,77 @@ class PhysicalPlant:
 
         print("Starting simulation for " + str(config_options['inp_file']) + " topology ")
 
+    def _init_what(self):
+        """Save a ordered tuple of pk field names in self._what."""
+
+        # https://sqlite.org/pragma.html#pragma_table_info
+        query = "PRAGMA table_info(%s)" % self._name
+        # print "DEBUG query: ", query
+
+        with sqlite3.connect(self._path) as conn:
+            try:
+                cursor = conn.cursor()
+                cursor.execute(query)
+                table_info = cursor.fetchall()
+                # print "DEBUG table_info: ", table_info
+
+                # last tuple element
+                pks = []
+                for field in table_info:
+                    if field[-1] > 0:
+                        # print 'DEBUG pk field: ', field
+                        pks.append(field)
+
+                if not pks:
+                    print("ERROR: please provide at least 1 primary key")
+                else:
+                    # sort by pk order
+                    pks.sort(key=lambda x: x[5])
+                    # print 'DEBUG sorted pks: ', pks
+
+                    what_list = []
+                    for pk in pks:
+                        what_list.append(pk[1])
+                    # print 'DEBUG what list: ', what_list
+
+                    self._what = tuple(what_list)
+                    print('DEBUG self._what: ', self._what)
+
+            except sqlite3.Error as e:
+                print('ERROR: %s: ' % e.args[0])
+
+    def _init_set_query(self):
+        """Use prepared statements."""
+
+        set_query = 'UPDATE %s SET %s = ? WHERE %s = ?' % (
+            self._name,
+            self._value,
+            self._what[0])
+
+        # for composite pk
+        for pk in self._what[1:]:
+            set_query += ' AND %s = ?' % (
+                pk)
+
+        print('DEBUG set_query:', set_query)
+        self._set_query = set_query
+
+    def _init_get_query(self):
+        """Use prepared statement."""
+
+        get_query = 'SELECT %s FROM %s WHERE %s = ?' % (
+            self._value,
+            self._name,
+            self._what[0])
+
+        # for composite pk
+        for pk in self._what[1:]:
+            get_query += ' AND %s = ?' % (
+                pk)
+
+        print('DEBUG get_query:', get_query)
+        self._get_query = get_query
+
     def load_config(self, config_path):
         """
         Reads the YAML configuration file
@@ -107,11 +197,7 @@ class PhysicalPlant:
         week_start = demand_starting_points.iloc[self.week_index][0]
         week_demands = total_demands.loc[week_start:week_start + limit, :]
 
-        print("Week_demands: " + str(week_demands))
-        print("wn.patterns" + str(list(self.wn.patterns.keys())))
-
         for pattern in list(self.wn.patterns.keys()):
-            print("Values: " + str(week_demands[pattern].values.tolist()))
             self.wn.set_demand_pattern(pattern, week_demands[pattern].values.tolist())
 
     def configure_initial_tank_levels(self, tank_levels_path):
@@ -128,7 +214,7 @@ class PhysicalPlant:
                 demand_patterns_path = config_options['demand_patterns_path']
                 starting_demand_path = config_options['starting_demand_path']
                 print("Running simulation with demmand patterns of week: " + str(self.week_index))
-                #self.configure_demand_patterns(demand_patterns_path, starting_demand_path)
+                self.configure_demand_patterns(demand_patterns_path, starting_demand_path)
 
                 initial_tank_levels_path = config_options['initial_tank_levels_path']
                 self.configure_initial_tank_levels(initial_tank_levels_path)
@@ -156,15 +242,12 @@ class PhysicalPlant:
             result.append(link + "_STATUS")
         return result
 
-    def get_actuator_status(self, table, actuator):
-        act_name = '\'' + actuator + '\''
-        rows_1 = self.c.execute('SELECT value FROM ' + table + ' WHERE name = ' + act_name).fetchall()
-        self.conn.commit()
-        return int(rows_1[0][0])
+    def get_actuator_status(self, actuator):
+        return int(self.get_from_db(actuator))
 
     def update_actuators(self):
         for actuator in self.actuator_list:
-            self.actuator_list[actuator] = self.get_actuator_status('ctown', actuator)
+            self.actuator_list[actuator] = self.get_actuator_status(actuator)
 
     def register_results(self, results):
 
@@ -188,12 +271,8 @@ class PhysicalPlant:
         attack2 = 0
 
         try:
-            rows = self.c.execute("SELECT value FROM ctown WHERE name = 'ATT_1'").fetchall()
-            self.conn.commit()
-            attack1 = int(rows[0][0])
-            rows = self.c.execute("SELECT value FROM ctown WHERE name = 'ATT_2'").fetchall()
-            self.conn.commit()
-            attack2 = int(rows[0][0])
+            attack1 = int(self.get_from_db('ATT_1'))
+            attack2 = int(self.get_from_db('ATT_2'))
         except Exception:
             print("Warning DB locked")
 
@@ -216,17 +295,51 @@ class PhysicalPlant:
                 self.attack_end = int(attack['end'])
                 self.attack_type = attack['type']
 
-    def write_to_db(self, db_name, attribute, value):
-        query = "UPDATE " + db_name + " SET value = " + str(value) + " WHERE name = " + attribute
-        self.c.execute(query)  # UPDATE TANKS IN THE DATABASE
-        self.conn.commit()
+    def convert_to_tuple(self, what):
+        return what, 1
+
+    def set_to_db(self, what, value):
+        """Returns setted value.
+        ``value``'s type is not checked, the client has to specify the correct
+        one.
+        what_list overwrites the given what tuple,
+        eg new what tuple: ``(value, what[0], what[1], ...)``
+        """
+        what_list = [value]
+
+        what_tuple = self.convert_to_tuple(what)
+        for pk in what_tuple:
+            what_list.append(pk)
+        what = tuple(what_list)
+
+        with sqlite3.connect(self._path) as conn:
+            try:
+                cursor = conn.cursor()
+                cursor.execute(self._set_query, what)
+                conn.commit()
+                return value
+
+            except sqlite3.Error as e:
+                print('_set ERROR: %s: ' % e.args[0])
+
+    def get_from_db(self, what):
+        """Returns the first element of the result tuple."""
+        what_tuple = self.convert_to_tuple(what)
+        with sqlite3.connect(self.db_path) as conn:
+            try:
+                cursor = conn.cursor()
+                cursor.execute(self._get_query, what_tuple)
+                record = cursor.fetchone()
+                return record[0]
+
+            except sqlite3.Error as e:
+                print('_get ERROR: %s: ' % e.args[0])
 
     def main(self):
 
         # toDO: These parameters need to be imported form the yaml file
         simluation_step = 300
         simulation_duration = self.simulation_days * 24 * 3600
-        #simulation_duration = 3600
 
         self.wn.set_time_params(duration=simulation_duration, hydraulic_step=simluation_step)
         self.wn.init_simulation(interactive=True)
@@ -288,46 +401,39 @@ class PhysicalPlant:
             try:
                 # Update tank pressure
                 for tank in self.tank_list:
-                    tank_name = '\'' + tank + '\''
-                    a_level = Decimal(network_state[tank]['pressure'])
-                    self.write_to_db('ctown', tank_name, a_level)
+                    a_level = network_state[tank]['pressure']
+                    self.set_to_db(tank, a_level)
 
                 # Update pump flow
                 for pump in self.pump_list:
-                    a_flowrate = Decimal(network_state[pump]['flow'])
-                    pump_name = '\'' + pump + 'F' + '\''
-                    self.write_to_db('ctown', pump_name, a_flowrate)
+                    a_flowrate = network_state[pump]['flow']
+                    pump_name = pump + 'F'
+                    self.set_to_db(pump_name, a_flowrate)
 
                 # Update valve flow
                 for valve in self.valve_list:
-                    a_flowrate = Decimal(network_state[valve]['flow'])
-                    valve_name = '\'' + valve + 'F' + '\''
-                    self.write_to_db('ctown', valve_name, a_flowrate)
+                    a_flowrate = network_state[valve]['flow']
+                    valve_name = valve + 'F'
+                    self.set_to_db(valve_name, a_flowrate)
 
                 # Update the SCADA junctions
                 #print(self.scada_junction_list)
                 for junction in self.scada_junction_list:
-                    junction_name = '\'' + junction + '\''
-                    a_level = Decimal(self.wn.junctions[junction].pressure.iloc[-1])
-                    self.write_to_db('ctown', junction_name, a_level)
+                    junction_name = junction
+                    a_level = self.wn.junctions[junction].pressure.iloc[-1]
+                    self.set_to_db(junction_name, a_level)
 
-                query = "UPDATE ctown SET value = 0 WHERE name = 'CONTROL'"
-                self.c.execute(query)  # UPDATE CONTROL value for the PLCs to apply control
-                self.conn.commit()
+                self.set_to_db('CONTROL', 0)
 
                 # For concealment attacks, we need more stages in the attack
                 if self.attack_flag and (self.attack_type == "device_attack" or self.attack_type == "network_attack"):
                     if self.attack_start <= master_time < self.attack_end:
-                        query = "UPDATE ctown SET value = " + str(1) + " WHERE name = 'ATT_2'"
-                        self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to launch attack
-                        self.conn.commit()
+                        self.set_to_db('ATT_2', 1)
                     else:
-                        query = "UPDATE ctown SET value = " + str(0) + " WHERE name = 'ATT_2'"
-                        self.c.execute(query)  # UPDATE ATT_2 value for the plc1 to stop attack
-                        self.conn.commit()
+                        self.set_to_db('ATT_2', 0)
 
-            except Exception as ex:
-                print("Warning, skipping an iteration")
+            except sqlite3 as ex:
+                print("Warning, DB error")
                 print(ex)
                 continue
 
