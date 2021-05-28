@@ -130,10 +130,10 @@ def test_config_parser_attacks(wadi_config_yaml_path):
 
     expected_output = {"plcs": [
         {"name": "PLC1", "actuators": ["P_RAW1", "V_PUB"], "sensors": ["T0"], "attacks": [
-            {"name": "Close PRAW1 from iteration 5 to 10", "type": "Time",
-             "actuator": "P_RAW1", "command": "closed", "start": 5, "end": 10},
-            {"name": "Close PRAW1 when T2 < 0.16", "type": "Below",
-             "actuator": "P_RAW1", "command": "closed", "sensor": "T2", "value": 0.16}
+            {"name": "Close PRAW1 from iteration 5 to 10", "trigger": {"type": "Time", "start": 5, "end": 10},
+             "actuator": "P_RAW1", "command": "closed"},
+            {"name": "Close PRAW1 when T2 < 0.16", "trigger": {"type": "Below", "sensor": "T2", "value": 0.16},
+             "actuator": "P_RAW1", "command": "closed"}
         ]},
         {"name": "PLC2", "actuators": ["V_ER2i"], "sensors": ["T2"]}
     ]}

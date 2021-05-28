@@ -1,13 +1,15 @@
 device_attacks:
   - name: "Close PRAW1 from iteration 5 to 10"
-    type: "Time"
+    trigger:
+      type: Time
+      start: 5
+      end: 10
     actuator: P_RAW1
-    command: "closed"
-    start: 5
-    end: 10
+    command: closed
   - name: "Close PRAW1 when T2 < 0.16"
-    type: "Below"
+    trigger:
+      type: Below
+      sensor: T2
+      value: 0.16
     actuator: P_RAW1
-    command: "closed"
-    sensor: "T2"
-    value: 0.16
+    command: closed

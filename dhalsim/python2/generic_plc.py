@@ -79,21 +79,21 @@ def create_attacks(attack_list):
     """
     attacks = []
     for attack in attack_list:
-        if attack['type'].lower() == "time":
+        if attack['trigger']['type'].lower() == "time":
             attacks.append(
-                TimeAttack(attack['name'], attack['actuator'], attack['command'], attack['start'], attack['end']))
-        elif attack['type'].lower() == "above":
+                TimeAttack(attack['name'], attack['actuator'], attack['command'], attack['trigger']['start'], attack['trigger']['end']))
+        elif attack['trigger']['type'].lower() == "above":
             attacks.append(
-                TriggerAboveAttack(attack['name'], attack['actuator'], attack['command'], attack['sensor'],
-                                   attack['value']))
-        elif attack['type'].lower() == "below":
+                TriggerAboveAttack(attack['name'], attack['actuator'], attack['command'], attack['trigger']['sensor'],
+                                   attack['trigger']['value']))
+        elif attack['trigger']['type'].lower() == "below":
             attacks.append(
-                TriggerBelowAttack(attack['name'], attack['actuator'], attack['command'], attack['sensor'],
-                                   attack['value']))
-        elif attack['type'].lower() == "between":
+                TriggerBelowAttack(attack['name'], attack['actuator'], attack['command'], attack['trigger']['sensor'],
+                                   attack['trigger']['value']))
+        elif attack['trigger']['type'].lower() == "between":
             attacks.append(
-                TriggerBetweenAttack(attack['name'], attack['actuator'], attack['command'], attack['sensor'],
-                                     attack['lower_value'], attack['upper_value']))
+                TriggerBetweenAttack(attack['name'], attack['actuator'], attack['command'], attack['trigger']['sensor'],
+                                     attack['trigger']['lower_value'], attack['trigger']['upper_value']))
     return attacks
 
 
