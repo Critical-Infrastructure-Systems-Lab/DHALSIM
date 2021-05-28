@@ -195,12 +195,59 @@ class ConfigParser:
         :param network_attacks: The YAML data of the network attacks
         """
         for network_attack in network_attacks:
+            if "name" not in network_attack:
+                raise MissingValueError("No name specified an network attack")
+
+            # Check existence and validity of network attack type
+            if "type" not in network_attack:
+                raise MissingValueError("No type specified for network attack {name}".format(name=network_attack["name"]))
+            network_attack['type'] = network_attack['type'].lower()
+            if network_attack['type'] not in ['mitm']:
+                raise InvalidValueError(f"{network_attack['type']} is not a valid network attack type")
+
+            # Check existence and validity of target PLC
+            if "target" not in network_attack:
+                raise MissingValueError("No target specified for network attack {name}".format(name=network_attack["name"]))
             target = network_attack['target']
             plcs = []
             for plc in self.cpa_data.get("plcs"):
-                plcs.append(plc['name'])
-            if target not in plcs:
-                raise NoSuchPlc
+                if plc['name'] == target:
+                    target_plc = plc
+                    break
+            if not target_plc:
+                raise NoSuchPlc("PLC {plc} does not exists".format(plc=target))
+
+            if "trigger" not in network_attack:
+                raise MissingValueError("No trigger specified for network attack {name}".format(name=network_attack["name"]))
+
+            if "type" not in network_attack["trigger"]:
+                raise MissingValueError("No trigger type specified for network attack {name}".format(name=network_attack["name"]))
+
+            network_attack["trigger"]["type"] = network_attack["trigger"]["type"].lower()
+
+            if network_attack["trigger"]["type"] == 'time':
+                if "begin" not in network_attack["trigger"]:
+                    raise MissingValueError("No begin time specified for network attack {name}".format(name=network_attack["name"]))
+                if "end" not in network_attack["trigger"]:
+                    raise MissingValueError("No end time specified for network attack {name}".format(name=network_attack["name"]))
+            elif network_attack["trigger"]["type"] == 'between':
+                if "lower_value" not in network_attack["trigger"]:
+                    raise MissingValueError("No lower_value specified for network attack {name}".format(name=network_attack["name"]))
+                if "upper_value" not in network_attack["trigger"]:
+                    raise MissingValueError("No upper_value specified for network attack {name}".format(name=network_attack["name"]))
+            elif network_attack["trigger"]["type"] == 'above' or network_attack["trigger"]["type"] == 'below':
+                if "value" not in network_attack["trigger"]:
+                    raise MissingValueError("No value specified for network attack {name}".format(name=network_attack["name"]))
+            else:
+                raise InvalidValueError("Trigger type should be either 'time', 'between', 'above' or 'below' for network attack {name}".format(name=network_attack["name"]))
+
+            # Check existence of tags on target PLC
+            tags = []
+            for tag in network_attack['tags']:
+                tags.append(tag['tag'])
+            if not set(tags).issubset(set(target_plc['actuators'] + target_plc['sensors'])):
+                raise NoSuchTag(f"PLC {target_plc['name']} does not have all the tags specified.")
+
         return network_attacks
 
     def generate_intermediate_yaml(self):
