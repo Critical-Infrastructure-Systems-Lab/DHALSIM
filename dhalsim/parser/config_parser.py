@@ -214,15 +214,19 @@ class ConfigParser:
 
         return network_type.lower()
 
-    def get_value(self, config_str):
+    def get_boolean(self, config_str, default_value):
         """
         Load the config_str. This is either `true` or `false`.
-
+        
+        :param config_str: name of config value in config file
+        :type config_str: str
+        :param default_value: default value of the boolean
+        :type default_value: bool
         :return: boolean of config_str
         :rtype: boolean
         """
         if config_str not in self.config_data:
-            return False
+            return default_value
 
         config_boolean = self.config_data[config_str]
 
@@ -239,7 +243,7 @@ class ConfigParser:
         :return: boolean of batch mode boolean
         :rtype: boolean
         """
-        return self.get_value('batch_mode')
+        return self.get_boolean('batch_mode', False)
 
     @property
     def mininet_cli(self):
@@ -249,7 +253,7 @@ class ConfigParser:
         :return: boolean of mininet cli
         :rtype: boolean
         """
-        return self.get_value("mininet_cli")
+        return self.get_boolean("mininet_cli", False)
 
     def generate_attacks(self, yaml_data):
         if 'run_attack' in self.config_data.keys() and self.config_data['run_attack']:
