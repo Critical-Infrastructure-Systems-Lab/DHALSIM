@@ -13,6 +13,9 @@ def get_logger(logging_level: str):
 
     log_level = switcher.get(logging_level)
     py3_logger = logging.getLogger('py3_logger')
+    # Check if the logger has already been configured
+    if len(py3_logger.handlers) > 0:
+        return py3_logger
     # Configure logger level
     py3_handler = logging.StreamHandler(stream=sys.stdout)
     logging_format = logging.Formatter('%(asctime)s - %(levelname)s @ %(filename)s: %(message)s',

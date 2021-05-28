@@ -1,8 +1,7 @@
-import logging
-import sys
+import os
+import tempfile
 from pathlib import Path
 
-import pandas as pd
 import yaml
 
 from dhalsim.parser.input_parser import InputParser
@@ -49,9 +48,7 @@ class ConfigParser:
         if not self.config_data:
             raise EmptyConfigError
 
-        # Create temp directory and intermediate yaml files in /tmp/
-        self.yaml_path = Path("/tmp/dhalsim/intermediate.yaml")
-        self.yaml_path.parent.mkdir(parents=True, exist_ok=True)
+        self.batch_mode = 'batch_simulations' in self.config_data
 
     def get_path(self, path_input):
         """
@@ -80,10 +77,19 @@ class ConfigParser:
         :rtype: Path
         """
         path = self.config_data.get('output_path')
+        # If path not provided, then create default
         if not path:
-            path = 'output'
-        path = (self.config_path.parent / path).absolute()
-        return path
+            # If running in batch mode, output to batch folder
+            if self.batch_mode:
+                path = 'output/batch_' + str(self.batch_index)
+            # Else just output
+            else:
+                path = 'output'
+        else:
+            # If running in batch mode, output to batch folder
+            if self.batch_mode:
+                path += '/batch_' + str(self.batch_index)
+        return (self.config_path.parent / path).absolute()
 
     @property
     def inp_file(self):
@@ -236,16 +242,6 @@ class ConfigParser:
         return config_boolean
 
     @property
-    def batch_mode(self):
-        """
-        Load the batch mode boolean. This is either `true` or `false`.
-
-        :return: boolean of batch mode boolean
-        :rtype: boolean
-        """
-        return self.get_boolean('batch_mode', False)
-
-    @property
     def mininet_cli(self):
         """
         Load the mininet cli boolean. This is either `true` or `false`.
@@ -254,6 +250,36 @@ class ConfigParser:
         :rtype: boolean
         """
         return self.get_boolean("mininet_cli", False)
+
+    @property
+    def batch_simulations(self):
+        """
+        Load the number of batch simulations, and verify that it is a number
+
+        :return: number of batch simulations
+        :rtype: int
+        """
+        simulations = self.config_data['batch_simulations']
+
+        if type(simulations) != int:
+            raise InvalidValueError("'batch_simulations' must be an integer")
+
+        return simulations
+
+    @property
+    def iterations(self):
+        """
+        Load the simulation iterations, and verify that it is a number
+
+        :return: number of simulation iterations
+        :rtype: int
+        """
+        iterations = self.config_data['iterations']
+
+        if type(iterations) != int:
+            raise InvalidValueError("'iterations' must be an integer")
+
+        return iterations
 
     def generate_attacks(self, yaml_data):
         if 'run_attack' in self.config_data.keys() and self.config_data['run_attack']:
@@ -267,6 +293,15 @@ class ConfigParser:
                             break
         return yaml_data
 
+    def generate_temporary_dirs(self):
+        """Generates the temporary directory and yaml/db paths"""
+        # Create temp directory and intermediate yaml files in /tmp/
+        temp_directory = tempfile.mkdtemp(prefix='dhalsim_')
+        # Change read permissions in tempdir
+        os.chmod(temp_directory, 0o777)
+        self.yaml_path = Path(temp_directory + '/intermediate.yaml')
+        self.db_path = temp_directory + '/dhalsim.sqlite'
+
     def generate_intermediate_yaml(self):
         """Writes the intermediate.yaml file to include all options specified in the config, the plc's and their
         data, and all valves/pumps/tanks etc.
@@ -274,18 +309,21 @@ class ConfigParser:
         :return: the path to the yaml file
         :rtype: Path
         """
+        self.generate_temporary_dirs()
+
         # Begin with PLC data specified in CPA file
         yaml_data = self.cpa_data
         # Add path and database information
         yaml_data['inp_file'] = str(self.inp_file)
         yaml_data['cpa_file'] = str(self.cpa_file)
         yaml_data['output_path'] = str(self.output_path)
-        yaml_data['db_path'] = "/tmp/dhalsim/dhalsim.sqlite"
+        yaml_data['db_path'] = self.db_path
         yaml_data['network_topology_type'] = self.network_topology_type
+
         # Add batch mode parameters
-        yaml_data['batch_mode'] = self.batch_mode
-        if yaml_data['batch_mode']:
+        if self.batch_mode:
             yaml_data['batch_index'] = self.batch_index
+            yaml_data['batch_simulations'] = self.batch_simulations
         # Initial physical values
         if 'initial_tank_data' in self.config_data:
             yaml_data['initial_tank_data'] = str(self.initial_tank_data)
@@ -307,7 +345,7 @@ class ConfigParser:
 
         # Note: if iterations not present then default value will be written in InputParser
         if 'iterations' in self.config_data:
-            yaml_data['iterations'] = self.config_data['iterations']
+            yaml_data['iterations'] = self.iterations
 
         # Log level
         if 'log_level' in self.config_data:

@@ -13,6 +13,9 @@ def get_logger(logging_level):
 
     log_level = switcher.get(logging_level)
     py2_logger = logging.getLogger('py2_logger')
+    # Check if the logger has already been configured
+    if len(py2_logger.handlers) > 0:
+        return py2_logger
     # Configure logger level
     py2_handler = logging.StreamHandler(stream=sys.stdout)
     logging_format = logging.Formatter('%(asctime)s - %(levelname)s @ %(filename)s: %(message)s',

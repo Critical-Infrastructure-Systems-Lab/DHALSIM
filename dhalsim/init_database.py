@@ -78,17 +78,3 @@ def is_valid_file(file_parser, arg):
         file_parser.error(arg + " does not exist.")
     else:
         return arg
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Setup a sqlite DB from a intermediate yaml file')
-    parser.add_argument(dest="intermediate_yaml",
-                        help="intermediate yaml file", metavar="FILE",
-                        type=lambda x: is_valid_file(parser, x))
-
-    args = parser.parse_args()
-    db_initializer = DatabaseInitializer(Path(args.intermediate_yaml))
-
-    db_initializer.drop()
-    db_initializer.write()
-    db_initializer.print()

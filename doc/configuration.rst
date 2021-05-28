@@ -17,7 +17,7 @@ Example with all options:
     simulator: pdd
     run_attack: True
     attacks_path: "attacks.yaml"
-    batch_mode: True
+    batch_simulations: 20
     initial_tank_values: initial_tank.csv
     demand_patterns: demand_patterns/
     network_loss_data: losses.csv
@@ -108,6 +108,8 @@ output_path
 This option represents the path to the folder in which output files (.pcap, .csv, etc.) will be
 created. The default is output and the path is relative to the configuration file.
 
+Note: if you run in batch mode, subfolders will automatically be created of the form :code:`output_path/batch_number`
+
 iterations
 ------------------------
 *This is an optional value with default*: duration / hydraulic time-step
@@ -148,15 +150,17 @@ The simulator option in the config file represents the demand model used by the 
 The valid options are :code:`PDD` and :code:`DD`. This value is then passed to the
 `WNTR hydraulic demand model option <https://wntr.readthedocs.io/en/latest/hydraulics.html>`_.
 
-batch_mode
+batch_simulations
 ------------------------
-*This is an optional value with default*: :code:`False`
+*This is an optional value*
 
-If the :code:`batch_mode` option is :code:`True`, then the simulation will be running in batch mode. This means you can provide :code:`.csv`
+If the :code:`batch_simulations` option is set, then the simulation will be running in batch mode. This means you can provide :code:`.csv`
 files with initial tank conditions, demand patterns, and network losses/delays to run simulations under different conditions. The full simulation will run
-:code:`batch_simulations` number of times. (**NOTE, NONE OF THIS WORKS YET, JUST INITIAL VALUES**)
+:code:`batch_simulations` number of times with output going to :code:`output_path/batch_number` folders.
 
-:code:`batch_mode` should be a boolean.
+Note: the :code:`.csv` files (besides demand patterns) you provide should have at least :code:`batch_simulations` rows.
+
+:code:`batch_simulations` should be a number.
 
 initial_tank_values
 ------------------------
@@ -204,8 +208,9 @@ network_loss_data
 
 The :code:`network_loss_data` field provides the name of the :code:`.csv` file with network loss values for the simulation.
 If the :code:`network_loss_data` field is provided, then the network simulation will run using network losses. This means you can provide a :code:`.csv`
-file with network losses to simulate under non-perfect network conditions. If :code:`batch_mode` is :code:`False`, then the network losses used will be the first
-row in the CSV. If :code:`batch_mode` is :code:`True` then it will use the same index as the tank levels, demand patterns, etc.
+file with network losses to simulate under non-perfect network conditions. If you aren't running DHALSIM in batch mode, then the network losses used will be the first
+row in the CSV. If you are running DHALSIM in batch mode, then it will use the same index as the tank levels, demand patterns, etc (i.e. the row corresponding to the current
+batch, so for batch 5 it will use the 5th data row).
 
 If the :code:`network_loss_data` field is not provided, then the simulation will run without network losses (0% packet loss).
 
@@ -229,8 +234,9 @@ network_delay_data
 
 The :code:`network_delay_data` field provides the name of the :code:`.csv` file with network delay values for the simulation.
 If the :code:`network_delay_data` option is provided, then the network simulation will run using network delays. This means you can provide a :code:`.csv`
-file with network delays to simulate under non-perfect network conditions. If :code:`batch_mode` is :code:`False`, then the network delays used will be the first
-row in the CSV. If :code:`batch_mode` is :code:`True` then it will use the same index as the tank levels, demand patterns, etc.
+file with network delays to simulate under non-perfect network conditions. If you aren't running DHALSIM in batch mode, then the network delays used will be the first
+row in the CSV. If you are running DHALSIM in batch mode, then it will use the same index as the tank levels, demand patterns, etc (i.e. the row corresponding to the current
+batch, so for batch 5 it will use the 5th data row).
 
 If the :code:`network_delay_data` field is not provided, then the simulation will run without network delays (0ms delay).
 

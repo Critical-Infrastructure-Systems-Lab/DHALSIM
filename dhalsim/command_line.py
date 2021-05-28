@@ -33,19 +33,24 @@ class Runner():
     def run(self):
         config_parser = ConfigParser(self.config_file)
 
-        batch_mode = config_parser.batch_mode
+        if config_parser.batch_mode:
+            # If in batch mode, generate all intermediate yamls and simulate one by one
+            yaml_paths = []
+            for batch_index in range(config_parser.batch_simulations):
+                config_parser.batch_index = batch_index
+                yaml_paths.append(config_parser.generate_intermediate_yaml())
+            for yaml_path in yaml_paths:
+                self.run_simulation(yaml_path)
+        else:
+            # Else generate the one we need and run the simulation
+            intermediate_yaml_path = config_parser.generate_intermediate_yaml()
+            self.run_simulation(intermediate_yaml_path)
 
-        # TODO: batch index for multiple batch runs
-        if batch_mode:
-            config_parser.batch_index = 3
-
-        intermediate_yaml_path = config_parser.generate_intermediate_yaml()
+    def run_simulation(self, intermediate_yaml_path):
         db_initializer = DatabaseInitializer(intermediate_yaml_path)
-
         db_initializer.drop()
         db_initializer.write()
         db_initializer.print()
-
         automatic_run_path = Path(__file__).parent.absolute() / "python2" / "automatic_run.py"
         self.automatic_run = subprocess.Popen(
             ["python2", str(automatic_run_path), str(intermediate_yaml_path)])
