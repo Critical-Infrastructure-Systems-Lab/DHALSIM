@@ -89,8 +89,7 @@ class ConfigParser:
             # If running in batch mode, output to batch folder
             if self.batch_mode:
                 path += '/batch_' + str(self.batch_index)
-        path = (self.config_path.parent / path).absolute()
-        return path
+        return (self.config_path.parent / path).absolute()
 
     @property
     def inp_file(self):
@@ -270,9 +269,9 @@ class ConfigParser:
     @property
     def iterations(self):
         """
-        Load the number of batch simulations, and verify that it is a number
+        Load the simulation iterations, and verify that it is a number
 
-        :return: number of batch simulations
+        :return: number of simulation iterations
         :rtype: int
         """
         iterations = self.config_data['iterations']
@@ -295,12 +294,13 @@ class ConfigParser:
         return yaml_data
 
     def generate_temporary_dirs(self):
+        """Generates the temporary directory and yaml/db paths"""
         # Create temp directory and intermediate yaml files in /tmp/
-        self.temp_directory = tempfile.mkdtemp(prefix='dhalsim_')
+        temp_directory = tempfile.mkdtemp(prefix='dhalsim_')
         # Change read permissions in tempdir
-        os.chmod(self.temp_directory, 0o777)
-        self.yaml_path = Path(self.temp_directory + '/intermediate.yaml')
-        self.db_path = self.temp_directory + '/dhalsim.sqlite'
+        os.chmod(temp_directory, 0o777)
+        self.yaml_path = Path(temp_directory + '/intermediate.yaml')
+        self.db_path = temp_directory + '/dhalsim.sqlite'
 
     def generate_intermediate_yaml(self):
         """Writes the intermediate.yaml file to include all options specified in the config, the plc's and their

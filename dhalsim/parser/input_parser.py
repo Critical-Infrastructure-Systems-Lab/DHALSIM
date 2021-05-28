@@ -212,6 +212,12 @@ class InputParser:
         self.data['network_delay_values'] = network_delay
 
     def verify_csv_input(self, dataframe, data):
+        """
+        Verifies the csv files have the proper number of rows for a simulation
+
+        :param dataframe: pandas dataframe containing csv data
+        :param data: name of data that is being verified
+        """
         num_rows = len(dataframe)
         if self.batch_mode:
             if num_rows < self.data['batch_simulations']:
