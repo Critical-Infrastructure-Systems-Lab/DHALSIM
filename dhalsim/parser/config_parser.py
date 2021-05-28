@@ -181,7 +181,7 @@ class ConfigParser:
         """
         for device_attack in self.attacks_data['device_attacks']:
             for plc in yaml_data['plcs']:
-                if set(device_attack['actuators']).issubset(set(plc['actuators'])):
+                if device_attack['actuator'] in plc['actuators']:
                     if 'attacks' not in plc.keys():
                         plc['attacks'] = []
                     plc['attacks'].append(device_attack)

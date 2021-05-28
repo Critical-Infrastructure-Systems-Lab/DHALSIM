@@ -81,18 +81,18 @@ def create_attacks(attack_list):
     for attack in attack_list:
         if attack['type'].lower() == "time":
             attacks.append(
-                TimeAttack(attack['name'], attack['actuators'], attack['command'], attack['start'], attack['end']))
+                TimeAttack(attack['name'], attack['actuator'], attack['command'], attack['start'], attack['end']))
         elif attack['type'].lower() == "above":
             attacks.append(
-                TriggerAboveAttack(attack['name'], attack['actuators'], attack['command'], attack['sensor'],
+                TriggerAboveAttack(attack['name'], attack['actuator'], attack['command'], attack['sensor'],
                                    attack['value']))
         elif attack['type'].lower() == "below":
             attacks.append(
-                TriggerBelowAttack(attack['name'], attack['actuators'], attack['command'], attack['sensor'],
+                TriggerBelowAttack(attack['name'], attack['actuator'], attack['command'], attack['sensor'],
                                    attack['value']))
         elif attack['type'].lower() == "between":
             attacks.append(
-                TriggerBetweenAttack(attack['name'], attack['actuators'], attack['command'], attack['sensor'],
+                TriggerBetweenAttack(attack['name'], attack['actuator'], attack['command'], attack['sensor'],
                                      attack['lower_value'], attack['upper_value']))
     return attacks
 
