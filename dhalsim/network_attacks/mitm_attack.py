@@ -52,7 +52,7 @@ class MitmAttack(SyncedAttack):
         for tag in request_tags:
             cmd.append(str(tag) + ':1=REAL')
 
-        self.logger(f"MITM Attack server: {cmd}")
+        self.logger.debug(f"MITM Attack server: {cmd}")
 
         self.server = subprocess.Popen(cmd, shell=False)
 
