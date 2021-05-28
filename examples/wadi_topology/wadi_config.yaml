@@ -7,7 +7,7 @@ inp_file: "wadi_map_newer.inp"
 cpa_file: "wadi_cpa.yaml"
 network_topology_type: complex
 output_path: "output/"
-iterations: 3
+iterations: 2
 mininet_cli: false
 log_level: info
 simulator: pdd
@@ -19,7 +19,7 @@ demand_patterns: demand_patterns/
 
 network_loss_data: losses_wadi.csv
 
-network_delay_data: delays_wadi.csv
+#network_delay_data: delays_wadi.csv
 
 # Setting this to debug will also print WNTR and MiniCPS output
 #simulator: "pdd"

@@ -34,14 +34,19 @@ class Runner():
         config_parser = ConfigParser(self.config_file)
 
         if config_parser.batch_mode:
+            # If in batch mode, generate all intermediate yamls and simulate one by one
+            yaml_paths = []
             for batch_index in range(config_parser.batch_simulations):
                 config_parser.batch_index = batch_index
-                self.run_simulation(config_parser)
+                yaml_paths.append(config_parser.generate_intermediate_yaml())
+            for yaml_path in yaml_paths:
+                self.run_simulation(yaml_path)
         else:
-            self.run_simulation(config_parser)
+            # Else generate the one we need and run the simulation
+            intermediate_yaml_path = config_parser.generate_intermediate_yaml()
+            self.run_simulation(intermediate_yaml_path)
 
-    def run_simulation(self, config_parser):
-        intermediate_yaml_path = config_parser.generate_intermediate_yaml()
+    def run_simulation(self, intermediate_yaml_path):
         db_initializer = DatabaseInitializer(intermediate_yaml_path)
         db_initializer.drop()
         db_initializer.write()

@@ -224,6 +224,8 @@ class PhysicalPlant:
 
         iteration_limit = self.data["iterations"]
 
+        self.logger.debug("Temporary file location: " + str(Path(self.data["db_path"]).parent))
+
         if 'batch_index' in self.data:
             self.logger.info("Running batch simulation {x} out of {y}.".format(x=self.data['batch_index'] + 1,
                                                                                y=self.data['batch_simulations']))
