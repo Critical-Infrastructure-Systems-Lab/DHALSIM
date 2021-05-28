@@ -53,6 +53,8 @@ class InputParser:
         # Read the inp file with WNTR
         self.wn = wntr.network.WaterNetworkModel(self.inp_file_path)
 
+        self.batch_mode = 'batch_simulations' in self.data
+
     def write(self):
         """
         Writes all needed inp file sections into the intermediate_yaml.
@@ -166,7 +168,7 @@ class InputParser:
         for index in range(len(initial_tank_levels.columns)):
             name = initial_tank_levels.columns[index]
             # Insert tank value into data
-            data_index = self.data["batch_index"] if self.data["batch_mode"] else 0
+            data_index = self.data["batch_index"] if self.batch_mode else 0
             initial_values[str(name)] = \
                 float(initial_tank_levels.iloc[data_index, index])
 
@@ -181,7 +183,7 @@ class InputParser:
         for index in range(len(network_loss_data.columns)):
             name = network_loss_data.columns[index]
             # Insert loss  value into data
-            data_index = self.data["batch_index"] if self.data["batch_mode"] else 0
+            data_index = self.data["batch_index"] if self.batch_mode else 0
             network_loss[str(name)] = \
                 float(network_loss_data.iloc[data_index, index])
 
@@ -196,7 +198,7 @@ class InputParser:
         for index in range(len(network_delay_data.columns)):
             name = network_delay_data.columns[index]
             # Insert tank : value into data
-            data_index = self.data["batch_index"] if self.data["batch_mode"] else 0
+            data_index = self.data["batch_index"] if self.batch_mode else 0
             network_delay[str(name)] = \
                 str(network_delay_data.iloc[data_index, index]) + "ms"
 
