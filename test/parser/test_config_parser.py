@@ -6,6 +6,8 @@ import yaml
 from dhalsim.parser.config_parser import ConfigParser, EmptyConfigError, MissingValueError, \
     InvalidValueError, DuplicateValueError
 
+pytestmark = pytest.mark.skip("This tests the old config parsing.")
+
 
 @pytest.fixture
 def wadi_config_yaml_path():

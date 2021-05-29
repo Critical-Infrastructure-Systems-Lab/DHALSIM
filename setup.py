@@ -19,7 +19,8 @@ setuptools.setup(
         'antlr4-python3-runtime==4.7.2',
         'progressbar2',
         'wntr',
-        'pandas'
+        'pandas',
+        'schema'
     ],
     extras_require={
         'test': ['pytest', 'pytest-mock', 'mock', 'wget'],

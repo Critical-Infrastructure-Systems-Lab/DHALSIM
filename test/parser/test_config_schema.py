@@ -1,0 +1,161 @@
+import sys
+from pathlib import Path
+
+import pytest
+from schema import SchemaError
+
+from dhalsim.parser.config_parser import ConfigParser
+
+
+def test_python_version():
+    assert sys.version_info.major is 3
+
+
+@pytest.fixture
+def test_dict():
+    return {
+        "inp_file": Path(),
+        "network_topology_type": "simple",
+        "output_path": Path(),
+        "iterations": 10,
+        "mininet_cli": False,
+        "log_level": "info",
+        "simulator": "pdd",
+        "batch_simulations": 3,
+        "initial_tank_data": Path(),
+        "demand_patterns": Path(),
+        "network_loss_data": Path(),
+        "network_delay_data": Path(),
+        "run_attack": True,
+        "cpa_file": {
+            "plcs": [
+                {"name": "PLC1", "sensors": ["T0"], "actuators": ["P_RAW1", "V_PUB"]},
+                {"name": "PLC2", "sensors": ["T2"], "actuators": ["V_ER2i"]},
+            ]
+        },
+        "attacks_path": {
+            "device_attacks": [
+                {
+                    "name": "Close PRAW1 from iteration 5 to 10",
+                    "type": "Time",
+                    "actuators": ["P_RAW1"],
+                    "command": "closed",
+                    "start": 5,
+                    "end": 10,
+                },
+                {
+                    "name": "Close PRAW1 when T2 < 0.16",
+                    "type": "Below",
+                    "actuators": ["P_RAW1"],
+                    "command": "closed",
+                    "sensor": "T2",
+                    "value": 0.16,
+                },
+            ]
+        },
+    }
+
+
+def test_valid_dict(test_dict):
+    ConfigParser.validate_schema(test_dict)
+    assert True
+
+
+@pytest.mark.parametrize("key, default_value", [
+    ('network_topology_type', 'simple'),
+    ('mininet_cli', False),
+    ('log_level', 'info'),
+    ('simulator', 'pdd')
+])
+def test_default_config(key, default_value, test_dict):
+    del test_dict[key]
+    result = ConfigParser.validate_schema(test_dict)
+    assert result[key] == default_value
+
+
+@pytest.mark.parametrize("key", [
+    'batch_simulations',
+    'initial_tank_data',
+    'demand_patterns',
+    'network_loss_data',
+    'network_delay_data',
+    'attacks_path',
+])
+def test_optional_config(key, test_dict):
+    del test_dict[key]
+    result = ConfigParser.validate_schema(test_dict)
+    assert result.get(key) is None
+
+
+@pytest.mark.parametrize("required_key", ['iterations', 'inp_file', 'cpa_file'])
+def test_required_config(required_key, test_dict):
+    del test_dict[required_key]
+    with pytest.raises(SchemaError):
+        ConfigParser.validate_schema(test_dict)
+
+
+@pytest.mark.parametrize("key, invalid_value", [
+    ('network_topology_type', 2),
+    ('network_topology_type', 'invalid'),
+    ('network_topology_type', ''),
+    ('iterations', '5'),
+    ('iterations', 10.5),
+    ('iterations', -10),
+    ('iterations', 0),
+    ('mininet_cli', "False"),
+    ('mininet_cli', "True"),
+    ('mininet_cli', ""),
+    ('mininet_cli', 1),
+    ('mininet_cli', 0),
+    ('log_level', 1),
+    ('log_level', "invalid"),
+    ('log_level', ""),
+    ('simulator', 1),
+    ('simulator', "invalid"),
+    ('simulator', ""),
+    ('run_attack', "False"),
+    ('run_attack', "True"),
+    ('run_attack', ""),
+    ('run_attack', 1),
+    ('run_attack', 0),
+    ('batch_simulations', '5'),
+    ('batch_simulations', 10.5),
+    ('batch_simulations', -10),
+    ('batch_simulations', 0),
+])
+def test_invalid_config(key, invalid_value, test_dict):
+    test_dict[key] = invalid_value
+    with pytest.raises(SchemaError):
+        ConfigParser.validate_schema(test_dict)
+
+
+@pytest.mark.parametrize("key, input_value, expected_value", [
+    ('network_topology_type', 'simple', 'simple'),
+    ('network_topology_type', 'SIMPLE', 'simple'),
+    ('network_topology_type', 'complex', 'complex'),
+    ('network_topology_type', 'COMPLEX', 'complex'),
+    ('iterations', 100, 100),
+    ('mininet_cli', True, True),
+    ('mininet_cli', False, False),
+    ('log_level', 'debug', 'debug'),
+    ('log_level', 'DEBUG', 'debug'),
+    ('log_level', 'info', 'info'),
+    ('log_level', 'INFO', 'info'),
+    ('log_level', 'warning', 'warning'),
+    ('log_level', 'WARNING', 'warning'),
+    ('log_level', 'error', 'error'),
+    ('log_level', 'ERROR', 'error'),
+    ('log_level', 'critical', 'critical'),
+    ('log_level', 'CRITICAL', 'critical'),
+    ('simulator', 'pdd', 'pdd'),
+    ('simulator', 'PDD', 'pdd'),
+    ('simulator', 'dd', 'dd'),
+    ('simulator', 'DD', 'dd'),
+    ('run_attack', True, True),
+    ('run_attack', False, False),
+    ('batch_simulations', 100, 100),
+])
+def test_valid_config(key, input_value, expected_value, test_dict):
+    test_dict[key] = input_value
+    output = ConfigParser.validate_schema(test_dict)
+    assert output[key] == expected_value

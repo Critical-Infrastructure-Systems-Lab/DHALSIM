@@ -1,8 +1,10 @@
 import os
+import sys
 import tempfile
 from pathlib import Path
 
 import yaml
+from schema import Schema, Or, And, Use, Optional, SchemaError
 
 from dhalsim.parser.input_parser import InputParser
 
@@ -38,17 +40,129 @@ class ConfigParser:
     def __init__(self, config_path: Path):
         """Constructor method"""
         self.batch_index = None
+
         self.config_path = config_path.absolute()
 
-        # Load yaml data from config file
-        with config_path.open(mode='r') as file:
-            self.config_data = yaml.load(file, Loader=yaml.FullLoader)
+        try:
+            self.data = self.apply_schema(self.config_path)
+        except SchemaError as exc:
+            sys.exit(exc.code)
 
-        # Assert config data is not empty
-        if not self.config_data:
-            raise EmptyConfigError
+        self.batch_mode = 'batch_simulations' in self.data
 
-        self.batch_mode = 'batch_simulations' in self.config_data
+    @staticmethod
+    def apply_schema(config_path: Path) -> dict:
+        data = ConfigParser.path_schema(config_path)
+        return ConfigParser.validate_schema(data)
+
+    @staticmethod
+    def path_schema(config_path: Path) -> dict:
+        return Schema(
+            And(
+                Path.exists,
+                Use(ConfigParser.load_yaml),
+                {
+                    'cpa_file': And(
+                        Use(Path),
+                        Use(lambda p: config_path.absolute().parent / p),
+                        Path.exists,
+                        Use(ConfigParser.load_yaml),
+                    ),
+                    'inp_file': And(
+                        Use(Path),
+                        Use(lambda p: config_path.absolute().parent / p),
+                        Path.is_file,
+                        Schema(lambda f: f.suffix == '.inp', error="Suffix of inp_file should be .inp")),
+                    Optional('attacks_path'): And(
+                        Use(Path),
+                        Use(lambda p: config_path.absolute().parent / p),
+                        Path.exists,
+                        Use(ConfigParser.load_yaml),
+                    ),
+                    Optional('output_path', default=config_path.absolute().parent / 'output'): And(
+                        Use(str),
+                        Use(Path),
+                        Use(lambda p: config_path.absolute().parent / p),
+                    ),
+                    Optional('initial_tank_data'): And(
+                        Use(Path),
+                        Use(lambda p: config_path.absolute().parent / p),
+                        Path.is_file,
+                        Schema(lambda f: f.suffix == '.csv', error="Suffix of initial_tank_data should be .csv")),
+                    Optional('demand_patterns'): And(
+                        Use(Path),
+                        Use(lambda p: config_path.absolute().parent / p),
+                        Path.exists,
+                        Or(
+                            Path.is_dir,
+                            Schema(lambda f: f.suffix == '.csv', error="Suffix of demand_patterns should be .csv"))),
+                    Optional('network_loss_data'): And(
+                        Use(Path),
+                        Use(lambda p: config_path.absolute().parent / p),
+                        Path.is_file,
+                        Schema(lambda f: f.suffix == '.csv', error="Suffix of network_loss_data should be .csv")),
+                    Optional('network_delay_data'): And(
+                        Use(Path),
+                        Use(lambda p: config_path.absolute().parent / p),
+                        Path.is_file,
+                        Schema(lambda f: f.suffix == '.csv', error="Suffix of network_delay_data should be .csv")),
+                    str: object
+                }
+            )
+        ).validate(config_path)
+
+    @staticmethod
+    def load_yaml(path: Path) -> dict:
+        with path.open(mode='r') as file:
+            data = yaml.load(file, Loader=yaml.FullLoader)
+        return data
+
+    @staticmethod
+    def validate_schema(data: dict) -> dict:
+        cpa_schema = Schema({
+            'plcs': [{
+                'name': str,
+                'sensors': [str],
+                'actuators': [str]
+            }]
+        })
+
+        attacks_schema = Schema({
+            str: object
+        })
+
+        config_schema = Schema({
+            'inp_file': Path,
+            'cpa_file': cpa_schema,
+            Optional('network_topology_type', default='simple'): And(
+                str,
+                Use(str.lower),
+                Or('complex', 'simple')),
+            'output_path': Path,
+            'iterations': And(
+                int,
+                Schema(lambda i: i > 0, error='iterations must be positive')),
+            Optional('mininet_cli', default=False): bool,
+            Optional('log_level', default='info'): And(
+                str,
+                Use(str.lower),
+                Or('debug', 'info', 'warning', 'error', 'critical')),
+            Optional('simulator', default='pdd'): And(
+                str,
+                Use(str.lower),
+                Or('pdd', 'dd')),
+            Optional('run_attack', default=True): bool,
+            Optional('attacks_path'): attacks_schema,
+            Optional('batch_simulations'): And(
+                int,
+                Schema(lambda i: i > 0, error='batch_simulations must be positive')),
+            Optional('initial_tank_data'): Path,
+            Optional('demand_patterns'): Path,
+            Optional('network_loss_data'): Path,
+            Optional('network_delay_data'): Path,
+        })
+
+        return config_schema.validate(data)
 
     def get_path(self, path_input):
         """
@@ -59,7 +173,7 @@ class ConfigParser:
         :return: absolute path to the file
         :rtype: Path
         """
-        path = self.config_data.get(path_input)
+        path = self.data.get(path_input)
         if not path:
             raise MissingValueError(path_input + " not in config file.")
         path = (self.config_path.parent / path).absolute()
@@ -76,40 +190,10 @@ class ConfigParser:
         :return: absolute path to the output folder
         :rtype: Path
         """
-        path = self.config_data.get('output_path')
-        # If path not provided, then create default
-        if not path:
-            # If running in batch mode, output to batch folder
-            if self.batch_mode:
-                path = 'output/batch_' + str(self.batch_index)
-            # Else just output
-            else:
-                path = 'output'
-        else:
-            # If running in batch mode, output to batch folder
-            if self.batch_mode:
-                path += '/batch_' + str(self.batch_index)
-        return (self.config_path.parent / path).absolute()
-
-    @property
-    def inp_file(self):
-        """
-        Property for the path to the inp file.
-
-        :return: absolute path to the inp file
-        :rtype: Path
-        """
-        return self.get_path('inp_file')
-
-    @property
-    def cpa_file(self):
-        """
-        Property for the path to the cpa file.
-
-        :return: absolute path to the cpa file
-        :rtype: Path
-        """
-        return self.get_path('cpa_file')
+        path = self.data.get('output_path')
+        if self.batch_mode:
+            path /= 'batch_' + str(self.batch_index)
+        return path
 
     @property
     def initial_tank_data(self):
@@ -119,7 +203,7 @@ class ConfigParser:
         :return: absolute path to the initial tank data file
         :rtype: Path
         """
-        return self.get_path('initial_tank_data')
+        return self.data.get('initial_tank_data')
 
     @property
     def network_loss_data(self):
@@ -129,7 +213,7 @@ class ConfigParser:
         :return: absolute path to the inp file
         :rtype: Path
         """
-        return self.get_path('network_loss_data')
+        return self.data.get('network_loss_data')
 
     @property
     def network_delay_data(self):
@@ -139,7 +223,7 @@ class ConfigParser:
         :return: absolute path to the inp file
         :rtype: Path
         """
-        return self.get_path('network_delay_data')
+        return self.data.get('network_delay_data')
 
     @property
     def demand_patterns(self):
@@ -149,107 +233,15 @@ class ConfigParser:
         :return: absolute path to the demand pattern csv
         :rtype: Path
         """
-        path = self.config_data.get('demand_patterns')
-        if not path:
-            raise MissingValueError("demand_patterns not in config file.")
+        path = self.data.get('demand_patterns')
 
         # If running in batch mode, then have to use batch index in name
         if self.batch_mode:
-            path = str(path) + str(self.batch_index) + '.csv'
+            path /= str(self.batch_index) + '.csv'
 
-        path = (self.config_path.parent / path).absolute()
         if not path.is_file():
             raise FileNotFoundError(str(path) + " is not a file.")
         return path
-
-    @property
-    def cpa_data(self):
-        """Property to load the yaml data from the cpa file.
-
-        :return: data from cpa file
-        """
-        with self.get_path('cpa_file').open() as file:
-            cpa = yaml.load(file, Loader=yaml.FullLoader)
-
-        # Verification of plc data
-        plcs = cpa.get('plcs')
-        if not plcs:
-            raise MissingValueError("PLCs section not present in cpa_file.")
-
-        # Check for plc names (and check for duplicates)
-        plc_list = []
-        for plc in plcs:
-            if not plc.get('name'):
-                raise MissingValueError("PLC in cpa file missing a name.")
-            else:
-                plc_list.append(plc.get('name'))
-
-        if len(plc_list) != len(set(plc_list)):
-            raise DuplicateValueError
-        return cpa
-
-    @property
-    def attacks_data(self):
-        """
-        Property to load attacks from the attacks file specified in the config file
-
-        :return: data from the attack file
-        """
-        with self.get_path('attacks_path').open(mode='r') as attacks_description:
-            attacks = yaml.safe_load(attacks_description)
-
-        return attacks
-
-    @property
-    def network_topology_type(self):
-        """
-        Load the type of topology. This is either `simple` or `complex`.
-
-        :return: the type of the topology
-        :rtype: str
-        """
-        if not 'network_topology_type' in self.config_data:
-            return 'simple'
-
-        network_type = self.config_data["network_topology_type"]
-
-        if type(network_type) != str:
-            raise InvalidValueError("network_topology_type must be simple or complex.")
-        if network_type.lower() != 'simple' and network_type.lower() != 'complex':
-            raise InvalidValueError("network_topology_type must be simple or complex.")
-
-        return network_type.lower()
-
-    def get_boolean(self, config_str, default_value):
-        """
-        Load the config_str. This is either `true` or `false`.
-        
-        :param config_str: name of config value in config file
-        :type config_str: str
-        :param default_value: default value of the boolean
-        :type default_value: bool
-        :return: boolean of config_str
-        :rtype: boolean
-        """
-        if config_str not in self.config_data:
-            return default_value
-
-        config_boolean = self.config_data[config_str]
-
-        if type(config_boolean) != bool:
-            raise InvalidValueError("batch_mode must be a boolean (true or false)")
-
-        return config_boolean
-
-    @property
-    def mininet_cli(self):
-        """
-        Load the mininet cli boolean. This is either `true` or `false`.
-
-        :return: boolean of mininet cli
-        :rtype: boolean
-        """
-        return self.get_boolean("mininet_cli", False)
 
     @property
     def batch_simulations(self):
@@ -259,32 +251,17 @@ class ConfigParser:
         :return: number of batch simulations
         :rtype: int
         """
-        simulations = self.config_data['batch_simulations']
+        simulations = self.data['batch_simulations']
 
         if type(simulations) != int:
             raise InvalidValueError("'batch_simulations' must be an integer")
 
         return simulations
 
-    @property
-    def iterations(self):
-        """
-        Load the simulation iterations, and verify that it is a number
-
-        :return: number of simulation iterations
-        :rtype: int
-        """
-        iterations = self.config_data['iterations']
-
-        if type(iterations) != int:
-            raise InvalidValueError("'iterations' must be an integer")
-
-        return iterations
-
     def generate_attacks(self, yaml_data):
-        if 'run_attack' in self.config_data.keys() and self.config_data['run_attack']:
-            if 'device_attacks' in self.attacks_data.keys():
-                for device_attack in self.attacks_data['device_attacks']:
+        if self.data.get('run_attack'):
+            if self.data.get('attacks_path'):
+                for device_attack in self.data.get('attacks_path').get('device_attacks'):
                     for plc in yaml_data['plcs']:
                         if set(device_attack['actuators']).issubset(set(plc['actuators'])):
                             if 'attacks' not in plc.keys():
@@ -311,50 +288,42 @@ class ConfigParser:
         """
         self.generate_temporary_dirs()
 
+        yaml_data = {}
+
         # Begin with PLC data specified in CPA file
-        yaml_data = self.cpa_data
+        yaml_data['plcs'] = self.data.get('cpa_file').get('plcs')
         # Add path and database information
-        yaml_data['inp_file'] = str(self.inp_file)
-        yaml_data['cpa_file'] = str(self.cpa_file)
+        yaml_data['inp_file'] = str(self.data.get('inp_file'))
         yaml_data['output_path'] = str(self.output_path)
         yaml_data['db_path'] = self.db_path
-        yaml_data['network_topology_type'] = self.network_topology_type
+        yaml_data['network_topology_type'] = self.data.get('network_topology_type')
 
         # Add batch mode parameters
         if self.batch_mode:
             yaml_data['batch_index'] = self.batch_index
             yaml_data['batch_simulations'] = self.batch_simulations
         # Initial physical values
-        if 'initial_tank_data' in self.config_data:
+        if 'initial_tank_data' in self.data:
             yaml_data['initial_tank_data'] = str(self.initial_tank_data)
-        if 'demand_patterns' in self.config_data:
+        if 'demand_patterns' in self.data:
             yaml_data['demand_patterns_data'] = str(self.demand_patterns)
         # Add network loss parameters
-        if 'network_loss_data' in self.config_data:
+        if 'network_loss_data' in self.data:
             yaml_data['network_loss_data'] = str(self.network_loss_data)
         # Add network delay parameters
-        if 'network_delay_data' in self.config_data:
+        if 'network_delay_data' in self.data:
             yaml_data['network_delay_data'] = str(self.network_delay_data)
         # Mininet cli parameter
-        yaml_data['mininet_cli'] = self.mininet_cli
+        yaml_data['mininet_cli'] = self.data.get('mininet_cli')
 
-        if 'simulator' in self.config_data:
-            yaml_data['simulator'] = self.config_data['simulator']
-        else:
-            yaml_data['simulator'] = 'pdd'
+        # Simulator
+        yaml_data['simulator'] = self.data['simulator']
 
         # Note: if iterations not present then default value will be written in InputParser
-        if 'iterations' in self.config_data:
-            yaml_data['iterations'] = self.iterations
+        yaml_data['iterations'] = self.data['iterations']
 
         # Log level
-        if 'log_level' in self.config_data:
-            if self.config_data['log_level'] in ['debug', 'info', 'warning', 'error', 'critical']:
-                yaml_data['log_level'] = self.config_data['log_level']
-            else:
-                raise InvalidValueError("Invalid log_level value.")
-        else:
-            yaml_data['log_level'] = 'info'
+        yaml_data['log_level'] = self.data['log_level']
 
         # Write values from IMP file into yaml file (controls, tanks/valves/initial values, etc.)
         yaml_data = InputParser(yaml_data).write()
