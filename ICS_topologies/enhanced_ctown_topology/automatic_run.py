@@ -344,4 +344,4 @@ if __name__ == "__main__":
     topo = CTownTopo(week_index, simulation_type, config_file, plc_dict_path)
     net = Mininet(topo=topo, autoSetMacs=True, link=TCLink)
     minitown_cps = CTown(name='ctown', net=net, week_index=week_index, attack_flag=a_flag,
-                         attack_name=a_name, attack_path=a_path, config_file='config_file')
+                         attack_name=a_name, attack_path=a_path)
