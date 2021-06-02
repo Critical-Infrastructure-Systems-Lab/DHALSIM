@@ -41,6 +41,8 @@ class ConfigParser:
     def __init__(self, config_path: Path):
         """Constructor method"""
         self.batch_index = None
+        self.yaml_path = None
+        self.db_path = None
 
         self.config_path = config_path.absolute()
 
