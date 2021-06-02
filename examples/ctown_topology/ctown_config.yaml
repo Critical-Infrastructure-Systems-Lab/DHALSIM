@@ -1,0 +1,6 @@
+inp_file: ctown_map.inp
+#cpa_file: ctown_cpa.yaml
+output_path: output
+iterations: 500
+network_topology_type: simple
+plcs: !include ctown_plcs.yaml
