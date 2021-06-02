@@ -57,12 +57,33 @@ class ConfigParser:
 
     @staticmethod
     def apply_schema(config_path: Path) -> dict:
+        """
+        Load the yaml data from the config file, and apply the schema.
+
+        :param config_path: The to the config file
+        :type config_path: Path
+
+        :return: A verified version of the data of the config file
+        :rtype: dict
+        """
         data = ConfigParser.load_yaml(config_path)
         data = ConfigParser.path_schema(data, config_path)
         return ConfigParser.validate_schema(data)
 
     @staticmethod
     def path_schema(data: dict, config_path: Path) -> dict:
+        """
+        For all the values that need to be a path, this function converts them to absolute paths,
+        checks if they exists, and checks the suffix if applicable.
+
+        :param data: data from the config file
+        :type data: dict
+        :param config_path: That to the config file
+        :type config_path:
+
+        :return: the config data, but with existing absolute path objects
+        :rtype: dict
+        """
         return Schema(
             And(
                 {
@@ -105,6 +126,15 @@ class ConfigParser:
 
     @staticmethod
     def load_yaml(path: Path) -> dict:
+        """
+        Uses :code:`pyyaml` and :code`pyyaml-include` to read in a yaml file.
+        This means you can use `!include` to include yaml files in other yaml files.
+
+        :param path: path to the yaml file to be loaded.
+        :type path: Path
+        :return: a dict representing the yaml file
+        :rtype: dict
+        """
         try:
             with path.open(mode='r') as file:
                 data = yaml.load(file, Loader=yaml.FullLoader)
@@ -114,6 +144,18 @@ class ConfigParser:
 
     @staticmethod
     def validate_schema(data: dict) -> dict:
+        """
+        Apply a schema to the data. This schema make sure that every reuired parameter is given.
+        It also fills in default values for missing parameters.
+        It will test for types of parameters as well.
+        Besides that, it converts some strings to lower case, like those of :code:`log_level`.
+
+        :param data: data from the config file
+        :type data: dict
+
+        :return: A verified version of the data of the config file
+        :rtype: dict
+        """
         string_pattern = Regex(r'^[a-zA-Z0-9_]+$', error="Error in string: '{}', Can only have a-z, A-Z, 0-9, and _")
 
         attacks_schema = Schema({
