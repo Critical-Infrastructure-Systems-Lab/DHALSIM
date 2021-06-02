@@ -1,0 +1,5 @@
+inp_file: ctown_map.inp
+output_path: output
+iterations: 500
+network_topology_type: complex
+plcs: !include ctown_plcs.yaml

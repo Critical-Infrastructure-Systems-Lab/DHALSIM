@@ -1,4 +1,0 @@
-inp_file: ctown_map.inp
-cpa_file: ctown_cpa.yaml
-output_path: output
-iterations: 500
