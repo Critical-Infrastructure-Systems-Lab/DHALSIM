@@ -63,8 +63,11 @@ def test_generate_intermediate_yaml(mocker, tmpdir, wadi_config_yaml_path, fille
     with filled_yaml_path.open(mode='r') as expectation:
         expected = yaml.safe_load(expectation)
 
-    # Because path is dynamic, overwrite it in expected output
+    # Because paths are dynamic, overwrite it in expected output
     expected['db_path'] = directory_mock.mkdtemp() + '/dhalsim.sqlite'
+    local_path = str(Path(__file__).absolute().parent.parent)
+    expected['inp_file'] = local_path + '/auxilary_testing_files/wadi_map_pda_original.inp'
+    expected['output_path'] = local_path + '/auxilary_testing_files/output'
 
     yaml_path = ConfigParser(wadi_config_yaml_path).generate_intermediate_yaml()
 
