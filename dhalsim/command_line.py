@@ -58,12 +58,12 @@ class Runner():
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Do the DHALSIM')  # Todo Change description
+    parser = argparse.ArgumentParser(description='Executes DHALSIM based on a config file')
     parser.add_argument(dest="config_file",
-                        help="config file", metavar="FILE",
+                        help="config file and its path", metavar="FILE",
                         type=lambda x: is_valid_file(parser, x))
     parser.add_argument('-o', '--output', dest='output_folder', metavar="FOLDER",
-                        help='folder to put the output files', type=str)
+                        help='folder where output files will be saved', type=str)
 
     args = parser.parse_args()
 
