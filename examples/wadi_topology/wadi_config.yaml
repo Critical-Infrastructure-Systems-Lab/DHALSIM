@@ -5,8 +5,6 @@ network_topology_type: Simple
 output_path: "output/"
 iterations: 2
 mininet_cli: false
-log_level: debug
-simulator: pdd
 
 plcs: !include wadi_plcs.yaml
 
