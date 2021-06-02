@@ -43,6 +43,8 @@ class ConfigParser:
 
         self.config_path = config_path.absolute()
 
+        YamlIncludeConstructor.add_to_loader_class(loader_class=yaml.FullLoader, base_dir=config_path.absolute().parent)
+
         try:
             self.data = self.apply_schema(self.config_path)
         except SchemaError as exc:
@@ -52,33 +54,20 @@ class ConfigParser:
 
     @staticmethod
     def apply_schema(config_path: Path) -> dict:
-        data = ConfigParser.path_schema(config_path)
+        data = ConfigParser.load_yaml(config_path)
+        data = ConfigParser.path_schema(data, config_path)
         return ConfigParser.validate_schema(data)
 
     @staticmethod
-    def path_schema(config_path: Path) -> dict:
+    def path_schema(data: dict, config_path: Path) -> dict:
         return Schema(
             And(
-                Path.exists,
-                Use(ConfigParser.load_yaml),
                 {
-                    'cpa_file': And(
-                        Use(Path),
-                        Use(lambda p: config_path.absolute().parent / p),
-                        Path.exists,
-                        Use(ConfigParser.load_yaml),
-                    ),
                     'inp_file': And(
                         Use(Path),
                         Use(lambda p: config_path.absolute().parent / p),
                         Path.is_file,
                         Schema(lambda f: f.suffix == '.inp', error="Suffix of inp_file should be .inp")),
-                    Optional('attacks_path'): And(
-                        Use(Path),
-                        Use(lambda p: config_path.absolute().parent / p),
-                        Path.exists,
-                        Use(ConfigParser.load_yaml),
-                    ),
                     Optional('output_path', default=config_path.absolute().parent / 'output'): And(
                         Use(str),
                         Use(Path),
@@ -109,31 +98,34 @@ class ConfigParser:
                     str: object
                 }
             )
-        ).validate(config_path)
+        ).validate(data)
 
     @staticmethod
     def load_yaml(path: Path) -> dict:
-        with path.open(mode='r') as file:
-            data = yaml.load(file, Loader=yaml.FullLoader)
-        return data
+        try:
+            with path.open(mode='r') as file:
+                data = yaml.load(file, Loader=yaml.FullLoader)
+            return data
+        except FileNotFoundError as exc:
+            sys.exit(f"File not found: {exc.filename}")
 
     @staticmethod
     def validate_schema(data: dict) -> dict:
-        cpa_schema = Schema({
-            'plcs': [{
-                'name': str,
-                'sensors': [str],
-                'actuators': [str]
-            }]
-        })
+        string_pattern = Regex(r'^[a-zA-Z0-9_]+$', error="Error in string: '{}', Can only have a-z, A-Z, 0-9, and _")
 
         attacks_schema = Schema({
             str: object
         })
 
+        plc_schema = Schema([{
+            'name': string_pattern,
+            Optional('sensors'): [string_pattern],
+            Optional('actuators'): [string_pattern]
+        }])
+
         config_schema = Schema({
+            'plcs': plc_schema,
             'inp_file': Path,
-            'cpa_file': cpa_schema,
             Optional('network_topology_type', default='simple'): And(
                 str,
                 Use(str.lower),
@@ -152,7 +144,7 @@ class ConfigParser:
                 Use(str.lower),
                 Or('pdd', 'dd')),
             Optional('run_attack', default=True): bool,
-            Optional('attacks_path'): attacks_schema,
+            Optional('attacks'): attacks_schema,
             Optional('batch_simulations'): And(
                 int,
                 Schema(lambda i: i > 0, error='batch_simulations must be positive')),
@@ -291,7 +283,7 @@ class ConfigParser:
         yaml_data = {}
 
         # Begin with PLC data specified in CPA file
-        yaml_data['plcs'] = self.data.get('cpa_file').get('plcs')
+        yaml_data['plcs'] = self.data.get('plcs')
         # Add path and database information
         yaml_data['inp_file'] = str(self.data.get('inp_file'))
         yaml_data['output_path'] = str(self.output_path)

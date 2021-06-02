@@ -4,52 +4,21 @@
 #output_ground_truth_path: "physical_process.csv"
 #duration_days: 1
 inp_file: "wadi_map_newer.inp"
-cpa_file: "wadi_cpa.yaml"
-network_topology_type: complex
+network_topology_type: Simple
 output_path: "output/"
 iterations: 2
 mininet_cli: false
-log_level: info
+log_level: debug
 simulator: pdd
 
-batch_simulations: 3
-initial_tank_data: initial_tank_wadi.csv
-demand_patterns: demand_patterns/
+plcs: !include wadi_plcs.yaml
+
+attacks: !include wadi_attacks.yaml
+
+#batch_simulations: 3
+#Initial Conditions
+#initial_tank_data: initial_tank_wadi.csv
+#demand_patterns: demand_patterns/
 #demand_patterns: demand_patterns/2.csv
-
-network_loss_data: losses_wadi.csv
-
+#network_loss_data: losses_wadi.csv
 #network_delay_data: delays_wadi.csv
-
-# Setting this to debug will also print WNTR and MiniCPS output
-#simulator: "pdd"
-#week_index: 0
-
-# PLC dictionary output file
-# This is the output path of the epanet_parser script. A YAML file that synthetizes the control logc and PLC
-# configuration parsed from the EPANET and epanetCPA files
-# There shouldn't be a real reason to change the path of this temporary file
-#plc_dict_path: "plc_dicts.yaml"
-
-# Network simulation parameters
-# True in complex topology means that each PLC is in its own LAN; NAT and port forwarding is used to connect the LAns
-# in a start topology. This uses the mininet topology described in simple_topo.py
-# False in complex topology means that all the PLCs are in the same LAN. This uses the mininet topology describes in
-# complex_topo.py
-#complex_topology: "True"
-
-# Simulation type. Supported values now are "Single" and "Batch"
-# A single simulation runs only once. Possibly using the customization values as defined by initial_custom_flag
-# In single simulations, the week_index parameter is read from this config file
-# A Batch simulation runs consecutive weeks. Batch simulation requires that the initial_custom_flag is set to true
-# and that the demand paths are correctly set. Batch simulations takes the week_index parameter for sys.argv. Hence,
-# the responsibility of passing this parameter to general_automatic_run.py is on the calling script
-#simulation_type: "Single"
-
-# Run attack. Possible values:
-# - True
-# - False
-# This flag indicates if the experiment will have an attack in the network
-# Using this flag also requires setting the value of attacks_path.
-run_attack: True
-attacks_path: "wadi_attacks.yaml"
