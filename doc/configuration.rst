@@ -27,12 +27,15 @@ Example with all options:
       - name: PLC1
         sensors:
           - Tank1
+          - Junction5
+          - Pump2F
         actuators:
           - Pump1
           - Valve1
       - name: PLC2
         sensors:
           - Tank2
+          - Valve2F
         actuators:
           - Valve2
 
@@ -65,30 +68,30 @@ those PLCs control. :code:`plcs` is an array that contains a list of PLCs. A PLC
       - actuator_1
       - actuator_2
 
-Sensors are the tanks that are being monitored, and actuators would be valves and pumps.
+If you want to put the PLCs in a different file, see section :ref:`PLCs in different file`.
 
-If you would like to have your :code:`plcs` stored in a separate yaml file, that is possible by including
-it by using :code:`!include` :
+sensors
+~~~~~~~~~~~~
+Sensors can be these 4 things:
 
-.. code-block:: yaml
+* Tank level
+    * Use the tank name from the :code:`.inp` file.
+* Junction pressure
+    * Use the junction name from the :code:`.inp` file.
+* Valve flow
+    * Use the valve name from the :code:`.inp` file + :code:`F`. Example: :code:`V3F`.
+* Pump flow
+    * Use the pump name from the :code:`.inp` file + :code:`F`. Example: :code:`P2F`.
 
-    plcs: !include plcs.yaml
+actuators
+~~~~~~~~~~~~
+Sensors can be these 2 things:
 
-Where :code:`plcs.yaml` could look like:
+* Valve status
+    * Use the valve name from the :code:`.inp` file.
+* Pump status
+    * Use the pump name from the :code:`.inp` file.
 
-.. code-block:: yaml
-
-  - name: PLC1
-    sensors:
-      - Tank1
-    actuators:
-      - Pump1
-      - Valve1
-  - name: PLC2
-    sensors:
-      - Tank2
-    actuators:
-      - Valve2
 
 network_topology_type
 --------------------------------
@@ -271,3 +274,41 @@ An example would look like this :
     22.02,42.45,17.17
     22.03,42.46,17.18
     22.04,42.47,17.19
+
+Splitting up the config file
+==============================
+If you want easily swap out the attacks for other attacks, or swap out the PLCs, you can split up your configuration file into multiple files.
+This is done using the :code:`!include` keyword.
+
+Here follow a few examples:
+
+PLCs in different file
+------------------------
+
+If you would like to have your :code:`plcs` stored in a separate yaml file, that is possible by including
+it by using :code:`!include`.
+
+This would be in the config file:
+
+.. code-block:: yaml
+
+    plcs: !include plcs.yaml
+
+And the :code:`plcs.yaml` would look like:
+
+.. code-block:: yaml
+
+  - name: PLC1
+    sensors:
+      - Tank1
+      - Junction5
+      - Pump2F
+    actuators:
+      - Pump1
+      - Valve1
+  - name: PLC2
+    sensors:
+      - Tank2
+      - Valve2F
+    actuators:
+      - Valve2
