@@ -210,7 +210,7 @@ class ConfigParser:
         :return: absolute path to the output folder
         :rtype: Path
         """
-        path = self.data.get('output_path')
+        path = self.data['output_path']
         if self.batch_mode:
             path /= 'batch_' + str(self.batch_index)
         return path
@@ -266,30 +266,30 @@ class ConfigParser:
         yaml_data = {}
 
         # Begin with PLC data specified in plcs section
-        yaml_data['plcs'] = self.data.get('plcs')
+        yaml_data['plcs'] = self.data['plcs']
         # Add path and database information
-        yaml_data['inp_file'] = str(self.data.get('inp_file'))
+        yaml_data['inp_file'] = str(self.data['inp_file'])
         yaml_data['output_path'] = str(self.output_path)
         yaml_data['db_path'] = self.db_path
-        yaml_data['network_topology_type'] = self.data.get('network_topology_type')
+        yaml_data['network_topology_type'] = self.data['network_topology_type']
 
         # Add batch mode parameters
         if self.batch_mode:
             yaml_data['batch_index'] = self.batch_index
-            yaml_data['batch_simulations'] = self.data.get('batch_simulations')
+            yaml_data['batch_simulations'] = self.data['batch_simulations']
         # Initial physical values
         if 'initial_tank_data' in self.data:
-            yaml_data['initial_tank_data'] = str(self.data.get('initial_tank_data'))
+            yaml_data['initial_tank_data'] = str(self.data['initial_tank_data'])
         if 'demand_patterns' in self.data:
             yaml_data['demand_patterns_data'] = str(self.demand_patterns)
         # Add network loss parameters
         if 'network_loss_data' in self.data:
-            yaml_data['network_loss_data'] = str(self.data.get('network_loss_data'))
+            yaml_data['network_loss_data'] = str(self.data['network_loss_data'])
         # Add network delay parameters
         if 'network_delay_data' in self.data:
-            yaml_data['network_delay_data'] = str(self.data.get('network_delay_data'))
+            yaml_data['network_delay_data'] = str(self.data['network_delay_data'])
         # Mininet cli parameter
-        yaml_data['mininet_cli'] = self.data.get('mininet_cli')
+        yaml_data['mininet_cli'] = self.data['mininet_cli']
 
         # Simulator
         yaml_data['simulator'] = self.data['simulator']
