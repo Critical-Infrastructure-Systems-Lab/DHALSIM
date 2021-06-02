@@ -27,7 +27,7 @@ class InvalidValueError(Error):
 
 
 class DuplicateValueError(Error):
-    """Raised when there is a duplicate plc value in the cpa file"""
+    """Raised when there is a duplicate plc value in the plcs section"""
 
 
 class ConfigParser:
@@ -221,7 +221,7 @@ class ConfigParser:
 
         yaml_data = {}
 
-        # Begin with PLC data specified in CPA file
+        # Begin with PLC data specified in plcs section
         yaml_data['plcs'] = self.data.get('plcs')
         # Add path and database information
         yaml_data['inp_file'] = str(self.data.get('inp_file'))
