@@ -319,7 +319,7 @@ class ConfigParser:
             if "type" not in network_attack:
                 raise MissingValueError("No type specified for network attack {name}".format(name=network_attack["name"]))
             network_attack['type'] = network_attack['type'].lower()
-            if network_attack['type'] not in ['mitm']:
+            if network_attack['type'] not in ['mitm', 'naive']:
                 raise InvalidValueError(f"{network_attack['type']} is not a valid network attack type")
 
             # Check existence and validity of target PLC

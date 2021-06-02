@@ -58,7 +58,11 @@ class AttackerControl(NodeControl):
 
     def start_attack(self):
         """Start a attack process."""
-        generic_plc_path = Path(__file__).parent.parent.absolute() / "network_attacks" / "mitm_attack.py"
+        generic_plc_path = None
+        if self.this_attacker_data['type'] == 'mitm':
+            generic_plc_path = Path(__file__).parent.parent.absolute() / "network_attacks" / "mitm_attack.py"
+        elif self.this_attacker_data['type'] == 'naive':
+            generic_plc_path = Path(__file__).parent.parent.absolute() / "network_attacks" / "naive_attack.py"
 
         cmd = ["python3", str(generic_plc_path), str(self.intermediate_yaml), str(self.attacker_index)]
 

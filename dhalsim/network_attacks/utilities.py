@@ -1,5 +1,6 @@
 import codecs
 import struct
+import binascii
 
 from scapy.all import srp, send
 from scapy.layers.l2 import Ether, ARP
@@ -42,19 +43,12 @@ def translate_payload_to_float(raw_payload):
 
     :param raw_payload: The payload to convert
     """
-    # Handle endianness with the payload
-    print("raw_payload: ", raw_payload)
-    print("type(raw_payload): ", type(raw_payload))
-    print("raw_payload[5:6]: ", raw_payload[5:6])
-    print("type(raw_payload[5:6]): ", type(raw_payload[5:6]))
-    ordered_payload = raw_payload[6:7] +  raw_payload[5:6] + raw_payload[4:5] + raw_payload[3:4] + raw_payload[2:3] + raw_payload[1:2] + raw_payload[0:1]
-    print("ordered_payload: ", ordered_payload)
-    print("type(ordered_payload): ", type(ordered_payload))
-    # Encode as HEX
-    # hex_value = ordered_payload.encode("hex")
-    # Convert HEX into float
-    float_value = struct.unpack('!f', ordered_payload)[0]
-    return float_value
+    hex_value = raw_payload.hex()
+    length = len(hex_value)
+    value_part = hex_value[length - 8: length]
+    val_length = len(value_part)
+    sorted_value_part = value_part[val_length - 2: val_length] + value_part[val_length - 4: val_length - 2] + value_part[val_length - 6: val_length - 4] + value_part[val_length - 8: val_length - 6]
+    return struct.unpack('>f', binascii.unhexlify(sorted_value_part))[0]
 
 
 def translate_float_to_payload(float_value, header_0, header_1):
