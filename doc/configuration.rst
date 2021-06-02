@@ -8,7 +8,6 @@ Example with all options:
 .. code-block:: yaml
 
     inp_file: map.inp
-    cpa_file: cpa.yaml
     network_topology_type: complex
     output_path: output
     iterations: 500
@@ -16,47 +15,13 @@ Example with all options:
     log_level: info
     simulator: pdd
     run_attack: True
-    attacks_path: "attacks.yaml"
     batch_simulations: 20
     initial_tank_values: initial_tank.csv
     demand_patterns: demand_patterns/
     network_loss_data: losses.csv
     network_delay_data: delays.csv
 
-In the following sections, every entry is explained.
-
-inp_file
-------------------------
-*This option is required*
-
-The inp file is the file used primarily in the EPANET water simulation, it stores the description of the water network
-along with simulation values such as duration; and control rules for valves, pumps, etc.
-
-The :code:`inp_file` option should be the path to the inp file to use in the experiment.
-This can be either a absolute path, or relative to the configuration file.
-
-cpa_file
-------------------------
-*This option is required*
-
-The :code:`cpa_file` is one of the mandatory input files to DHALSIM. It defines what PLCs are in the network, and which sensors/actuators
-those PLCs control. The :code:`cpa_file` is a yaml file that contains a list of PLCs. A PLC has the following format:
-
-.. code-block:: yaml
-
-  - name: plc_name
-    sensors:
-      - sensor_1
-      - sensor_2
-    actuators:
-      - actuator_1
-      - actuator_2
-
-Sensors are the tanks that are being monitored, and actuators would be valves and pumps.
-
-Thus, an example yaml file would look as such:
-
-.. code-block:: yaml
+    attacks: "Maartens job"
 
     plcs:
       - name: PLC1
@@ -71,8 +36,59 @@ Thus, an example yaml file would look as such:
         actuators:
           - Valve2
 
-The name of the :code:`cpa_file` must be defined in the :code:`config.yaml` under 'cpa_file',
-this can be either a absolute path, or relative to the configuration file.
+In the following sections, every entry is explained.
+
+inp_file
+------------------------
+*This option is required*
+
+The inp file is the file used primarily in the EPANET water simulation, it stores the description of the water network
+along with simulation values such as duration; and control rules for valves, pumps, etc.
+
+The :code:`inp_file` option should be the path to the inp file to use in the experiment.
+This can be either a absolute path, or relative to the configuration file.
+
+plcs
+------------------------
+*This option is required*
+
+The :code:`plcs` section is one of the mandatory options for DHALSIM. It defines what PLCs are in the network, and which sensors/actuators
+those PLCs control. :code:`plcs` is an array that contains a list of PLCs. A PLC has the following format:
+
+.. code-block:: yaml
+
+  - name: plc_name
+    sensors:
+      - sensor_1
+      - sensor_2
+    actuators:
+      - actuator_1
+      - actuator_2
+
+Sensors are the tanks that are being monitored, and actuators would be valves and pumps.
+
+If you would like to have your :code:`plcs` stored in a separate yaml file, that is possible by including
+it by using :code:`!include` :
+
+.. code-block:: yaml
+
+    plcs: !include plcs.yaml
+
+Where :code:`plcs.yaml` could look like:
+
+.. code-block:: yaml
+
+  - name: PLC1
+    sensors:
+      - Tank1
+    actuators:
+      - Pump1
+      - Valve1
+  - name: PLC2
+    sensors:
+      - Tank2
+    actuators:
+      - Valve2
 
 network_topology_type
 --------------------------------
