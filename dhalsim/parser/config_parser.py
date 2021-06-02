@@ -157,23 +157,6 @@ class ConfigParser:
 
         return config_schema.validate(data)
 
-    def get_path(self, path_input):
-        """
-        Function that returns a given path if it exists
-
-        :param path_input: Path that should be returned
-        :type path_input: str
-        :return: absolute path to the file
-        :rtype: Path
-        """
-        path = self.data.get(path_input)
-        if not path:
-            raise MissingValueError(path_input + " not in config file.")
-        path = (self.config_path.parent / path).absolute()
-        if not path.is_file():
-            raise FileNotFoundError(str(path) + " is not a file.")
-        return path
-
     @property
     def output_path(self):
         """
@@ -187,36 +170,6 @@ class ConfigParser:
         if self.batch_mode:
             path /= 'batch_' + str(self.batch_index)
         return path
-
-    @property
-    def initial_tank_data(self):
-        """
-        Property for the path to the initial tank data file.
-
-        :return: absolute path to the initial tank data file
-        :rtype: Path
-        """
-        return self.data.get('initial_tank_data')
-
-    @property
-    def network_loss_data(self):
-        """
-        Property for the path to the network loss data file.
-
-        :return: absolute path to the inp file
-        :rtype: Path
-        """
-        return self.data.get('network_loss_data')
-
-    @property
-    def network_delay_data(self):
-        """
-        Property for the path to the network delay data file.
-
-        :return: absolute path to the inp file
-        :rtype: Path
-        """
-        return self.data.get('network_delay_data')
 
     @property
     def demand_patterns(self):
@@ -235,21 +188,6 @@ class ConfigParser:
         if not path.is_file():
             raise FileNotFoundError(str(path) + " is not a file.")
         return path
-
-    @property
-    def batch_simulations(self):
-        """
-        Load the number of batch simulations, and verify that it is a number
-
-        :return: number of batch simulations
-        :rtype: int
-        """
-        simulations = self.data['batch_simulations']
-
-        if type(simulations) != int:
-            raise InvalidValueError("'batch_simulations' must be an integer")
-
-        return simulations
 
     def generate_attacks(self, yaml_data):
         if self.data.get('run_attack'):
@@ -294,18 +232,18 @@ class ConfigParser:
         # Add batch mode parameters
         if self.batch_mode:
             yaml_data['batch_index'] = self.batch_index
-            yaml_data['batch_simulations'] = self.batch_simulations
+            yaml_data['batch_simulations'] = self.data.get('batch_simulations')
         # Initial physical values
         if 'initial_tank_data' in self.data:
-            yaml_data['initial_tank_data'] = str(self.initial_tank_data)
+            yaml_data['initial_tank_data'] = str(self.data.get('initial_tank_data'))
         if 'demand_patterns' in self.data:
             yaml_data['demand_patterns_data'] = str(self.demand_patterns)
         # Add network loss parameters
         if 'network_loss_data' in self.data:
-            yaml_data['network_loss_data'] = str(self.network_loss_data)
+            yaml_data['network_loss_data'] = str(self.data.get('network_loss_data'))
         # Add network delay parameters
         if 'network_delay_data' in self.data:
-            yaml_data['network_delay_data'] = str(self.network_delay_data)
+            yaml_data['network_delay_data'] = str(self.data.get('network_delay_data'))
         # Mininet cli parameter
         yaml_data['mininet_cli'] = self.data.get('mininet_cli')
 
