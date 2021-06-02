@@ -45,24 +45,22 @@ def translate_payload_to_float(raw_payload):
     """
     hex_value = raw_payload.hex()
     length = len(hex_value)
-    value_part = hex_value[length - 8: length]
-    val_length = len(value_part)
-    sorted_value_part = value_part[val_length - 2: val_length] + value_part[val_length - 4: val_length - 2] + value_part[val_length - 6: val_length - 4] + value_part[val_length - 8: val_length - 6]
-    return struct.unpack('>f', binascii.unhexlify(sorted_value_part))[0]
+    value_part = hex_value[length - 8 : length]
+    return struct.unpack('<f', binascii.unhexlify(value_part))[0]
 
 
-def translate_float_to_payload(float_value, header_0, header_1):
+def translate_float_to_payload(float_value, original_payload):
     """
     This function will convert a float number to a raw package payload
 
     :param float_value: The float number to convert
-    :param header_0: The first header to include in the payload
-    :param header_1: The second header to include in the payload
+    :param original_payload: The original payload of the packet
     """
-    # Convert to hex again
-    hex_value = hex(struct.unpack('<I', struct.pack('<f', float_value))[0])
-    # Decode as string
-    string_decode = codecs.decode(hex_value[2:], 'hex')
-    # Re arrange for endianness. This is a string
-    payload = header_0 + header_1 + string_decode[-1] + string_decode[-2] + string_decode[-3] + string_decode[0]
-    return payload
+    hex_payload = original_payload.hex()
+    length = len(hex_payload)
+
+    payload_save = hex_payload[0 : length - 8]
+    hex_value = hex(struct.unpack('>I', struct.pack('<f', float_value))[0])
+
+    result_hex = payload_save + hex_value[2:len(hex_value)]
+    return binascii.unhexlify(result_hex)
