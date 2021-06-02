@@ -6,9 +6,6 @@ from schema import SchemaError
 
 from dhalsim.parser.config_parser import ConfigParser
 
-pytestmark = pytest.mark.skip("These need to be fixed.")
-
-
 def test_python_version():
     assert sys.version_info.major is 3
 
@@ -29,13 +26,12 @@ def test_dict():
         "network_loss_data": Path(),
         "network_delay_data": Path(),
         "run_attack": True,
-        "cpa_file": {
-            "plcs": [
-                {"name": "PLC1", "sensors": ["T0"], "actuators": ["P_RAW1", "V_PUB"]},
-                {"name": "PLC2", "sensors": ["T2"], "actuators": ["V_ER2i"]},
-            ]
-        },
-        "attacks_path": {
+        "plcs": [
+            {"name": "PLC1", "sensors": ["T0"], "actuators": ["P_RAW1", "V_PUB"]},
+            {"name": "PLC2", "sensors": ["T2"], "actuators": ["V_ER2i"]},
+        ],
+
+        "attacks": {
             "device_attacks": [
                 {
                     "name": "Close PRAW1 from iteration 5 to 10",
@@ -44,15 +40,7 @@ def test_dict():
                     "command": "closed",
                     "start": 5,
                     "end": 10,
-                },
-                {
-                    "name": "Close PRAW1 when T2 < 0.16",
-                    "type": "Below",
-                    "actuators": ["P_RAW1"],
-                    "command": "closed",
-                    "sensor": "T2",
-                    "value": 0.16,
-                },
+                }
             ]
         },
     }
@@ -81,7 +69,7 @@ def test_default_config(key, default_value, test_dict):
     'demand_patterns',
     'network_loss_data',
     'network_delay_data',
-    'attacks_path',
+    'attacks',
 ])
 def test_optional_config(key, test_dict):
     del test_dict[key]
@@ -89,7 +77,7 @@ def test_optional_config(key, test_dict):
     assert result.get(key) is None
 
 
-@pytest.mark.parametrize("required_key", ['iterations', 'inp_file', 'cpa_file'])
+@pytest.mark.parametrize("required_key", ['iterations', 'inp_file', 'plcs'])
 def test_required_config(required_key, test_dict):
     del test_dict[required_key]
     with pytest.raises(SchemaError):
@@ -161,3 +149,75 @@ def test_valid_config(key, input_value, expected_value, test_dict):
     test_dict[key] = input_value
     output = ConfigParser.validate_schema(test_dict)
     assert output[key] == expected_value
+
+
+
+
+
+
+@pytest.mark.parametrize("key", [
+    'actuators',
+    'sensors',
+])
+def test_optional_plcs(key, test_dict):
+    del test_dict['plcs'][0][key]
+    result = ConfigParser.validate_schema(test_dict)
+    assert result.get(key) is None
+
+
+@pytest.mark.parametrize("required_key", ['name'])
+def test_required_plcs(required_key, test_dict):
+    del test_dict['plcs'][0][required_key]
+    with pytest.raises(SchemaError):
+        ConfigParser.validate_schema(test_dict)
+
+
+@pytest.mark.parametrize("key, invalid_value", [
+    ('name', ''),
+    ('name', 'PLC 1'),
+    ('name', 1),
+    ('name', 0),
+    ('name', 'plc#1'),
+    ('name', '&'),
+    ('name', ' plc1'),
+    ('sensors', ["T 0"]),
+    ('sensors', [" T0"]),
+    ('sensors', ["T#0"]),
+    ('sensors', [5]),
+    ('sensors', [4.2]),
+    ('sensors', ['&']),
+    ('sensors', ["木头"]),
+    ('actuators', ["V 0"]),
+    ('actuators', [" V0"]),
+    ('actuators', ["V#0"]),
+    ('actuators', [5]),
+    ('actuators', [4.2]),
+    ('actuators', ['&']),
+    ('actuators', ["木头"]),
+])
+def test_invalid_plc(key, invalid_value, test_dict):
+    test_dict['plcs'][0][key] = invalid_value
+    with pytest.raises(SchemaError):
+        ConfigParser.validate_schema(test_dict)
+
+
+@pytest.mark.parametrize("key, input_value, expected_value", [
+    ('name', 'plc1', 'plc1'),
+    ('name', 'PLc1', 'PLc1'),
+    ('name', 'PLC100', 'PLC100'),
+    ('name', 'thing', 'thing'),
+    ('name', '123', '123'),
+    ('name', 'plc_1', 'plc_1'),
+    ('sensors', ["T0", "T1"], ["T0", "T1"]),
+    ('sensors', ["Tank"], ["Tank"]),
+    ('sensors', [], []),
+    ('sensors', ["tank_42"], ["tank_42"]),
+    ('actuators', ["V0", "V1"], ["V0", "V1"]),
+    ('actuators', ["Valve"], ["Valve"]),
+    ('actuators', [], []),
+    ('actuators', ["valve_42"], ["valve_42"]),
+])
+def test_valid_plc(key, input_value, expected_value, test_dict):
+    test_dict['plcs'][0][key] = input_value
+    output = ConfigParser.validate_schema(test_dict)
+    assert output['plcs'][0][key] == expected_value
