@@ -56,7 +56,7 @@ plcs
 *This option is required*
 
 The :code:`plcs` section is one of the mandatory options for DHALSIM. It defines what PLCs are in the network, and which sensors/actuators
-those PLCs control. :code:`plcs` is an array that contains a list of PLCs. A PLC has the following format:
+those PLCs control. :code:`plcs` is a list of PLCs. A PLC has the following format:
 
 .. code-block:: yaml
 
@@ -68,11 +68,13 @@ those PLCs control. :code:`plcs` is an array that contains a list of PLCs. A PLC
       - actuator_1
       - actuator_2
 
-If you want to put the PLCs in a different file, see section :ref:`PLCs in different file`.
+The :code:`name`, :code:`sensors` and :code:`actuators` can only contain the the characters :code:`a-z`, :code:`A-Z`, :code:`0-9` and :code:`_`.
+
+If you want to put the PLCs in a different file, see the section :ref:`PLCs in a different file`.
 
 sensors
 ~~~~~~~~~~~~
-Sensors can be these 4 things:
+Sensors can be one of the following types:
 
 * Tank level
     * Use the tank name from the :code:`.inp` file.
@@ -85,7 +87,7 @@ Sensors can be these 4 things:
 
 actuators
 ~~~~~~~~~~~~
-Sensors can be these 2 things:
+Actuators can be one of the following types:
 
 * Valve status
     * Use the valve name from the :code:`.inp` file.
@@ -235,7 +237,7 @@ If the :code:`network_loss_data` field is not provided, then the simulation will
 
 Each column of the :code:`.csv` file should be a plc/scada with rows being the loss values (where each value is a percentage from 0-100).
 If you want to only provide losses for some nodes, then you can do that and the remaining nodes will use the default value (none). Note
-that the plc name must be the same as in the :code:`.cpa` file, and the scada name must be 'scada'.
+that the plc name must be the same as in the :code:`plcs` section, and the scada name must be 'scada'.
 
 An example would look like this :
 
@@ -263,7 +265,7 @@ Each column should be a plc/scada with rows being the delay values (where each v
 If you want to only provide delays for some nodes, then you can do that and the remaining
 nodes will use the default value (none).
 
-Note that the plc name must be the same as in the :code:`.cpa` file, and the scada name must be 'scada'.
+Note that the plc name must be the same as in the :code:`plcs` section, and the scada name must be 'scada'.
 
 An example would look like this :
 
@@ -282,7 +284,7 @@ This is done using the :code:`!include` keyword.
 
 Here follow a few examples:
 
-PLCs in different file
+PLCs in a different file
 ------------------------
 
 If you would like to have your :code:`plcs` stored in a separate yaml file, that is possible by including
