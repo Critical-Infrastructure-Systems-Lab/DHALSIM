@@ -8,7 +8,6 @@ Example with all options:
 .. code-block:: yaml
 
     inp_file: map.inp
-    cpa_file: cpa.yaml
     network_topology_type: complex
     output_path: output
     iterations: 500
@@ -16,12 +15,29 @@ Example with all options:
     log_level: info
     simulator: pdd
     run_attack: True
-    attacks_path: "attacks.yaml"
     batch_simulations: 20
     initial_tank_values: initial_tank.csv
     demand_patterns: demand_patterns/
     network_loss_data: losses.csv
     network_delay_data: delays.csv
+
+    attacks: "Maartens job"
+
+    plcs:
+      - name: PLC1
+        sensors:
+          - Tank1
+          - Junction5
+          - Pump2F
+        actuators:
+          - Pump1
+          - Valve1
+      - name: PLC2
+        sensors:
+          - Tank2
+          - Valve2F
+        actuators:
+          - Valve2
 
 In the following sections, every entry is explained.
 
@@ -35,12 +51,12 @@ along with simulation values such as duration; and control rules for valves, pum
 The :code:`inp_file` option should be the path to the inp file to use in the experiment.
 This can be either a absolute path, or relative to the configuration file.
 
-cpa_file
+plcs
 ------------------------
 *This option is required*
 
-The :code:`cpa_file` is one of the mandatory input files to DHALSIM. It defines what PLCs are in the network, and which sensors/actuators
-those PLCs control. The :code:`cpa_file` is a yaml file that contains a list of PLCs. A PLC has the following format:
+The :code:`plcs` section is one of the mandatory options for DHALSIM. It defines what PLCs are in the network, and which sensors/actuators
+those PLCs control. :code:`plcs` is a list of PLCs. A PLC has the following format:
 
 .. code-block:: yaml
 
@@ -52,27 +68,32 @@ those PLCs control. The :code:`cpa_file` is a yaml file that contains a list of 
       - actuator_1
       - actuator_2
 
-Sensors are the tanks that are being monitored, and actuators would be valves and pumps.
+The :code:`name`, :code:`sensors` and :code:`actuators` can only contain the the characters :code:`a-z`, :code:`A-Z`, :code:`0-9` and :code:`_`.
 
-Thus, an example yaml file would look as such:
+If you want to put the PLCs in a different file, see the section :ref:`PLCs in a different file`.
 
-.. code-block:: yaml
+sensors
+~~~~~~~~~~~~
+Sensors can be one of the following types:
 
-    plcs:
-      - name: PLC1
-        sensors:
-          - Tank1
-        actuators:
-          - Pump1
-          - Valve1
-      - name: PLC2
-        sensors:
-          - Tank2
-        actuators:
-          - Valve2
+* Tank level
+    * Use the tank name from the :code:`.inp` file.
+* Junction pressure
+    * Use the junction name from the :code:`.inp` file.
+* Valve flow
+    * Use the valve name from the :code:`.inp` file + :code:`F`. Example: :code:`V3F`.
+* Pump flow
+    * Use the pump name from the :code:`.inp` file + :code:`F`. Example: :code:`P2F`.
 
-The name of the :code:`cpa_file` must be defined in the :code:`config.yaml` under 'cpa_file',
-this can be either a absolute path, or relative to the configuration file.
+actuators
+~~~~~~~~~~~~
+Actuators can be one of the following types:
+
+* Valve status
+    * Use the valve name from the :code:`.inp` file.
+* Pump status
+    * Use the pump name from the :code:`.inp` file.
+
 
 network_topology_type
 --------------------------------
@@ -216,7 +237,7 @@ If the :code:`network_loss_data` field is not provided, then the simulation will
 
 Each column of the :code:`.csv` file should be a plc/scada with rows being the loss values (where each value is a percentage from 0-100).
 If you want to only provide losses for some nodes, then you can do that and the remaining nodes will use the default value (none). Note
-that the plc name must be the same as in the :code:`.cpa` file, and the scada name must be 'scada'.
+that the plc name must be the same as in the :code:`plcs` section, and the scada name must be 'scada'.
 
 An example would look like this :
 
@@ -244,7 +265,7 @@ Each column should be a plc/scada with rows being the delay values (where each v
 If you want to only provide delays for some nodes, then you can do that and the remaining
 nodes will use the default value (none).
 
-Note that the plc name must be the same as in the :code:`.cpa` file, and the scada name must be 'scada'.
+Note that the plc name must be the same as in the :code:`plcs` section, and the scada name must be 'scada'.
 
 An example would look like this :
 
@@ -255,3 +276,41 @@ An example would look like this :
     22.02,42.45,17.17
     22.03,42.46,17.18
     22.04,42.47,17.19
+
+Splitting up the config file
+==============================
+If you want easily swap out the attacks for other attacks, or swap out the PLCs, you can split up your configuration file into multiple files.
+This is done using the :code:`!include` keyword.
+
+Here follow a few examples:
+
+PLCs in a different file
+------------------------
+
+If you would like to have your :code:`plcs` stored in a separate yaml file, that is possible by including
+it by using :code:`!include`.
+
+This would be in the config file:
+
+.. code-block:: yaml
+
+    plcs: !include plcs.yaml
+
+And the :code:`plcs.yaml` would look like:
+
+.. code-block:: yaml
+
+  - name: PLC1
+    sensors:
+      - Tank1
+      - Junction5
+      - Pump2F
+    actuators:
+      - Pump1
+      - Valve1
+  - name: PLC2
+    sensors:
+      - Tank2
+      - Valve2F
+    actuators:
+      - Valve2

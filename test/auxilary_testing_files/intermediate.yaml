@@ -1,211 +1,100 @@
-inp_file: /examples/wadi_topology/wadi_map_pda_original.inp
-db_path: dhalsim.sqlite
-db_name: wadi
-
-output_path: dhalsim/output
-
-mininet_cli: False
-
-simulator: pdd
-itterations: 86400
-
-plcs:
-  - name: PLC1
-    ip: 192.168.1.1
-    mac: 11:22:33:44:55:01
-    interface: plc1-eth0
-    sensors:
-      - T0
-    actuators:
-      - P_RAW1
-      - V_PUB
-    controls:
-      - type: Below
-        dependant: T0
-        value: 0.256
-        actuator: P_PUB
-        action: OPEN
-      - type: Above
-        dependant: T0
-        value: 0.448
-        actuator: P_PUB
-        action: CLOSED
-      - type: Below
-        dependant: T0
-        value: 0.256
-        actuator: P_RAW1
-        action: CLOSED
-      - type: Below
-        dependant: T2
-        value: 0.16
-        actuator: P_RAW1
-        action: OPEN
-      - type: Above
-        dependant: T2
-        value: 0.32
-        actuator: P_RAW1
-        action: CLOSED
-      - type: Time
-        value: 0
-        actuator: V_PUB
-        action: OPEN
-      - type: Time
-        value: 0
-        actuator: P_RAW1
-        action: CLOSED
-  - name: PLC2
-    ip: 192.168.1.2
-    mac: 11:22:33:44:55:02
-    sensors:
-      - T2
-    actuators:
-      - V_ER2i
-    controls:
-      - type: Time
-        value: 0
-        actuator: V_ER2i
-        action: CLOSED
-      - type: Above
-        dependant: T2
-        value: 0.32
-        actuator: V_ER2i
-        action: CLOSED
-      - type: Below
-        dependant: T2
-        value: 0.16
-        actuator: V_ER2i
-        action: OPEN
-
-valves:
-  - name: V_Gi_G
-    initial_state: Closed
-  - name: V_Gi_B
-    initial_state: Open
-  - name: V_SWaT
-    initial_state: Closed
-  - name: V_PUB
-    initial_state: Open
-  - name: V_ER2i
-    initial_state: Open
-  - name: V_ER2o
-    initial_state: Open
-  - name: V_ER1i
-    initial_state: Closed
-  - name: V_ER1o
-    initial_state: Closed
-  - name: FCV_ER
-    initial_state: Open
-  - name: FCV_RWin
-    initial_state: Open
-  - name: 1
-    initial_state: Open
-  - name: 2
-    initial_state: Open
-  - name: 3
-    initial_state: Open
-  - name: 4
-    initial_state: Open
-  - name: 5
-    initial_state: Open
-  - name: 6
-    initial_state: Open
-  - name: 7
-    initial_state: Open
-  - name: 8
-    initial_state: Open
-  - name: 9
-    initial_state: Open
-  - name: 10
-    initial_state: Open
-  - name: 11
-    initial_state: Open
-  - name: 12
-    initial_state: Open
-
-tanks:
-  - name: T1
-    initial_value: 0.3129975
-  - name: T2
-    initial_value: 0.2369489
-  - name: T0
-    initial_value: 0.4259549
-
-
-pumps:
-  - name: P_RAW1
-    initial_state: Open
-  - name: P_RAW2
-    initial_state: Closed
-  - name: P_B1
-    initial_state: Open
-  - name: P_B2
-    initial_state: Closed
-
-#valves:
-#  - name: V_Gi_G
-#    initial_state: Closed
-#  - name: V_Gi_B
-#    initial_state: Open
-#  - name: V_SWaT
-#    initial_state: Closed
-#  - name: V_PUB
-#    initial_state: Closed
-#  - name: V_ER2i
-#    initial_state: Closed
-#  - name: V_ER2o
-#    initial_state: Open
-#  - name: V_ER1i
-#    initial_state: Open
-#  - name: V_ER1o
-#    initial_state: Closed
-#  - name: FCV_ER
-#    initial_state: Open
-#  - name: FCV_RWin
-#    initial_state: Open
-#  - name: V1
-#    initial_state: Open
-#  - name: V2
-#    initial_state: Open
-#  - name: V3
-#    initial_state: Open
-#  - name: V4
-#    initial_state: Open
-#  - name: V5
-#    initial_state: Open
-#  - name: V6
-#    initial_state: Open
-#  - name: V7
-#    initial_state: Open
-#  - name: V8
-#    initial_state: Open
-#  - name: V9
-#    initial_state: Open
-#  - name: V10
-#    initial_state: Open
-#  - name: V11
-#    initial_state: Open
-#  - name: V12
-#    initial_state: Open
-#
-#tanks: CAME FROM wadi_map_dda_run55.inp
-#  - name: T0
-#    initial_value: 0.5629288
-#  - name: T1
-#    initial_value: 0.3212883
-#  - name: T2
-#    initial_value: 0.1466138
-#
-#
-#pumps:
-#  - name: P_RAW1
-#    initial_state: Closed
-#  - name: P_RAW2
-#    initial_state: Closed
-#  - name: P_B1
-#    initial_state: Open
-#  - name: P_B2
-#    initial_state: Closed
-
-time:
-  - hydraulic_timestep: 0:01
-  - duration: 144:00
+{'actuators': [{'initial_state': 'open', 'name': 'P_RAW1'},
+               {'initial_state': 'closed', 'name': 'P_RAW2'},
+               {'initial_state': 'closed', 'name': 'P_B2'},
+               {'initial_state': 'open', 'name': 'P_B1'},
+               {'initial_state': 'closed', 'name': 'V_Gi_G'},
+               {'initial_state': 'open', 'name': 'V_Gi_B'},
+               {'initial_state': 'closed', 'name': 'V_SWaT'},
+               {'initial_state': 'open', 'name': 'V_PUB'},
+               {'initial_state': 'open', 'name': 'V_ER2i'},
+               {'initial_state': 'open', 'name': 'V_ER2o'},
+               {'initial_state': 'closed', 'name': 'V_ER1i'},
+               {'initial_state': 'closed', 'name': 'V_ER1o'},
+               {'initial_state': 'open', 'name': 'FCV_ER'},
+               {'initial_state': 'open', 'name': 'FCV_RWin'},
+               {'initial_state': 'open', 'name': '1'},
+               {'initial_state': 'open', 'name': '2'},
+               {'initial_state': 'open', 'name': '3'},
+               {'initial_state': 'open', 'name': '4'},
+               {'initial_state': 'open', 'name': '5'},
+               {'initial_state': 'open', 'name': '6'},
+               {'initial_state': 'open', 'name': '7'},
+               {'initial_state': 'open', 'name': '8'},
+               {'initial_state': 'open', 'name': '9'},
+               {'initial_state': 'open', 'name': '10'},
+               {'initial_state': 'open', 'name': '11'},
+               {'initial_state': 'open', 'name': '12'}],
+# 'db_path': 'added by test',
+ 'inp_file': '/tmp/pycharm_project_303/test/auxilary_testing_files/wadi_map_pda_original.inp',
+ 'iterations': 2,
+ 'log_level': 'debug',
+ 'mininet_cli': False,
+ 'network_topology_type': 'simple',
+ 'output_path': '/tmp/pycharm_project_303/test/auxilary_testing_files/output',
+ 'plcs': [{'actuators': ['P_RAW1', 'V_PUB'],
+           'attacks': [{'actuators': ['P_RAW1'],
+                        'command': 'closed',
+                        'end': 10,
+                        'name': 'Close PRAW1 from iteration 5 to 10',
+                        'start': 5,
+                        'type': 'Time'},
+                       {'actuators': ['P_RAW1'],
+                        'command': 'closed',
+                        'name': 'Close PRAW1 when T2 < 0.16',
+                        'sensor': 'T2',
+                        'type': 'Below',
+                        'value': 0.16}],
+           'controls': [{'action': 'open',
+                         'actuator': 'V_PUB',
+                         'dependant': 'T0',
+                         'type': 'below',
+                         'value': 0.256},
+                        {'action': 'closed',
+                         'actuator': 'V_PUB',
+                         'dependant': 'T0',
+                         'type': 'above',
+                         'value': 0.448},
+                        {'action': 'closed',
+                         'actuator': 'P_RAW1',
+                         'dependant': 'T0',
+                         'type': 'below',
+                         'value': 0.256},
+                        {'action': 'open',
+                         'actuator': 'P_RAW1',
+                         'dependant': 'T2',
+                         'type': 'below',
+                         'value': 0.16},
+                        {'action': 'closed',
+                         'actuator': 'P_RAW1',
+                         'dependant': 'T2',
+                         'type': 'above',
+                         'value': 0.32},
+                        {'action': 'open',
+                         'actuator': 'V_PUB',
+                         'type': 'time',
+                         'value': 0},
+                        {'action': 'closed',
+                         'actuator': 'P_RAW1',
+                         'type': 'time',
+                         'value': 0}],
+           'name': 'PLC1',
+           'sensors': ['T0']},
+          {'actuators': ['V_ER2i'],
+           'controls': [{'action': 'closed',
+                         'actuator': 'V_ER2i',
+                         'dependant': 'T2',
+                         'type': 'above',
+                         'value': 0.32},
+                        {'action': 'open',
+                         'actuator': 'V_ER2i',
+                         'dependant': 'T2',
+                         'type': 'below',
+                         'value': 0.16},
+                        {'action': 'closed',
+                         'actuator': 'V_ER2i',
+                         'type': 'time',
+                         'value': 0}],
+           'name': 'PLC2',
+           'sensors': ['T2']}],
+ 'simulator': 'pdd',
+ 'time': [{'duration': 518400.0}, {'hydraulic_timestep': 60.0}]}
