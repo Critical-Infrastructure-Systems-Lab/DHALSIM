@@ -4,7 +4,8 @@ import tempfile
 from pathlib import Path
 
 import yaml
-from schema import Schema, Or, And, Use, Optional, SchemaError
+from yamlinclude import YamlIncludeConstructor
+from schema import Schema, Or, And, Use, Optional, SchemaError, Regex
 
 from dhalsim.parser.input_parser import InputParser
 
@@ -252,8 +253,8 @@ class ConfigParser:
 
     def generate_attacks(self, yaml_data):
         if self.data.get('run_attack'):
-            if self.data.get('attacks_path'):
-                for device_attack in self.data.get('attacks_path').get('device_attacks'):
+            if self.data.get('attacks'):
+                for device_attack in self.data.get('attacks').get('device_attacks'):
                     for plc in yaml_data['plcs']:
                         if set(device_attack['actuators']).issubset(set(plc['actuators'])):
                             if 'attacks' not in plc.keys():
