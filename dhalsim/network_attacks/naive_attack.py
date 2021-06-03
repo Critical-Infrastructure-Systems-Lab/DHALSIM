@@ -14,7 +14,17 @@ from dhalsim.network_attacks.synced_attack import SyncedAttack
 
 class PacketAttack(SyncedAttack):
     """
-    This is a packet attack class.
+    This is a Naive Man In The Middle attack. This  attack will modify
+    the data that is passed around in tcp packets on the network, in order to
+    change the values of tags before they reach the requesting PLC.
+
+    It does this by capturing the responses of the the target plc, and changing
+    some bytes in the TCP packet so that the value is a different value.
+
+    When preforming this attack, you can use either an offset, or an absolute value.
+
+    When using this type of attack, all the responses of the PLC are modified.
+    You cannot modify the values of individual tags.
 
     :param intermediate_yaml_path: The path to the intermediate YAML file
     :param yaml_index: The index of the attack in the intermediate YAML
