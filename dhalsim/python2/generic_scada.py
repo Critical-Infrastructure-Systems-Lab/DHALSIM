@@ -25,47 +25,6 @@ class InvalidControlValue(Error):
     """Raised when tag you are looking for does not exist"""
 
 
-def generate_real_tags(plcs):
-    """
-    Generates real tags with all sensors and actuators attached to pls in the network.
-
-    :param plcs: list of plcs
-    """
-    real_tags = []
-
-    for plc in plcs:
-        if 'sensors' not in plc:
-            plc['sensors'] = list()
-
-        if 'actuators' not in plc:
-            plc['actuators'] = list()
-
-        for sensor in plc['sensors']:
-            if sensor != "":
-                real_tags.append((sensor, 1, 'REAL'))
-        for actuator in plc['actuators']:
-            if actuator != "":
-                real_tags.append((actuator, 1, 'REAL'))
-
-    return tuple(real_tags)
-
-
-def generate_tags(taggable):
-    """
-    Generates tags from a list of taggable entities (sensor or actuator)
-
-    :param taggable: a list of strings containing names of things like tanks, pumps, and valves
-    """
-    tags = []
-
-    if taggable:
-        for tag in taggable:
-            if tag and tag != "":
-                tags.append((tag, 1))
-
-    return tags
-
-
 class GenericScada(SCADAServer):
     """
     This class represents a scada. This scada knows what plcs it is collecting data from by reading the
@@ -92,7 +51,7 @@ class GenericScada(SCADAServer):
         # Create server, real tags are generated
         scada_server = {
             'address': self.intermediate_yaml['scada']['local_ip'],
-            'tags': generate_real_tags(self.intermediate_yaml['plcs'])
+            'tags': self.generate_real_tags(self.intermediate_yaml['plcs'])
         }
 
         # Create protocol
@@ -130,6 +89,47 @@ class GenericScada(SCADAServer):
         """
         self.conn = sqlite3.connect(self.intermediate_yaml["db_path"])
         self.cur = self.conn.cursor()
+
+    @staticmethod
+    def generate_real_tags(plcs):
+        """
+        Generates real tags with all sensors and actuators attached to plcs in the network.
+
+        :param plcs: list of plcs
+        """
+        real_tags = []
+
+        for plc in plcs:
+            if 'sensors' not in plc:
+                plc['sensors'] = list()
+
+            if 'actuators' not in plc:
+                plc['actuators'] = list()
+
+            for sensor in plc['sensors']:
+                if sensor != "":
+                    real_tags.append((sensor, 1, 'REAL'))
+            for actuator in plc['actuators']:
+                if actuator != "":
+                    real_tags.append((actuator, 1, 'REAL'))
+
+        return tuple(real_tags)
+
+    @staticmethod
+    def generate_tags(taggable):
+        """
+        Generates tags from a list of taggable entities (sensor or actuator)
+
+        :param taggable: a list of strings containing names of things like tanks, pumps, and valves
+        """
+        tags = []
+
+        if taggable:
+            for tag in taggable:
+                if tag and tag != "":
+                    tags.append((tag, 1))
+
+        return tags
 
     def pre_loop(self, sleep=0.5):
         """
@@ -197,8 +197,8 @@ class GenericScada(SCADAServer):
 
             tags = []
 
-            tags.extend(generate_tags(PLC['sensors']))
-            tags.extend(generate_tags(PLC['actuators']))
+            tags.extend(self.generate_tags(PLC['sensors']))
+            tags.extend(self.generate_tags(PLC['actuators']))
 
             plcs.append((PLC['public_ip'], tags))
 
