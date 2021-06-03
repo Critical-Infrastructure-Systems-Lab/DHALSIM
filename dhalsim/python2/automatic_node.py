@@ -7,7 +7,7 @@ import yaml
 
 class NodeControl:
     """
-    This class is started for a ndoe. It can start all the subprocess and terminate them again.
+    This class is started for a node. It can start all the subprocess and terminate them again.
     """
     __metaclass__ = ABCMeta
 
