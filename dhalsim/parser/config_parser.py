@@ -54,6 +54,8 @@ class ConfigParser:
             sys.exit(exc.code)
 
         self.batch_mode = 'batch_simulations' in self.data
+        if self.batch_mode:
+            self.batch_simulations = self.data['batch_simulations']
 
     @staticmethod
     def apply_schema(config_path: Path) -> dict:
