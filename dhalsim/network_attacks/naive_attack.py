@@ -96,7 +96,7 @@ class PacketAttack(SyncedAttack):
                         del p[IP].chksum
 
                         packet.payload = bytes(p)
-                        self.logger.debug("Network packet value overwritten.")
+                        self.logger.debug(f"Value of network packet for {p[IP].dst} overwritten.")
 
                     packet.mangle()
 

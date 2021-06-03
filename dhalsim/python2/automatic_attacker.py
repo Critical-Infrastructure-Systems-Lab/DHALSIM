@@ -8,6 +8,14 @@ from pathlib import Path
 from automatic_node import NodeControl
 
 
+class Error(Exception):
+    """Base class for exceptions in this module."""
+
+
+class NoSuchAttack(Error):
+    """Raised when the configuration file is empty"""
+
+
 class AttackerControl(NodeControl):
     """This class is started for a attacker. It starts a tcpdump and a network attack."""
 
@@ -63,6 +71,8 @@ class AttackerControl(NodeControl):
             generic_plc_path = Path(__file__).parent.parent.absolute() / "network_attacks" / "mitm_attack.py"
         elif self.this_attacker_data['type'] == 'naive':
             generic_plc_path = Path(__file__).parent.parent.absolute() / "network_attacks" / "naive_attack.py"
+        else:
+            raise NoSuchAttack("Attack {attack} does not exists.".format(attack=self.this_attacker_data['type']))
 
         cmd = ["python3", str(generic_plc_path), str(self.intermediate_yaml), str(self.attacker_index)]
 

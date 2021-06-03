@@ -54,14 +54,36 @@ class ConfigParser:
 
         self.config_path = config_path.absolute()
 
-        YamlIncludeConstructor.add_to_loader_class(loader_class=yaml.FullLoader, base_dir=config_path.absolute().parent)
+        YamlIncludeConstructor.add_to_loader_class(loader_class=yaml.FullLoader,
+                                                   base_dir=config_path.absolute().parent)
 
         try:
             self.data = self.apply_schema(self.config_path)
         except SchemaError as exc:
             sys.exit(exc.code)
 
+        try:
+            self.do_checks(self.data)
+        except Error as exc:
+            sys.exit(exc)
+
         self.batch_mode = 'batch_simulations' in self.data
+
+    @staticmethod
+    def do_checks(data: dict):
+        ConfigParser.network_attack_only_complex(data)
+
+    @staticmethod
+    def network_attack_only_complex(data: dict):
+        """
+        Check if a network attack is applied on a complex topology
+        :param data:
+        """
+        if 'attacks' in data and 'network_attacks' in data['attacks'] and len(
+                data['attacks']['network_attacks']) > 0:
+            if data['network_topology_type'] == 'simple':
+                raise NetworkAttackError(
+                    "Network attacks can only be applied on a complex topology")
 
     @staticmethod
     def apply_schema(config_path: Path) -> dict:
@@ -99,7 +121,8 @@ class ConfigParser:
                         Use(Path),
                         Use(lambda p: config_path.absolute().parent / p),
                         Path.is_file,
-                        Schema(lambda f: f.suffix == '.inp', error="Suffix of inp_file should be .inp")),
+                        Schema(lambda f: f.suffix == '.inp',
+                               error="Suffix of inp_file should be .inp")),
                     Optional('output_path', default=config_path.absolute().parent / 'output'): And(
                         Use(str),
                         Use(Path),
@@ -109,24 +132,28 @@ class ConfigParser:
                         Use(Path),
                         Use(lambda p: config_path.absolute().parent / p),
                         Path.is_file,
-                        Schema(lambda f: f.suffix == '.csv', error="Suffix of initial_tank_data should be .csv")),
+                        Schema(lambda f: f.suffix == '.csv',
+                               error="Suffix of initial_tank_data should be .csv")),
                     Optional('demand_patterns'): And(
                         Use(Path),
                         Use(lambda p: config_path.absolute().parent / p),
                         Path.exists,
                         Or(
                             Path.is_dir,
-                            Schema(lambda f: f.suffix == '.csv', error="Suffix of demand_patterns should be .csv"))),
+                            Schema(lambda f: f.suffix == '.csv',
+                                   error="Suffix of demand_patterns should be .csv"))),
                     Optional('network_loss_data'): And(
                         Use(Path),
                         Use(lambda p: config_path.absolute().parent / p),
                         Path.is_file,
-                        Schema(lambda f: f.suffix == '.csv', error="Suffix of network_loss_data should be .csv")),
+                        Schema(lambda f: f.suffix == '.csv',
+                               error="Suffix of network_loss_data should be .csv")),
                     Optional('network_delay_data'): And(
                         Use(Path),
                         Use(lambda p: config_path.absolute().parent / p),
                         Path.is_file,
-                        Schema(lambda f: f.suffix == '.csv', error="Suffix of network_delay_data should be .csv")),
+                        Schema(lambda f: f.suffix == '.csv',
+                               error="Suffix of network_delay_data should be .csv")),
                     str: object
                 }
             )
@@ -164,16 +191,132 @@ class ConfigParser:
         :return: A verified version of the data of the config file
         :rtype: dict
         """
-        string_pattern = Regex(r'^[a-zA-Z0-9_]+$', error="Error in string: '{}', Can only have a-z, A-Z, 0-9, and _")
+        string_pattern = Regex(r'^[a-zA-Z0-9_]+$',
+                               error="Error in string: '{}', Can only have a-z, A-Z, 0-9, and _")
 
-        attacks_schema = Schema({
-            str: object
+        trigger = Schema(
+            Or(
+                {
+                    'type': And(
+                        str,
+                        Use(str.lower),
+                        'time'
+                    ),
+                    'start': And(
+                        int,
+                        Schema(lambda i: i >= 0, error='start time must be positive'),
+                    ),
+                    'end': And(
+                        int,
+                        Schema(lambda i: i >= 0, error='end time must be positive'),
+                    ),
+                },
+                {
+                    'type': And(
+                        str,
+                        Use(str.lower),
+                        Or('below', 'above')
+                    ),
+                    'sensor': And(
+                        str,
+                        string_pattern,
+                    ),
+                    'value': And(
+                        float,
+                    ),
+                },
+                {
+                    'type': And(
+                        str,
+                        Use(str.lower),
+                        'between'
+                    ),
+                    'sensor': And(
+                        str,
+                        string_pattern,
+                    ),
+                    'lower_value': And(
+                        float,
+                    ),
+                    'upper_value': And(
+                        float,
+                    ),
+                },
+            )
+        )
+
+        device_attacks = Schema({
+            'name': str,
+            'trigger': trigger,
+            'actuator': And(
+                str,
+                string_pattern,
+            ),
+            'command': And(
+                str,
+                Use(str.lower),
+                Or('open', 'closed')
+            )
         })
 
+        network_attacks = Schema(
+            Or(
+                {
+                    'type': And(
+                        str,
+                        Use(str.lower),
+                        'naive_mitm',
+                    ),
+                    'name': And(
+                        str,
+                        string_pattern,
+                    ),
+                    'trigger': trigger,
+                    Or('value', 'offset', only_one=True): Or(float, And(int, Use(float))),
+                    'target': And(
+                        str,
+                        string_pattern
+                    )
+                },
+                {
+                    'type': And(
+                        str,
+                        Use(str.lower),
+                        'mitm',
+                    ),
+                    'name': And(
+                        str,
+                        string_pattern,
+                    ),
+                    'trigger': trigger,
+                    'target': And(
+                        str,
+                        string_pattern
+                    ),
+                    'tags': [{
+                        'tag': And(
+                            str,
+                            string_pattern,
+                        ),
+                        Or('value', 'offset', only_one=True): float,
+                    }]
+                }
+            )
+        )
+
         plc_schema = Schema([{
-            'name': string_pattern,
-            Optional('sensors'): [string_pattern],
-            Optional('actuators'): [string_pattern]
+            'name': And(
+                str,
+                string_pattern
+            ),
+            Optional('sensors'): [And(
+                str,
+                string_pattern
+            )],
+            Optional('actuators'): [And(
+                str,
+                string_pattern
+            )]
         }])
 
         config_schema = Schema({
@@ -197,7 +340,10 @@ class ConfigParser:
                 Use(str.lower),
                 Or('pdd', 'dd')),
             Optional('run_attack', default=True): bool,
-            Optional('attacks'): attacks_schema,
+            Optional('attacks'): {
+                Optional('device_attacks'): [device_attacks],
+                Optional('network_attacks'): [network_attacks],
+            },
             Optional('batch_simulations'): And(
                 int,
                 Schema(lambda i: i > 0, error='batch_simulations must be positive')),
@@ -247,77 +393,46 @@ class ConfigParser:
 
         :param yaml_data: The YAML data without the device attacks
         """
-        for device_attack in self.attacks_data['device_attacks']:
-            for plc in yaml_data['plcs']:
-                if device_attack['actuator'] in plc['actuators']:
-                    if 'attacks' not in plc.keys():
-                        plc['attacks'] = []
-                    plc['attacks'].append(device_attack)
-                    break
+        if 'attacks' in self.data and 'device_attacks' in self.data['attacks']:
+            for device_attack in self.data['attacks']['device_attacks']:
+                for plc in yaml_data['plcs']:
+                    if device_attack['actuator'] in plc['actuators']:
+                        if 'attacks' not in plc.keys():
+                            plc['attacks'] = []
+                        plc['attacks'].append(device_attack)
+                        break
         return yaml_data
 
-    def generate_network_attacks(self, network_attacks):
+    def generate_network_attacks(self):
         """
         This function will add device attacks to the appropriate PLCs in the intermediate yaml
 
         :param network_attacks: The YAML data of the network attacks
         """
-        for network_attack in network_attacks:
-            if "name" not in network_attack:
-                raise MissingValueError("No name specified an network attack")
+        if 'attacks' in self.data and 'network_attacks' in self.data['attacks']:
+            network_attacks = self.data['attacks']["network_attacks"]
+            for network_attack in network_attacks:
+                # Check existence and validity of target PLC
+                target = network_attack['target']
+                target_plc = None
+                for plc in self.data.get("plcs"):
+                    if plc['name'] == target:
+                        target_plc = plc
+                        break
+                if not target_plc:
+                    raise NoSuchPlc("PLC {plc} does not exists".format(plc=target))
 
-            # Check existence and validity of network attack type
-            if "type" not in network_attack:
-                raise MissingValueError("No type specified for network attack {name}".format(name=network_attack["name"]))
-            network_attack['type'] = network_attack['type'].lower()
-            if network_attack['type'] not in ['mitm', 'naive']:
-                raise InvalidValueError(f"{network_attack['type']} is not a valid network attack type")
+                if network_attack['type'] == 'mitm':
+                    # Check existence of tags on target PLC
+                    tags = []
+                    for tag in network_attack['tags']:
+                        tags.append(tag['tag'])
+                    if not set(tags).issubset(set(target_plc['actuators'] + target_plc['sensors'])):
+                        raise NoSuchTag(
+                            f"PLC {target_plc['name']} does not have all the tags specified.")
 
-            # Check existence and validity of target PLC
-            if "target" not in network_attack:
-                raise MissingValueError("No target specified for network attack {name}".format(name=network_attack["name"]))
-            target = network_attack['target']
-            target_plc = None
-            for plc in self.cpa_data.get("plcs"):
-                if plc['name'] == target:
-                    target_plc = plc
-                    break
-            if not target_plc:
-                raise NoSuchPlc("PLC {plc} does not exists".format(plc=target))
-
-            if "trigger" not in network_attack:
-                raise MissingValueError("No trigger specified for network attack {name}".format(name=network_attack["name"]))
-
-            if "type" not in network_attack["trigger"]:
-                raise MissingValueError("No trigger type specified for network attack {name}".format(name=network_attack["name"]))
-
-            network_attack["trigger"]["type"] = network_attack["trigger"]["type"].lower()
-
-            if network_attack["trigger"]["type"] == 'time':
-                if "start" not in network_attack["trigger"]:
-                    raise MissingValueError("No start time specified for network attack {name}".format(name=network_attack["name"]))
-                if "end" not in network_attack["trigger"]:
-                    raise MissingValueError("No end time specified for network attack {name}".format(name=network_attack["name"]))
-            elif network_attack["trigger"]["type"] == 'between':
-                if "lower_value" not in network_attack["trigger"]:
-                    raise MissingValueError("No lower_value specified for network attack {name}".format(name=network_attack["name"]))
-                if "upper_value" not in network_attack["trigger"]:
-                    raise MissingValueError("No upper_value specified for network attack {name}".format(name=network_attack["name"]))
-            elif network_attack["trigger"]["type"] == 'above' or network_attack["trigger"]["type"] == 'below':
-                if "value" not in network_attack["trigger"]:
-                    raise MissingValueError("No value specified for network attack {name}".format(name=network_attack["name"]))
-            else:
-                raise InvalidValueError("Trigger type should be either 'time', 'between', 'above' or 'below' for network attack {name}".format(name=network_attack["name"]))
-
-            if network_attack['type'] == 'mitm':
-                # Check existence of tags on target PLC
-                tags = []
-                for tag in network_attack['tags']:
-                    tags.append(tag['tag'])
-                if not set(tags).issubset(set(target_plc['actuators'] + target_plc['sensors'])):
-                    raise NoSuchTag(f"PLC {target_plc['name']} does not have all the tags specified.")
-
-        return network_attacks
+            return network_attacks
+        return []
 
     def generate_temporary_dirs(self):
         """Generates the temporary directory and yaml/db paths"""
@@ -378,12 +493,8 @@ class ConfigParser:
         yaml_data = InputParser(yaml_data).write()
 
         # Parse the device attacks from the config file
-        if "attacks_path" in self.config_data.keys():
-            if self.attacks_data is not None:
-                if 'device_attacks' in self.attacks_data.keys():
-                    yaml_data = self.generate_device_attacks(yaml_data)
-                if "network_attacks" in self.attacks_data.keys():
-                    yaml_data["network_attacks"] = self.generate_network_attacks(self.attacks_data["network_attacks"])
+        yaml_data = self.generate_device_attacks(yaml_data)
+        yaml_data["network_attacks"] = self.generate_network_attacks()
 
         # Write data to yaml file
         with self.yaml_path.open(mode='w') as intermediate_yaml:
