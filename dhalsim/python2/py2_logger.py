@@ -18,8 +18,14 @@ def get_logger(logging_level):
         return py2_logger
     # Configure logger level
     py2_handler = logging.StreamHandler(stream=sys.stdout)
-    logging_format = logging.Formatter('%(asctime)s - %(levelname)s @ %(filename)s: %(message)s',
-                                       '%H:%M:%S')
+
+    # Print originating filename only in debug mode
+    if log_level == logging.DEBUG:
+        logging_format = logging\
+            .Formatter('%(asctime)s - %(levelname)s @ %(filename)s: %(message)s', '%H:%M:%S')
+    else:
+        logging_format = logging.Formatter('%(asctime)s - %(levelname)s: %(message)s', '%H:%M:%S')
+
     py2_handler.setFormatter(logging_format)
     py2_logger.addHandler(py2_handler)
     # Set level of logger
