@@ -358,12 +358,13 @@ class ConfigParser:
             else:
                 raise InvalidValueError("Trigger type should be either 'time', 'between', 'above' or 'below' for network attack {name}".format(name=network_attack["name"]))
 
-            # Check existence of tags on target PLC
-            tags = []
-            for tag in network_attack['tags']:
-                tags.append(tag['tag'])
-            if not set(tags).issubset(set(target_plc['actuators'] + target_plc['sensors'])):
-                raise NoSuchTag(f"PLC {target_plc['name']} does not have all the tags specified.")
+            if network_attack['type'] == 'mitm':
+                # Check existence of tags on target PLC
+                tags = []
+                for tag in network_attack['tags']:
+                    tags.append(tag['tag'])
+                if not set(tags).issubset(set(target_plc['actuators'] + target_plc['sensors'])):
+                    raise NoSuchTag(f"PLC {target_plc['name']} does not have all the tags specified.")
 
         return network_attacks
 

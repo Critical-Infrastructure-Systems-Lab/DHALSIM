@@ -43,10 +43,7 @@ def translate_payload_to_float(raw_payload):
 
     :param raw_payload: The payload to convert
     """
-    hex_value = raw_payload.hex()
-    length = len(hex_value)
-    value_part = hex_value[length - 8 : length]
-    return struct.unpack('<f', binascii.unhexlify(value_part))[0]
+    return struct.unpack('<f', raw_payload[-4:])[0]
 
 
 def translate_float_to_payload(float_value, original_payload):
@@ -56,11 +53,6 @@ def translate_float_to_payload(float_value, original_payload):
     :param float_value: The float number to convert
     :param original_payload: The original payload of the packet
     """
-    hex_payload = original_payload.hex()
-    length = len(hex_payload)
-
-    payload_save = hex_payload[0 : length - 8]
-    hex_value = hex(struct.unpack('>I', struct.pack('<f', float_value))[0])
-
-    result_hex = payload_save + hex_value[2:len(hex_value)]
-    return binascii.unhexlify(result_hex)
+    float_in_bytes = struct.pack('<f', float_value)
+    result = original_payload[0:-4] + float_in_bytes
+    return result

