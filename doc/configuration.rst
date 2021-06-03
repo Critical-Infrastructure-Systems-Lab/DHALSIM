@@ -8,20 +8,6 @@ Example with all options:
 .. code-block:: yaml
 
     inp_file: map.inp
-    network_topology_type: complex
-    output_path: output
-    iterations: 500
-    mininet_cli: False
-    log_level: info
-    simulator: pdd
-    run_attack: True
-    batch_simulations: 20
-    initial_tank_values: initial_tank.csv
-    demand_patterns: demand_patterns/
-    network_loss_data: losses.csv
-    network_delay_data: delays.csv
-
-    attacks: "Maartens job"
 
     plcs:
       - name: PLC1
@@ -38,6 +24,49 @@ Example with all options:
           - Valve2F
         actuators:
           - Valve2
+
+    network_topology_type: complex
+    output_path: output
+    iterations: 500
+    mininet_cli: False
+    log_level: info
+    simulator: pdd
+    batch_simulations: 20
+    initial_tank_values: initial_tank.csv
+    demand_patterns: demand_patterns/
+    network_loss_data: losses.csv
+    network_delay_data: delays.csv
+
+    attacks:
+      device_attacks:
+        - name: attack1
+          trigger:
+            type: time
+            start: 5
+            end: 10
+          actuator: Pump1
+          command: closed
+
+      network_attacks:
+        - name: attack2
+          type: mitm
+          trigger:
+            type: above
+            sensor: Valve2F
+            value: 0.16
+          tags:
+            - tag: Tank2
+              value: 2.0
+          target: PLC2
+        - name: attack3
+          type: naive_mitm
+          trigger:
+            type: between
+            sensor: Tank1
+            lower_value: 0.10
+            upper_value: 0.16
+          value: 0.5
+          target: PLC1
 
 In the following sections, every entry is explained.
 
@@ -70,7 +99,7 @@ those PLCs control. :code:`plcs` is a list of PLCs. A PLC has the following form
 
 The :code:`name`, :code:`sensors` and :code:`actuators` can only contain the the characters :code:`a-z`, :code:`A-Z`, :code:`0-9` and :code:`_`.
 
-If you want to put the PLCs in a different file, see the section :ref:`PLCs in a different file`.
+If you want to put the PLCs in a separate file, see the section :ref:`PLCs in a separate file`.
 
 sensors
 ~~~~~~~~~~~~
@@ -138,6 +167,14 @@ iterations
 The iterations value represents for how many iterations you would like the water simulation to run.
 One iteration represents one hydraulic time-step.
 
+mininet_cli
+------------------------
+*This is an optional value with default*: :code:`False`
+
+If the :code:`mininet_cli` option is :code:`True`, then after the network is setup, the mininet CLI interface will start.
+See the `mininet tutorial on the CLI <http://mininet.org/walkthrough/#part-3-mininet-command-line-interface-cli-commands>`_ for more information
+
+:code:`mininet_cli` should be a boolean.
 
 log_level
 ------------------------
@@ -153,15 +190,6 @@ DHALSIM uses Python's built-in :code:`logging` module to log events. Using the `
 * :code:`error`
 * :code:`critical`
     * Critical errors are errors that make DHALSIM crash. This will always be logged to the console.
-
-mininet_cli
-------------------------
-*This is an optional value with default*: :code:`False`
-
-If the :code:`mininet_cli` option is :code:`True`, then after the network is setup, the mininet CLI interface will start.
-See the `mininet tutorial on the CLI <http://mininet.org/walkthrough/#part-3-mininet-command-line-interface-cli-commands>`_ for more information
-
-:code:`mininet_cli` should be a boolean.
 
 simulator
 ------------------------
@@ -277,13 +305,15 @@ An example would look like this :
     22.03,42.46,17.18
     22.04,42.47,17.19
 
-attacks_path
+attacks
 ------------------------
 *This is an optional value*
 
-This is the path, relative to the config file, to the attacks YAML file.
-The contents of this file are described in the :ref:`Attacks` section.
+There are multiple types of attack available. They are described in the :ref:`Attacks` section.
 If this option is left out, or commented out, the simulation will run without attacks.
+
+If you want to put the attacks in a separate file, see the section :ref:`Attacks in a separate file`.
+
 
 
 Splitting up the config file
@@ -293,7 +323,7 @@ This is done using the :code:`!include` keyword.
 
 Here follow a few examples:
 
-PLCs in a different file
+PLCs in a separate file
 ------------------------
 
 If you would like to have your :code:`plcs` stored in a separate yaml file, that is possible by including
@@ -323,3 +353,49 @@ And the :code:`plcs.yaml` would look like:
       - Valve2F
     actuators:
       - Valve2
+
+Attacks in a separate file
+----------------------------
+
+If you would like to have your :code:`attacks` stored in a separate yaml file, that is possible by including
+it by using :code:`!include`.
+
+This would be in the config file:
+
+.. code-block:: yaml
+
+    attacks: !include attacks.yaml
+
+And the :code:`attacks.yaml` would look like:
+
+.. code-block:: yaml
+
+   device_attacks:
+     - name: attack1
+       trigger:
+         type: time
+         start: 5
+         end: 10
+       actuator: Pump1
+       command: closed
+
+   network_attacks:
+     - name: attack2
+       type: mitm
+       trigger:
+         type: above
+         sensor: Valve2F
+         value: 0.16
+       tags:
+         - tag: Tank2
+           value: 2.0
+       target: PLC2
+     - name: attack3
+       type: naive_mitm
+       trigger:
+         type: between
+         sensor: Tank1
+         lower_value: 0.10
+         upper_value: 0.16
+       value: 0.5
+       target: PLC1
