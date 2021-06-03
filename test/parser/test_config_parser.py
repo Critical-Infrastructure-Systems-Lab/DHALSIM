@@ -71,6 +71,8 @@ def test_generate_intermediate_yaml(mocker, tmpdir, wadi_config_yaml_path, fille
 
     yaml_path = ConfigParser(wadi_config_yaml_path).generate_intermediate_yaml()
 
+    print(yaml_path)
+
     with yaml_path.open(mode='r') as reality:
         actual = yaml.safe_load(reality)
 
