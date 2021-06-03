@@ -243,6 +243,10 @@ class GenericPLC(BasePLC):
         raise TagDoesNotExist(tag)
 
     def update_cache(self):
+        """
+        Update the cache of this plc by receiving all the required tags.
+        When something cannot be received, the previous value is used.
+        """
         for cached_tag in self.cache:
             for i, plc_data in enumerate(self.intermediate_yaml["plcs"]):
                 if i == self.yaml_index:
@@ -252,8 +256,10 @@ class GenericPLC(BasePLC):
                         received = Decimal(self.receive((cached_tag, 1), plc_data["public_ip"]))
                         self.cache[cached_tag] = received
                     except Exception as e:
-                        self.logger.debug("{plc} receive {tag} from {ip} failed with exception '{e}'".format(
-                            plc=self.intermediate_plc["name"], tag=cached_tag, ip=plc_data["public_ip"], e=str(e)))
+                        self.logger.debug(
+                            "{plc} receive {tag} from {ip} failed with exception '{e}'".format(
+                                plc=self.intermediate_plc["name"], tag=cached_tag,
+                                ip=plc_data["public_ip"], e=str(e)))
 
     def set_tag(self, tag, value):
         """
