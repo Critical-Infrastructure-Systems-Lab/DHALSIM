@@ -37,4 +37,4 @@ cd ${cwd}
 sudo python3 -m pip install -e .
 
 # Installation complete
-printf "\nInstallation finished. You can now run DHALSIM by using \n\t\<sudo dhalsim your_config.yaml\>.\n"
+printf "\nInstallation finished. You can now run DHALSIM by using \n\t<sudo dhalsim your_config.yaml>.\n"
