@@ -35,11 +35,13 @@ def test_dict():
             "device_attacks": [
                 {
                     "name": "Close PRAW1 from iteration 5 to 10",
-                    "type": "Time",
-                    "actuators": ["P_RAW1"],
+                    "trigger": {
+                        "type": "Time",
+                        "start": 5,
+                        "end": 10
+                    },
+                    "actuator": "P_RAW1",
                     "command": "closed",
-                    "start": 5,
-                    "end": 10,
                 }
             ]
         },

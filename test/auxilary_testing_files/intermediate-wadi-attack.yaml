@@ -48,7 +48,7 @@ plcs:
     attacks:
       - name: "Close PRAW1 from iteration 5 to 10"
         trigger:
-          - type: "Time"
+          - type: "time"
             start: 5
             end: 10
         actuators:
@@ -56,7 +56,7 @@ plcs:
         command: "closed"
       - name: "Close PRAW1 when T2 < 0.16"
         trigger:
-          - type: "Below"
+          - type: "below"
             sensor: "T2"
             value: 0.16
         actuators:
