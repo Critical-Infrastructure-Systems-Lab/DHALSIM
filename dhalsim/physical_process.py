@@ -7,25 +7,22 @@ from decimal import Decimal
 
 import pandas as pd
 import progressbar
-import wntr
-import wntr.network.controls as controls
 import sqlite3
 import sys
 import time
-from datetime import datetime, timedelta
 from pathlib import Path
 from dhalsim.py3_logger import get_logger
-
 import wntr
 import wntr.network.controls as controls
 import yaml
 
 
 class PhysicalPlant:
-
+    """
+    Class representing the plant itself, runs each iteration. This class also deals with WNTR
+    and updates the database.
+    """
     def __init__(self, intermediate_yaml):
-        logging.getLogger('wntr').setLevel(logging.WARNING)
-
         signal.signal(signal.SIGINT, self.interrupt)
         signal.signal(signal.SIGTERM, self.interrupt)
 
@@ -34,6 +31,7 @@ class PhysicalPlant:
         with self.intermediate_yaml.open(mode='r') as file:
             self.data = yaml.safe_load(file)
 
+        logging.getLogger('wntr').setLevel(logging.WARNING)
         self.logger = get_logger(self.data['log_level'])
 
         self.ground_truth_path = Path(self.data["output_path"]) / "ground_truth.csv"
@@ -79,23 +77,15 @@ class PhysicalPlant:
             a_control = controls.Control(control['condition'], an_action, name=control['name'])
             self.wn.add_control(control['name'], a_control)
 
-        simulator_string = self.data['simulator']
-
-        if simulator_string == 'pdd':
-            self.logger.info("Running simulation using PDD.")
+        if self.data['simulator'] == 'pdd':
             self.wn.options.hydraulic.demand_model = 'PDD'
-        elif simulator_string == 'dd':
-            self.logger.info("Running simulation using DD.")
-        else:
-            self.logger.critical('Invalid simulation mode, exiting.')
-            sys.exit(1)
 
         # Set initial physical conditions
         self.set_initial_values()
 
         self.sim = wntr.sim.WNTRSimulator(self.wn)
 
-        self.logger.info("Starting simulation for " + str(self.data['inp_file']) + " topology.")
+        self.logger.info("Starting simulation for " + os.path.basename(str(self.data['inp_file'])) + " topology.")
 
     def get_node_list_by_type(self, a_list, a_type):
         result = []
@@ -168,7 +158,7 @@ class PhysicalPlant:
             else:
                 values_list.extend([self.wn.get_link(pump).status.value])
 
-                # Get valves flows and status
+        # Get valves flows and status
         for valve in self.valve_list:
             values_list.extend([self.wn.get_link(valve).flow])
 
@@ -180,6 +170,7 @@ class PhysicalPlant:
         return values_list
 
     def update_controls(self):
+        """Updates all controls in WNTR."""
         for control in self.control_list:
             rows_1 = self.c.execute('SELECT value FROM plant WHERE name = ?',
                                     (control['name'],)).fetchone()
@@ -196,11 +187,16 @@ class PhysicalPlant:
             self.wn.add_control(control['name'], new_control)
 
     def write_results(self, results):
+        """Writes ground truth file."""
         with self.ground_truth_path.open(mode='w') as f:
             writer = csv.writer(f)
             writer.writerows(results)
 
     def get_plcs_ready(self):
+        """
+        Checks whether all PLCs have finished their loop.
+        :return: boolean whether all PLCs have finished
+        """
         self.c.execute("""SELECT count(*)
                         FROM sync
                         WHERE flag <= 0""")
@@ -210,7 +206,8 @@ class PhysicalPlant:
     def main(self):
         """Runs the simulation for x iterations."""
 
-        # We want to simulate only 1 hydraulic timestep each time MiniCPS processes the simulation data
+        # We want to simulate only one hydraulic timestep each time MiniCPS processes the
+        # simulation data
         self.wn.options.time.duration = self.wn.options.time.hydraulic_timestep
 
         master_time = -1
@@ -257,7 +254,7 @@ class PhysicalPlant:
             self.update_tanks()
             self.update_pumps()
             self.update_valves()
-            self.update_juntions()
+            self.update_junctions()
 
             # Set sync flags for nodes
             self.c.execute("UPDATE sync SET flag=0")
@@ -289,7 +286,7 @@ class PhysicalPlant:
                            (str(flow), valve + "F",))
             self.conn.commit()
 
-    def update_juntions(self):
+    def update_junctions(self):
         """Update junction pressure in database."""
         for junction in self.junction_list:
             level = Decimal(self.wn.get_node(junction).head - self.wn.get_node(junction).elevation)
@@ -305,7 +302,6 @@ class PhysicalPlant:
 
     def finish(self):
         self.write_results(self.results_list)
-        self.logger.info("Simulation finished.")
         sys.exit(0)
 
     def set_initial_values(self):
