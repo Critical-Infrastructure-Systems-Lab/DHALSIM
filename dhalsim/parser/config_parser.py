@@ -49,6 +49,118 @@ class ConfigParser:
     :param config_path: The path to the config file of the experiment in yaml format
     :type config_path: Path
     """
+    string_pattern = Regex(r'^[a-zA-Z0-9_]+$',
+                           error="Error in string: '{}', Can only have a-z, A-Z, 0-9, and _")
+
+    trigger = Schema(
+        Or(
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
+                    'time'
+                ),
+                'start': And(
+                    int,
+                    Schema(lambda i: i >= 0, error='start time must be positive'),
+                ),
+                'end': And(
+                    int,
+                    Schema(lambda i: i >= 0, error='end time must be positive'),
+                ),
+            },
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
+                    Or('below', 'above')
+                ),
+                'sensor': And(
+                    str,
+                    string_pattern,
+                ),
+                'value': And(
+                    float,
+                ),
+            },
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
+                    'between'
+                ),
+                'sensor': And(
+                    str,
+                    string_pattern,
+                ),
+                'lower_value': And(
+                    float,
+                ),
+                'upper_value': And(
+                    float,
+                ),
+            },
+        )
+    )
+
+    device_attacks = Schema({
+        'name': str,
+        'trigger': trigger,
+        'actuator': And(
+            str,
+            string_pattern,
+        ),
+        'command': And(
+            str,
+            Use(str.lower),
+            Or('open', 'closed')
+        )
+    })
+
+    network_attacks = Schema(
+        Or(
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
+                    'naive_mitm',
+                ),
+                'name': And(
+                    str,
+                    string_pattern,
+                ),
+                'trigger': trigger,
+                Or('value', 'offset', only_one=True): Or(float, And(int, Use(float))),
+                'target': And(
+                    str,
+                    string_pattern
+                )
+            },
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
+                    'mitm',
+                ),
+                'name': And(
+                    str,
+                    string_pattern,
+                ),
+                'trigger': trigger,
+                'target': And(
+                    str,
+                    string_pattern
+                ),
+                'tags': [{
+                    'tag': And(
+                        str,
+                        string_pattern,
+                    ),
+                    Or('value', 'offset', only_one=True): float,
+                }]
+            }
+        )
+    )
 
     def __init__(self, config_path: Path):
         """Constructor method"""
@@ -195,131 +307,18 @@ class ConfigParser:
         :return: A verified version of the data of the config file
         :rtype: dict
         """
-        string_pattern = Regex(r'^[a-zA-Z0-9_]+$',
-                               error="Error in string: '{}', Can only have a-z, A-Z, 0-9, and _")
-
-        trigger = Schema(
-            Or(
-                {
-                    'type': And(
-                        str,
-                        Use(str.lower),
-                        'time'
-                    ),
-                    'start': And(
-                        int,
-                        Schema(lambda i: i >= 0, error='start time must be positive'),
-                    ),
-                    'end': And(
-                        int,
-                        Schema(lambda i: i >= 0, error='end time must be positive'),
-                    ),
-                },
-                {
-                    'type': And(
-                        str,
-                        Use(str.lower),
-                        Or('below', 'above')
-                    ),
-                    'sensor': And(
-                        str,
-                        string_pattern,
-                    ),
-                    'value': And(
-                        float,
-                    ),
-                },
-                {
-                    'type': And(
-                        str,
-                        Use(str.lower),
-                        'between'
-                    ),
-                    'sensor': And(
-                        str,
-                        string_pattern,
-                    ),
-                    'lower_value': And(
-                        float,
-                    ),
-                    'upper_value': And(
-                        float,
-                    ),
-                },
-            )
-        )
-
-        device_attacks = Schema({
-            'name': str,
-            'trigger': trigger,
-            'actuator': And(
-                str,
-                string_pattern,
-            ),
-            'command': And(
-                str,
-                Use(str.lower),
-                Or('open', 'closed')
-            )
-        })
-
-        network_attacks = Schema(
-            Or(
-                {
-                    'type': And(
-                        str,
-                        Use(str.lower),
-                        'naive_mitm',
-                    ),
-                    'name': And(
-                        str,
-                        string_pattern,
-                    ),
-                    'trigger': trigger,
-                    Or('value', 'offset', only_one=True): Or(float, And(int, Use(float))),
-                    'target': And(
-                        str,
-                        string_pattern
-                    )
-                },
-                {
-                    'type': And(
-                        str,
-                        Use(str.lower),
-                        'mitm',
-                    ),
-                    'name': And(
-                        str,
-                        string_pattern,
-                    ),
-                    'trigger': trigger,
-                    'target': And(
-                        str,
-                        string_pattern
-                    ),
-                    'tags': [{
-                        'tag': And(
-                            str,
-                            string_pattern,
-                        ),
-                        Or('value', 'offset', only_one=True): float,
-                    }]
-                }
-            )
-        )
-
         plc_schema = Schema([{
             'name': And(
                 str,
-                string_pattern
+                ConfigParser.string_pattern
             ),
             Optional('sensors'): [And(
                 str,
-                string_pattern
+                ConfigParser.string_pattern
             )],
             Optional('actuators'): [And(
                 str,
-                string_pattern
+                ConfigParser.string_pattern
             )]
         }])
 
@@ -345,8 +344,8 @@ class ConfigParser:
                 Or('pdd', 'dd')),
             Optional('run_attack', default=True): bool,
             Optional('attacks'): {
-                Optional('device_attacks'): [device_attacks],
-                Optional('network_attacks'): [network_attacks],
+                Optional('device_attacks'): [ConfigParser.device_attacks],
+                Optional('network_attacks'): [ConfigParser.network_attacks],
             },
             Optional('batch_simulations'): And(
                 int,
