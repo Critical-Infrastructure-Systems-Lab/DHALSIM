@@ -38,6 +38,10 @@ class NoSuchTag(Error):
     """Raised when an attack targets a tag the target PLC does not have"""
 
 
+class NetworkAttackError(Error):
+    """Used to raise errors about network attack"""
+
+
 class ConfigParser:
     """
     Class handling the parsing of the input config data.
