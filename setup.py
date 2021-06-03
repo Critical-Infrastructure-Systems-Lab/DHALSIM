@@ -21,7 +21,7 @@ setuptools.setup(
         'progressbar2',
         'wntr',
         'pandas',
-        'schema'
+        'schema',
         'scapy',
         'fnfqueue'
     ],
