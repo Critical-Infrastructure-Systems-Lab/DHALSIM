@@ -52,7 +52,7 @@ class PhysicalPlant:
         self.pump_list = self.get_link_list_by_type(self.link_list, 'Pump')
         self.valve_list = self.get_link_list_by_type(self.link_list, 'Valve')
 
-        list_header = ["Timestamps"]
+        list_header = ["iteration"]
         list_header.extend(self.create_node_header(self.tank_list))
         list_header.extend(self.create_node_header(self.junction_list))
         list_header.extend(self.create_link_header(self.pump_list))
@@ -134,9 +134,8 @@ class PhysicalPlant:
             act_dict['value'] = act_dict['actuator'].status.value
         return act_dict
 
-    def register_results(self, results):
+    def register_results(self):
         values_list = []
-        values_list.extend([results.timestamp])
 
         # Results are divided into: nodes: reservoir and tanks, links: flows and status
         # Get tanks levels
@@ -247,8 +246,9 @@ class PhysicalPlant:
             if self.data['log_level'] != 'debug':
                 p_bar.update(master_time)
 
-            results = self.sim.run_sim(convergence_error=True)
-            values_list = self.register_results(results)
+            self.sim.run_sim(convergence_error=True)
+            values_list = self.register_results()
+            values_list.insert(0, master_time)
             self.results_list.append(values_list)
 
             self.update_tanks()

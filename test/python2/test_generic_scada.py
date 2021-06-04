@@ -31,6 +31,13 @@ def magic_mock_scada_init():
 
 
 @pytest.fixture
+def magic_mock_scada_clock():
+    mock = MagicMock()
+    mock.get_master_clock.return_value = 2
+    return mock
+
+
+@pytest.fixture
 def magic_mock_scada_preloop():
     mock = MagicMock()
     mock.signal.return_value = None
@@ -78,7 +85,8 @@ def yaml_scada_file(tmpdir):
     return file
 
 
-def patch_methods(magic_mock_scada_init, magic_mock_scada_preloop, magic_mock_scada_network, mocker):
+def patch_methods(magic_mock_scada_init, magic_mock_scada_preloop, magic_mock_scada_clock, magic_mock_scada_network,
+                  mocker):
     # Init mocker patches
     mocker.patch(
         'dhalsim.python2.generic_scada.GenericScada.initialize_db',
@@ -97,6 +105,11 @@ def patch_methods(magic_mock_scada_init, magic_mock_scada_preloop, magic_mock_sc
         'signal.signal',
         magic_mock_scada_preloop.signal
     )
+    # Clock patch
+    mocker.patch(
+        'dhalsim.python2.generic_scada.GenericScada.get_master_clock',
+        magic_mock_scada_clock.get_master_clock
+    )
     # Network mocker patches
     mocker.patch(
         'dhalsim.python2.generic_scada.GenericScada.receive_multiple',
@@ -113,8 +126,10 @@ def patch_methods(magic_mock_scada_init, magic_mock_scada_preloop, magic_mock_sc
 
 
 @pytest.fixture
-def generic_scada(mocker, yaml_scada_file, magic_mock_scada_init, magic_mock_scada_preloop, magic_mock_scada_network):
-    patch_methods(magic_mock_scada_init, magic_mock_scada_preloop, magic_mock_scada_network, mocker)
+def generic_scada(mocker, yaml_scada_file, magic_mock_scada_init, magic_mock_scada_preloop, magic_mock_scada_clock,
+                  magic_mock_scada_network):
+    patch_methods(magic_mock_scada_init, magic_mock_scada_preloop, magic_mock_scada_clock, magic_mock_scada_network,
+                  mocker)
     return GenericScada(Path(str(yaml_scada_file)))
 
 
@@ -135,7 +150,7 @@ def test_generic_scada_init(generic_scada, magic_mock_scada_init, yaml_scada_fil
     assert generic_scada.plc_data == [('192.168.1.1', [('T0', 1), ('P_RAW1', 1)]),
                                       ('192.168.1.2', [('T2', 1), ('V_ER2i', 1)])]
     # Assert plc saved values generation
-    assert generic_scada.saved_values == [['T0', 'P_RAW1', 'T2', 'V_ER2i']]
+    assert generic_scada.saved_values == [['iteration', 'T0', 'P_RAW1', 'T2', 'V_ER2i']]
     # Assert proper function calls
     expected_calls = [call.initialize_db(), call.touch(exist_ok=True),
                       call.do_super_construction({'server': {
@@ -153,11 +168,11 @@ def test_generic_scada_preloop(generic_scada, magic_mock_scada_preloop):
     assert magic_mock_scada_preloop.mock_calls == expected_calls
 
 
-def test_generic_scada_mainloop(generic_scada, magic_mock_scada_network, yaml_scada_file):
+def test_generic_scada_mainloop(generic_scada, magic_mock_scada_network, magic_mock_scada_clock, yaml_scada_file):
     generic_scada.main_loop(test_break=True)
     # Assert saved_values has been properly modified
-    assert generic_scada.saved_values == [['T0', 'P_RAW1', 'T2', 'V_ER2i'],
-                                          ['0.420420', '1', '0.420420', '1']]
+    assert generic_scada.saved_values == [['iteration', 'T0', 'P_RAW1', 'T2', 'V_ER2i'],
+                                          [2, '0.420420', '1', '0.420420', '1']]
     # Assert proper function calls
     expected_calls = [call.get_sync(),
                       call.receive_multiple([('T0', 1), ('P_RAW1', 1)], '192.168.1.1'),

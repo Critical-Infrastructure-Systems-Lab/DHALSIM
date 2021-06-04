@@ -48,6 +48,7 @@ class GenericScada(SCADAServer):
             'path': self.intermediate_yaml['db_path']
         }
 
+
         # Create server, real tags are generated
         scada_server = {
             'address': self.intermediate_yaml['scada']['local_ip'],
@@ -62,7 +63,7 @@ class GenericScada(SCADAServer):
         }
 
         self.plc_data = self.generate_plcs()
-        self.saved_values = [[]]
+        self.saved_values = [['iteration']]
 
         for PLC in self.intermediate_yaml['plcs']:
             if 'sensors' not in PLC:
@@ -204,6 +205,17 @@ class GenericScada(SCADAServer):
 
         return plcs
 
+    def get_master_clock(self):
+        """
+        Get the value of the master clock of the physical process through the database.
+
+        :return: Iteration in the physical process
+        """
+        # Fetch master_time
+        self.cur.execute("SELECT time FROM master_time WHERE id IS 1")
+        master_time = self.cur.fetchone()[0]
+        return master_time
+
     def main_loop(self, sleep=0.5, test_break=False):
         """
         The main loop of a PLC. In here all the controls will be applied.
@@ -217,7 +229,7 @@ class GenericScada(SCADAServer):
                 time.sleep(0.01)
 
             try:
-                results = []
+                results = [self.get_master_clock()]
                 for plc_datum in self.plc_data:
                     plc_value = self.receive_multiple(plc_datum[1], plc_datum[0])
                     self.logger.debug("PLC value received by SCADA from IP: " + str(plc_datum[0])
