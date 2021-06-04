@@ -60,7 +60,7 @@ def test_writeback_yaml(tmpdir, topo_fixture, filled_dict):
 
 def test_host_amount_network(topo_fixture):
     # Expecting 4 hosts; 2 PLCs, a router, a scada and a plant
-    assert len(topo_fixture.hosts()) == 5
+    assert len(topo_fixture.hosts()) == 4
 
 
 def test_host_names(topo_fixture):
