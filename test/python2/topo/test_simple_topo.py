@@ -66,9 +66,8 @@ def test_host_amount_network(topo_fixture):
 def test_host_names(topo_fixture):
     assert topo_fixture.hosts()[0] == 'PLC1'
     assert topo_fixture.hosts()[1] == 'PLC2'
-    assert topo_fixture.hosts()[2] == 'plant'
-    assert topo_fixture.hosts()[3] == 'r0'
-    assert topo_fixture.hosts()[4] == 'scada'
+    assert topo_fixture.hosts()[2] == 'r0'
+    assert topo_fixture.hosts()[3] == 'scada'
 
 
 def test_host_ips(topo_fixture):
