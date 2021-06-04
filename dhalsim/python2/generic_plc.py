@@ -3,14 +3,15 @@ import os.path
 import sqlite3
 import threading
 import time
-import yaml
-
 from decimal import Decimal
 from pathlib import Path
+
+import yaml
+
 from basePLC import BasePLC
-from py2_logger import get_logger
 from entities.attack import TimeAttack, TriggerBelowAttack, TriggerAboveAttack, TriggerBetweenAttack
 from entities.control import AboveControl, BelowControl, TimeControl
+from py2_logger import get_logger
 
 
 class Error(Exception):

@@ -1,15 +1,15 @@
 import argparse
 import csv
 import os.path
-import sqlite3
 import signal
+import sqlite3
 import sys
 import time
 from pathlib import Path
-import logging
 
 import yaml
 from minicps.devices import SCADAServer
+
 from py2_logger import get_logger
 
 
@@ -224,7 +224,7 @@ class GenericScada(SCADAServer):
                                       + " is " + str(plc_value) + ".")
                     results.extend(plc_value)
                 self.saved_values.append(results)
-            except Exception, msg:
+            except Exception as msg:
                 self.logger.error(msg)
                 continue
 

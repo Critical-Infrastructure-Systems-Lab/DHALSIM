@@ -11,6 +11,7 @@ from minicps.mcps import MiniCPS
 from mininet.net import Mininet
 from mininet.cli import CLI
 from mininet.link import TCLink
+
 from py2_logger import get_logger
 from topo.simple_topo import SimpleTopo
 from topo.complex_topo import ComplexTopo
@@ -134,7 +135,7 @@ class GeneralCPS(MiniCPS):
         self.logger.info("Simulation finished.")
         try:
             self.end_process(self.scada_process)
-        except Exception, msg:
+        except Exception as msg:
             self.logger.error("Exception shutting down SCADA: " + str(msg))
 
         for plc_process in self.plc_processes:

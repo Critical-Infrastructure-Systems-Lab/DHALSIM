@@ -1,13 +1,13 @@
 import argparse
-import logging
 import os
 import signal
 import subprocess
 import sys
 from pathlib import Path
-from py2_logger import get_logger
 
 import yaml
+
+from py2_logger import get_logger
 
 
 class NodeControl:
