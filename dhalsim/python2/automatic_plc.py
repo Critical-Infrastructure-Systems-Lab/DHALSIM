@@ -8,6 +8,8 @@ from pathlib import Path
 from automatic_node import NodeControl
 from py2_logger import get_logger
 
+from py2_logger import get_logger
+
 
 class PlcControl(NodeControl):
     """

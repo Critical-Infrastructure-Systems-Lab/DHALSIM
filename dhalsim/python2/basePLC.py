@@ -1,14 +1,9 @@
-import logging
-import time
-from minicps.devices import PLC
-import csv
 import signal
 import sys
-
+import time
 import thread
-import threading
-import shlex
-import subprocess
+
+from minicps.devices import PLC
 
 
 class BasePLC(PLC):

@@ -34,7 +34,7 @@ extensions = [
     'sphinx.ext.autosectionlabel',
 ]
 
-autodoc_mock_imports = ["thread", "topo", "basePLC", "control"]
+autodoc_mock_imports = ['thread', 'py2_logger', 'topo', 'basePLC', 'entities']
 
 # Add any paths that contain templates here, relative to this directory.
 # templates_path = ['_templates']

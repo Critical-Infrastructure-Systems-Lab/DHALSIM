@@ -184,6 +184,8 @@ class ConfigParser:
             sys.exit(exc)
 
         self.batch_mode = 'batch_simulations' in self.data
+        if self.batch_mode:
+            self.batch_simulations = self.data['batch_simulations']
 
     @staticmethod
     def do_checks(data: dict):

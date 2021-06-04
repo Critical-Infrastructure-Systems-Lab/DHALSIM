@@ -10,7 +10,7 @@ plcs: !include wadi_plcs.yaml
 
 attacks: !include wadi_attacks.yaml
 
-#batch_simulations: 3
+batch_simulations: 3
 #Initial Conditions
 #initial_tank_data: initial_tank_wadi.csv
 #demand_patterns: demand_patterns/

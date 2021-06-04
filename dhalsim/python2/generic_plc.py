@@ -26,77 +26,6 @@ class InvalidControlValue(Error):
     """Raised when tag you are looking for does not exist"""
 
 
-def generate_real_tags(sensors, dependants, actuators):
-    real_tags = []
-
-    for sensor_tag in sensors:
-        if sensor_tag != "":
-            real_tags.append((sensor_tag, 1, 'REAL'))
-    for dependant_tag in dependants:
-        if dependant_tag != "":
-            real_tags.append((dependant_tag, 1, 'REAL'))
-    for actuator_tag in actuators:
-        if actuator_tag != "":
-            real_tags.append((actuator_tag, 1, 'REAL'))
-
-    return tuple(real_tags)
-
-
-def generate_tags(taggable):
-    tags = []
-
-    if taggable:
-        for tag in taggable:
-            if tag and tag != "":
-                tags.append((tag, 1))
-
-    return tags
-
-
-def create_controls(controls_list):
-    ret = []
-    for control in controls_list:
-        if control["type"].lower() == "above":
-            control_instance = AboveControl(control["actuator"], control["action"],
-                                            control["dependant"],
-                                            control["value"])
-            ret.append(control_instance)
-        if control["type"].lower() == "below":
-            control_instance = BelowControl(control["actuator"], control["action"],
-                                            control["dependant"],
-                                            control["value"])
-            ret.append(control_instance)
-        if control["type"].lower() == "time":
-            control_instance = TimeControl(control["actuator"], control["action"], control["value"])
-            ret.append(control_instance)
-    return ret
-
-
-def create_attacks(attack_list):
-    """This function will create an array of DeviceAttacks
-
-    :param attack_list: A list of attack dicts that need to be converted to DeviceAttacks
-    """
-    attacks = []
-    for attack in attack_list:
-        if attack['trigger']['type'].lower() == "time":
-            attacks.append(
-                TimeAttack(attack['name'], attack['actuator'], attack['command'], attack['trigger']['start'], attack['trigger']['end']))
-        elif attack['trigger']['type'].lower() == "above":
-            attacks.append(
-                TriggerAboveAttack(attack['name'], attack['actuator'], attack['command'], attack['trigger']['sensor'],
-                                   attack['trigger']['value']))
-        elif attack['trigger']['type'].lower() == "below":
-            attacks.append(
-                TriggerBelowAttack(attack['name'], attack['actuator'], attack['command'], attack['trigger']['sensor'],
-                                   attack['trigger']['value']))
-        elif attack['trigger']['type'].lower() == "between":
-            attacks.append(
-                TriggerBetweenAttack(attack['name'], attack['actuator'], attack['command'], attack['trigger']['sensor'],
-                                     attack['trigger']['lower_value'], attack['trigger']['upper_value']))
-    return attacks
-
-
 class GenericPLC(BasePLC):
     """
     This class represents a plc. This plc knows what it is connected to by reading the
@@ -123,10 +52,10 @@ class GenericPLC(BasePLC):
         self.initialize_db()
 
         self.intermediate_controls = self.intermediate_plc['controls']
-        self.controls = create_controls(self.intermediate_controls)
+        self.controls = self.create_controls(self.intermediate_controls)
 
         if 'attacks' in self.intermediate_plc.keys():
-            self.attacks = create_attacks(self.intermediate_plc['attacks'])
+            self.attacks = self.create_attacks(self.intermediate_plc['attacks'])
         else:
             self.attacks = []
 
@@ -148,7 +77,7 @@ class GenericPLC(BasePLC):
         # Create server, real tags are generated
         plc_server = {
             'address': self.intermediate_plc['local_ip'],
-            'tags': generate_real_tags(plc_sensors,
+            'tags': self.generate_real_tags(plc_sensors,
                                        list(set(dependant_sensors) - set(plc_sensors)),
                                        self.intermediate_plc['actuators'])
         }
@@ -184,6 +113,98 @@ class GenericPLC(BasePLC):
         self.conn = sqlite3.connect(self.intermediate_yaml["db_path"])
         self.cur = self.conn.cursor()
 
+    @staticmethod
+    def generate_real_tags(sensors, dependants, actuators):
+        """
+        Generates real tags with all sensors, dependants, and actuators
+        attached to the plc.
+
+        :param sensors: list of sensors attached to the plc
+        :param dependants: list of dependant sensors (from other plcs)
+        :param actuators: list of actuators controlled by the plc
+        """
+        real_tags = []
+
+        for sensor_tag in sensors:
+            if sensor_tag != "":
+                real_tags.append((sensor_tag, 1, 'REAL'))
+        for dependant_tag in dependants:
+            if dependant_tag != "":
+                real_tags.append((dependant_tag, 1, 'REAL'))
+        for actuator_tag in actuators:
+            if actuator_tag != "":
+                real_tags.append((actuator_tag, 1, 'REAL'))
+
+        return tuple(real_tags)
+
+    @staticmethod
+    def generate_tags(taggable):
+        """
+        Generates tags from a list of taggable entities (sensor or actuator)
+
+        :param taggable: a list of strings containing names of things like tanks, pumps, and valves
+        """
+        tags = []
+
+        if taggable:
+            for tag in taggable:
+                if tag and tag != "":
+                    tags.append((tag, 1))
+
+        return tags
+
+    @staticmethod
+    def create_controls(controls_list):
+        """
+        Generates list of control objects for a plc
+
+        :param controls_list: a list of the control dicts to be converted to Control objects
+        """
+        ret = []
+        for control in controls_list:
+            if control["type"].lower() == "above":
+                control_instance = AboveControl(control["actuator"], control["action"],
+                                                control["dependant"],
+                                                control["value"])
+                ret.append(control_instance)
+            if control["type"].lower() == "below":
+                control_instance = BelowControl(control["actuator"], control["action"],
+                                                control["dependant"],
+                                                control["value"])
+                ret.append(control_instance)
+            if control["type"].lower() == "time":
+                control_instance = TimeControl(control["actuator"], control["action"], control["value"])
+                ret.append(control_instance)
+        return ret
+
+    @staticmethod
+    def create_attacks(attack_list):
+        """This function will create an array of DeviceAttacks
+
+        :param attack_list: A list of attack dicts that need to be converted to DeviceAttacks
+        """
+        attacks = []
+        for attack in attack_list:
+            if attack['trigger']['type'].lower() == "time":
+                attacks.append(
+                    TimeAttack(attack['name'], attack['actuator'], attack['command'], attack['trigger']['start'], attack['trigger']['end']))
+            elif attack['trigger']['type'].lower() == "above":
+                attacks.append(
+                    TriggerAboveAttack(attack['name'], attack['actuator'], attack['command'], attack['trigger']['sensor'],
+                                       attack['trigger']['value']))
+            elif attack['trigger']['type'].lower() == "below":
+                attacks.append(
+                    TriggerBelowAttack(attack['name'], attack['actuator'], attack['command'], attack['trigger']['sensor'],
+                                       attack['trigger']['value']))
+            elif attack['trigger']['type'].lower() == "between":
+                attacks.append(
+                    TriggerBetweenAttack(attack['name'], attack['actuator'], attack['command'], attack['trigger']['sensor'],
+                                         attack['trigger']['lower_value'], attack['trigger']['upper_value']))
+        return attacks
+
+
+
+
     def pre_loop(self, sleep=0.5):
         """
         The pre loop of a PLC. In everything is setup. Like starting the sending thread through
@@ -195,8 +216,8 @@ class GenericPLC(BasePLC):
 
         reader = True
 
-        sensors = generate_tags(self.intermediate_plc['sensors'])
-        actuators = generate_tags(self.intermediate_plc['actuators'])
+        sensors = self.generate_tags(self.intermediate_plc['sensors'])
+        actuators = self.generate_tags(self.intermediate_plc['actuators'])
 
         values = []
         for tag in sensors:

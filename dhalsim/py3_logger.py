@@ -18,8 +18,14 @@ def get_logger(logging_level: str):
         return py3_logger
     # Configure logger level
     py3_handler = logging.StreamHandler(stream=sys.stdout)
-    logging_format = logging.Formatter('%(asctime)s - %(levelname)s @ %(filename)s: %(message)s',
-                                       '%H:%M:%S')
+
+    # Print originating filename only in debug mode
+    if log_level == logging.DEBUG:
+        logging_format = logging\
+            .Formatter('%(asctime)s - %(levelname)s @ %(filename)s: %(message)s', '%H:%M:%S')
+    else:
+        logging_format = logging.Formatter('%(asctime)s - %(levelname)s: %(message)s', '%H:%M:%S')
+
     py3_handler.setFormatter(logging_format)
     py3_logger.addHandler(py3_handler)
     # Set level of logger
