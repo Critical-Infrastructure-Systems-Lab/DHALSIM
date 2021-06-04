@@ -3,6 +3,7 @@ import os.path
 import signal
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 from dhalsim.init_database import DatabaseInitializer
@@ -28,6 +29,7 @@ class Runner():
 
     def sigint_handler(self, sig, frame):
         os.kill(self.automatic_run.pid, signal.SIGTERM)
+        time.sleep(0.3)
         sys.exit(0)
 
     def run(self):

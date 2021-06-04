@@ -134,8 +134,8 @@ class GeneralCPS(MiniCPS):
         self.logger.info("Simulation finished.")
         try:
             self.end_process(self.scada_process)
-        except Exception, msg:
-            self.logger.error("Exception shutting down SCADA: " + str(msg))
+        except:
+            pass
 
         for plc_process in self.plc_processes:
             try:
