@@ -141,7 +141,7 @@ class PhysicalPlant:
                     # print 'DEBUG what list: ', what_list
 
                     self._what = tuple(what_list)
-                    print('DEBUG self._what: ', self._what)
+                    #print('DEBUG self._what: ', self._what)
 
             except sqlite3.Error as e:
                 print('ERROR: %s: ' % e.args[0])
@@ -159,7 +159,7 @@ class PhysicalPlant:
             set_query += ' AND %s = ?' % (
                 pk)
 
-        print('DEBUG set_query:', set_query)
+        #print('DEBUG set_query:', set_query)
         self._set_query = set_query
 
     def _init_get_query(self):
@@ -175,7 +175,7 @@ class PhysicalPlant:
             get_query += ' AND %s = ?' % (
                 pk)
 
-        print('DEBUG get_query:', get_query)
+        #print('DEBUG get_query:', get_query)
         self._get_query = get_query
 
     def load_config(self, config_path):

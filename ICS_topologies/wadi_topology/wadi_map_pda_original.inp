@@ -162,7 +162,7 @@
  V_SWaT          	J1_10           	J1_11           	25.4        	PRV 	0           	0           	;
  V_PUB           	J1_20           	J1_30           	25.4        	PRV 	0           	0           	;
  V_ER2i          	J2a_30          	J2a_31          	25.4        	TCV 	0           	0           	;
- V_ER2o          	J2a_32          	J2a_33          	12          	TCV 	0           	0           	;
+ V_ER2o          	J2a_32          	J2a_33          	12          	TCV 	0           	0           	;    2-MV-002
  V_ER1i          	J2a_20          	J2a_21          	25.4        	TCV 	0           	0           	;
  V_ER1o          	J2a_22          	J2a_23          	12          	TCV 	0           	0           	;
  FCV_ER          	J2a_10          	J2a_11          	25.4        	FCV 	2.25        	0           	;
