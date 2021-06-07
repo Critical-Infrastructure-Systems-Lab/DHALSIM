@@ -11,6 +11,9 @@ import sqlite3
 import sys
 import time
 from pathlib import Path
+
+from dhalsim.parser.readme_generator import ReadMeGenerator
+
 from dhalsim.py3_logger import get_logger
 import wntr
 import wntr.network.controls as controls
@@ -85,7 +88,8 @@ class PhysicalPlant:
 
         self.sim = wntr.sim.WNTRSimulator(self.wn)
 
-        self.logger.info("Starting simulation for " + os.path.basename(str(self.data['inp_file'])) + " topology.")
+        self.logger.info("Starting simulation for " +
+                         os.path.basename(str(self.data['inp_file']))[:-4] + " topology.")
 
     def get_node_list_by_type(self, a_list, a_type):
         result = []
@@ -302,6 +306,7 @@ class PhysicalPlant:
 
     def finish(self):
         self.write_results(self.results_list)
+        ReadMeGenerator(self.intermediate_yaml).write_md()
         sys.exit(0)
 
     def set_initial_values(self):
