@@ -24,7 +24,7 @@ setuptools.setup(
         'schema'
     ],
     extras_require={
-        'test': ['pytest', 'pytest-mock', 'mock', 'wget'],
+        'test': ['pytest', 'pytest-mock', 'mock', 'wget', 'coverage', 'pytest-cov'],
         'doc': ['sphinx', 'sphinx-rtd-theme', 'sphinx-prompt'],
     },
     python_requires=">=3.8",
