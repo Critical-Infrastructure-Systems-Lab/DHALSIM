@@ -1,3 +1,5 @@
+import sys
+
 import pandas as pd
 import wntr
 from antlr4 import *
@@ -80,8 +82,12 @@ class InputParser:
             self.generate_network_delays()
         # Add iterations if not existing
         if "iterations" not in self.data.keys():
-            self.data["iterations"] = int(self.data["time"][0]["duration"]
-                                          / self.data["time"][1]["hydraulic_timestep"])
+            iterations = int(self.data["time"][0]["duration"] / self.data["time"][1]["hydraulic_timestep"])
+            if iterations <= 0:
+                print(f"Error in inp file section [TIMES]: (duration: {self.data['time'][0]['duration']} / "
+                      f"hydraultic timestep: {self.data['time'][1]['hydraulic_timestep']}) = {iterations}")
+                sys.exit(1)
+            self.data["iterations"] = iterations
 
         # Return the YAML object
         return self.data

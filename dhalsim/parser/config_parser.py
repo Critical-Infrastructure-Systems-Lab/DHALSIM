@@ -178,7 +178,7 @@ class ConfigParser:
                 Use(str.lower),
                 Or('complex', 'simple')),
             'output_path': Path,
-            'iterations': And(
+            Optional('iterations'): And(
                 int,
                 Schema(lambda i: i > 0, error='iterations must be positive')),
             Optional('mininet_cli', default=False): bool,
@@ -297,7 +297,8 @@ class ConfigParser:
         yaml_data['simulator'] = self.data['simulator']
 
         # Note: if iterations not present then default value will be written in InputParser
-        yaml_data['iterations'] = self.data['iterations']
+        if 'iterations' in self.data:
+            yaml_data['iterations'] = self.data['iterations']
 
         # Log level
         yaml_data['log_level'] = self.data['log_level']
