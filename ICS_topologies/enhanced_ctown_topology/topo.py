@@ -82,7 +82,7 @@ class CTownTopo(Topo):
                     network_losses.iloc[self.week_index]['r' + str(i)]))
                 linkopts = dict(bw=1000, delay=str(network_delays.iloc[self.week_index]['r' + str(i)])+"ms",
                                 loss=loss, max_queue_size=1000, use_htb=True)
-                self.addLink(plcs[i-1], switches[i-1], params2={'mac': ri_inbound_mac}, **linkopts)
+                self.addLink(plcs[i-1], switches[i-1], adddr2=ri_inbound_mac, **linkopts)
             else:
                 self.addLink(plcs[i - 1], switches[i - 1])
 
