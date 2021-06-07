@@ -113,9 +113,6 @@ class SimpleTopo(Topo):
         # Add a link between the switch and the scada
         self.add_node_switch_link(scada, supervisor_switch, self.data['scada'])
 
-        # -- PLANT -- #
-        self.addHost('plant')
-
     def add_node_switch_link(self, node, switch, yaml_node_data):
         """
         This function adds the link between the node and its switch,

@@ -104,9 +104,6 @@ class ComplexTopo(Topo):
 
         self.build_for_node(scada, provider_router)
 
-        # -- PLANT -- #
-        self.addHost('plant')
-
     def build_for_node(self, node, provider_router):
         """
         This build a subnetwork for one node, and connects it to the provider.
