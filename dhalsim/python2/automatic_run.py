@@ -24,6 +24,7 @@ class GeneralCPS(MiniCPS):
     :param intermediate_yaml: The path to the intermediate yaml file
     :type intermediate_yaml: Path
     """
+
     def __init__(self, intermediate_yaml):
         # Create logs directory in working directory
         try:
@@ -147,6 +148,17 @@ class GeneralCPS(MiniCPS):
         automatic run spawned.
         """
         self.logger.info("Simulation finished.")
+
+        readme_path = Path(self.data['output_path']) / 'configuration'
+        if not os.path.exists(str(readme_path)):
+            os.makedirs(str(readme_path))
+
+        linkstring = "Links\n=============="
+        for link in self.net.links:
+            linkstring += "\n\n" + str(link)
+
+        mininet_links = open(str(readme_path / 'mininet_links.md'), 'w')
+        mininet_links.write(linkstring)
 
         if self.scada_process.poll() is None:
             try:
