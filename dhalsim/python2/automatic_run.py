@@ -7,11 +7,13 @@ import sys
 from pathlib import Path
 
 import yaml
+from datetime import datetime
 from minicps.mcps import MiniCPS
 from mininet.net import Mininet
 from mininet.cli import CLI
 from mininet.link import TCLink
 
+from readme_generator import ReadMeGenerator
 from py2_logger import get_logger
 from topo.simple_topo import SimpleTopo
 from topo.complex_topo import ComplexTopo
@@ -26,6 +28,8 @@ class GeneralCPS(MiniCPS):
     """
 
     def __init__(self, intermediate_yaml):
+        self.start_time = datetime.now()
+
         # Create logs directory in working directory
         try:
             os.mkdir('logs')
@@ -149,16 +153,8 @@ class GeneralCPS(MiniCPS):
         """
         self.logger.info("Simulation finished.")
 
-        readme_path = Path(self.data['output_path']) / 'configuration'
-        if not os.path.exists(str(readme_path)):
-            os.makedirs(str(readme_path))
-
-        linkstring = "Links\n=============="
-        for link in self.net.links:
-            linkstring += "\n\n" + str(link)
-
-        mininet_links = open(str(readme_path / 'mininet_links.md'), 'w')
-        mininet_links.write(linkstring)
+        ReadMeGenerator(self.intermediate_yaml, self.net.links)\
+            .write_readme(self.start_time, datetime.now())
 
         if self.scada_process.poll() is None:
             try:

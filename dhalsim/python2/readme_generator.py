@@ -12,20 +12,14 @@ class ReadMeGenerator:
     Class which deals with generating a readme.
     """
 
-    def __init__(self, intermediate_yaml_path, config_file_path):
+    def __init__(self, intermediate_yaml_path, links):
+        self.links = links
+
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
-        with config_file_path.open() as config_file:
-            self.config = yaml.load(config_file)
 
-        # Create directories in output folder
-        self.configuration_path = Path(self.intermediate_yaml['output_path']) / 'configuration'
-        self.input_files_path = self.configuration_path / 'input_files'
-
-        os.makedirs(str(self.input_files_path), exist_ok=True)
-
-    def get_value(self, parameter: str):
+    def get_value(self, parameter):
         """
         Gets the value of a required parameter.
         :param parameter: to find the value of
@@ -33,41 +27,52 @@ class ReadMeGenerator:
         """
         return "\n\n" + parameter + ": " + str(self.intermediate_yaml[parameter])
 
-    def get_optional(self, parameter: str):
+    def get_optional(self, parameter):
         """
         Gets the value of an optional parameter.
         :param parameter: to find the value of
+        :type parameter: str
         :return: human readable string
+        :rtype: str
         """
         if parameter in self.intermediate_yaml:
             return self.get_value(parameter)
         else:
             return "\n\n" + parameter + ": None"
 
-    def write_readme(self, start_time: datetime, end_time: datetime,
-                     wn: wntr.network.WaterNetworkModel, master_time: int):
+    def write_readme(self, start_time, end_time):
         """
         Writes a readme about the current experiment.
         :param start_time: starting time of experiment
+        :type start_time: datetime
         :param end_time: ending time of experiment
-        :param wn: WNTR instance
-        :param master_time: current iteration
+        :type end_time: datetime
         """
-        readme_path = str(self.configuration_path / 'readme_experiment.md')
-        open(readme_path, 'w+')
+        if 'batch_simulations' in self.intermediate_yaml:
+            configuration_folder = Path(self.intermediate_yaml['config_path']).parent \
+                                        / Path(self.intermediate_yaml['output_path']).parent\
+                                        / 'configuration'
+        else:
+            configuration_folder = Path(self.intermediate_yaml['config_path']).parent \
+                                        / self.intermediate_yaml['output_path'] / 'configuration'
 
-        # with open(str(self.configuration_path / 'config2.yaml'), 'w') as file:
-        #     yaml.dump(self.intermediate_yaml, file)
+        readme_path = str(configuration_folder / 'readme_experiment.md')
+        #open(configuration_folder, 'w+')
+
+        # Create directories in output folder
+        if not os.path.exists(str(configuration_folder)):
+            os.makedirs(str(configuration_folder))
 
         with open(readme_path, 'a') as readme:
-            readme.write("# Automatically generated README of "
-                         + os.path.basename(str(self.intermediate_yaml['inp_file']))[:-4])
+            readme.write("# Auto-generated README of {file}"
+                         .format(file=os.path.basename(str(self.intermediate_yaml['inp_file']))[:-4]))
 
             # Input files
             readme.write("\n\n## Input files")
             input_string = "\n\nInput files have been copied to {output}. In case" \
-                           " ```attacks_path``` or ```batch_simulations``` was used, these files" \
-                           " will be copied to the output folder as well."
+                           " any extra files were used (like ```attacks``` or" \
+                           " ```network_delay_data```, these files will be copied to the output " \
+                           "folder as well."
 
             if 'batch_simulations' in self.intermediate_yaml:
                 readme.write(input_string
@@ -85,47 +90,17 @@ class ReadMeGenerator:
             readme.write(self.get_value('simulator'))
             readme.write(self.get_optional('attacks_path'))
             readme.write(self.get_optional('batch_simulations'))
-            readme.write("\n\nAll Mininet links can be found in mininet_links.md.")
+
+            readme.write("\n\n## Mininet links")
+            for link in self.links:
+                readme.write("\n\n" + str(link))
 
             # About this experiment
             readme.write("\n\n## About this experiment")
             readme.write("\n\nRan with DHALSIM v{version}."
-                         .format(version=pkg_resources.require('dhalsim')[0].version))
+                         .format(version=self.intermediate_yaml['dhalsim_version']))
             readme.write("\n\nStarted at {start} and finished at {end}"
                          .format(start=str(start_time.strftime("%Y-%m-%d %H:%M:%S")),
                                  end=str(end_time.strftime("%Y-%m-%d %H:%M:%S"))))
             readme.write("\n\nThe duration of this simulation was {time}."
                          .format(time=str(end_time - start_time)))
-
-    def copy_input_files(self):
-        """Copies all input files, mandatory and optional ones included."""
-        with self.config.open(mode='r') as file:
-            config = yaml.load(file, Loader=yaml.FullLoader)
-
-        # Prepare configuration folder in output where files will be copied.
-        configuration_folder = self.config.parent / config['output_path'] / 'configuration'
-        os.makedirs(str(configuration_folder), exist_ok=True)
-
-        # Copy mandatory files.
-        with open(str(configuration_folder / 'config.yaml'), 'w') as file:
-            yaml.dump(config, file)
-
-        copy(self.config.parent / config['inp_file'], configuration_folder / 'map.inp')
-
-        # Copy optional csv files.
-        if 'initial_tank_data' in config:
-            copy(self.config.parent / config['initial_tank_data'],
-                 configuration_folder / 'initial_tank_data.csv')
-
-        if 'demand_patterns' in config:
-            copy(self.config.parent / config['demand_patterns'],
-                 configuration_folder / 'demand_patterns.csv')
-
-        if 'network_loss_data' in config:
-            copy(self.config.parent / config['network_loss_data'],
-                 configuration_folder / 'network_loss_data.csv')
-
-        if 'network_delay_data' in config:
-            copy(self.config.parent / config['network_delay_data'],
-                 configuration_folder / 'network_delay_data.csv')
-

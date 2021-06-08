@@ -13,7 +13,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from dhalsim.parser.batch_readme_generator import ReadMeGenerator, BatchReadMeGenerator
+from dhalsim.parser.file_generator import BatchReadMeGenerator
 from dhalsim.py3_logger import get_logger
 import wntr
 import wntr.network.controls as controls
@@ -311,7 +311,7 @@ class PhysicalPlant:
         self.write_results(self.results_list)
         end_time = datetime.now()
         BatchReadMeGenerator(self.intermediate_yaml).write_batch(self.start_time, end_time, self.wn,
-                                                                    self.master_time)
+                                                                 self.master_time)
         sys.exit(0)
 
     def set_initial_values(self):
