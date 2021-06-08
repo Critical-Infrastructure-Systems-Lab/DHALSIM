@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 
 import yaml
-from mdutils import MdUtils
 
 
 class ReadMeGenerator:
@@ -20,4 +19,21 @@ class ReadMeGenerator:
 
         os.makedirs(str(self.input_files_path), exist_ok=True)
 
-    def write_md(self):
+    def get_value(self, parameter: str):
+        """
+        Gets the value of a required parameter.
+        :param parameter: to find the value of
+        :return: human readable string
+        """
+        return "\n\n" + parameter + ": " + str(self.intermediate_yaml[parameter])
+
+    def get_optional(self, parameter: str):
+        """
+        Gets the value of an optional parameter.
+        :param parameter: to find the value of
+        :return: human readable string
+        """
+        if parameter in self.intermediate_yaml:
+            return self.get_value(parameter)
+        else:
+            return "\n\n" + parameter + ": None"
