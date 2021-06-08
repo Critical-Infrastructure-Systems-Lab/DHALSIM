@@ -18,7 +18,6 @@ class ReadMeGenerator:
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
-
     def get_value(self, parameter):
         """
         Gets the value of a required parameter.
@@ -50,20 +49,20 @@ class ReadMeGenerator:
         """
         if 'batch_simulations' in self.intermediate_yaml:
             configuration_folder = Path(self.intermediate_yaml['config_path']).parent \
-                                        / Path(self.intermediate_yaml['output_path']).parent\
-                                        / 'configuration'
+                                   / Path(self.intermediate_yaml['output_path']).parent \
+                                   / 'configuration'
         else:
             configuration_folder = Path(self.intermediate_yaml['config_path']).parent \
-                                        / self.intermediate_yaml['output_path'] / 'configuration'
+                                   / self.intermediate_yaml['output_path'] / 'configuration'
 
         readme_path = str(configuration_folder / 'readme_experiment.md')
-        #open(configuration_folder, 'w+')
+        # open(configuration_folder, 'w+')
 
         # Create directories in output folder
         if not os.path.exists(str(configuration_folder)):
             os.makedirs(str(configuration_folder))
 
-        with open(readme_path, 'a') as readme:
+        with open(readme_path, 'w') as readme:
             readme.write("# Auto-generated README of {file}"
                          .format(file=os.path.basename(str(self.intermediate_yaml['inp_file']))[:-4]))
 
@@ -99,7 +98,7 @@ class ReadMeGenerator:
             readme.write("\n\n## About this experiment")
             readme.write("\n\nRan with DHALSIM v{version}."
                          .format(version=self.intermediate_yaml['dhalsim_version']))
-            readme.write("\n\nStarted at {start} and finished at {end}"
+            readme.write("\n\nStarted at {start} and finished at {end}."
                          .format(start=str(start_time.strftime("%Y-%m-%d %H:%M:%S")),
                                  end=str(end_time.strftime("%Y-%m-%d %H:%M:%S"))))
             readme.write("\n\nThe duration of this simulation was {time}."

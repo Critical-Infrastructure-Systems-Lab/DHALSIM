@@ -3,7 +3,6 @@ import os
 from pathlib import Path
 from shutil import copy
 
-import pkg_resources
 import wntr
 import yaml
 
@@ -30,13 +29,13 @@ class BatchReadMeGenerator:
         :param wn: is WNTR instance
         :param master_time: is current iteration
         """
-        with open(self.readme_path, 'a') as readme:
+        with open(self.readme_path, 'w') as readme:
             readme.write("# Auto-generated README of {file} for batch {no}"
                          .format(file=os.path.basename(str(self.intermediate_yaml['inp_file']))[:-4],
-                                 no=self.intermediate_yaml['batch_index']))
+                                 no=self.intermediate_yaml['batch_index'] + 1))
             readme.write("\n\nThis is batch {x} out of {y} batches."
-                         .format(x=self.intermediate_yaml['batch_index'],
-                                 y=self.intermediate_yaml['batch_iterations']))
+                         .format(x=self.intermediate_yaml['batch_index'] + 1,
+                                 y=self.intermediate_yaml['batch_simulations']))
             readme.write("\n\n## Information about this batch")
             readme.write("\n\nRan for {x} out of {y} iterations with hydraulic timestep {step}."
                          .format(x=str(master_time),
