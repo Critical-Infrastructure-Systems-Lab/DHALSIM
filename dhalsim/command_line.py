@@ -10,6 +10,7 @@ import yaml
 
 from dhalsim.init_database import DatabaseInitializer
 from dhalsim.parser.config_parser import ConfigParser
+from dhalsim.parser.file_generator import InputFilesCopier
 
 
 def is_valid_file(parser, arg):
@@ -51,9 +52,7 @@ class Runner():
             self.run_simulation(intermediate_yaml_path)
 
     def run_simulation(self, intermediate_yaml_path):
-        # ReadMeGenerator(self.intermediate_yaml).write_md(self.start_time, end_time, self.wn,
-        #                                                  self.master_time)
-
+        InputFilesCopier(self.config_file).copy_input_files()
 
         db_initializer = DatabaseInitializer(intermediate_yaml_path)
         db_initializer.drop()
