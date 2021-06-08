@@ -13,7 +13,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from dhalsim.parser.readme_generator import ReadMeGenerator
+from dhalsim.parser.batch_readme_generator import ReadMeGenerator, BatchReadMeGenerator
 from dhalsim.py3_logger import get_logger
 import wntr
 import wntr.network.controls as controls
@@ -25,6 +25,7 @@ class PhysicalPlant:
     Class representing the plant itself, runs each iteration. This class also deals with WNTR
     and updates the database.
     """
+
     def __init__(self, intermediate_yaml):
         signal.signal(signal.SIGINT, self.interrupt)
         signal.signal(signal.SIGTERM, self.interrupt)
@@ -309,8 +310,8 @@ class PhysicalPlant:
     def finish(self):
         self.write_results(self.results_list)
         end_time = datetime.now()
-        ReadMeGenerator(self.intermediate_yaml).write_md(self.start_time, end_time, self.wn,
-                                                         self.master_time)
+        BatchReadMeGenerator(self.intermediate_yaml).write_batch(self.start_time, end_time, self.wn,
+                                                                    self.master_time)
         sys.exit(0)
 
     def set_initial_values(self):

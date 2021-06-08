@@ -1,9 +1,9 @@
 import datetime
 import os
 from pathlib import Path
+from shutil import copy
 
 import pkg_resources
-import wntr
 import yaml
 
 
@@ -12,9 +12,12 @@ class ReadMeGenerator:
     Class which deals with generating a readme.
     """
 
-    def __init__(self, intermediate_yaml_path):
+    def __init__(self, intermediate_yaml_path, config_file_path):
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
+
+        with config_file_path.open() as config_file:
+            self.config = yaml.load(config_file)
 
         # Create directories in output folder
         self.configuration_path = Path(self.intermediate_yaml['output_path']) / 'configuration'
@@ -41,8 +44,8 @@ class ReadMeGenerator:
         else:
             return "\n\n" + parameter + ": None"
 
-    def write_md(self, start_time: datetime, end_time: datetime,
-                 wn: wntr.network.WaterNetworkModel, master_time: int):
+    def write_readme(self, start_time: datetime, end_time: datetime,
+                     wn: wntr.network.WaterNetworkModel, master_time: int):
         """
         Writes a readme about the current experiment.
         :param start_time: starting time of experiment
@@ -93,7 +96,36 @@ class ReadMeGenerator:
                                  end=str(end_time.strftime("%Y-%m-%d %H:%M:%S"))))
             readme.write("\n\nThe duration of this simulation was {time}."
                          .format(time=str(end_time - start_time)))
-            readme.write("\n\nRan for {x} out of {y} iterations with hydraulic timestep {step}."
-                         .format(x=str(master_time),
-                                 y=str(self.intermediate_yaml['iterations']),
-                                 step=str(wn.options.time.hydraulic_timestep)))
+
+    def copy_input_files(self):
+        """Copies all input files, mandatory and optional ones included."""
+        with self.config.open(mode='r') as file:
+            config = yaml.load(file, Loader=yaml.FullLoader)
+
+        # Prepare configuration folder in output where files will be copied.
+        configuration_folder = self.config.parent / config['output_path'] / 'configuration'
+        os.makedirs(str(configuration_folder), exist_ok=True)
+
+        # Copy mandatory files.
+        with open(str(configuration_folder / 'config.yaml'), 'w') as file:
+            yaml.dump(config, file)
+
+        copy(self.config.parent / config['inp_file'], configuration_folder / 'map.inp')
+
+        # Copy optional csv files.
+        if 'initial_tank_data' in config:
+            copy(self.config.parent / config['initial_tank_data'],
+                 configuration_folder / 'initial_tank_data.csv')
+
+        if 'demand_patterns' in config:
+            copy(self.config.parent / config['demand_patterns'],
+                 configuration_folder / 'demand_patterns.csv')
+
+        if 'network_loss_data' in config:
+            copy(self.config.parent / config['network_loss_data'],
+                 configuration_folder / 'network_loss_data.csv')
+
+        if 'network_delay_data' in config:
+            copy(self.config.parent / config['network_delay_data'],
+                 configuration_folder / 'network_delay_data.csv')
+

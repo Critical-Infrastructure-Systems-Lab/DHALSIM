@@ -5,7 +5,6 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from shutil import copyfile, copy
 
 import yaml
 
@@ -52,7 +51,9 @@ class Runner():
             self.run_simulation(intermediate_yaml_path)
 
     def run_simulation(self, intermediate_yaml_path):
-        self.copy_input_files()
+        # ReadMeGenerator(self.intermediate_yaml).write_md(self.start_time, end_time, self.wn,
+        #                                                  self.master_time)
+
 
         db_initializer = DatabaseInitializer(intermediate_yaml_path)
         db_initializer.drop()
@@ -62,39 +63,6 @@ class Runner():
         self.automatic_run = subprocess.Popen(
             ["python2", str(automatic_run_path), str(intermediate_yaml_path)])
         self.automatic_run.wait()
-
-    def copy_input_files(self):
-        """Copies all input files, mandatory and optional ones included."""
-        with self.config_file.open(mode='r') as file:
-            config = yaml.load(file, Loader=yaml.FullLoader)
-
-        # Prepare configuration folder in output where files will be copied.
-        configuration_folder = self.config_file.parent / config['output_path'] / 'configuration'
-        os.makedirs(str(configuration_folder), exist_ok=True)
-
-        # Copy mandatory files.
-        with open(str(configuration_folder / 'config.yaml'), 'w') as file:
-            yaml.dump(config, file)
-
-        copy(self.config_file.parent / config['inp_file'], configuration_folder / 'map.inp')
-
-        # Copy optional csv files.
-        if 'initial_tank_data' in config:
-            copy(self.config_file.parent / config['initial_tank_data'],
-                 configuration_folder / 'initial_tank_data.csv')
-
-        if 'demand_patterns' in config:
-            copy(self.config_file.parent / config['demand_patterns'],
-                 configuration_folder / 'demand_patterns.csv')
-
-        if 'network_loss_data' in config:
-            copy(self.config_file.parent / config['network_loss_data'],
-                 configuration_folder / 'network_loss_data.csv')
-
-        if 'network_delay_data' in config:
-            copy(self.config_file.parent / config['network_delay_data'],
-                 configuration_folder / 'network_delay_data.csv')
-
 
 def main():
     parser = argparse.ArgumentParser(description='Executes DHALSIM based on a config file')
