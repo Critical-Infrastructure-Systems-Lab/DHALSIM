@@ -310,8 +310,9 @@ class PhysicalPlant:
     def finish(self):
         self.write_results(self.results_list)
         end_time = datetime.now()
-        BatchReadMeGenerator(self.intermediate_yaml).write_batch(self.start_time, end_time, self.wn,
-                                                                 self.master_time)
+        if 'batch_simulations' in self.data:
+            BatchReadMeGenerator(self.intermediate_yaml).write_batch(self.start_time, end_time, self.wn,
+                                                                     self.master_time)
         sys.exit(0)
 
     def set_initial_values(self):
