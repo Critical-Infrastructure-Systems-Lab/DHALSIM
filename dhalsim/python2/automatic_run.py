@@ -157,7 +157,7 @@ class GeneralCPS(MiniCPS):
             os.makedirs(str(links_path))
 
         with open(str(links_path / 'mininet_links.md'), 'w') as links_file:
-            links_file.write("Mininet Links\n=========")
+            links_file.write("# Mininet Links")
             for link in self.net.links:
                 links_file.write("\n\n" + str(link))
 
