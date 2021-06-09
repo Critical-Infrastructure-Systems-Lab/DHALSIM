@@ -19,7 +19,7 @@ class BatchReadMeGenerator:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
         os.makedirs(str(Path(self.intermediate_yaml['config_path']).parent
-                        / self.intermediate_yaml['output_path']), exist_ok=True)
+                        / self.intermediate_yaml['output_path'] / 'configuration'), exist_ok=True)
         self.readme_path = Path(self.intermediate_yaml['config_path']).parent \
                            / self.intermediate_yaml['output_path'] / 'configuration'\
                            / 'batch_readme.md'
