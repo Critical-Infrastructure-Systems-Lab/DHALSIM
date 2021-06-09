@@ -30,14 +30,17 @@ class DatabaseInitializer:
                     value TEXT,
                     PRIMARY KEY (name, pid)
                 );""")
-            for actuator in self.data["actuators"]:
-                initial_state = "0" if actuator["initial_state"].lower() == "closed" else "1"
-                cur.execute("INSERT INTO plant VALUES (?, 1, ?);",
-                            (actuator["name"], initial_state,))
 
-            for plc in self.data["plcs"]:
-                for sensor in plc["sensors"]:
-                    cur.execute("INSERT INTO plant VALUES (?, 1, 0);", (sensor,))
+            if "actuators" in self.data:
+                for actuator in self.data["actuators"]:
+                    initial_state = "0" if actuator["initial_state"].lower() == "closed" else "1"
+                    cur.execute("INSERT INTO plant VALUES (?, 1, ?);",
+                                (actuator["name"], initial_state,))
+
+            if "plcs" in self.data:
+                for plc in self.data["plcs"]:
+                    for sensor in plc["sensors"]:
+                        cur.execute("INSERT INTO plant VALUES (?, 1, 0);", (sensor,))
 
             # Creates master_time table if it does not yet exist
             cur.execute("CREATE TABLE master_time (id INTEGER PRIMARY KEY, time INTEGER)")
@@ -52,10 +55,17 @@ class DatabaseInitializer:
                 PRIMARY KEY (name)
             );""")
 
-            for plc in self.data["plcs"]:
-                cur.execute("INSERT INTO sync (name, flag) VALUES (?, 1);",
-                            (plc["name"],))
+            if "plcs" in self.data:
+                for plc in self.data["plcs"]:
+                    cur.execute("INSERT INTO sync (name, flag) VALUES (?, 1);",
+                                (plc["name"],))
+
             cur.execute("INSERT INTO sync (name, flag) VALUES ('scada', 1);")
+
+            if "network_attacks" in self.data:
+                for attacker in self.data["network_attacks"]:
+                    cur.execute("INSERT INTO sync (name, flag) VALUES (?, 1);",
+                                (attacker["name"],))
             conn.commit()
 
     def drop(self):

@@ -6,6 +6,7 @@ from schema import SchemaError
 
 from dhalsim.parser.config_parser import ConfigParser
 
+
 def test_python_version():
     assert sys.version_info.major is 3
 
@@ -35,15 +36,37 @@ def test_dict():
             "device_attacks": [
                 {
                     "name": "Close PRAW1 from iteration 5 to 10",
-                    "type": "Time",
-                    "actuators": ["P_RAW1"],
+                    "trigger": {
+                        "type": "Time",
+                        "start": 5,
+                        "end": 10
+                    },
+                    "actuator": "P_RAW1",
                     "command": "closed",
-                    "start": 5,
-                    "end": 10,
                 }
             ]
         },
     }
+
+
+@pytest.fixture
+def attack_dict_1():
+    return {
+        'name': 'test1',
+        'tags': [{'tag': 'T2', 'value': 0.2}],
+        'target': 'PLC2',
+        'trigger': {'end': 7, 'start': 2, 'type': 'Time'},
+        'type': 'mitm'
+    }
+
+
+@pytest.fixture
+def attack_dict_2():
+    return {'name': 'test2',
+            'target': 'PLC1',
+            'trigger': {'end': 17, 'start': 12, 'type': 'Time'},
+            'type': 'naive_mitm',
+            'value': -2}
 
 
 def test_valid_dict(test_dict):
@@ -152,10 +175,6 @@ def test_valid_config(key, input_value, expected_value, test_dict):
     assert output[key] == expected_value
 
 
-
-
-
-
 @pytest.mark.parametrize("key", [
     'actuators',
     'sensors',
@@ -222,3 +241,70 @@ def test_valid_plc(key, input_value, expected_value, test_dict):
     test_dict['plcs'][0][key] = input_value
     output = ConfigParser.validate_schema(test_dict)
     assert output['plcs'][0][key] == expected_value
+
+
+def test_attack_dicts(attack_dict_1, attack_dict_2):
+    ConfigParser.network_attacks.validate(attack_dict_1)
+    ConfigParser.network_attacks.validate(attack_dict_2)
+
+
+@pytest.mark.parametrize("key, input_value", [
+    ('type', 9),
+    ('type', 'hi')
+])
+def test_invalid_attacks_mitm(key, input_value, attack_dict_1):
+    attack_dict_1[key] = input_value
+    with pytest.raises(SchemaError):
+        ConfigParser.validate_schema(attack_dict_1)
+
+
+@pytest.mark.parametrize("key, input_value, expected", [
+    ('name', 'hello', 'hello'),
+])
+def test_valid_attacks_mitm(key, input_value, expected, attack_dict_1):
+    attack_dict_1[key] = input_value
+    output = ConfigParser.network_attacks.validate(attack_dict_1)
+    assert output[key] == expected
+
+
+@pytest.mark.parametrize("key, input_value", [
+    ('type', 9),
+    ('type', 'hi')
+])
+def test_invalid_attacks_naive(key, input_value, attack_dict_2):
+    attack_dict_2[key] = input_value
+    with pytest.raises(SchemaError):
+        ConfigParser.validate_schema(attack_dict_2)
+
+
+@pytest.mark.parametrize("key, input_value, expected", [
+    ('name', 'hello', 'hello'),
+])
+def test_valid_attacks_naive(key, input_value, expected, attack_dict_2):
+    attack_dict_2[key] = input_value
+    output = ConfigParser.network_attacks.validate(attack_dict_2)
+    assert output[key] == expected
+
+
+@pytest.mark.parametrize("required_key", [
+    'name',
+    'type',
+    'trigger',
+    'target'
+])
+def test_required_attack_fields_mitm(required_key, attack_dict_1):
+    del attack_dict_1[required_key]
+    with pytest.raises(SchemaError):
+        ConfigParser.validate_schema(attack_dict_1)
+
+
+@pytest.mark.parametrize("required_key", [
+    'name',
+    'type',
+    'trigger',
+    'target'
+])
+def test_required_attack_fields_naive(required_key, attack_dict_2):
+    del attack_dict_2[required_key]
+    with pytest.raises(SchemaError):
+        ConfigParser.validate_schema(attack_dict_2)

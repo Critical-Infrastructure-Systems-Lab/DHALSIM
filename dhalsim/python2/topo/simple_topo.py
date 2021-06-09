@@ -5,6 +5,14 @@ from mininet.node import Node
 from mininet.net import Mininet
 
 
+class Error(Exception):
+    """Base class for exceptions in this module."""
+
+
+class NoSuchPlc(Error):
+    """Raised when an attack targets a PLC that does not exist"""
+
+
 class LinuxRouter(Node):
     """
     A node with IP forwarding enabled
@@ -13,10 +21,10 @@ class LinuxRouter(Node):
     def config(self, **params):
         super(LinuxRouter, self).config(**params)
         # Enable forwarding on the router
-        self.cmd('sysctl net.ipv4.ip_foward=1')
+        self.cmd('sysctl net.ipv4.ip_forward=1')
 
     def terminate(self):
-        self.cmd('sysctl net.ipv4.ip_foward=0')
+        self.cmd('sysctl net.ipv4.ip_forward=0')
 
 
 class SimpleTopo(Topo):
@@ -36,6 +44,9 @@ class SimpleTopo(Topo):
         # Set variables
         self.router_ip = "192.168.1.254"
         self.supervisor_ip = "192.168.2.254"
+        self.router = 'r0'
+        self.plc_switch = 's1'
+        self.scada_switch = 's2'
 
         # Load the data from the YAML file
         self.intermediate_yaml_path = intermediate_yaml_path
@@ -43,37 +54,70 @@ class SimpleTopo(Topo):
             self.data = yaml.safe_load(intermediate_yaml)
 
         # Generate PLC data and write back to file (mac addresses, ip addresses, interface names, ...)
-        self.generate_plc_data(self.data['plcs'])
-        # Generate scada data
-        self.data['scada'] = {}
-        self.data['scada']['name'] = "scada"
-        self.data['scada']['local_ip'] = "192.168.2.1"
-        self.data['scada']['public_ip'] = "192.168.2.1"
-        self.data['scada']['interface'] = "scada-eth0"
+        self.generate_data(self.data)
+
         with self.intermediate_yaml_path.open(mode='w') as intermediate_yaml:
             yaml.safe_dump(self.data, intermediate_yaml)
 
         # Initialize mininet topology
         Topo.__init__(self)
 
-    def generate_plc_data(self, plcs):
+    def generate_data(self, data):
         """
         Generate all the ips, interfaces, etc. from every plc and the scada.
         These are then applied when building the topo
 
         :param data: the dict resulting from a dump of the intermediate yaml
         """
-        for idx, plc in enumerate(plcs):
-            plc_ip = "192.168.1." + str(idx + 1)
-            plc_mac = Mininet.randMac()
-            plc_int = plc['name'] + "-eth0"
+        index = 1
+        if 'plcs' in self.data.keys():
+            if len(data["plcs"]) > 250:
+                self.logger.error("There are too many PLCs for a simple network topology.")
+            else:
+                for plc in data["plcs"]:
+                    plc_ip = "192.168.1." + str(index)
+                    plc_mac = Mininet.randMac()
+                    plc_int = plc['name'] + "-eth0"
 
-            # Store the data in self.data
-            plc['local_ip'] = plc_ip
-            plc['public_ip'] = plc_ip
-            plc['mac'] = plc_mac
-            plc['interface'] = plc_int
-            plc['gateway'] = self.router_ip
+                    # Store the data in self.data
+                    plc['local_ip'] = plc_ip
+                    plc['public_ip'] = plc_ip
+                    plc['mac'] = plc_mac
+                    plc['interface'] = plc_int
+                    plc['gateway'] = self.router_ip
+                    plc['switch_name'] = self.plc_switch
+                    plc['gateway_name'] = self.router
+                    plc['gateway_ip'] = self.router_ip
+                    index += 1
+
+        # Generate scada data
+        data['scada'] = {}
+        data['scada']['name'] = "scada"
+        data['scada']['local_ip'] = "192.168.2.1"
+        data['scada']['public_ip'] = "192.168.2.1"
+        data['scada']['interface'] = "scada-eth0"
+        data['scada']['switch_name'] = self.scada_switch
+        data['scada']['gateway_name'] = self.router
+        data['scada']['gateway_ip'] = self.supervisor_ip
+
+        if 'network_attacks' in self.data.keys():
+            for attack in data['network_attacks']:
+                target = next((plc for plc in data['plcs'] if plc['name'] == attack['target']), None)
+                if attack['target'] == 'scada':
+                    target = data['scada']
+                if not target:
+                    raise NoSuchPlc("The target plc {name} does not exist".format(name=attack['target']))
+                if attack['target'] == 'scada':
+                    attack['local_ip'] = "192.168.2." + str(index)
+                else:
+                    attack['local_ip'] = "192.168.1." + str(index)
+                attack['public_ip'] = attack['local_ip']
+                attack['mac'] = Mininet.randMac()
+                attack['interface'] = attack['name'] + "-eth0"
+                attack['gateway_name'] = target['gateway_name']
+                attack['switch_name'] = target['switch_name']
+                attack['gateway_ip'] = target['gateway_ip']
+                index += 1
 
     def build(self):
         """
@@ -113,6 +157,17 @@ class SimpleTopo(Topo):
         # Add a link between the switch and the scada
         self.add_node_switch_link(scada, supervisor_switch, self.data['scada'])
 
+        # -- ATACKERS -- #
+        if 'network_attacks' in self.data.keys():
+            # Add attackers to the mininet network
+            for attack in self.data['network_attacks']:
+                attacker = self.addHost(
+                    attack['name'],
+                    mac=attack['mac'],
+                    ip=attack['local_ip'] + "/24",
+                    defaultRoute='via ' + attack['gateway_ip'] + '/24')
+                self.addLink(attacker, attack["switch_name"], intfName=attack['interface'])
+
     def add_node_switch_link(self, node, switch, yaml_node_data):
         """
         This function adds the link between the node and its switch,
@@ -150,11 +205,16 @@ class SimpleTopo(Topo):
         # Set the default gateway of the PLCs
         if 'plcs' in self.data.keys():
             for plc in self.data['plcs']:
-                net.get(plc['name']).cmd('route add default gw ' + plc['gateway'])
+                net.get(plc['name']).cmd('route add default gw {ip}'.format(ip=plc['gateway']))
 
         # Set the default gateway of the SCADA
         net.get('scada').cmd('route add default gw ' + self.supervisor_ip)
 
-        # Additional router commands
-        net.get('r0').cmd('ifconfig r0-eth2 192.168.2.254')
+        # Set default gateway for the attackers
+        if 'network_attacks' in self.data.keys():
+            for attack in self.data['network_attacks']:
+                net.get(attack['name']).cmd('route add default gw {ip}'.format(ip=attack['gateway_ip']))
+
+        # Set interface ip on router for scada
+        net.get('r0').cmd('ifconfig r0-eth2 {ip}'.format(ip=self.supervisor_ip))
         net.get('r0').waitOutput()

@@ -14,5 +14,6 @@ DHALSIM was presented in the ICSS Workshop in ACSAC'20.
 
    installation.rst
    configuration.rst
+   attacks.rst
    running.rst
    api.rst

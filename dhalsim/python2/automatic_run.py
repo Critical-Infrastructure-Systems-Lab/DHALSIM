@@ -72,6 +72,7 @@ class GeneralCPS(MiniCPS):
         self.plc_processes = None
         self.scada_process = None
         self.plant_process = None
+        self.attacker_processes = None
 
         self.automatic_start()
 
@@ -89,25 +90,38 @@ class GeneralCPS(MiniCPS):
         This starts all the processes for plcs, etc.
         """
         self.plc_processes = []
+        if "plcs" in self.data:
+            automatic_plc_path = Path(__file__).parent.absolute() / "automatic_plc.py"
+            for i, plc in enumerate(self.data["plcs"]):
+                node = self.net.get(plc["name"])
+                cmd = ["python2", str(automatic_plc_path), str(self.intermediate_yaml), str(i)]
+                self.plc_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
 
-        automatic_plc_path = Path(__file__).parent.absolute() / "automatic_plc.py"
-        for i, plc in enumerate(self.data["plcs"]):
-            node = self.net.get(plc["name"])
-            cmd = ["python2", str(automatic_plc_path), str(self.intermediate_yaml), str(i)]
-            self.plc_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
+        self.logger.info("Launched the PLCs processes.")
 
         automatic_scada_path = Path(__file__).parent.absolute() / "automatic_scada.py"
         scada_cmd = ["python2", str(automatic_scada_path), str(self.intermediate_yaml)]
         self.scada_process = self.net.get('scada').popen(scada_cmd, stderr=sys.stderr, stdout=sys.stdout)
 
-        self.logger.info("Launched the PLCs and SCADA processes.")
+        self.logger.info("Launched the SCADA process.")
+
+        self.attacker_processes = []
+        if "network_attacks" in self.data:
+            automatic_attacker_path = Path(__file__).parent.absolute() / "automatic_attacker.py"
+            for i, attacker in enumerate(self.data["network_attacks"]):
+                node = self.net.get(attacker["name"])
+                cmd = ["python2", str(automatic_attacker_path), str(self.intermediate_yaml), str(i)]
+                self.attacker_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
+
+        self.logger.debug("Launched the attackers processes.")
 
         automatic_plant_path = Path(__file__).parent.absolute() / "automatic_plant.py"
 
         cmd = ["python2", str(automatic_plant_path), str(self.intermediate_yaml)]
         self.plant_process = subprocess.Popen(cmd, stderr=sys.stderr, stdout=sys.stdout)
 
-        self.logger.info("Simulating...")
+        self.logger.debug("Launched the plant processes.")
+
         # We wait until the simulation ends
         while self.plant_process.poll() is None:
             pass
@@ -133,20 +147,32 @@ class GeneralCPS(MiniCPS):
         automatic run spawned.
         """
         self.logger.info("Simulation finished.")
-        try:
-            self.end_process(self.scada_process)
-        except:
-            pass
+
+        if self.scada_process.poll() is None:
+            try:
+                self.end_process(self.scada_process)
+            except Exception as msg:
+                self.logger.error("Exception shutting down SCADA: " + str(msg))
 
         for plc_process in self.plc_processes:
-            try:
-                self.end_process(plc_process)
-            except:
-                continue
+            if plc_process.poll() is None:
+                try:
+                    self.end_process(plc_process)
+                except Exception as msg:
+                    self.logger.error("Exception shutting down plc: " + str(msg))
+
+        for attacker in self.attacker_processes:
+            if attacker.poll() is None:
+                try:
+                    self.end_process(attacker)
+                except Exception as msg:
+                    self.logger.error("Exception shutting down attacker: " + str(msg))
 
         if self.plant_process.poll() is None:
-            self.logger.info("Physical simulation process terminated.")
-            self.end_process(self.plant_process)
+            try:
+                self.end_process(self.plant_process)
+            except Exception as msg:
+                self.logger.error("Exception shutting down plant_process: " + str(msg))
 
         cmd = 'sudo pkill -f "python2 -m cpppo.server.enip"'
         subprocess.call(cmd, shell=True, stderr=sys.stderr, stdout=sys.stdout)

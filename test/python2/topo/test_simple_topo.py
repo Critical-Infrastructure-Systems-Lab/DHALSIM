@@ -21,14 +21,14 @@ def unmodified_dict():
 
 @pytest.fixture
 def filled_dict():
-    return {'scada': {'interface': 'scada-eth0', 'local_ip': '192.168.2.1', 'name': 'scada',
-                      'public_ip': '192.168.2.1'},
-            'plcs': [{'public_ip': '192.168.1.1', 'mac': '00:1D:9C:C7:B0:70', 'name': 'PLC1',
-                      'local_ip': '192.168.1.1', 'interface': 'PLC1-eth0',
-                      'gateway': '192.168.1.254'},
-                     {'public_ip': '192.168.1.2', 'mac': '00:1D:9C:C7:B0:70', 'name': 'PLC2',
-                      'local_ip': '192.168.1.2', 'interface': 'PLC2-eth0',
-                      'gateway': '192.168.1.254'}]}
+    return {'scada': {'interface': 'scada-eth0', 'local_ip': '192.168.2.1', 'name': 'scada', 'public_ip': '192.168.2.1',
+                      'switch_name': 's2', 'gateway_name': 'r0', 'gateway_ip': '192.168.2.254'}, 'plcs': [
+        {'public_ip': '192.168.1.1', 'mac': '00:1D:9C:C7:B0:70', 'name': 'PLC1', 'local_ip': '192.168.1.1',
+         'interface': 'PLC1-eth0', 'gateway': '192.168.1.254', 'switch_name': 's1', 'gateway_name': 'r0',
+         'gateway_ip': '192.168.1.254'},
+        {'public_ip': '192.168.1.2', 'mac': '00:1D:9C:C7:B0:70', 'name': 'PLC2', 'local_ip': '192.168.1.2',
+         'interface': 'PLC2-eth0', 'gateway': '192.168.1.254', 'switch_name': 's1', 'gateway_name': 'r0',
+         'gateway_ip': '192.168.1.254'}]}
 
 
 @pytest.fixture
@@ -117,6 +117,7 @@ def test_links_endpoints(topo_fixture):
 @pytest.mark.integrationtest
 @pytest.mark.parametrize("host1, host2",
                          [("r0", "PLC1"), ("r0", "PLC2"), ("r0", "scada")])
+@pytest.mark.flaky(max_runs=3)
 def test_ping(net, host1, host2):
     assert net.ping(hosts=[net.get(host1), net.get(host2)]) == 0.0
 
@@ -139,6 +140,7 @@ def test_number_of_links(net):
                          [("PLC1", "r0", "192.168.1.1"), ("PLC2", "r0", "192.168.1.2"),
                           # ("PLC1", "PLC2", "192.168.1.1"), ("PLC2", "PLC1", "192.168.1.2"),
                           ("PLC1", "scada", "192.168.1.1"), ("PLC2", "scada", "192.168.1.2")])
+@pytest.mark.flaky(max_runs=3)
 def test_reachability(net, server, client, server_ip):
     net.get(server).cmd("echo 'test' | nc -q1 -l 44818 &")
     time.sleep(0.1)
