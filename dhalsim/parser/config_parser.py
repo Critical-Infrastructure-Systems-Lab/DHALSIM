@@ -1,6 +1,7 @@
 import os
 import sys
 import tempfile
+from datetime import datetime
 
 import pkg_resources
 from pathlib import Path
@@ -504,6 +505,7 @@ class ConfigParser:
         # Log level
         yaml_data['log_level'] = self.data['log_level']
 
+        yaml_data['start_time'] = datetime.now()
         # Write values from IMP file into yaml file (controls, tanks/valves/initial values, etc.)
         yaml_data = InputParser(yaml_data).write()
 

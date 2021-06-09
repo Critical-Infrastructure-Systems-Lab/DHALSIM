@@ -13,7 +13,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from dhalsim.parser.file_generator import BatchReadMeGenerator
+from dhalsim.parser.file_generator import BatchReadMeGenerator, ReadMeGenerator
 from dhalsim.py3_logger import get_logger
 import wntr
 import wntr.network.controls as controls
@@ -313,6 +313,10 @@ class PhysicalPlant:
         if 'batch_simulations' in self.data:
             BatchReadMeGenerator(self.intermediate_yaml).write_batch(self.start_time, end_time, self.wn,
                                                                      self.master_time)
+            if self.data['batch_index'] == self.data['batch_simulations'] - 1:
+                ReadMeGenerator(self.intermediate_yaml).write_readme(self.data['start_time'], datetime.now())
+        else:
+            ReadMeGenerator(self.intermediate_yaml).write_readme(self.data['start_time'], datetime.now())
         sys.exit(0)
 
     def set_initial_values(self):
