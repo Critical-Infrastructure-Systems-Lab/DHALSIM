@@ -105,7 +105,6 @@ class ReadMeGenerator:
             readme.write(self.get_value('mininet_cli'))
             readme.write(self.get_value('log_level'))
             readme.write(self.get_value('simulator'))
-            readme.write(self.get_optional('attacks_path'))
             readme.write(self.get_optional('batch_simulations'))
 
             # Extra data
