@@ -39,6 +39,12 @@ class ReadMeGenerator:
         else:
             return "\n\n" + parameter + ": None"
 
+    def checkbox(self, parameter):
+        if parameter in self.intermediate_yaml:
+            return "\n\n- [x] {para}".format(para=parameter)
+        else:
+            return "\n\n- [ ] {para}".format(para=parameter)
+
     def write_readme(self, start_time, end_time):
         """
         Writes a readme about the current experiment.
@@ -56,7 +62,6 @@ class ReadMeGenerator:
                                    / self.intermediate_yaml['output_path'] / 'configuration'
 
         readme_path = str(configuration_folder / 'readme_experiment.md')
-        # open(configuration_folder, 'w+')
 
         # Create directories in output folder
         if not os.path.exists(str(configuration_folder)):
@@ -89,6 +94,14 @@ class ReadMeGenerator:
             readme.write(self.get_value('simulator'))
             readme.write(self.get_optional('attacks_path'))
             readme.write(self.get_optional('batch_simulations'))
+
+            # Extra data
+            readme.write("\n\n## Extra parameters")
+            readme.write(self.checkbox('initial_tank_data'))
+            readme.write(self.checkbox('demand_patterns'))
+            readme.write(self.checkbox('network_loss_data'))
+            readme.write(self.checkbox('network_delay_data'))
+            readme.write(self.checkbox('network_attacks'))
 
             # Mininet links
             readme.write("\n\n## Mininet links")
