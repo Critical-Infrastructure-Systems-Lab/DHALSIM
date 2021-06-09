@@ -189,6 +189,11 @@ class ConfigParser:
 
     @staticmethod
     def do_checks(data: dict):
+        """
+        Perform various checks on the data provided
+
+        :param data: The data to check
+        """
         ConfigParser.network_attack_only_complex(data)
 
     @staticmethod
