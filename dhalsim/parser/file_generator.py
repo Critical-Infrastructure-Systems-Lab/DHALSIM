@@ -11,10 +11,9 @@ class BatchReadMeGenerator:
     """
     Class which deals with generating a readme for each batch.
     :param intermediate_yaml_path: contains the path to intermediate yaml
-    :type intermediate_yaml_path: str
     """
 
-    def __init__(self, intermediate_yaml_path):
+    def __init__(self, intermediate_yaml_path: str):
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
@@ -24,7 +23,8 @@ class BatchReadMeGenerator:
                            / self.intermediate_yaml['output_path'] / 'configuration'\
                            / 'readme_batch.md'
 
-    def write_batch(self, start_time: datetime, end_time: datetime, wn: WaterNetworkModel, master_time: int):
+    def write_batch(self, start_time: datetime.datetime, end_time: datetime.datetime,
+                    wn: WaterNetworkModel, master_time: int):
         """
         Creates a small readme for each batch.
         :param start_time: is the start time of batch
@@ -69,9 +69,10 @@ class BatchReadMeGenerator:
 class InputFilesCopier:
     """
     Copies all input files.
+    :param config_file: contains the location of the config file
     """
 
-    def __init__(self, config_file):
+    def __init__(self, config_file: str):
         self.config_file = config_file
 
         with self.config_file.open(mode='r') as conf:
@@ -123,40 +124,34 @@ class ReadMeGenerator:
     :type links: list of links
     """
 
-    def __init__(self, intermediate_yaml_path):
+    def __init__(self, intermediate_yaml_path: str):
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
-    def get_value(self, parameter):
+    def get_value(self, parameter: str) -> str:
         """
         Gets the value of a required parameter.
         :param parameter: to find the value of
-        :type parameter: str
         :return: human readable string
-        :rtype: str
         """
         return "\n\n" + parameter + ": " + str(self.intermediate_yaml[parameter])
 
-    def get_optional(self, parameter):
+    def get_optional(self, parameter: str) -> str:
         """
         Gets the value of an optional parameter.
         :param parameter: to find the value of
-        :type parameter: str
         :return: human readable string
-        :rtype: str
         """
         if parameter in self.intermediate_yaml:
             return self.get_value(parameter)
         else:
             return "\n\n" + parameter + ": None"
 
-    def checkbox(self, parameter):
+    def checkbox(self, parameter: str) -> str:
         """
         Returns a string with a checkbox, checked if parameter is used, otherwise unchecked.
         :param parameter: parameter to evaluate
-        :type parameter: str
         :return: complete string with checkbox in it
-        :rtype: str
         """
         if parameter in self.intermediate_yaml:
             if len(self.intermediate_yaml[parameter]) > 0:
@@ -181,8 +176,7 @@ class ReadMeGenerator:
         readme_path = str(configuration_folder / 'readme_experiment.md')
 
         # Create directories in output folder
-        if not os.path.exists(str(configuration_folder)):
-            os.makedirs(str(configuration_folder))
+        os.makedirs(str(configuration_folder), exist_ok=True)
 
         with open(readme_path, 'w') as readme:
             readme.write("# Auto-generated README of {file}"
