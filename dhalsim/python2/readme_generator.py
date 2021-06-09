@@ -41,9 +41,10 @@ class ReadMeGenerator:
 
     def checkbox(self, parameter):
         if parameter in self.intermediate_yaml:
-            return "\n\n- [x] {para}".format(para=parameter)
-        else:
-            return "\n\n- [ ] {para}".format(para=parameter)
+            if len(self.intermediate_yaml[parameter]) > 0:
+                return "\n\n- [x] {para}".format(para=parameter)
+
+        return "\n\n- [ ] {para}".format(para=parameter)
 
     def write_readme(self, start_time, end_time):
         """
