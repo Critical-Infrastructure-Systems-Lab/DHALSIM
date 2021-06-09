@@ -78,6 +78,7 @@ def test_generate_intermediate_yaml(mocker, tmpdir, wadi_config_yaml_path, fille
 
     actual.pop('dhalsim_version')
     actual.pop('config_path')
+    actual.pop('start_time')
 
     assert actual == expected
     directory_mock.mkdtemp.assert_called_with(prefix='dhalsim_')
