@@ -118,14 +118,14 @@ class GeneralCPS(MiniCPS):
                 cmd = ["python2", str(automatic_attacker_path), str(self.intermediate_yaml), str(i)]
                 self.attacker_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
 
-        self.logger.info("Launched the attackers processes.")
+        self.logger.debug("Launched the attackers processes.")
 
         automatic_plant_path = Path(__file__).parent.absolute() / "automatic_plant.py"
 
         cmd = ["python2", str(automatic_plant_path), str(self.intermediate_yaml)]
-        self.plant_process = self.net.get('plant').popen(cmd, stderr=sys.stderr, stdout=sys.stdout)
+        self.plant_process = subprocess.Popen(cmd, stderr=sys.stderr, stdout=sys.stdout)
 
-        self.logger.info("Launched the plant processes.")
+        self.logger.debug("Launched the plant processes.")
 
         # We wait until the simulation ends
         while self.plant_process.poll() is None:

@@ -30,7 +30,7 @@ class AttackerControl(NodeControl):
 
     def terminate(self):
         """This function stops the tcp dump and the attack network attack."""
-        print("Stopping tcpdump process on attacker...")
+        self.logger.debug("Stopping tcpdump process on attacker...")
         self.tcp_dump_process.send_signal(signal.SIGINT)
         self.tcp_dump_process.wait()
         if self.tcp_dump_process.poll() is None:
@@ -38,7 +38,7 @@ class AttackerControl(NodeControl):
         if self.tcp_dump_process.poll() is None:
             self.tcp_dump_process.kill()
 
-        print("Stopping attacker...")
+        self.logger.debug("Stopping attacker...")
         self.attacker_process.send_signal(signal.SIGINT)
         self.attacker_process.wait()
         if self.attacker_process.poll() is None:

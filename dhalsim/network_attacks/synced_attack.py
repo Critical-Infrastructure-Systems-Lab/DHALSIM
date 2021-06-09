@@ -169,7 +169,7 @@ class SyncedAttack(metaclass=ABCMeta):
         master_time = self.cur.fetchone()[0]
         return master_time
 
-    def get_sync(self):
+    def get_sync(self) -> bool:
         """
         Get the sync flag of this attack.
 

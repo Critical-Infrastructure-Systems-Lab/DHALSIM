@@ -27,7 +27,7 @@ setuptools.setup(
         'mdutils'
     ],
     extras_require={
-        'test': ['pytest', 'pytest-mock', 'mock', 'wget', 'flaky', 'netaddr'],
+        'test': ['pytest', 'pytest-mock', 'mock', 'wget', 'coverage', 'pytest-cov', 'flaky', 'netaddr'],
         'doc': ['sphinx', 'sphinx-rtd-theme', 'sphinx-prompt'],
     },
     python_requires=">=3.8",

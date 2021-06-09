@@ -165,9 +165,6 @@ class SimpleTopo(Topo):
                     defaultRoute='via ' + attack['gateway_ip'] + '/24')
                 self.addLink(attacker, attack["switch_name"], intfName=attack['interface'])
 
-        # -- PLANT -- #
-        self.addHost('plant')
-
     def add_node_switch_link(self, node, switch, yaml_node_data):
         """
         This function adds the link between the node and its switch,
