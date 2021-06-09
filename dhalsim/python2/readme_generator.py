@@ -10,8 +10,11 @@ import yaml
 class ReadMeGenerator:
     """
     Class which deals with generating a readme.
+    :param intermediate_yaml_path: contains the path to intermediate yaml
+    :type intermediate_yaml_path: str
+    :param links: contains all Mininet links
+    :type links: list of links
     """
-
     def __init__(self, intermediate_yaml_path, links):
         self.links = links
 
@@ -22,7 +25,9 @@ class ReadMeGenerator:
         """
         Gets the value of a required parameter.
         :param parameter: to find the value of
+        :type parameter: str
         :return: human readable string
+        :rtype: str
         """
         return "\n\n" + parameter + ": " + str(self.intermediate_yaml[parameter])
 
@@ -40,6 +45,13 @@ class ReadMeGenerator:
             return "\n\n" + parameter + ": None"
 
     def checkbox(self, parameter):
+        """
+        Returns a string with a checkbox, checked if parameter is used, otherwise unchecked.
+        :param parameter: parameter to evaluate
+        :type parameter: str
+        :return: complete string with checkbox in it
+        :rtype: str
+        """
         if parameter in self.intermediate_yaml:
             if len(self.intermediate_yaml[parameter]) > 0:
                 return "\n\n- [x] {para}".format(para=parameter)

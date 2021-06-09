@@ -10,8 +10,9 @@ import yaml
 class BatchReadMeGenerator:
     """
     Class which deals with generating a readme for each batch.
+    :param intermediate_yaml_path: contains the path to intermediate yaml
+    :type intermediate_yaml_path: str
     """
-
     def __init__(self, intermediate_yaml_path):
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
@@ -61,11 +62,10 @@ class BatchReadMeGenerator:
             readme.write("\n\nFor more information with regard to this experiment, consult "
                          "```readme_experiment.md``` in the root of the output folder.")
 
-        # batch x / y
-        # initial values van deze batch
-
-
 class InputFilesCopier:
+    """
+    Copies all input files.
+    """
     def __init__(self, config_file):
         self.config_file = config_file
 
