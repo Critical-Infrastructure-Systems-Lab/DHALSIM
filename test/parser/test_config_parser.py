@@ -76,7 +76,6 @@ def test_generate_intermediate_yaml(mocker, tmpdir, wadi_config_yaml_path, fille
     with yaml_path.open(mode='r') as reality:
         actual = yaml.safe_load(reality)
 
-    actual.pop('dhalsim_version')
     actual.pop('config_path')
     actual.pop('start_time')
 

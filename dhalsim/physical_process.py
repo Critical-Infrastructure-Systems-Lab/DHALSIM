@@ -314,9 +314,13 @@ class PhysicalPlant:
             BatchReadMeGenerator(self.intermediate_yaml).write_batch(self.start_time, end_time, self.wn,
                                                                      self.master_time)
             if self.data['batch_index'] == self.data['batch_simulations'] - 1:
-                ReadMeGenerator(self.intermediate_yaml).write_readme(self.data['start_time'], datetime.now())
+                ReadMeGenerator(self.intermediate_yaml).write_readme(self.data['start_time'],
+                                                                     datetime.now(), True,
+                                                                     self.master_time, self.wn)
         else:
-            ReadMeGenerator(self.intermediate_yaml).write_readme(self.data['start_time'], datetime.now())
+            ReadMeGenerator(self.intermediate_yaml).write_readme(self.data['start_time'],
+                                                                 datetime.now(), False,
+                                                                 self.master_time, self.wn)
         sys.exit(0)
 
     def set_initial_values(self):

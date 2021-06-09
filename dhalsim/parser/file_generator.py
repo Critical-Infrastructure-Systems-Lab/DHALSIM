@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 from shutil import copy
 
+import pkg_resources
 from wntr.network import WaterNetworkModel
 import yaml
 
@@ -21,7 +22,7 @@ class BatchReadMeGenerator:
                         / self.intermediate_yaml['output_path']), exist_ok=True)
         self.readme_path = Path(self.intermediate_yaml['config_path']).parent \
                            / self.intermediate_yaml['output_path'] / 'configuration'\
-                           / 'readme_batch.md'
+                           / 'batch_readme.md'
 
     def write_batch(self, start_time: datetime.datetime, end_time: datetime.datetime,
                     wn: WaterNetworkModel, master_time: int):
@@ -39,6 +40,8 @@ class BatchReadMeGenerator:
             readme.write("\n\nThis is batch {x} out of {y}."
                          .format(x=self.intermediate_yaml['batch_index'] + 1,
                                  y=self.intermediate_yaml['batch_simulations']))
+
+            # Batch specific values.
             if 'initial_tank_values' in self.intermediate_yaml:
                 readme.write("\n\n## Initial tank data")
                 readme.write("\n\n{data}".format(data=str(self.intermediate_yaml['initial_tank_values'])))
@@ -48,9 +51,8 @@ class BatchReadMeGenerator:
             if 'network_delay_values' in self.intermediate_yaml:
                 readme.write("\n\n## Network delay values")
                 readme.write("\n\n{data}".format(data=str(self.intermediate_yaml['network_delay_values'])))
-            if 'demand_patterns_path' in self.intermediate_yaml:
-                readme.write("\n\n## Demand patterns")
-                readme.write("\n\n{data}".format(data=str(self.intermediate_yaml['demand_patterns_path'])))
+
+            # Information about this batch.
             readme.write("\n\n## Information about this batch")
             readme.write("\n\nRan for {x} out of {y} iterations with hydraulic timestep {step}."
                          .format(x=str(master_time),
@@ -159,11 +161,15 @@ class ReadMeGenerator:
 
         return "\n\n- [ ] {para}".format(para=parameter)
 
-    def write_readme(self, start_time: datetime.datetime, end_time: datetime.datetime):
+    def write_readme(self, start_time: datetime.datetime, end_time: datetime.datetime,
+                     batch: bool, master_time: int, wn: WaterNetworkModel):
         """
         Writes a readme about the current experiment.
         :param start_time: starting time of experiment
         :param end_time: ending time of experiment
+        :param batch: bool whether this was batch mode
+        :param master_time: current master time
+        :param wn: instance of WaterNetworkModel
         """
         if 'batch_simulations' in self.intermediate_yaml:
             configuration_folder = Path(self.intermediate_yaml['config_path']).parent \
@@ -173,7 +179,7 @@ class ReadMeGenerator:
             configuration_folder = Path(self.intermediate_yaml['config_path']).parent \
                                    / self.intermediate_yaml['output_path'] / 'configuration'
 
-        readme_path = str(configuration_folder / 'readme_experiment.md')
+        readme_path = str(configuration_folder / 'general_readme.md')
 
         # Create directories in output folder
         os.makedirs(str(configuration_folder), exist_ok=True)
@@ -186,7 +192,7 @@ class ReadMeGenerator:
             readme.write("\n\n## Input files")
             input_string = "\n\nInput files have been copied to ```{output}```. In case" \
                            " any extra files were used, these files will be copied to the" \
-                           " output folder as well."
+                           " /output/configuration folder as well."
 
             # We want to write this readme to the root directory of the original output folder.
             if 'batch_simulations' in self.intermediate_yaml:
@@ -213,10 +219,28 @@ class ReadMeGenerator:
             readme.write(self.checkbox('network_delay_data'))
             readme.write(self.checkbox('network_attacks'))
 
+            if not batch:
+                if 'initial_tank_values' in self.intermediate_yaml:
+                    readme.write("\n\n## Initial tank data")
+                    readme.write("\n\n{data}".format(data=str(self.intermediate_yaml['initial_tank_values'])))
+                if 'network_loss_values' in self.intermediate_yaml:
+                    readme.write("\n\n## Network loss values")
+                    readme.write("\n\n{data}".format(data=str(self.intermediate_yaml['network_loss_values'])))
+                if 'network_delay_values' in self.intermediate_yaml:
+                    readme.write("\n\n## Network delay values")
+                    readme.write("\n\n{data}".format(data=str(self.intermediate_yaml['network_delay_values'])))
+
             # About this experiment
             readme.write("\n\n## About this experiment")
             readme.write("\n\nRan with DHALSIM v{version}."
-                         .format(version=self.intermediate_yaml['dhalsim_version']))
+                         .format(version=str(pkg_resources.require('dhalsim')[0].version)))
+
+            if not batch:
+                readme.write("\n\nRan for {x} out of {y} iterations with hydraulic timestep {step}."
+                             .format(x=str(master_time),
+                                     y=str(self.intermediate_yaml['iterations']),
+                                     step=str(wn.options.time.hydraulic_timestep)))
+
             readme.write("\n\nStarted at {start} and finished at {end}."
                          .format(start=str(start_time.strftime("%Y-%m-%d %H:%M:%S")),
                                  end=str(end_time.strftime("%Y-%m-%d %H:%M:%S"))))

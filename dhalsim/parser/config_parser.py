@@ -467,7 +467,6 @@ class ConfigParser:
 
         yaml_data = {}
         yaml_data['config_path'] = str(self.config_path)
-        yaml_data['dhalsim_version'] = str(pkg_resources.require('dhalsim')[0].version)
 
         # Begin with PLC data specified in plcs section
         yaml_data['plcs'] = self.data['plcs']
