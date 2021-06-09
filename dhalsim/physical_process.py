@@ -226,7 +226,7 @@ class PhysicalPlant:
                              .format(x=self.data['batch_index'] + 1,
                                      y=self.data['batch_simulations']))
 
-        self.logger.info("Simulation will run for {x} iterations with hydraulic timestep {step}"
+        self.logger.info("Simulation will run for {x} iterations with hydraulic timestep {step}."
                          .format(x=str(iteration_limit),
                                  step=str(self.wn.options.time.hydraulic_timestep)))
 

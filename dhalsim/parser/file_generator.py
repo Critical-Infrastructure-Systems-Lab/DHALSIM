@@ -33,9 +33,21 @@ class BatchReadMeGenerator:
             readme.write("# Auto-generated README of {file} for batch {no}"
                          .format(file=os.path.basename(str(self.intermediate_yaml['inp_file']))[:-4],
                                  no=self.intermediate_yaml['batch_index'] + 1))
-            readme.write("\n\nThis is batch {x} out of {y} batches."
+            readme.write("\n\nThis is batch {x} out of {y}."
                          .format(x=self.intermediate_yaml['batch_index'] + 1,
                                  y=self.intermediate_yaml['batch_simulations']))
+            if 'initial_tank_values' in self.intermediate_yaml:
+                readme.write("\n\n## Initial tank data")
+                readme.write("\n\n{data}".format(data=str(self.intermediate_yaml['initial_tank_values'])))
+            if 'network_loss_values' in self.intermediate_yaml:
+                readme.write("\n\n## Network loss values")
+                readme.write("\n\n{data}".format(data=str(self.intermediate_yaml['network_loss_values'])))
+            if 'network_delay_values' in self.intermediate_yaml:
+                readme.write("\n\n## Network delay values")
+                readme.write("\n\n{data}".format(data=str(self.intermediate_yaml['network_delay_values'])))
+            if 'demand_patters_path' in self.intermediate_yaml:
+                readme.write("\n\n## Demand patterns")
+                readme.write("\n\n{data}".format(data=str(self.intermediate_yaml['demand_patterns_path'])))
             readme.write("\n\n## Information about this batch")
             readme.write("\n\nRan for {x} out of {y} iterations with hydraulic timestep {step}."
                          .format(x=str(master_time),
@@ -79,8 +91,10 @@ class InputFilesCopier:
                  self.configuration_folder / 'initial_tank_data.csv')
 
         if 'demand_patterns' in self.config:
-            copy(self.config_file.parent / self.config['demand_patterns'],
-                 self.configuration_folder / 'demand_patterns.csv')
+            os.makedirs(self.configuration_folder / 'demand_patterns', exist_ok=True)
+            for batch in range(self.config['batch_simulations']):
+                copy(self.config_file.parent / self.config['demand_patterns'] / (str(batch) + ".csv"),
+                     self.configuration_folder / 'demand_patterns' / (str(batch) + ".csv"))
 
         if 'network_loss_data' in self.config:
             copy(self.config_file.parent / self.config['network_loss_data'],
