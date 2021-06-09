@@ -69,10 +69,10 @@ class ReadMeGenerator:
             # Input files
             readme.write("\n\n## Input files")
             input_string = "\n\nInput files have been copied to {output}. In case" \
-                           " any extra files were used (like ```attacks``` or" \
-                           " ```network_delay_data```, these files will be copied to the output " \
-                           "folder as well."
+                           " any extra files were used, these files will be copied to the" \
+                           " output folder as well."
 
+            # We want to write this readme to the root directory of the original output folder.
             if 'batch_simulations' in self.intermediate_yaml:
                 readme.write(input_string
                              .format(output=str(Path(self.intermediate_yaml['output_path'])
@@ -90,6 +90,7 @@ class ReadMeGenerator:
             readme.write(self.get_optional('attacks_path'))
             readme.write(self.get_optional('batch_simulations'))
 
+            # Mininet links
             readme.write("\n\n## Mininet links")
             for link in self.links:
                 readme.write("\n\n" + str(link))

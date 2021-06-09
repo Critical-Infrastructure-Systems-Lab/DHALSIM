@@ -91,10 +91,14 @@ class InputFilesCopier:
                  self.configuration_folder / 'initial_tank_data.csv')
 
         if 'demand_patterns' in self.config:
-            os.makedirs(self.configuration_folder / 'demand_patterns', exist_ok=True)
-            for batch in range(self.config['batch_simulations']):
-                copy(self.config_file.parent / self.config['demand_patterns'] / (str(batch) + ".csv"),
-                     self.configuration_folder / 'demand_patterns' / (str(batch) + ".csv"))
+            if 'batch_simulations' in self.config:
+                os.makedirs(self.configuration_folder / 'demand_patterns', exist_ok=True)
+                for batch in range(self.config['batch_simulations']):
+                    copy(self.config_file.parent / self.config['demand_patterns'] / (str(batch) + ".csv"),
+                         self.configuration_folder / 'demand_patterns' / (str(batch) + ".csv"))
+            else:
+                copy(self.config_file.parent / self.config['demand_patterns'],
+                     self.configuration_folder / 'demand_patterns.csv')
 
         if 'network_loss_data' in self.config:
             copy(self.config_file.parent / self.config['network_loss_data'],
