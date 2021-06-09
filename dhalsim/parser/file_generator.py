@@ -46,7 +46,7 @@ class BatchReadMeGenerator:
             if 'network_delay_values' in self.intermediate_yaml:
                 readme.write("\n\n## Network delay values")
                 readme.write("\n\n{data}".format(data=str(self.intermediate_yaml['network_delay_values'])))
-            if 'demand_patters_path' in self.intermediate_yaml:
+            if 'demand_patterns_path' in self.intermediate_yaml:
                 readme.write("\n\n## Demand patterns")
                 readme.write("\n\n{data}".format(data=str(self.intermediate_yaml['demand_patterns_path'])))
             readme.write("\n\n## Information about this batch")
