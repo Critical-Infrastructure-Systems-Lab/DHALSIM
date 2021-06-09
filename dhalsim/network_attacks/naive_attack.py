@@ -64,7 +64,7 @@ class PacketAttack(SyncedAttack):
             self.q = self.queue.bind(1)
             self.q.set_mode(fnfqueue.MAX_PAYLOAD, fnfqueue.COPY_PACKET)
         except PermissionError:
-            self.logger.error("Permission Error. Am I running as root?")
+            self.logger.error("Permission Error trying to bind to the NFQUEUE")
 
         self.run_thread = True
         self.thread = threading.Thread(target=self.packet_thread_function)

@@ -132,7 +132,7 @@ class SyncedAttack(metaclass=ABCMeta):
               sensor: T2
               lower_value: 0.10
               upper_value: 0.16
-        :return:
+        :return: Boolean indicating whether or not to run the attack
         """
         if self.intermediate_attack['trigger']['type'] == "time":
             start = self.intermediate_attack['trigger']['start']

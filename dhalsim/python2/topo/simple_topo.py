@@ -71,21 +71,24 @@ class SimpleTopo(Topo):
         """
         index = 1
         if 'plcs' in self.data.keys():
-            for plc in data["plcs"]:
-                plc_ip = "192.168.1." + str(index)
-                plc_mac = Mininet.randMac()
-                plc_int = plc['name'] + "-eth0"
+            if len(data["plcs"]) > 250:
+                self.logger.error("There are too many PLCs for a simple network topology.")
+            else:
+                for plc in data["plcs"]:
+                    plc_ip = "192.168.1." + str(index)
+                    plc_mac = Mininet.randMac()
+                    plc_int = plc['name'] + "-eth0"
 
-                # Store the data in self.data
-                plc['local_ip'] = plc_ip
-                plc['public_ip'] = plc_ip
-                plc['mac'] = plc_mac
-                plc['interface'] = plc_int
-                plc['gateway'] = self.router_ip
-                plc['switch_name'] = self.plc_switch
-                plc['gateway_name'] = self.router
-                plc['gateway_ip'] = self.router_ip
-                index += 1
+                    # Store the data in self.data
+                    plc['local_ip'] = plc_ip
+                    plc['public_ip'] = plc_ip
+                    plc['mac'] = plc_mac
+                    plc['interface'] = plc_int
+                    plc['gateway'] = self.router_ip
+                    plc['switch_name'] = self.plc_switch
+                    plc['gateway_name'] = self.router
+                    plc['gateway_ip'] = self.router_ip
+                    index += 1
 
         # Generate scada data
         data['scada'] = {}
