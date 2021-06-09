@@ -32,7 +32,7 @@ Example with all options:
     log_level: info
     simulator: pdd
     batch_simulations: 20
-    initial_tank_values: initial_tank.csv
+    initial_tank_data: initial_tank.csv
     demand_patterns: demand_patterns/
     network_loss_data: losses.csv
     network_delay_data: delays.csv
@@ -211,18 +211,18 @@ Note: the :code:`.csv` files (besides demand patterns) you provide should have a
 
 :code:`batch_simulations` should be a number.
 
-initial_tank_values
+initial_tank_data
 ------------------------
 *This is an optional value*
 
-The :code:`initial_tank_values` field provides the name of the :code:`.csv` files with initial tank values for a simulation. Each column should be a tank
+The :code:`initial_tank_data` field provides the name of the :code:`.csv` files with initial tank values for a simulation. Each column should be a tank
 with rows being initial values. If you run in batch mode, then it will use the row corresponding to the number of the simulation (e.g. for simulation 3 it will
 use the column with index 3); if you do not run in batch mode then it will use the first row (row 0).If you want to only provide initial values for some tanks,
 then you can do so and the remaining tanks will use the default initial value from the :code:`.inp` file.
 
 An example would look like this :
 
-.. csv-table:: initial_tank_values
+.. csv-table:: initial_tank_data
    :header: "tank_1", "tank_2", "tank_3"
    :widths: 5, 5, 5
 
