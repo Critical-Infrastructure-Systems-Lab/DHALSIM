@@ -142,8 +142,6 @@ class ComplexTopo(Topo):
                     defaultRoute='via ' + attack['gateway_ip'] + '/24')
                 self.addLink(attacker, attack["switch_name"], intfName=attack['interface'])
 
-        # -- PLANT -- #
-        self.addHost('plant')
 
     def build_for_node(self, node, provider_router):
         """

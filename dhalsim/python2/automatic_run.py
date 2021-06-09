@@ -118,7 +118,7 @@ class GeneralCPS(MiniCPS):
         automatic_plant_path = Path(__file__).parent.absolute() / "automatic_plant.py"
 
         cmd = ["python2", str(automatic_plant_path), str(self.intermediate_yaml)]
-        self.plant_process = self.net.get('plant').popen(cmd, stderr=sys.stderr, stdout=sys.stdout)
+        self.plant_process = subprocess.Popen(cmd, stderr=sys.stderr, stdout=sys.stdout)
 
         self.logger.debug("Launched the plant processes.")
 

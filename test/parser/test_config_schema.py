@@ -87,6 +87,7 @@ def test_default_config(key, default_value, test_dict):
 
 
 @pytest.mark.parametrize("key", [
+    'iterations',
     'batch_simulations',
     'initial_tank_data',
     'demand_patterns',
@@ -100,7 +101,7 @@ def test_optional_config(key, test_dict):
     assert result.get(key) is None
 
 
-@pytest.mark.parametrize("required_key", ['iterations', 'inp_file', 'plcs'])
+@pytest.mark.parametrize("required_key", ['inp_file', 'plcs'])
 def test_required_config(required_key, test_dict):
     del test_dict[required_key]
     with pytest.raises(SchemaError):
