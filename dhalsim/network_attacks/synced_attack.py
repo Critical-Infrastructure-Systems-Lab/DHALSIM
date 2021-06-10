@@ -212,16 +212,13 @@ class SyncedAttack(metaclass=ABCMeta):
                 time.sleep(0.01)
 
             run = self.check_trigger()
+            self.set_attack_flag(run)
             if self.state == 0:
                 if run:
-                    self.set_attack_flag(True)
                     self.state = 1
                     self.setup()
             elif self.state == 1:
-                if run:
-                    self.set_attack_flag(True)
-                else:
-                    self.set_attack_flag(False)
+                if not run:
                     self.state = 0
                     self.teardown()
 
