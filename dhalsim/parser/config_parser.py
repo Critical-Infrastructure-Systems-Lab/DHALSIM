@@ -52,8 +52,8 @@ class ConfigParser:
     :param config_path: The path to the config file of the experiment in yaml format
     :type config_path: Path
     """
-    string_pattern = Regex(r'^[a-zA-Z0-9_]+$',
-                           error="Error in string: '{}', Can only have a-z, A-Z, 0-9, and _")
+    string_pattern = Regex(r'^[a-zA-Z0-9_<>+-.]+$',
+                           error="Error in string: '{}', Can only have a-z, A-Z, 0-9, and symbols: _ < > + - . (no whitespaces)")
 
     trigger = Schema(
         Or(
@@ -107,7 +107,10 @@ class ConfigParser:
     )
 
     device_attacks = Schema({
-        'name': str,
+        'name': And(
+            str,
+            string_pattern,
+        ),
         'trigger': trigger,
         'actuator': And(
             str,
