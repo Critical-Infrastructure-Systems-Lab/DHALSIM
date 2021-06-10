@@ -62,11 +62,11 @@ class SchemaParser:
                 ),
                 'start': And(
                     int,
-                    Schema(lambda i: i >= 0, error='start time must be positive'),
+                    Schema(lambda i: i >= 0, error="'start' must be positive."),
                 ),
                 'end': And(
                     int,
-                    Schema(lambda i: i >= 0, error='end time must be positive'),
+                    Schema(lambda i: i >= 0, error="'end' must be positive."),
                 ),
             },
             {
@@ -229,7 +229,7 @@ class SchemaParser:
         Apply a schema to the data. This schema make sure that every reuired parameter is given.
         It also fills in default values for missing parameters.
         It will test for types of parameters as well.
-        Besides that, it converts some strings to lower case, like those of :code:`log_level`.
+        Besides that, it converts some strings to lower case, like those of :code:'log_level'.
 
         :param data: data from the config file
         :type data: dict
@@ -262,7 +262,7 @@ class SchemaParser:
             'output_path': Path,
             Optional('iterations'): And(
                 int,
-                Schema(lambda i: i > 0, error=''iterations' must be positive.')),
+                Schema(lambda i: i > 0, error="'iterations' must be positive.")),
             Optional('mininet_cli', default=False): bool,
             Optional('log_level', default='info'): And(
                 str,
@@ -281,7 +281,7 @@ class SchemaParser:
             },
             Optional('batch_simulations'): And(
                 int,
-                Schema(lambda i: i > 0, error=''batch_simulations' must be positive.')),
+                Schema(lambda i: i > 0, error="'batch_simulations' must be positive.")),
             Optional('initial_tank_data'): Path,
             Optional('demand_patterns'): Path,
             Optional('network_loss_data'): Path,
@@ -362,8 +362,8 @@ class ConfigParser:
     @staticmethod
     def load_yaml(path: Path) -> dict:
         """
-        Uses :code:`pyyaml` and :code`pyyaml-include` to read in a yaml file.
-        This means you can use `!include` to include yaml files in other yaml files.
+        Uses :code:'pyyaml' and :code'pyyaml-include' to read in a yaml file.
+        This means you can use '!include' to include yaml files in other yaml files.
 
         :param path: path to the yaml file to be loaded.
         :type path: Path
@@ -381,7 +381,7 @@ class ConfigParser:
     def output_path(self):
         """
         Property for the path to the output folder.
-        ``output`` by default.
+        ''output'' by default.
 
         :return: absolute path to the output folder
         :rtype: Path
