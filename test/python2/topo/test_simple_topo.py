@@ -60,7 +60,6 @@ def net(topo_fixture):
 def test_writeback_yaml(tmpdir, topo_fixture, filled_dict):
     with tmpdir.join("intermediate.yaml").open(mode='r') as intermediate_yaml:
         dump = yaml.safe_load(intermediate_yaml)
-    print(dump)
     assert dump == filled_dict
 
 
