@@ -131,7 +131,7 @@ class SchemaParser:
                 ),
                 'trigger': trigger,
                 Or('value', 'offset', only_one=True,
-                   error="`tags` should have either a `value` or `offset` attribute."): Or(float, And(int, Use(float))),
+                   error="'tags' should have either a 'value' or 'offset' attribute."): Or(float, And(int, Use(float))),
                 'target': And(
                     str,
                     string_pattern
@@ -158,7 +158,7 @@ class SchemaParser:
                         string_pattern,
                     ),
                     Or('value', 'offset', only_one=True,
-                       error="`tags` should have either a `value` or `offset` attribute."): Or(float, And(int, Use(float))),
+                       error="'tags' should have either a 'value' or 'offset' attribute."): Or(float, And(int, Use(float))),
                 }]
             }
         )
@@ -184,24 +184,24 @@ class SchemaParser:
                     'inp_file': And(
                         Use(Path),
                         Use(lambda p: config_path.absolute().parent / p),
-                        Schema(lambda l: Path.is_file, error="`inp_file` could not be found."),
+                        Schema(lambda l: Path.is_file, error="'inp_file' could not be found."),
                         Schema(lambda f: f.suffix == '.inp',
-                               error="Suffix of `inp_file` should be .inp.")),
+                               error="Suffix of 'inp_file' should be .inp.")),
                     Optional('output_path', default=config_path.absolute().parent / 'output'): And(
-                        Use(str, error="`output_path` should be a string."),
+                        Use(str, error="'output_path' should be a string."),
                         Use(Path),
                         Use(lambda p: config_path.absolute().parent / p),
                     ),
                     Optional('initial_tank_data'): And(
                         Use(Path),
                         Use(lambda p: config_path.absolute().parent / p),
-                        Schema(lambda l: Path.is_file, error="`initial_tank_data` could not be found."),
+                        Schema(lambda l: Path.is_file, error="'initial_tank_data' could not be found."),
                         Schema(lambda f: f.suffix == '.csv',
                                error="Suffix of initial_tank_data should be .csv")),
                     Optional('demand_patterns'): And(
                         Use(Path),
                         Use(lambda p: config_path.absolute().parent / p),
-                        Schema(lambda l: Path.exists, error="`demand_patterns` path does not exist."),
+                        Schema(lambda l: Path.exists, error="'demand_patterns' path does not exist."),
                         Or(
                             Path.is_dir,
                             Schema(lambda f: f.suffix == '.csv',
@@ -209,13 +209,13 @@ class SchemaParser:
                     Optional('network_loss_data'): And(
                         Use(Path),
                         Use(lambda p: config_path.absolute().parent / p),
-                        Schema(lambda l: Path.is_file, error="`network_loss_data` could not be found."),
+                        Schema(lambda l: Path.is_file, error="'network_loss_data' could not be found."),
                         Schema(lambda f: f.suffix == '.csv',
                                error="Suffix of network_loss_data should be .csv")),
                     Optional('network_delay_data'): And(
                         Use(Path),
                         Use(lambda p: config_path.absolute().parent / p),
-                        Schema(lambda l: Path.is_file, error="`network_delay_data` could not be found."),
+                        Schema(lambda l: Path.is_file, error="'network_delay_data' could not be found."),
                         Schema(lambda f: f.suffix == '.csv',
                                error="Suffix of network_delay_data should be .csv")),
                     str: object
@@ -262,26 +262,26 @@ class SchemaParser:
             'output_path': Path,
             Optional('iterations'): And(
                 int,
-                Schema(lambda i: i > 0, error='`iterations` must be positive.')),
+                Schema(lambda i: i > 0, error=''iterations' must be positive.')),
             Optional('mininet_cli', default=False): bool,
             Optional('log_level', default='info'): And(
                 str,
                 Use(str.lower),
-                Or('debug', 'info', 'warning', 'error', 'critical', error="`log_level` should be "
+                Or('debug', 'info', 'warning', 'error', 'critical', error="'log_level' should be "
                                                                           "one of the following: "
-                                                                          "`debug`, `info`, `warning`, "
-                                                                          "`error` or `critical`.")),
+                                                                          "'debug', 'info', 'warning', "
+                                                                          "'error' or 'critical'.")),
             Optional('simulator', default='pdd'): And(
                 str,
                 Use(str.lower),
-                Or('pdd', 'dd'), error="`simulator` should be one of the following: `pdd` or `dd`."),
+                Or('pdd', 'dd'), error="'simulator' should be one of the following: 'pdd' or 'dd'."),
             Optional('attacks'): {
                 Optional('device_attacks'): [SchemaParser.device_attacks],
                 Optional('network_attacks'): [SchemaParser.network_attacks],
             },
             Optional('batch_simulations'): And(
                 int,
-                Schema(lambda i: i > 0, error='`batch_simulations` must be positive.')),
+                Schema(lambda i: i > 0, error=''batch_simulations' must be positive.')),
             Optional('initial_tank_data'): Path,
             Optional('demand_patterns'): Path,
             Optional('network_loss_data'): Path,
