@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 from schema import SchemaError
 
-from dhalsim.parser.config_parser import ConfigParser
+from dhalsim.parser.config_parser import ConfigParser, SchemaParser
 
 
 def test_python_version():
@@ -70,7 +70,7 @@ def attack_dict_2():
 
 
 def test_valid_dict(test_dict):
-    ConfigParser.validate_schema(test_dict)
+    SchemaParser.validate_schema(test_dict)
     assert True
 
 
@@ -82,7 +82,7 @@ def test_valid_dict(test_dict):
 ])
 def test_default_config(key, default_value, test_dict):
     del test_dict[key]
-    result = ConfigParser.validate_schema(test_dict)
+    result = SchemaParser.validate_schema(test_dict)
     assert result[key] == default_value
 
 
@@ -97,7 +97,7 @@ def test_default_config(key, default_value, test_dict):
 ])
 def test_optional_config(key, test_dict):
     del test_dict[key]
-    result = ConfigParser.validate_schema(test_dict)
+    result = SchemaParser.validate_schema(test_dict)
     assert result.get(key) is None
 
 
@@ -105,7 +105,7 @@ def test_optional_config(key, test_dict):
 def test_required_config(required_key, test_dict):
     del test_dict[required_key]
     with pytest.raises(SchemaError):
-        ConfigParser.validate_schema(test_dict)
+        SchemaParser.validate_schema(test_dict)
 
 
 @pytest.mark.parametrize("key, invalid_value", [
@@ -140,7 +140,7 @@ def test_required_config(required_key, test_dict):
 def test_invalid_config(key, invalid_value, test_dict):
     test_dict[key] = invalid_value
     with pytest.raises(SchemaError):
-        ConfigParser.validate_schema(test_dict)
+        SchemaParser.validate_schema(test_dict)
 
 
 @pytest.mark.parametrize("key, input_value, expected_value", [
@@ -171,7 +171,7 @@ def test_invalid_config(key, invalid_value, test_dict):
 ])
 def test_valid_config(key, input_value, expected_value, test_dict):
     test_dict[key] = input_value
-    output = ConfigParser.validate_schema(test_dict)
+    output = SchemaParser.validate_schema(test_dict)
     assert output[key] == expected_value
 
 
@@ -181,7 +181,7 @@ def test_valid_config(key, input_value, expected_value, test_dict):
 ])
 def test_optional_plcs(key, test_dict):
     del test_dict['plcs'][0][key]
-    result = ConfigParser.validate_schema(test_dict)
+    result = SchemaParser.validate_schema(test_dict)
     assert result.get(key) is None
 
 
@@ -189,7 +189,7 @@ def test_optional_plcs(key, test_dict):
 def test_required_plcs(required_key, test_dict):
     del test_dict['plcs'][0][required_key]
     with pytest.raises(SchemaError):
-        ConfigParser.validate_schema(test_dict)
+        SchemaParser.validate_schema(test_dict)
 
 
 @pytest.mark.parametrize("key, invalid_value", [
@@ -218,7 +218,7 @@ def test_required_plcs(required_key, test_dict):
 def test_invalid_plc(key, invalid_value, test_dict):
     test_dict['plcs'][0][key] = invalid_value
     with pytest.raises(SchemaError):
-        ConfigParser.validate_schema(test_dict)
+        SchemaParser.validate_schema(test_dict)
 
 
 @pytest.mark.parametrize("key, input_value, expected_value", [
@@ -239,13 +239,13 @@ def test_invalid_plc(key, invalid_value, test_dict):
 ])
 def test_valid_plc(key, input_value, expected_value, test_dict):
     test_dict['plcs'][0][key] = input_value
-    output = ConfigParser.validate_schema(test_dict)
+    output = SchemaParser.validate_schema(test_dict)
     assert output['plcs'][0][key] == expected_value
 
 
 def test_attack_dicts(attack_dict_1, attack_dict_2):
-    ConfigParser.network_attacks.validate(attack_dict_1)
-    ConfigParser.network_attacks.validate(attack_dict_2)
+    SchemaParser.network_attacks.validate(attack_dict_1)
+    SchemaParser.network_attacks.validate(attack_dict_2)
 
 
 @pytest.mark.parametrize("key, input_value", [
@@ -255,7 +255,7 @@ def test_attack_dicts(attack_dict_1, attack_dict_2):
 def test_invalid_attacks_mitm(key, input_value, attack_dict_1):
     attack_dict_1[key] = input_value
     with pytest.raises(SchemaError):
-        ConfigParser.validate_schema(attack_dict_1)
+        SchemaParser.validate_schema(attack_dict_1)
 
 
 @pytest.mark.parametrize("key, input_value, expected", [
@@ -263,7 +263,7 @@ def test_invalid_attacks_mitm(key, input_value, attack_dict_1):
 ])
 def test_valid_attacks_mitm(key, input_value, expected, attack_dict_1):
     attack_dict_1[key] = input_value
-    output = ConfigParser.network_attacks.validate(attack_dict_1)
+    output = SchemaParser.network_attacks.validate(attack_dict_1)
     assert output[key] == expected
 
 
@@ -274,7 +274,7 @@ def test_valid_attacks_mitm(key, input_value, expected, attack_dict_1):
 def test_invalid_attacks_naive(key, input_value, attack_dict_2):
     attack_dict_2[key] = input_value
     with pytest.raises(SchemaError):
-        ConfigParser.validate_schema(attack_dict_2)
+        SchemaParser.validate_schema(attack_dict_2)
 
 
 @pytest.mark.parametrize("key, input_value, expected", [
@@ -282,7 +282,7 @@ def test_invalid_attacks_naive(key, input_value, attack_dict_2):
 ])
 def test_valid_attacks_naive(key, input_value, expected, attack_dict_2):
     attack_dict_2[key] = input_value
-    output = ConfigParser.network_attacks.validate(attack_dict_2)
+    output = SchemaParser.network_attacks.validate(attack_dict_2)
     assert output[key] == expected
 
 
@@ -295,7 +295,7 @@ def test_valid_attacks_naive(key, input_value, expected, attack_dict_2):
 def test_required_attack_fields_mitm(required_key, attack_dict_1):
     del attack_dict_1[required_key]
     with pytest.raises(SchemaError):
-        ConfigParser.validate_schema(attack_dict_1)
+        SchemaParser.validate_schema(attack_dict_1)
 
 
 @pytest.mark.parametrize("required_key", [
@@ -307,4 +307,4 @@ def test_required_attack_fields_mitm(required_key, attack_dict_1):
 def test_required_attack_fields_naive(required_key, attack_dict_2):
     del attack_dict_2[required_key]
     with pytest.raises(SchemaError):
-        ConfigParser.validate_schema(attack_dict_2)
+        SchemaParser.validate_schema(attack_dict_2)

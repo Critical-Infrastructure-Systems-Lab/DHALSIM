@@ -45,12 +45,9 @@ class NetworkAttackError(Error):
     """Used to raise errors about network attack"""
 
 
-class ConfigParser:
+class SchemaParser:
     """
-    Class handling the parsing of the input config data.
-
-    :param config_path: The path to the config file of the experiment in yaml format
-    :type config_path: Path
+    Class which handles all schema logic.
     """
     string_pattern = Regex(r'^[a-zA-Z0-9_]+$',
                            error="Error in string: '{}', Can only have a-z, A-Z, 0-9, and _")
@@ -165,67 +162,6 @@ class ConfigParser:
         )
     )
 
-    def __init__(self, config_path: Path):
-        """Constructor method"""
-        self.batch_index = None
-        self.yaml_path = None
-        self.db_path = None
-
-        self.config_path = config_path.absolute()
-
-        YamlIncludeConstructor.add_to_loader_class(loader_class=yaml.FullLoader,
-                                                   base_dir=config_path.absolute().parent)
-
-        try:
-            self.data = self.apply_schema(self.config_path)
-        except SchemaError as exc:
-            sys.exit(exc.code)
-
-        try:
-            self.do_checks(self.data)
-        except Error as exc:
-            sys.exit(exc)
-
-        self.batch_mode = 'batch_simulations' in self.data
-        if self.batch_mode:
-            self.batch_simulations = self.data['batch_simulations']
-
-    @staticmethod
-    def do_checks(data: dict):
-        """
-        Perform various checks on the data provided
-
-        :param data: The data to check
-        """
-        ConfigParser.network_attack_only_complex(data)
-
-    @staticmethod
-    def network_attack_only_complex(data: dict):
-        """
-        Check if a network attack is applied on a complex topology
-        :param data:
-        """
-        if 'attacks' in data and 'network_attacks' in data['attacks'] and len(
-                data['attacks']['network_attacks']) > 0:
-            if data['network_topology_type'] == 'simple':
-                raise NetworkAttackError(
-                    "Network attacks can only be applied on a complex topology")
-
-    @staticmethod
-    def apply_schema(config_path: Path) -> dict:
-        """
-        Load the yaml data from the config file, and apply the schema.
-
-        :param config_path: The to the config file
-        :type config_path: Path
-
-        :return: A verified version of the data of the config file
-        :rtype: dict
-        """
-        data = ConfigParser.load_yaml(config_path)
-        data = ConfigParser.path_schema(data, config_path)
-        return ConfigParser.validate_schema(data)
-
     @staticmethod
     def path_schema(data: dict, config_path: Path) -> dict:
         """
@@ -286,24 +222,6 @@ class ConfigParser:
         ).validate(data)
 
     @staticmethod
-    def load_yaml(path: Path) -> dict:
-        """
-        Uses :code:`pyyaml` and :code`pyyaml-include` to read in a yaml file.
-        This means you can use `!include` to include yaml files in other yaml files.
-
-        :param path: path to the yaml file to be loaded.
-        :type path: Path
-        :return: a dict representing the yaml file
-        :rtype: dict
-        """
-        try:
-            with path.open(mode='r') as file:
-                data = yaml.load(file, Loader=yaml.FullLoader)
-            return data
-        except FileNotFoundError as exc:
-            sys.exit(f"File not found: {exc.filename}")
-
-    @staticmethod
     def validate_schema(data: dict) -> dict:
         """
         Apply a schema to the data. This schema make sure that every reuired parameter is given.
@@ -320,15 +238,15 @@ class ConfigParser:
         plc_schema = Schema([{
             'name': And(
                 str,
-                ConfigParser.string_pattern
+                SchemaParser.string_pattern
             ),
             Optional('sensors'): [And(
                 str,
-                ConfigParser.string_pattern
+                SchemaParser.string_pattern
             )],
             Optional('actuators'): [And(
                 str,
-                ConfigParser.string_pattern
+                SchemaParser.string_pattern
             )]
         }])
 
@@ -354,8 +272,8 @@ class ConfigParser:
                 Or('pdd', 'dd')),
             Optional('run_attack', default=True): bool,
             Optional('attacks'): {
-                Optional('device_attacks'): [ConfigParser.device_attacks],
-                Optional('network_attacks'): [ConfigParser.network_attacks],
+                Optional('device_attacks'): [SchemaParser.device_attacks],
+                Optional('network_attacks'): [SchemaParser.network_attacks],
             },
             Optional('batch_simulations'): And(
                 int,
@@ -367,6 +285,94 @@ class ConfigParser:
         })
 
         return config_schema.validate(data)
+
+
+class ConfigParser:
+    """
+    Class handling the parsing of the input config data.
+
+    :param config_path: The path to the config file of the experiment in yaml format
+    :type config_path: Path
+    """
+
+    def __init__(self, config_path: Path):
+        """Constructor method"""
+        self.batch_index = None
+        self.yaml_path = None
+        self.db_path = None
+
+        self.config_path = config_path.absolute()
+
+        YamlIncludeConstructor.add_to_loader_class(loader_class=yaml.FullLoader,
+                                                   base_dir=config_path.absolute().parent)
+
+        try:
+            self.data = self.apply_schema(self.config_path)
+        except SchemaError as exc:
+            sys.exit(exc.code)
+
+        try:
+            self.do_checks(self.data)
+        except Error as exc:
+            sys.exit(exc)
+
+        self.batch_mode = 'batch_simulations' in self.data
+        if self.batch_mode:
+            self.batch_simulations = self.data['batch_simulations']
+
+    @staticmethod
+    def do_checks(data: dict):
+        """
+        Perform various checks on the data provided
+
+        :param data: The data to check
+        """
+        ConfigParser.network_attack_only_complex(data)
+
+    @staticmethod
+    def network_attack_only_complex(data: dict):
+        """
+        Check if a network attack is applied on a complex topology
+        :param data:
+        """
+        if 'attacks' in data and 'network_attacks' in data['attacks'] and len(
+                data['attacks']['network_attacks']) > 0:
+            if data['network_topology_type'] == 'simple':
+                raise NetworkAttackError(
+                    "Network attacks can only be applied on a complex topology")
+
+    @staticmethod
+    def apply_schema(config_path: Path) -> dict:
+        """
+        Load the yaml data from the config file, and apply the schema.
+
+        :param config_path: The to the config file
+        :type config_path: Path
+
+        :return: A verified version of the data of the config file
+        :rtype: dict
+        """
+        data = ConfigParser.load_yaml(config_path)
+        data = SchemaParser.path_schema(data, config_path)
+        return SchemaParser.validate_schema(data)
+
+    @staticmethod
+    def load_yaml(path: Path) -> dict:
+        """
+        Uses :code:`pyyaml` and :code`pyyaml-include` to read in a yaml file.
+        This means you can use `!include` to include yaml files in other yaml files.
+
+        :param path: path to the yaml file to be loaded.
+        :type path: Path
+        :return: a dict representing the yaml file
+        :rtype: dict
+        """
+        try:
+            with path.open(mode='r') as file:
+                data = yaml.load(file, Loader=yaml.FullLoader)
+            return data
+        except FileNotFoundError as exc:
+            sys.exit(f"File not found: {exc.filename}")
 
     @property
     def output_path(self):
