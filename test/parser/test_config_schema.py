@@ -35,7 +35,7 @@ def test_dict():
         "attacks": {
             "device_attacks": [
                 {
-                    "name": "Close PRAW1 from iteration 5 to 10",
+                    "name": "Close_PRAW1_from_iteration_5_to_10",
                     "trigger": {
                         "type": "Time",
                         "start": 5,
