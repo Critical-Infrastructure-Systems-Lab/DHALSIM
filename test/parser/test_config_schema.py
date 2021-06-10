@@ -26,7 +26,6 @@ def test_dict():
         "demand_patterns": Path(),
         "network_loss_data": Path(),
         "network_delay_data": Path(),
-        "run_attack": True,
         "plcs": [
             {"name": "PLC1", "sensors": ["T0"], "actuators": ["P_RAW1", "V_PUB"]},
             {"name": "PLC2", "sensors": ["T2"], "actuators": ["V_ER2i"]},
@@ -127,11 +126,6 @@ def test_required_config(required_key, test_dict):
     ('simulator', 1),
     ('simulator', "invalid"),
     ('simulator', ""),
-    ('run_attack', "False"),
-    ('run_attack', "True"),
-    ('run_attack', ""),
-    ('run_attack', 1),
-    ('run_attack', 0),
     ('batch_simulations', '5'),
     ('batch_simulations', 10.5),
     ('batch_simulations', -10),
@@ -165,8 +159,6 @@ def test_invalid_config(key, invalid_value, test_dict):
     ('simulator', 'PDD', 'pdd'),
     ('simulator', 'dd', 'dd'),
     ('simulator', 'DD', 'dd'),
-    ('run_attack', True, True),
-    ('run_attack', False, False),
     ('batch_simulations', 100, 100),
 ])
 def test_valid_config(key, input_value, expected_value, test_dict):
