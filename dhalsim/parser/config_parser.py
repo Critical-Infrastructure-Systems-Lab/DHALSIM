@@ -158,7 +158,7 @@ class SchemaParser:
                         string_pattern,
                     ),
                     Or('value', 'offset', only_one=True,
-                       error="`tags` should have either a `value` or `offset` attribute."): float,
+                       error="`tags` should have either a `value` or `offset` attribute."): Or(float, And(int, Use(float))),
                 }]
             }
         )

@@ -284,7 +284,7 @@ def test_valid_network_attacks_mitm(key, input_value, expected, attack_dict_1):
 def test_invalid_attacks_naive(key, input_value, attack_dict_2):
     attack_dict_2[key] = input_value
     with pytest.raises(SchemaError):
-        SchemaParser.validate_schema(attack_dict_2)
+        SchemaParser.network_attacks.validate(attack_dict_2)
 
 
 @pytest.mark.parametrize("key, input_value, expected", [
@@ -306,7 +306,7 @@ def test_valid_attacks_naive(key, input_value, expected, attack_dict_2):
 def test_required_attack_fields_mitm(required_key, attack_dict_1):
     del attack_dict_1[required_key]
     with pytest.raises(SchemaError):
-        SchemaParser.validate_schema(attack_dict_1)
+        SchemaParser.network_attacks.validate(attack_dict_1)
 
 
 @pytest.mark.parametrize("required_key", [
@@ -318,4 +318,4 @@ def test_required_attack_fields_mitm(required_key, attack_dict_1):
 def test_required_attack_fields_naive(required_key, attack_dict_2):
     del attack_dict_2[required_key]
     with pytest.raises(SchemaError):
-        SchemaParser.validate_schema(attack_dict_2)
+        SchemaParser.network_attacks.validate(attack_dict_2)
