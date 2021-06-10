@@ -94,6 +94,7 @@ class DatabaseInitializer:
             cur.execute("DROP TABLE IF EXISTS plant;")
             cur.execute("DROP TABLE IF EXISTS master_time;")
             cur.execute("DROP TABLE IF EXISTS sync;")
+            cur.execute("DROP TABLE IF EXISTS attack;")
             conn.commit()
 
     def print(self):
