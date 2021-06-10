@@ -6,8 +6,11 @@ import sys
 import time
 from pathlib import Path
 
+import yaml
+
 from dhalsim.init_database import DatabaseInitializer
 from dhalsim.parser.config_parser import ConfigParser
+from dhalsim.parser.file_generator import InputFilesCopier
 
 
 def is_valid_file(parser, arg):
@@ -49,6 +52,8 @@ class Runner():
             self.run_simulation(intermediate_yaml_path)
 
     def run_simulation(self, intermediate_yaml_path):
+        InputFilesCopier(self.config_file).copy_input_files()
+
         db_initializer = DatabaseInitializer(intermediate_yaml_path)
         db_initializer.drop()
         db_initializer.write()
@@ -57,7 +62,6 @@ class Runner():
         self.automatic_run = subprocess.Popen(
             ["python2", str(automatic_run_path), str(intermediate_yaml_path)])
         self.automatic_run.wait()
-
 
 def main():
     parser = argparse.ArgumentParser(description='Executes DHALSIM based on a config file')
