@@ -57,7 +57,7 @@ class GeneralCPS(MiniCPS):
         else:
             topo = SimpleTopo(self.intermediate_yaml)
 
-        self.net = Mininet(topo=topo, autoSetMacs=True, link=TCLink)
+        self.net = Mininet(topo=topo, autoSetMacs=False, link=TCLink)
 
         self.net.start()
 

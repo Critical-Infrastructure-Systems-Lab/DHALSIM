@@ -66,19 +66,6 @@ class ComplexTopo(Topo):
         :param data: the dict resulting from a dump of the intermediate yaml
         """
         index = 1
-        if 'plcs' in self.data.keys():
-            for plc in data["plcs"]:
-                # Store the data in self.data
-                plc['local_ip'] = self.local_plc_ips
-                plc['public_ip'] = "10.0." + str(index) + ".1"
-                plc['provider_ip'] = "10.0." + str(index) + ".254"
-                plc['mac'] = Mininet.randMac()
-                plc['interface'] = plc['name'] + "-eth0"
-                plc['provider_interface'] = "r0-eth" + str(index)
-                plc['gateway_name'] = "r" + str(index)
-                plc['switch_name'] = "s" + str(index)
-                plc['gateway_ip'] = self.local_router_ips
-                index += 1
 
         data["scada"] = {}
         scada = data["scada"]
@@ -86,14 +73,35 @@ class ComplexTopo(Topo):
         scada['local_ip'] = self.local_plc_ips
         scada['public_ip'] = "10.0." + str(index) + ".1"
         scada['provider_ip'] = "10.0." + str(index) + ".254"
-        scada['mac'] = Mininet.randMac()
+        scada['provider_mac'] = 'AA:BB:CC:DD:00:' + "{:02x}".format(index)
+        scada['mac'] = 'AA:BB:CC:DD:01:' + "{:02x}".format(index)
         scada['interface'] = scada['name'] + "-eth0"
         scada['provider_interface'] = "r0-eth" + str(index)
         scada['gateway_name'] = "r" + str(index)
         scada['switch_name'] = "s" + str(index)
+        scada['gateway_inbound_mac'] = 'AA:BB:CC:DD:03:' + "{:02x}".format(index)
+        scada['gateway_outbound_mac'] = 'AA:BB:CC:DD:04:' + "{:02x}".format(index)
         scada['gateway_ip'] = self.local_router_ips
 
-        index = 2
+        index += 1
+
+        if 'plcs' in self.data.keys():
+            for plc in data["plcs"]:
+                # Store the data in self.data
+                plc['local_ip'] = self.local_plc_ips
+                plc['public_ip'] = "10.0." + str(index) + ".1"
+                plc['provider_ip'] = "10.0." + str(index) + ".254"
+                plc['mac'] = 'AA:BB:CC:DD:02:' + "{:02x}".format(index)
+                plc['interface'] = plc['name'] + "-eth0"
+                plc['provider_interface'] = "r0-eth" + str(index)
+                plc['provider_mac'] = 'AA:BB:CC:DD:00:' + "{:02x}".format(index)
+                plc['gateway_name'] = "r" + str(index)
+                plc['switch_name'] = "s" + str(index)
+                plc['gateway_ip'] = self.local_router_ips
+                plc['gateway_inbound_mac'] = 'AA:BB:CC:DD:03:' + "{:02x}".format(index)
+                plc['gateway_outbound_mac'] = 'AA:BB:CC:DD:04:' + "{:02x}".format(index)
+                index += 1
+
         if 'network_attacks' in self.data.keys():
             for attack in data['network_attacks']:
                 target = next((plc for plc in data['plcs'] if plc['name'] == attack['target']), None)
@@ -104,12 +112,15 @@ class ComplexTopo(Topo):
                 attack['local_ip'] = "192.168.1." + str(index)
                 attack['public_ip'] = target['public_ip']
                 attack['provider_ip'] = target['provider_ip']
-                attack['mac'] = Mininet.randMac()
+                attack['mac'] = 'AA:BB:CC:DD:05:' + "{:02x}".format(index)
                 attack['interface'] = attack['name'] + "-eth0"
                 attack['provider_interface'] = target['provider_interface']
+                attack['provider_mac'] = target['provider_mac']
                 attack['gateway_name'] = target['gateway_name']
                 attack['switch_name'] = target['switch_name']
                 attack['gateway_ip'] = target['gateway_ip']
+                attack['gateway_inbound_mac'] = target['gateway_inbound_mac']
+                attack['gateway_outbound_mac'] = target['gateway_outbound_mac']
                 index += 1
 
     def build(self, *args, **params):
@@ -159,8 +170,11 @@ class ComplexTopo(Topo):
             ip=node['local_ip'] + "/24",
             defaultRoute='via ' + node['gateway_ip'] + '/24')
         self.addLink(node_router, provider_router, intfName2=node['provider_interface'],
-                     params2={'ip': node['provider_ip'] + "/24"})
-        self.addLink(node_switch, node_router, params2={'ip': node['gateway_ip'] + "/24"})
+                     params2={'ip': node['provider_ip'] + "/24"},
+                     addr1=node['gateway_outbound_mac'],
+                     addr2=node['provider_mac'])
+        self.addLink(node_switch, node_router, params2={'ip': node['gateway_ip'] + "/24"},
+                     addr2=node['gateway_inbound_mac'])
         self.add_node_switch_link(node_node, node_switch, node)
 
     def add_node_switch_link(self, node, switch, yaml_node_data):
@@ -185,7 +199,10 @@ class ComplexTopo(Topo):
             if self.data['network_loss_values'][yaml_node_data['name']]:
                 link_params['loss'] = self.data['network_loss_values'][yaml_node_data['name']]
         # Add link with network parameters
-        self.addLink(node, switch, intfName=yaml_node_data['interface'], **link_params)
+        self.addLink(node, switch, intfName=yaml_node_data['interface'],
+                     addr1=yaml_node_data['mac'],
+                     **link_params
+                     )
 
     def setup_network(self, net):
         """
