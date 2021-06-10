@@ -11,7 +11,6 @@ device_attacks:
       type: Below
       sensor: T2
       value: 0.16
-    type: "Below"
     actuator: P_RAW1
     command: "closed"
   - name: "Close PRAW1 when 0.10 < T2 < 0.16"
