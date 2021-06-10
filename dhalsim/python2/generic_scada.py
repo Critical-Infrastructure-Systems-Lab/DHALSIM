@@ -5,6 +5,7 @@ import signal
 import sqlite3
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 
 import yaml
@@ -63,7 +64,7 @@ class GenericScada(SCADAServer):
         }
 
         self.plc_data = self.generate_plcs()
-        self.saved_values = [['iteration']]
+        self.saved_values = [['iteration', 'timestamp']]
 
         for PLC in self.intermediate_yaml['plcs']:
             if 'sensors' not in PLC:
@@ -229,7 +230,7 @@ class GenericScada(SCADAServer):
                 time.sleep(0.01)
 
             try:
-                results = [self.get_master_clock()]
+                results = [self.get_master_clock(), datetime.now()]
                 for plc_datum in self.plc_data:
                     plc_value = self.receive_multiple(plc_datum[1], plc_datum[0])
                     self.logger.debug("PLC value received by SCADA from IP: " + str(plc_datum[0])
