@@ -17,8 +17,8 @@ attacks:
       - 7.0
     tags:
       - T1
-    start: 50
-    end: 150
+    start: 1316
+    end: 1507
 
 # Not supported
   - name: "concealment_empty_tank_1"

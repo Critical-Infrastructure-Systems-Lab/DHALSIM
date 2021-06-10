@@ -1715,11 +1715,11 @@
 
 [TIMES]
  ;Duration           	144:00
- Hydraulic Timestep 	0:01
+ Hydraulic Timestep 	0:15
  Quality Timestep   	0:05
- Pattern Timestep   	0:01
+ Pattern Timestep   	0:15
  Pattern Start      	0:00
- Report Timestep    	0:01
+ Report Timestep    	0:15
  Report Start       	0:00 
  Start ClockTime    	0:00
  Statistic          	NONE

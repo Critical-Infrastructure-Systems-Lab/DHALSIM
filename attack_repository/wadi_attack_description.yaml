@@ -15,9 +15,9 @@ attacks:
     values:
       - 7.0
     tags:
-      - T1
-    start: 600
-    end: 1000
+      - T2
+    start: 5
+    end: 80
 
   - name: "plc_overflow_tank_3"
     type: "device_attack"

@@ -89,7 +89,7 @@ def capture(packet):
                 attack_on = int(rows[0][0])
 
                 # We add this delay to simulate the attacker running another process
-                time.sleep(0.01)
+                #time.sleep(0.01)
                 if attack_on == 0:
                     print("Attack finished")
                     c.execute("UPDATE ctown SET value = 0 WHERE name = 'ATT_1'")
