@@ -60,6 +60,8 @@ class TimeAttack(Attack):
             plc.set_attack_flag(True, self.name)
             plc.logger.debug(self.__str__())
             plc.set_tag(self.actuator, self.command)
+        else:
+            plc.set_attack_flag(False, self.name)
 
 
 class TriggerBelowAttack(Attack):
@@ -96,6 +98,8 @@ class TriggerBelowAttack(Attack):
             plc.set_attack_flag(True, self.name)
             plc.logger.debug(self.__str__())
             plc.set_tag(self.actuator, self.command)
+        else:
+            plc.set_attack_flag(False, self.name)
 
 
 class TriggerAboveAttack(Attack):
@@ -132,6 +136,8 @@ class TriggerAboveAttack(Attack):
             plc.set_attack_flag(True, self.name)
             plc.logger.debug(self.__str__())
             plc.set_tag(self.actuator, self.command)
+        else:
+            plc.set_attack_flag(False, self.name)
 
 
 class TriggerBetweenAttack(Attack):
@@ -169,3 +175,5 @@ class TriggerBetweenAttack(Attack):
             plc.set_attack_flag(True, self.name)
             plc.logger.debug(self.__str__())
             plc.set_tag(self.actuator, self.command)
+        else:
+            plc.set_attack_flag(False, self.name)
