@@ -3,6 +3,7 @@ import csv
 import os
 import signal
 import logging
+from datetime import datetime
 from decimal import Decimal
 
 import pandas as pd
@@ -10,7 +11,6 @@ import progressbar
 import sqlite3
 import sys
 import time
-from datetime import datetime
 from pathlib import Path
 
 from dhalsim.parser.file_generator import BatchReadMeGenerator, ReadMeGenerator
@@ -56,7 +56,7 @@ class PhysicalPlant:
         self.pump_list = self.get_link_list_by_type(self.link_list, 'Pump')
         self.valve_list = self.get_link_list_by_type(self.link_list, 'Valve')
 
-        list_header = ["iteration"]
+        list_header = ['iteration', 'timestamp']
         list_header.extend(self.create_node_header(self.tank_list))
         list_header.extend(self.create_node_header(self.junction_list))
         list_header.extend(self.create_link_header(self.pump_list))
@@ -142,7 +142,7 @@ class PhysicalPlant:
         return act_dict
 
     def register_results(self):
-        values_list = []
+        values_list = [self.master_time, datetime.now()]
 
         # Results are divided into: nodes: reservoir and tanks, links: flows and status
         # Get tanks levels
@@ -255,7 +255,6 @@ class PhysicalPlant:
 
             self.sim.run_sim(convergence_error=True)
             values_list = self.register_results()
-            values_list.insert(0, self.master_time)
             self.results_list.append(values_list)
 
             self.update_tanks()

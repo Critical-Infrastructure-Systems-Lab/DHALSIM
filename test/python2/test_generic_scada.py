@@ -1,4 +1,5 @@
 import sys
+from datetime import datetime
 from decimal import Decimal
 
 import pytest
@@ -150,7 +151,7 @@ def test_generic_scada_init(generic_scada, magic_mock_scada_init, yaml_scada_fil
     assert generic_scada.plc_data == [('192.168.1.1', [('T0', 1), ('P_RAW1', 1)]),
                                       ('192.168.1.2', [('T2', 1), ('V_ER2i', 1)])]
     # Assert plc saved values generation
-    assert generic_scada.saved_values == [['iteration', 'T0', 'P_RAW1', 'T2', 'V_ER2i']]
+    assert generic_scada.saved_values == [['iteration', 'timestamp', 'T0', 'P_RAW1', 'T2', 'V_ER2i']]
     # Assert proper function calls
     expected_calls = [call.initialize_db(), call.touch(exist_ok=True),
                       call.do_super_construction({'server': {
@@ -171,11 +172,13 @@ def test_generic_scada_preloop(generic_scada, magic_mock_scada_preloop):
 def test_generic_scada_mainloop(generic_scada, magic_mock_scada_network, magic_mock_scada_clock, yaml_scada_file):
     generic_scada.main_loop(test_break=True)
     # Assert saved_values has been properly modified
-    assert generic_scada.saved_values == [['iteration', 'T0', 'P_RAW1', 'T2', 'V_ER2i'],
-                                          [2, '0.420420', '1', '0.420420', '1']]
+    assert generic_scada.saved_values == [['iteration', 'timestamp', 'T0', 'P_RAW1', 'T2', 'V_ER2i'],
+                                          [2, generic_scada.saved_values[1][1], '0.420420', '1', '0.420420', '1']]
     # Assert proper function calls
-    expected_calls = [call.get_sync(),
-                      call.receive_multiple([('T0', 1), ('P_RAW1', 1)], '192.168.1.1'),
-                      call.receive_multiple([('T2', 1), ('V_ER2i', 1)], '192.168.1.2'),
-                      call.set_sync(1)]
-    assert magic_mock_scada_network.mock_calls == expected_calls
+    expected_network_calls = [call.get_sync(),
+                              call.receive_multiple([('T0', 1), ('P_RAW1', 1)], '192.168.1.1'),
+                              call.receive_multiple([('T2', 1), ('V_ER2i', 1)], '192.168.1.2'),
+                              call.set_sync(1)]
+    expected_clock_calls = [call.get_master_clock()]
+    assert magic_mock_scada_network.mock_calls == expected_network_calls
+    assert magic_mock_scada_clock.mock_calls == expected_clock_calls
