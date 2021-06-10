@@ -53,7 +53,6 @@ def test_ping(net, host1, host2):
                           ("r3", "s3"), ("s2", "PLC1"), ("s3", "PLC2"),
                           ("s1", "scada")])
 def test_links(net, host1, host2):
-    print(net.linksBetween(net.get(host1), net.get(host2)))
     assert net.linksBetween(net.get(host1), net.get(host2)) != []
 
 
