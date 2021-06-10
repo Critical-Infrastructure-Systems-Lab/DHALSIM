@@ -23,8 +23,7 @@ setuptools.setup(
         'pandas',
         'schema',
         'scapy',
-        'fnfqueue',
-        'mdutils'
+        'fnfqueue'
     ],
     extras_require={
         'test': ['pytest', 'pytest-mock', 'mock', 'wget', 'coverage', 'pytest-cov', 'flaky', 'netaddr'],
