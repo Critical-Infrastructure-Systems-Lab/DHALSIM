@@ -242,18 +242,29 @@ def test_attack_dicts(attack_dict_1, attack_dict_2):
 
 @pytest.mark.parametrize("key, input_value", [
     ('type', 9),
-    ('type', 'hi')
+    ('type', 'hi'),
+    ('trigger', 4),
+    ('trigger', {'type': 'Time', 'start': '5', 'end': 10}),
+    ('trigger', {'type': 'NoType', 'start': 5, 'end': 10}),
+    ('trigger', {'type': 'NoType', 'start': 5, 'end': '10'}),
+    ('tags', 3),
+    ('tags', [{'tag': 'T2', 'value': 'not_int'}]),
+    ('tags', [{'tag': 8, 'value': 0.2}]),
+    ('target', 5),
+    ('wrong', 1)
 ])
-def test_invalid_attacks_mitm(key, input_value, attack_dict_1):
+def test_invalid_network_attacks_mitm(key, input_value, attack_dict_1):
     attack_dict_1[key] = input_value
     with pytest.raises(SchemaError):
-        SchemaParser.validate_schema(attack_dict_1)
+        SchemaParser.network_attacks.validate(attack_dict_1)
 
 
 @pytest.mark.parametrize("key, input_value, expected", [
     ('name', 'hello', 'hello'),
+    ('trigger', {'type': 'Time', 'start': 5, 'end': 10}, {'type': 'time', 'start': 5, 'end': 10}),
+    ('tags', [{'tag': 'T2', 'value': 0.2}], [{'tag': 'T2', 'value': 0.2}]),
 ])
-def test_valid_attacks_mitm(key, input_value, expected, attack_dict_1):
+def test_valid_network_attacks_mitm(key, input_value, expected, attack_dict_1):
     attack_dict_1[key] = input_value
     output = SchemaParser.network_attacks.validate(attack_dict_1)
     assert output[key] == expected
@@ -261,7 +272,14 @@ def test_valid_attacks_mitm(key, input_value, expected, attack_dict_1):
 
 @pytest.mark.parametrize("key, input_value", [
     ('type', 9),
-    ('type', 'hi')
+    ('type', 'hi'),
+    ('name', 9),
+    ('trigger', 4),
+    ('trigger', {'type': 'Time', 'start': '5', 'end': 10}),
+    ('trigger', {'type': 'NoType', 'start': 5, 'end': 10}),
+    ('trigger', {'type': 'NoType', 'start': 5, 'end': '10'}),
+    ('target', True),
+    ('wrong', 1)
 ])
 def test_invalid_attacks_naive(key, input_value, attack_dict_2):
     attack_dict_2[key] = input_value
@@ -271,6 +289,7 @@ def test_invalid_attacks_naive(key, input_value, attack_dict_2):
 
 @pytest.mark.parametrize("key, input_value, expected", [
     ('name', 'hello', 'hello'),
+    ('trigger', {'type': 'Time', 'start': 5, 'end': 10}, {'type': 'time', 'start': 5, 'end': 10}),
 ])
 def test_valid_attacks_naive(key, input_value, expected, attack_dict_2):
     attack_dict_2[key] = input_value
