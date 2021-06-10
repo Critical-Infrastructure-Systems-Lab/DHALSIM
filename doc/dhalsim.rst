@@ -5,8 +5,9 @@ Subpackages
 -----------
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 100
 
+   dhalsim.network_attacks
    dhalsim.parser
    dhalsim.python2
 
