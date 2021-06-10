@@ -12,6 +12,8 @@ import sqlite3
 import sys
 import time
 from pathlib import Path
+
+from dhalsim.parser.file_generator import BatchReadMeGenerator, ReadMeGenerator
 from dhalsim.py3_logger import get_logger
 import wntr
 import wntr.network.controls as controls
@@ -23,6 +25,7 @@ class PhysicalPlant:
     Class representing the plant itself, runs each iteration. This class also deals with WNTR
     and updates the database.
     """
+
     def __init__(self, intermediate_yaml):
         signal.signal(signal.SIGINT, self.interrupt)
         signal.signal(signal.SIGTERM, self.interrupt)
@@ -86,7 +89,10 @@ class PhysicalPlant:
 
         self.sim = wntr.sim.WNTRSimulator(self.wn)
 
-        self.logger.info("Starting simulation for " + os.path.basename(str(self.data['inp_file'])) + " topology.")
+        self.logger.info("Starting simulation for " +
+                         os.path.basename(str(self.data['inp_file']))[:-4] + " topology.")
+
+        self.start_time = datetime.now()
 
     def get_node_list_by_type(self, a_list, a_type):
         result = []
@@ -210,7 +216,7 @@ class PhysicalPlant:
         # simulation data
         self.wn.options.time.duration = self.wn.options.time.hydraulic_timestep
 
-        master_time = -1
+        self.master_time = -1
         iteration_limit = self.data["iterations"]
 
         self.logger.debug("Temporary file location: " + str(Path(self.data["db_path"]).parent))
@@ -220,7 +226,7 @@ class PhysicalPlant:
                              .format(x=self.data['batch_index'] + 1,
                                      y=self.data['batch_simulations']))
 
-        self.logger.info("Simulation will run for {x} iterations with hydraulic timestep {step}"
+        self.logger.info("Simulation will run for {x} iterations with hydraulic timestep {step}."
                          .format(x=str(iteration_limit),
                                  step=str(self.wn.options.time.hydraulic_timestep)))
 
@@ -230,26 +236,26 @@ class PhysicalPlant:
             p_bar = progressbar.ProgressBar(max_value=iteration_limit, widgets=widgets)
             p_bar.start()
 
-        while master_time < iteration_limit:
-            self.c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(master_time),))
+        while self.master_time < iteration_limit:
+            self.c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(self.master_time),))
             self.conn.commit()
 
-            master_time = master_time + 1
+            self.master_time = self.master_time + 1
 
             while not self.get_plcs_ready():
                 time.sleep(0.01)
 
             self.update_controls()
 
-            self.logger.debug("Iteration {x} out of {y}.".format(x=str(master_time),
+            self.logger.debug("Iteration {x} out of {y}.".format(x=str(self.master_time),
                                                                  y=str(iteration_limit)))
 
             if self.data['log_level'] != 'debug':
-                p_bar.update(master_time)
+                p_bar.update(self.master_time)
 
             self.sim.run_sim(convergence_error=True)
             values_list = self.register_results()
-            values_list.insert(0, master_time)
+            values_list.insert(0, self.master_time)
             values_list.insert(1, datetime.now())
             self.results_list.append(values_list)
 
@@ -304,6 +310,19 @@ class PhysicalPlant:
 
     def finish(self):
         self.write_results(self.results_list)
+        end_time = datetime.now()
+
+        if 'batch_simulations' in self.data:
+            BatchReadMeGenerator(self.intermediate_yaml).write_batch(self.start_time, end_time, self.wn,
+                                                                     self.master_time)
+            if self.data['batch_index'] == self.data['batch_simulations'] - 1:
+                ReadMeGenerator(self.intermediate_yaml).write_readme(self.data['start_time'],
+                                                                     datetime.now(), True,
+                                                                     self.master_time, self.wn)
+        else:
+            ReadMeGenerator(self.intermediate_yaml).write_readme(self.data['start_time'],
+                                                                 datetime.now(), False,
+                                                                 self.master_time, self.wn)
         sys.exit(0)
 
     def set_initial_values(self):

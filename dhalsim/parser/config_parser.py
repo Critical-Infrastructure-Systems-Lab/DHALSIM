@@ -1,6 +1,9 @@
 import os
 import sys
 import tempfile
+from datetime import datetime
+
+import pkg_resources
 from pathlib import Path
 
 import yaml
@@ -463,6 +466,7 @@ class ConfigParser:
         self.generate_temporary_dirs()
 
         yaml_data = {}
+        yaml_data['config_path'] = str(self.config_path)
 
         # Begin with PLC data specified in plcs section
         yaml_data['plcs'] = self.data['plcs']
@@ -500,6 +504,7 @@ class ConfigParser:
         # Log level
         yaml_data['log_level'] = self.data['log_level']
 
+        yaml_data['start_time'] = datetime.now()
         # Write values from IMP file into yaml file (controls, tanks/valves/initial values, etc.)
         yaml_data = InputParser(yaml_data).write()
 

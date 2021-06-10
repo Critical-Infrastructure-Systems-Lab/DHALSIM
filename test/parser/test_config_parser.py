@@ -27,7 +27,7 @@ def directory_mock(tmpdir):
 
 
 def test_python_version():
-    assert sys.version_info.major is 3
+    assert sys.version_info.major == 3
 
 
 def test_config_parser_attacks(wadi_config_yaml_path):
@@ -75,6 +75,9 @@ def test_generate_intermediate_yaml(mocker, tmpdir, wadi_config_yaml_path, fille
 
     with yaml_path.open(mode='r') as reality:
         actual = yaml.safe_load(reality)
+
+    actual.pop('config_path')
+    actual.pop('start_time')
 
     assert actual == expected
     directory_mock.mkdtemp.assert_called_with(prefix='dhalsim_')

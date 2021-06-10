@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import yaml
+from datetime import datetime
 from minicps.mcps import MiniCPS
 from mininet.net import Mininet
 from mininet.cli import CLI
@@ -24,7 +25,9 @@ class GeneralCPS(MiniCPS):
     :param intermediate_yaml: The path to the intermediate yaml file
     :type intermediate_yaml: Path
     """
+
     def __init__(self, intermediate_yaml):
+
         # Create logs directory in working directory
         try:
             os.mkdir('logs')
@@ -148,6 +151,8 @@ class GeneralCPS(MiniCPS):
         """
         self.logger.info("Simulation finished.")
 
+        self.write_mininet_links()
+
         if self.scada_process.poll() is None:
             try:
                 self.end_process(self.scada_process)
@@ -179,6 +184,21 @@ class GeneralCPS(MiniCPS):
 
         self.net.stop()
         sys.exit(0)
+
+    def write_mininet_links(self):
+        """Writes mininet links file."""
+        if 'batch_simulations' in self.data:
+            links_path = (Path(self.data['config_path']).parent / self.data['output_path']).parent / 'configuration'
+        else:
+            links_path = Path(self.data['config_path']).parent / self.data['output_path'] / 'configuration'
+
+        if not os.path.exists(str(links_path)):
+            os.makedirs(str(links_path))
+
+        with open(str(links_path / 'mininet_links.md'), 'w') as links_file:
+            links_file.write("# Mininet Links")
+            for link in self.net.links:
+                links_file.write("\n\n" + str(link))
 
 
 def is_valid_file(parser_instance, arg):
