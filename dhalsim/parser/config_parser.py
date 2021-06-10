@@ -137,7 +137,7 @@ class ConfigParser:
                 ),
                 'name': And(
                     str,
-                    string_pattern,
+                    attack_pattern,
                 ),
                 'trigger': trigger,
                 Or('value', 'offset', only_one=True): Or(float, And(int, Use(float))),
