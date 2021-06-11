@@ -229,8 +229,10 @@ class GenericScada(SCADAServer):
             while self.get_sync():
                 time.sleep(0.01)
 
+            master_time = self.get_master_clock()
+
             try:
-                results = [self.get_master_clock(), datetime.now()]
+                results = [master_time, datetime.now()]
                 for plc_datum in self.plc_data:
                     plc_value = self.receive_multiple(plc_datum[1], plc_datum[0])
                     self.logger.debug("PLC value received by SCADA from IP: " + str(plc_datum[0])
@@ -240,8 +242,8 @@ class GenericScada(SCADAServer):
 
                 # Save scada_values.csv when needed
                 if 'saving_interval' in self.intermediate_yaml:
-                    if self.get_master_clock() != 0 and \
-                            self.get_master_clock() % self.intermediate_yaml['saving_interval'] == 0:
+                    if master_time != 0 and \
+                            master_time % self.intermediate_yaml['saving_interval'] == 0:
                         self.write_output()
             except Exception as msg:
                 self.logger.error(msg)
