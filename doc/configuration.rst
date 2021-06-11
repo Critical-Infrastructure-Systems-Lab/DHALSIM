@@ -211,6 +211,15 @@ Note: the :code:`.csv` files (besides demand patterns) you provide should have a
 
 :code:`batch_simulations` should be a number.
 
+saving_interval
+------------------------
+*This is an optional value*
+
+When this option is set with value, the simulation will save the :code:`ground_truth.csv` and :code:`scada_values.csv` files
+every x iterations, where x is the value set.
+
+:code:`saving_interval` should be an integer greater than 0.
+
 initial_tank_data
 ------------------------
 *This is an optional value*
