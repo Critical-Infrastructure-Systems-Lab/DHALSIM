@@ -5,13 +5,29 @@ Subpackages
 -----------
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 100
 
    dhalsim.python2.entities
    dhalsim.python2.topo
 
 Submodules
 ----------
+
+dhalsim.python2.automatic\_attacker module
+------------------------------------------
+
+.. automodule:: dhalsim.python2.automatic_attacker
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+dhalsim.python2.automatic\_node module
+--------------------------------------
+
+.. automodule:: dhalsim.python2.automatic_node
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 dhalsim.python2.automatic\_plant module
 ---------------------------------------

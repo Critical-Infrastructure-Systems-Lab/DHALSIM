@@ -5,7 +5,7 @@ Subpackages
 -----------
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 100
 
    dhalsim.parser.antlr
 
@@ -16,6 +16,14 @@ dhalsim.parser.config\_parser module
 ------------------------------------
 
 .. automodule:: dhalsim.parser.config_parser
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+dhalsim.parser.file\_generator module
+-------------------------------------
+
+.. automodule:: dhalsim.parser.file_generator
    :members:
    :undoc-members:
    :show-inheritance:

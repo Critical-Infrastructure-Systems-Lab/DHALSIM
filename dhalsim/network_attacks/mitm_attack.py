@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import List
 
 from dhalsim.network_attacks.utilities import launch_arp_poison, restore_arp
-from synced_attack import SyncedAttack
+from dhalsim.network_attacks.synced_attack import SyncedAttack
 
 
 class MitmAttack(SyncedAttack):

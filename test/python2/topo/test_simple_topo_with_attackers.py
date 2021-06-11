@@ -33,7 +33,7 @@ def topo(unmodified_yaml):
 
 @pytest.fixture
 def net(topo):
-    net = Mininet(topo=topo, autoSetMacs=True, link=TCLink)
+    net = Mininet(topo=topo, autoSetMacs=False, link=TCLink)
     net.start()
     topo.setup_network(net)
     time.sleep(0.2)
@@ -59,6 +59,27 @@ def test_ping(net, host1, host2):
                           ('s1', 'attack2'), ('s1', 'attack3'), ('s2', 'scada'), ('s2', 'attack4')])
 def test_links(net, host1, host2):
     assert net.linksBetween(net.get(host1), net.get(host2)) != []
+
+
+@pytest.mark.integrationtest
+@pytest.mark.parametrize('host1, host2, mac1, mac2',
+                         [('r0', 's1', 'aa:bb:cc:dd:00:01', ''),
+                          ('r0', 's2', 'aa:bb:cc:dd:00:02', ''),
+                          ('s1', 'PLC1', '', 'aa:bb:cc:dd:02:'),
+                          ('s1', 'PLC2', '', 'aa:bb:cc:dd:02:'),
+                          ('s1', 'attack1', '', 'aa:bb:cc:dd:05:'),
+                          ('s1', 'attack2', '', 'aa:bb:cc:dd:05:'),
+                          ('s1', 'attack3', '', 'aa:bb:cc:dd:05:'),
+                          ('s2', 'scada', '', 'aa:bb:cc:dd:01:'),
+                          ('s2', 'attack4', '', 'aa:bb:cc:dd:05:')])
+def test_mac_prefix(net, host1, host2, mac1, mac2):
+    links = net.linksBetween(net.get(host1), net.get(host2))
+    assert links != []
+    link = links[0]
+    full_mac_1 = link.intf1.MAC().lower()
+    full_mac_2 = link.intf2.MAC().lower()
+    assert (full_mac_1.startswith(mac1.lower()) and full_mac_2.startswith(mac2.lower())) or (
+            full_mac_1.startswith(mac2.lower()) and full_mac_2.startswith(mac1.lower()))
 
 
 @pytest.mark.integrationtest

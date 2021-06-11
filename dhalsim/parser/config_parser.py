@@ -45,12 +45,13 @@ class NetworkAttackError(Error):
     """Used to raise errors about network attack"""
 
 
-class ConfigParser:
-    """
-    Class handling the parsing of the input config data.
+class TooManyNodes(Error):
+    """Raised when there will be too many nodes in the network"""
 
-    :param config_path: The path to the config file of the experiment in yaml format
-    :type config_path: Path
+
+class SchemaParser:
+    """
+    Class which handles all schema logic.
     """
     string_pattern = Regex(r'^[a-zA-Z0-9_]+$',
                            error="Error in string: '{}', Can only have a-z, A-Z, 0-9, and _")
@@ -69,11 +70,11 @@ class ConfigParser:
                 ),
                 'start': And(
                     int,
-                    Schema(lambda i: i >= 0, error='start time must be positive'),
+                    Schema(lambda i: i >= 0, error="'start' must be positive."),
                 ),
                 'end': And(
                     int,
-                    Schema(lambda i: i >= 0, error='end time must be positive'),
+                    Schema(lambda i: i >= 0, error="'end' must be positive."),
                 ),
             },
             {
@@ -140,7 +141,8 @@ class ConfigParser:
                     string_pattern,
                 ),
                 'trigger': trigger,
-                Or('value', 'offset', only_one=True): Or(float, And(int, Use(float))),
+                Or('value', 'offset', only_one=True,
+                   error="'tags' should have either a 'value' or 'offset' attribute."): Or(float, And(int, Use(float))),
                 'target': And(
                     str,
                     string_pattern
@@ -166,14 +168,149 @@ class ConfigParser:
                         str,
                         string_pattern,
                     ),
-                    Or('value', 'offset', only_one=True): float,
+                    Or('value', 'offset', only_one=True,
+                       error="'tags' should have either a 'value' or 'offset' attribute."): Or(float, And(int, Use(float))),
                 }]
             }
         )
     )
 
+    @staticmethod
+    def path_schema(data: dict, config_path: Path) -> dict:
+        """
+        For all the values that need to be a path, this function converts them to absolute paths,
+        checks if they exists, and checks the suffix if applicable.
+
+        :param data: data from the config file
+        :type data: dict
+        :param config_path: That to the config file
+        :type config_path:
+
+        :return: the config data, but with existing absolute path objects
+        :rtype: dict
+        """
+        return Schema(
+            And(
+                {
+                    'inp_file': And(
+                        Use(Path),
+                        Use(lambda p: config_path.absolute().parent / p),
+                        Schema(lambda l: Path.is_file, error="'inp_file' could not be found."),
+                        Schema(lambda f: f.suffix == '.inp',
+                               error="Suffix of 'inp_file' should be .inp.")),
+                    Optional('output_path', default=config_path.absolute().parent / 'output'): And(
+                        Use(str, error="'output_path' should be a string."),
+                        Use(Path),
+                        Use(lambda p: config_path.absolute().parent / p),
+                    ),
+                    Optional('initial_tank_data'): And(
+                        Use(Path),
+                        Use(lambda p: config_path.absolute().parent / p),
+                        Schema(lambda l: Path.is_file, error="'initial_tank_data' could not be found."),
+                        Schema(lambda f: f.suffix == '.csv',
+                               error="Suffix of initial_tank_data should be .csv")),
+                    Optional('demand_patterns'): And(
+                        Use(Path),
+                        Use(lambda p: config_path.absolute().parent / p),
+                        Schema(lambda l: Path.exists, error="'demand_patterns' path does not exist."),
+                        Or(
+                            Path.is_dir,
+                            Schema(lambda f: f.suffix == '.csv',
+                                   error="Suffix of demand_patterns should be .csv"))),
+                    Optional('network_loss_data'): And(
+                        Use(Path),
+                        Use(lambda p: config_path.absolute().parent / p),
+                        Schema(lambda l: Path.is_file, error="'network_loss_data' could not be found."),
+                        Schema(lambda f: f.suffix == '.csv',
+                               error="Suffix of network_loss_data should be .csv")),
+                    Optional('network_delay_data'): And(
+                        Use(Path),
+                        Use(lambda p: config_path.absolute().parent / p),
+                        Schema(lambda l: Path.is_file, error="'network_delay_data' could not be found."),
+                        Schema(lambda f: f.suffix == '.csv',
+                               error="Suffix of network_delay_data should be .csv")),
+                    str: object
+                }
+            )
+        ).validate(data)
+
+    @staticmethod
+    def validate_schema(data: dict) -> dict:
+        """
+        Apply a schema to the data. This schema make sure that every reuired parameter is given.
+        It also fills in default values for missing parameters.
+        It will test for types of parameters as well.
+        Besides that, it converts some strings to lower case, like those of :code:'log_level'.
+
+        :param data: data from the config file
+        :type data: dict
+
+        :return: A verified version of the data of the config file
+        :rtype: dict
+        """
+        plc_schema = Schema([{
+            'name': And(
+                str,
+                SchemaParser.string_pattern
+            ),
+            Optional('sensors'): [And(
+                str,
+                SchemaParser.string_pattern
+            )],
+            Optional('actuators'): [And(
+                str,
+                SchemaParser.string_pattern
+            )]
+        }])
+
+        config_schema = Schema({
+            'plcs': plc_schema,
+            'inp_file': Path,
+            Optional('network_topology_type', default='simple'): And(
+                str,
+                Use(str.lower),
+                Or('complex', 'simple')),
+            'output_path': Path,
+            Optional('iterations'): And(
+                int,
+                Schema(lambda i: i > 0, error="'iterations' must be positive.")),
+            Optional('mininet_cli', default=False): bool,
+            Optional('log_level', default='info'): And(
+                str,
+                Use(str.lower),
+                Or('debug', 'info', 'warning', 'error', 'critical', error="'log_level' should be "
+                                                                          "one of the following: "
+                                                                          "'debug', 'info', 'warning', "
+                                                                          "'error' or 'critical'.")),
+            Optional('simulator', default='pdd'): And(
+                str,
+                Use(str.lower),
+                Or('pdd', 'dd'), error="'simulator' should be one of the following: 'pdd' or 'dd'."),
+            Optional('attacks'): {
+                Optional('device_attacks'): [SchemaParser.device_attacks],
+                Optional('network_attacks'): [SchemaParser.network_attacks],
+            },
+            Optional('batch_simulations'): And(
+                int,
+                Schema(lambda i: i > 0, error="'batch_simulations' must be positive.")),
+            Optional('initial_tank_data'): Path,
+            Optional('demand_patterns'): Path,
+            Optional('network_loss_data'): Path,
+            Optional('network_delay_data'): Path,
+        })
+
+        return config_schema.validate(data)
+
+
+class ConfigParser:
+    """
+    Class handling the parsing of the input config data.
+
+    :param config_path: The path to the config file of the experiment in yaml format
+    :type config_path: Path
+    """
+
     def __init__(self, config_path: Path):
-        """Constructor method"""
         self.batch_index = None
         self.yaml_path = None
         self.db_path = None
@@ -205,18 +342,49 @@ class ConfigParser:
         :param data: The data to check
         """
         ConfigParser.network_attack_only_complex(data)
+        ConfigParser.not_to_many_nodes(data)
 
     @staticmethod
     def network_attack_only_complex(data: dict):
         """
         Check if a network attack is applied on a complex topology
-        :param data:
+
+        :param data: the data to check on
+
+        :raise NetworkAttackError: When Network attacks are applied in a simple topology
         """
         if 'attacks' in data and 'network_attacks' in data['attacks'] and len(
                 data['attacks']['network_attacks']) > 0:
             if data['network_topology_type'] == 'simple':
                 raise NetworkAttackError(
                     "Network attacks can only be applied on a complex topology")
+
+    @staticmethod
+    def not_to_many_nodes(data: dict):
+        """
+        Check if there are not more then 250 plcs and network attacks.
+        This would cause trouble with assigning IP and MAC addresses.
+
+        :param data: the data to check on
+
+        :raise TooManyNodes: When there are more then 250 nodes in the network
+        """
+        if 'plcs' in data:
+            n_plcs = len(data["plcs"])
+            if n_plcs > 250:
+                raise TooManyNodes(
+                    "There are too many nodes in the network. Only 250 nodes are supported.")
+            if 'attacks' in data and 'network_attacks' in data['attacks']:
+                if n_plcs + len(data['attacks']['network_attacks']) > 250:
+                    raise TooManyNodes(
+                        "There are too many nodes in the network. Only 250 nodes are supported.")
+        else:
+            if 'attacks' in data and 'network_attacks' in data['attacks']:
+                if len(data['attacks']['network_attacks']) > 250:
+                    raise TooManyNodes(
+                        "There are too many nodes in the network. Only 250 nodes are supported.")
+
+
 
     @staticmethod
     def apply_schema(config_path: Path) -> dict:
@@ -230,73 +398,14 @@ class ConfigParser:
         :rtype: dict
         """
         data = ConfigParser.load_yaml(config_path)
-        data = ConfigParser.path_schema(data, config_path)
-        return ConfigParser.validate_schema(data)
-
-    @staticmethod
-    def path_schema(data: dict, config_path: Path) -> dict:
-        """
-        For all the values that need to be a path, this function converts them to absolute paths,
-        checks if they exists, and checks the suffix if applicable.
-
-        :param data: data from the config file
-        :type data: dict
-        :param config_path: That to the config file
-        :type config_path:
-
-        :return: the config data, but with existing absolute path objects
-        :rtype: dict
-        """
-        return Schema(
-            And(
-                {
-                    'inp_file': And(
-                        Use(Path),
-                        Use(lambda p: config_path.absolute().parent / p),
-                        Path.is_file,
-                        Schema(lambda f: f.suffix == '.inp',
-                               error="Suffix of inp_file should be .inp")),
-                    Optional('output_path', default=config_path.absolute().parent / 'output'): And(
-                        Use(str),
-                        Use(Path),
-                        Use(lambda p: config_path.absolute().parent / p),
-                    ),
-                    Optional('initial_tank_data'): And(
-                        Use(Path),
-                        Use(lambda p: config_path.absolute().parent / p),
-                        Path.is_file,
-                        Schema(lambda f: f.suffix == '.csv',
-                               error="Suffix of initial_tank_data should be .csv")),
-                    Optional('demand_patterns'): And(
-                        Use(Path),
-                        Use(lambda p: config_path.absolute().parent / p),
-                        Path.exists,
-                        Or(
-                            Path.is_dir,
-                            Schema(lambda f: f.suffix == '.csv',
-                                   error="Suffix of demand_patterns should be .csv"))),
-                    Optional('network_loss_data'): And(
-                        Use(Path),
-                        Use(lambda p: config_path.absolute().parent / p),
-                        Path.is_file,
-                        Schema(lambda f: f.suffix == '.csv',
-                               error="Suffix of network_loss_data should be .csv")),
-                    Optional('network_delay_data'): And(
-                        Use(Path),
-                        Use(lambda p: config_path.absolute().parent / p),
-                        Path.is_file,
-                        Schema(lambda f: f.suffix == '.csv',
-                               error="Suffix of network_delay_data should be .csv")),
-                    str: object
-                }
-            )
-        ).validate(data)
+        data = SchemaParser.path_schema(data, config_path)
+        return SchemaParser.validate_schema(data)
 
     @staticmethod
     def load_yaml(path: Path) -> dict:
         """
-        Uses :code:`pyyaml` and :code`pyyaml-include` to read in a yaml file.
-        This means you can use `!include` to include yaml files in other yaml files.
+        Uses :code:'pyyaml' and :code'pyyaml-include' to read in a yaml file.
+        This means you can use '!include' to include yaml files in other yaml files.
 
         :param path: path to the yaml file to be loaded.
         :type path: Path
@@ -310,76 +419,11 @@ class ConfigParser:
         except FileNotFoundError as exc:
             sys.exit(f"File not found: {exc.filename}")
 
-    @staticmethod
-    def validate_schema(data: dict) -> dict:
-        """
-        Apply a schema to the data. This schema make sure that every reuired parameter is given.
-        It also fills in default values for missing parameters.
-        It will test for types of parameters as well.
-        Besides that, it converts some strings to lower case, like those of :code:`log_level`.
-
-        :param data: data from the config file
-        :type data: dict
-
-        :return: A verified version of the data of the config file
-        :rtype: dict
-        """
-        plc_schema = Schema([{
-            'name': And(
-                str,
-                ConfigParser.string_pattern
-            ),
-            Optional('sensors'): [And(
-                str,
-                ConfigParser.string_pattern
-            )],
-            Optional('actuators'): [And(
-                str,
-                ConfigParser.string_pattern
-            )]
-        }])
-
-        config_schema = Schema({
-            'plcs': plc_schema,
-            'inp_file': Path,
-            Optional('network_topology_type', default='simple'): And(
-                str,
-                Use(str.lower),
-                Or('complex', 'simple')),
-            'output_path': Path,
-            Optional('iterations'): And(
-                int,
-                Schema(lambda i: i > 0, error='iterations must be positive')),
-            Optional('mininet_cli', default=False): bool,
-            Optional('log_level', default='info'): And(
-                str,
-                Use(str.lower),
-                Or('debug', 'info', 'warning', 'error', 'critical')),
-            Optional('simulator', default='pdd'): And(
-                str,
-                Use(str.lower),
-                Or('pdd', 'dd')),
-            Optional('run_attack', default=True): bool,
-            Optional('attacks'): {
-                Optional('device_attacks'): [ConfigParser.device_attacks],
-                Optional('network_attacks'): [ConfigParser.network_attacks],
-            },
-            Optional('batch_simulations'): And(
-                int,
-                Schema(lambda i: i > 0, error='batch_simulations must be positive')),
-            Optional('initial_tank_data'): Path,
-            Optional('demand_patterns'): Path,
-            Optional('network_loss_data'): Path,
-            Optional('network_delay_data'): Path,
-        })
-
-        return config_schema.validate(data)
-
     @property
     def output_path(self):
         """
         Property for the path to the output folder.
-        ``output`` by default.
+        ''output'' by default.
 
         :return: absolute path to the output folder
         :rtype: Path
