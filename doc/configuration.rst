@@ -32,6 +32,7 @@ Example with all options:
     log_level: info
     simulator: pdd
     batch_simulations: 20
+    saving_interval: 2
     initial_tank_data: initial_tank.csv
     demand_patterns: demand_patterns/
     network_loss_data: losses.csv
