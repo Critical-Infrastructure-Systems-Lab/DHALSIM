@@ -1,11 +1,11 @@
 #!/bin/bash
 
 cwd=$(pwd)
-version=$(lsb_release -rs | head -c2 )
+version=$(lsb_release -rs )
 
-if [ "$version" != "20" ]
+if [ "$version" != "20.04" ]
 then
-  echo "Warning! This script is only tested on Ubuntu 20 and will likely not work on other major versions."
+  echo "Warning! This installation script has only been tested on Ubuntu 20.04 LTS and will likely not work on other versions."
   sleep 3
 fi
 
