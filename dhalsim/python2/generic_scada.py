@@ -237,6 +237,12 @@ class GenericScada(SCADAServer):
                                       + " is " + str(plc_value) + ".")
                     results.extend(plc_value)
                 self.saved_values.append(results)
+
+                # Save scada_values.csv when needed
+                if 'saving_interval' in self.intermediate_yaml:
+                    if self.get_master_clock() != 0 and \
+                            self.get_master_clock() % self.intermediate_yaml['saving_interval'] == 0:
+                        self.write_output()
             except Exception as msg:
                 self.logger.error(msg)
                 continue
