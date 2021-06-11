@@ -207,6 +207,17 @@ class SyncedAttack(metaclass=ABCMeta):
                          (int(flag), self.intermediate_attack["name"],))
         self.conn.commit()
 
+    def set_attack_flag(self, flag):
+        """
+        Set a flag in the attack table. When it is 1, we know that the attack with the
+        provided name is currently running. When it is 0, it is not.
+
+        :param flag: True for running to 1, false for running to 0
+        """
+        self.cur.execute("UPDATE attack SET flag=? WHERE name IS ?",
+                         (int(flag), self.intermediate_attack['name']))
+        self.conn.commit()
+
     def main_loop(self):
         """
         The main loop of an attack.
@@ -217,6 +228,7 @@ class SyncedAttack(metaclass=ABCMeta):
                 time.sleep(0.01)
 
             run = self.check_trigger()
+            self.set_attack_flag(run)
             if self.state == 0:
                 if run:
                     self.state = 1

@@ -335,6 +335,18 @@ class GenericPLC(BasePLC):
                          (int(flag), self.intermediate_plc["name"],))
         self.conn.commit()
 
+    def set_attack_flag(self, flag, attack_name):
+        """
+        Set a flag in the attack table. When it is 1, we know that the attack with the
+        provided name is currently running. When it is 0, it is not.
+
+        :param flag: True for running to 1, false for running to 0
+        :param attack_name: The name of the attack
+        """
+        self.cur.execute("UPDATE attack SET flag=? WHERE name IS ?",
+                         (int(flag), attack_name,))
+        self.conn.commit()
+
     def main_loop(self, sleep=0.5, test_break=False):
         """
         The main loop of a PLC. In here all the controls will be applied.

@@ -56,6 +56,10 @@ class SchemaParser:
     string_pattern = Regex(r'^[a-zA-Z0-9_]+$',
                            error="Error in string: '{}', Can only have a-z, A-Z, 0-9, and _")
 
+    attack_pattern = Regex(r'^[a-zA-Z0-9_<>+-.]+$',
+                           error="Error in attack name: '{}', "
+                                 "Can only have a-z, A-Z, 0-9, and symbols: _ < > + - . (no whitespaces)")
+
     trigger = Schema(
         Or(
             {
@@ -108,7 +112,10 @@ class SchemaParser:
     )
 
     device_attacks = Schema({
-        'name': str,
+        'name': And(
+            str,
+            attack_pattern,
+        ),
         'trigger': trigger,
         'actuator': And(
             str,

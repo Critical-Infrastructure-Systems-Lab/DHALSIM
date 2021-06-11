@@ -48,7 +48,7 @@ class DatabaseInitializer:
             # Sets master_time to 0
             cur.execute("REPLACE INTO master_time (id, time) VALUES (1, 0)")
 
-            # Creates master_time table if it does not yet exist
+            # Creates sync table
             cur.execute("""CREATE TABLE sync (
                 name TEXT NOT NULL,
                 flag INT NOT NULL,
@@ -66,6 +66,26 @@ class DatabaseInitializer:
                 for attacker in self.data["network_attacks"]:
                     cur.execute("INSERT INTO sync (name, flag) VALUES (?, 1);",
                                 (attacker["name"],))
+
+            # Creates attack table
+            cur.execute("""CREATE TABLE attack (
+                name TEXT NOT NULL,
+                flag INT NOT NULL,
+                PRIMARY KEY (name)
+            );""")
+            # Add device attacks to attack table
+            if "plcs" in self.data:
+                for plc in self.data["plcs"]:
+                    if "attacks" in plc:
+                        for attack in plc["attacks"]:
+                            cur.execute("INSERT INTO attack (name, flag) VALUES (?, 0);",
+                                        (attack["name"],))
+            # Add network attacks to attack table
+            if "network_attacks" in self.data:
+                for network_attack in self.data["network_attacks"]:
+                    cur.execute("INSERT INTO attack (name, flag) VALUES (?, 0);",
+                                (network_attack["name"],))
+
             conn.commit()
 
     def drop(self):
@@ -74,6 +94,7 @@ class DatabaseInitializer:
             cur.execute("DROP TABLE IF EXISTS plant;")
             cur.execute("DROP TABLE IF EXISTS master_time;")
             cur.execute("DROP TABLE IF EXISTS sync;")
+            cur.execute("DROP TABLE IF EXISTS attack;")
             conn.commit()
 
     def print(self):
@@ -81,6 +102,7 @@ class DatabaseInitializer:
             self.logger.debug(pd.read_sql_query("SELECT * FROM plant;", conn))
             self.logger.debug(pd.read_sql_query("SELECT * FROM master_time;", conn))
             self.logger.debug(pd.read_sql_query("SELECT * FROM sync;", conn))
+            self.logger.debug(pd.read_sql_query("SELECT * FROM attack;", conn))
 
 
 def is_valid_file(file_parser, arg):

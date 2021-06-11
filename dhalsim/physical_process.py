@@ -62,6 +62,8 @@ class PhysicalPlant:
         list_header.extend(self.create_link_header(self.pump_list))
         list_header.extend(self.create_link_header(self.valve_list))
 
+        list_header.extend(self.create_attack_header())
+
         self.results_list = []
         self.results_list.append(list_header)
 
@@ -123,6 +125,26 @@ class PhysicalPlant:
             result.append(link + "_STATUS")
         return result
 
+    def create_attack_header(self):
+        """
+        Function that creates csv list headers for device and network attacks
+
+        :return: list of attack names starting with device and ending with network
+        """
+        result = []
+        # Append device attacks
+        if "plcs" in self.data:
+            for plc in self.data["plcs"]:
+                if "attacks" in plc:
+                    for attack in plc["attacks"]:
+                        result.append(attack['name'])
+        # Append network attacks
+        if "network_attacks" in self.data:
+            for network_attack in self.data["network_attacks"]:
+                result.append(network_attack['name'])
+
+        return result
+
     def get_controls(self, a_list):
         result = []
         for control in a_list:
@@ -173,6 +195,17 @@ class PhysicalPlant:
             else:
                 values_list.extend([self.wn.get_link(valve).status.value])
 
+        # Get device attacks
+        if "plcs" in self.data:
+            for plc in self.data["plcs"]:
+                if "attacks" in plc:
+                    for attack in plc["attacks"]:
+                        values_list.append(self.get_attack_flag(attack['name']))
+        # get network attacks
+        if "network_attacks" in self.data:
+            for network_attack in self.data["network_attacks"]:
+                values_list.append(self.get_attack_flag(network_attack['name']))
+
         return values_list
 
     def update_controls(self):
@@ -207,6 +240,16 @@ class PhysicalPlant:
                         FROM sync
                         WHERE flag <= 0""")
         flag = int(self.c.fetchone()[0]) == 0
+        return flag
+
+    def get_attack_flag(self, name):
+        """
+        Get the attack flag of this attack.
+
+        :return: False if attack not running, true otherwise
+        """
+        self.c.execute("SELECT flag FROM attack WHERE name IS ?", (name,))
+        flag = int(self.c.fetchone()[0])
         return flag
 
     def main(self):

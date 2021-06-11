@@ -57,8 +57,11 @@ class TimeAttack(Attack):
         """
         curr_time = plc.get_master_clock()
         if self.start <= curr_time <= self.end:
+            plc.set_attack_flag(True, self.name)
             plc.logger.debug(self.__str__())
             plc.set_tag(self.actuator, self.command)
+        else:
+            plc.set_attack_flag(False, self.name)
 
 
 class TriggerBelowAttack(Attack):
@@ -92,8 +95,11 @@ class TriggerBelowAttack(Attack):
         """
         sensor_value = plc.get_tag(self.sensor)
         if sensor_value < self.value:
+            plc.set_attack_flag(True, self.name)
             plc.logger.debug(self.__str__())
             plc.set_tag(self.actuator, self.command)
+        else:
+            plc.set_attack_flag(False, self.name)
 
 
 class TriggerAboveAttack(Attack):
@@ -127,8 +133,11 @@ class TriggerAboveAttack(Attack):
         """
         sensor_value = plc.get_tag(self.sensor)
         if sensor_value > self.value:
+            plc.set_attack_flag(True, self.name)
             plc.logger.debug(self.__str__())
             plc.set_tag(self.actuator, self.command)
+        else:
+            plc.set_attack_flag(False, self.name)
 
 
 class TriggerBetweenAttack(Attack):
@@ -163,5 +172,8 @@ class TriggerBetweenAttack(Attack):
         """
         sensor_value = plc.get_tag(self.sensor)
         if self.lower_value < sensor_value < self.upper_value:
+            plc.set_attack_flag(True, self.name)
             plc.logger.debug(self.__str__())
             plc.set_tag(self.actuator, self.command)
+        else:
+            plc.set_attack_flag(False, self.name)

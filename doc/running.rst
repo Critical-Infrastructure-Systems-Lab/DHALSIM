@@ -19,7 +19,7 @@ CSV
 ~~~~~~~~~~~~~~~~
 Two :code:`.csv` files will be produced, one by the water simulation software and one by the SCADA:
 
- * The :code:`ground_truth.csv` represents the *actual* values of all tanks, pumps, actuators, valves, etc. during the running of the simulation.
+ * The :code:`ground_truth.csv` represents the *actual* values of all tanks, pumps, actuators, valves, attacks, etc. during the running of the simulation.
  * The :code:`scada_values.csv` represents the values seen over the network by the SCADA during the simulation, it will record sensor values and
    actuator states for every sensor or actuator belonging to a PLC in the network.
 
