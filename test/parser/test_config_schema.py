@@ -22,6 +22,7 @@ def test_dict():
         "log_level": "info",
         "simulator": "pdd",
         "batch_simulations": 3,
+        "saving_interval": 3,
         "initial_tank_data": Path(),
         "demand_patterns": Path(),
         "network_loss_data": Path(),
@@ -90,6 +91,7 @@ def test_default_config(key, default_value, test_dict):
     'batch_simulations',
     'initial_tank_data',
     'demand_patterns',
+    'saving_interval',
     'network_loss_data',
     'network_delay_data',
     'attacks',
@@ -130,6 +132,10 @@ def test_required_config(required_key, test_dict):
     ('batch_simulations', 10.5),
     ('batch_simulations', -10),
     ('batch_simulations', 0),
+    ('saving_interval', 0),
+    ('saving_interval', -2),
+    ('saving_interval', 2.5),
+    ('saving_interval', '3')
 ])
 def test_invalid_config(key, invalid_value, test_dict):
     test_dict[key] = invalid_value
@@ -160,6 +166,7 @@ def test_invalid_config(key, invalid_value, test_dict):
     ('simulator', 'dd', 'dd'),
     ('simulator', 'DD', 'dd'),
     ('batch_simulations', 100, 100),
+    ('saving_interval', 2, 2),
 ])
 def test_valid_config(key, input_value, expected_value, test_dict):
     test_dict[key] = input_value

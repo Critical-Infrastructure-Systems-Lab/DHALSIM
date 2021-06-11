@@ -312,6 +312,11 @@ class PhysicalPlant:
             self.update_valves()
             self.update_junctions()
 
+            # Write results of this iteration if needed
+            if 'saving_interval' in self.data:
+                if self.master_time != 0 and self.master_time % self.data['saving_interval'] == 0:
+                    self.write_results(self.results_list)
+
             # Set sync flags for nodes
             self.c.execute("UPDATE sync SET flag=0")
             self.conn.commit()

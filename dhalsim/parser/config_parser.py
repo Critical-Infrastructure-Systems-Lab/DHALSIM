@@ -293,6 +293,9 @@ class SchemaParser:
             Optional('batch_simulations'): And(
                 int,
                 Schema(lambda i: i > 0, error="'batch_simulations' must be positive.")),
+            Optional('saving_interval'): And(
+                int,
+                Schema(lambda i: i > 0, error="'saving_interval' must be positive.")),
             Optional('initial_tank_data'): Path,
             Optional('demand_patterns'): Path,
             Optional('network_loss_data'): Path,
@@ -544,6 +547,9 @@ class ConfigParser:
             yaml_data['network_delay_data'] = str(self.data['network_delay_data'])
         # Mininet cli parameter
         yaml_data['mininet_cli'] = self.data['mininet_cli']
+        # Write intermittent saving interval to intermediate yaml
+        if 'saving_interval' in self.data:
+            yaml_data['saving_interval'] = self.data['saving_interval']
 
         # Simulator
         yaml_data['simulator'] = self.data['simulator']
