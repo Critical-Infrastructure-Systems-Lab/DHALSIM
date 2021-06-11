@@ -6,7 +6,7 @@ import yaml
 from mininet.net import Mininet
 from mininet.link import TCLink
 
-from dhalsim.python2.topo.simple_topo import SimpleTopo
+from dhalsim.python2.topo.simple_topo import SimpleTopo, TooManyNodes
 
 
 def test_python_version():
@@ -21,14 +21,19 @@ def unmodified_dict():
 
 @pytest.fixture
 def filled_dict():
-    return {'scada': {'interface': 'scada-eth0', 'local_ip': '192.168.2.1', 'name': 'scada', 'public_ip': '192.168.2.1',
-                      'switch_name': 's2', 'gateway_name': 'r0', 'gateway_ip': '192.168.2.254'}, 'plcs': [
-        {'public_ip': '192.168.1.1', 'mac': '00:1D:9C:C7:B0:70', 'name': 'PLC1', 'local_ip': '192.168.1.1',
-         'interface': 'PLC1-eth0', 'gateway': '192.168.1.254', 'switch_name': 's1', 'gateway_name': 'r0',
-         'gateway_ip': '192.168.1.254'},
-        {'public_ip': '192.168.1.2', 'mac': '00:1D:9C:C7:B0:70', 'name': 'PLC2', 'local_ip': '192.168.1.2',
-         'interface': 'PLC2-eth0', 'gateway': '192.168.1.254', 'switch_name': 's1', 'gateway_name': 'r0',
-         'gateway_ip': '192.168.1.254'}]}
+    return {'plcs': [{'gateway_name': 'r0', 'name': 'PLC1', 'local_ip': '192.168.1.1',
+                      'gateway_inbound_mac': 'AA:BB:CC:DD:00:01', 'gateway': '192.168.1.254',
+                      'public_ip': '192.168.1.1', 'mac': 'AA:BB:CC:DD:02:01',
+                      'gateway_ip': '192.168.1.254', 'interface': 'PLC1-eth0', 'switch_name': 's1'},
+                     {'gateway_name': 'r0', 'name': 'PLC2', 'local_ip': '192.168.1.2',
+                      'gateway_inbound_mac': 'AA:BB:CC:DD:00:01', 'gateway': '192.168.1.254',
+                      'public_ip': '192.168.1.2', 'mac': 'AA:BB:CC:DD:02:02',
+                      'gateway_ip': '192.168.1.254', 'interface': 'PLC2-eth0',
+                      'switch_name': 's1'}],
+            'scada': {'gateway_name': 'r0', 'name': 'scada', 'local_ip': '192.168.2.1',
+                      'gateway_inbound_mac': 'AA:BB:CC:DD:00:02', 'public_ip': '192.168.2.1',
+                      'mac': 'AA:BB:CC:DD:01:01', 'gateway_ip': '192.168.2.254',
+                      'interface': 'scada-eth0', 'switch_name': 's2'}}
 
 
 @pytest.fixture
@@ -44,7 +49,7 @@ def topo_fixture(mocker, tmpdir, unmodified_dict):
 
 @pytest.fixture
 def net(topo_fixture):
-    net = Mininet(topo=topo_fixture, autoSetMacs=True, link=TCLink)
+    net = Mininet(topo=topo_fixture, autoSetMacs=False, link=TCLink)
     net.start()
     topo_fixture.setup_network(net)
     time.sleep(0.2)
@@ -131,6 +136,23 @@ def test_links(net, host1, host2):
 
 
 @pytest.mark.integrationtest
+@pytest.mark.parametrize('host1, host2, mac1, mac2',
+                         [('r0', 's1', 'aa:bb:cc:dd:00:01', ''),
+                          ('r0', 's2', 'aa:bb:cc:dd:00:02', ''),
+                          ('s1', 'PLC1', '', 'aa:bb:cc:dd:02:'),
+                          ('s1', 'PLC2', '', 'aa:bb:cc:dd:02:'),
+                          ('s2', 'scada', '', 'aa:bb:cc:dd:01:')])
+def test_mac_prefix(net, host1, host2, mac1, mac2):
+    links = net.linksBetween(net.get(host1), net.get(host2))
+    assert links != []
+    link = links[0]
+    full_mac_1 = link.intf1.MAC().lower()
+    full_mac_2 = link.intf2.MAC().lower()
+    assert (full_mac_1.startswith(mac1.lower()) and full_mac_2.startswith(mac2.lower())) or (
+            full_mac_1.startswith(mac2.lower()) and full_mac_2.startswith(mac1.lower()))
+
+
+@pytest.mark.integrationtest
 def test_number_of_links(net):
     assert len(net.links) == 5
 
@@ -146,3 +168,74 @@ def test_reachability(net, server, client, server_ip):
     time.sleep(0.1)
     response = net.get(client).cmd("wget -qO - {ip}:44818".format(ip=server_ip))
     assert response.rstrip() == "test"
+
+
+@pytest.mark.parametrize('plcs, network_attacks',
+                         [
+                             (10, 10),
+                             (0, 250),
+                             (250, 0),
+                             (10, 240),
+                         ])
+def test_not_to_many_nodes_good_weather(plcs, network_attacks):
+    plcs = [i for i in range(plcs)]
+    network_attacks = [i for i in range(network_attacks)]
+    SimpleTopo.check_amount_of_nodes({'plcs': plcs, 'network_attacks': network_attacks})
+
+
+@pytest.mark.parametrize('network_attacks',
+                         [
+                             10,
+                             250,
+                             0,
+                         ])
+def test_not_to_many_nodes_no_plcs_good_weather(network_attacks):
+    network_attacks = [i for i in range(network_attacks)]
+    SimpleTopo.check_amount_of_nodes({'network_attacks': network_attacks})
+
+
+@pytest.mark.parametrize('plcs',
+                         [
+                             10,
+                             250,
+                             0,
+                         ])
+def test_not_to_many_nodes_no_network_attacks_good_weather(plcs):
+    plcs = [i for i in range(plcs)]
+    SimpleTopo.check_amount_of_nodes({'plcs': plcs})
+
+
+@pytest.mark.parametrize('plcs, network_attacks',
+                         [
+                             (10, 241),
+                             (0, 251),
+                             (251, 0),
+                             (11, 240),
+                         ])
+def test_not_to_many_nodes_bad_weather(plcs, network_attacks):
+    plcs = [i for i in range(plcs)]
+    network_attacks = [i for i in range(network_attacks)]
+    with pytest.raises(TooManyNodes):
+        SimpleTopo.check_amount_of_nodes({'plcs': plcs, 'network_attacks': network_attacks})
+
+
+@pytest.mark.parametrize('network_attacks',
+                         [
+                             251,
+                             1000000,
+                         ])
+def test_not_to_many_nodes_no_plcs_bad_weather(network_attacks):
+    network_attacks = [i for i in range(network_attacks)]
+    with pytest.raises(TooManyNodes):
+        SimpleTopo.check_amount_of_nodes({'network_attacks': network_attacks})
+
+
+@pytest.mark.parametrize('plcs',
+                         [
+                             251,
+                             100000,
+                         ])
+def test_not_to_many_nodes_no_network_attacks_bad_weather(plcs):
+    plcs = [i for i in range(plcs)]
+    with pytest.raises(TooManyNodes):
+        SimpleTopo.check_amount_of_nodes({'plcs': plcs})

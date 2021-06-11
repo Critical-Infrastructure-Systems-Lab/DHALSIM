@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 import yaml
 
-from dhalsim.parser.config_parser import ConfigParser
+from dhalsim.parser.config_parser import ConfigParser, TooManyNodes
 
 
 @pytest.fixture
@@ -38,9 +38,11 @@ def test_config_parser_attacks(wadi_config_yaml_path):
 
     expected_output = {"plcs": [
         {"name": "PLC1", "actuators": ["P_RAW1", "V_PUB"], "sensors": ["T0"], "attacks": [
-            {"name": "Close PRAW1 from iteration 5 to 10", "trigger": {"type": "time", "start": 5, "end": 10},
+            {"name": "Close PRAW1 from iteration 5 to 10",
+             "trigger": {"type": "time", "start": 5, "end": 10},
              "actuator": "P_RAW1", "command": "closed"},
-            {"name": "Close PRAW1 when T2 < 0.16", "trigger": {"type": "below", "sensor": "T2", "value": 0.16},
+            {"name": "Close PRAW1 when T2 < 0.16",
+             "trigger": {"type": "below", "sensor": "T2", "value": 0.16},
              "actuator": "P_RAW1", "command": "closed"}
         ]},
         {"name": "PLC2", "actuators": ["V_ER2i"], "sensors": ["T2"]}
@@ -50,7 +52,8 @@ def test_config_parser_attacks(wadi_config_yaml_path):
     assert 'attacks' not in output['plcs'][1].keys()
 
 
-def test_generate_intermediate_yaml(mocker, tmpdir, wadi_config_yaml_path, filled_yaml_path, directory_mock):
+def test_generate_intermediate_yaml(mocker, tmpdir, wadi_config_yaml_path, filled_yaml_path,
+                                    directory_mock):
     mocker.patch(
         'tempfile.mkdtemp',
         directory_mock.mkdtemp
@@ -82,3 +85,74 @@ def test_generate_intermediate_yaml(mocker, tmpdir, wadi_config_yaml_path, fille
     assert actual == expected
     directory_mock.mkdtemp.assert_called_with(prefix='dhalsim_')
     directory_mock.chmod.assert_called_with(directory_mock.mkdtemp(), 0o777)
+
+
+@pytest.mark.parametrize('plcs, network_attacks',
+                         [
+                             (10, 10),
+                             (0, 250),
+                             (250, 0),
+                             (10, 240),
+                         ])
+def test_not_to_many_nodes_good_weather(plcs, network_attacks):
+    plcs = [i for i in range(plcs)]
+    network_attacks = [i for i in range(network_attacks)]
+    ConfigParser.not_to_many_nodes({'plcs': plcs, 'attacks': {'network_attacks': network_attacks}})
+
+
+@pytest.mark.parametrize('network_attacks',
+                         [
+                             10,
+                             250,
+                             0,
+                         ])
+def test_not_to_many_nodes_no_plcs_good_weather(network_attacks):
+    network_attacks = [i for i in range(network_attacks)]
+    ConfigParser.not_to_many_nodes({'attacks': {'network_attacks': network_attacks}})
+
+
+@pytest.mark.parametrize('plcs',
+                         [
+                             10,
+                             250,
+                             0,
+                         ])
+def test_not_to_many_nodes_no_network_attacks_good_weather(plcs):
+    plcs = [i for i in range(plcs)]
+    ConfigParser.not_to_many_nodes({'plcs': plcs})
+
+
+@pytest.mark.parametrize('plcs, network_attacks',
+                         [
+                             (10, 241),
+                             (0, 251),
+                             (251, 0),
+                             (11, 240),
+                         ])
+def test_not_to_many_nodes_bad_weather(plcs, network_attacks):
+    plcs = [i for i in range(plcs)]
+    network_attacks = [i for i in range(network_attacks)]
+    with pytest.raises(TooManyNodes):
+        ConfigParser.not_to_many_nodes({'plcs': plcs, 'attacks': {'network_attacks': network_attacks}})
+
+
+@pytest.mark.parametrize('network_attacks',
+                         [
+                             251,
+                             1000000,
+                         ])
+def test_not_to_many_nodes_no_plcs_bad_weather(network_attacks):
+    network_attacks = [i for i in range(network_attacks)]
+    with pytest.raises(TooManyNodes):
+        ConfigParser.not_to_many_nodes({'attacks': {'network_attacks': network_attacks}})
+
+
+@pytest.mark.parametrize('plcs',
+                         [
+                             251,
+                             100000,
+                         ])
+def test_not_to_many_nodes_no_network_attacks_bad_weather(plcs):
+    plcs = [i for i in range(plcs)]
+    with pytest.raises(TooManyNodes):
+        ConfigParser.not_to_many_nodes({'plcs': plcs})
