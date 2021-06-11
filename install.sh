@@ -1,6 +1,13 @@
 #!/bin/bash
 
 cwd=$(pwd)
+version=$(lsb_release -rs | head -c2 )
+
+if [ "$version" != "20" ]
+then
+  echo "Warning! This script is only tested on Ubuntu 20 and will likely not work on other major versions."
+  sleep 3
+fi
 
 # Update apt
 sudo apt update
@@ -35,6 +42,7 @@ sudo PYTHON=python2 ./util/install.sh -fnv
 # Install DHALSIM
 cd ${cwd}
 sudo python3 -m pip install -e .
+sudo service openvswitch-switch start
 
 # Installation complete
 printf "\nInstallation finished. You can now run DHALSIM by using \n\t<sudo dhalsim your_config.yaml>.\n"
