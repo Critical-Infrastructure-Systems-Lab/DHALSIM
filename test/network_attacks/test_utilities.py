@@ -5,7 +5,7 @@ from mock import call, Mock
 from scapy.layers.l2 import ARP, Ether
 
 from dhalsim.network_attacks.utilities import spoof_arp_cache, launch_arp_poison, restore_arp, \
-    get_mac
+    get_mac, translate_payload_to_float, translate_float_to_payload
 
 
 def test_python_version():
@@ -83,3 +83,18 @@ def test_get_mac(srp_mock):
 
     arp_packet = Ether(dst='ff:ff:ff:ff:ff:ff') / ARP(op=1, pdst='192.168.1.3')
     srp_mock.assert_called_once_with(arp_packet, timeout=2, verbose=False)
+
+
+def test_translate_payload_to_float():
+    payload = b'o\x00\x1a\x00\x91\xb9\x1df\x00\x00\x00\x000\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\xb2\x00\n\x00\xcc\x00\x00\x00\xca\x00\x18\x89\x81>'
+    expected = 0.25299906730651855
+
+    assert translate_payload_to_float(payload) == expected
+
+
+def test_translate_float_to_payload():
+    payload = b'o\x00\x1a\x00\x91\xb9\x1df\x00\x00\x00\x000\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\xb2\x00\n\x00\xcc\x00\x00\x00\xca\x00\x00\x00\x00>'
+    value = 0.25299906730651855
+    expected = b'o\x00\x1a\x00\x91\xb9\x1df\x00\x00\x00\x000\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\xb2\x00\n\x00\xcc\x00\x00\x00\xca\x00\x18\x89\x81>'
+
+    assert translate_float_to_payload(value, payload) == expected
