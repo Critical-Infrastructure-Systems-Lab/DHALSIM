@@ -1,14 +1,14 @@
 ---
 # General simulation parameters
 inp_file: "wadi_map_newer.inp"
-network_topology_type: Simple
+network_topology_type: complex
 output_path: "output/"
-iterations: 2
+iterations: 15
 mininet_cli: false
 
 plcs: !include wadi_plcs.yaml
 
-#attacks: !include wadi_attacks.yaml
+attacks: !include wadi_attacks.yaml
 
 #batch_simulations: 3
 #Initial Conditions
