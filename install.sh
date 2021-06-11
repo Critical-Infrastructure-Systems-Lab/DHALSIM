@@ -18,7 +18,7 @@ sudo pip install cpppo==4.0.*
 
 # MiniCPS
 cd ~
-git clone https://github.com/afmurillo/minicps.git || git -C minicps pull
+git clone --depth 1 https://github.com/afmurillo/minicps.git || git -C minicps pull
 cd minicps
 sudo python2 -m pip install .
 
@@ -28,7 +28,7 @@ sudo pip install pyyaml==5.3.*
 
 # Mininet from source
 cd ~
-git clone -b 2.3.0 https://github.com/mininet/mininet.git || git -C mininet pull
+git clone --depth 1 -b 2.3.0 https://github.com/mininet/mininet.git || git -C mininet pull
 cd mininet
 sudo PYTHON=python2 ./util/install.sh -fnv
 
