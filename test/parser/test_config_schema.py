@@ -69,6 +69,28 @@ def attack_dict_2():
             'value': -2}
 
 
+@pytest.fixture
+def attack_dict_3():
+    return {
+        'name': 'test1',
+        'actuator': 'P_RAW1',
+        'trigger': {'type': "Between",
+                    'sensor': "T2",
+                    'lower_value': 0.10,
+                    'upper_value': 0.16},
+        'command': 'closed'
+    }
+
+
+@pytest.fixture
+def attack_dict_4():
+    return {'name': 'test2',
+            'actuator': 'P_RAW1',
+            'trigger': {'end': 17, 'start': 12, 'type': 'Time'},
+            'command': 'open'
+            }
+
+
 def test_valid_dict(test_dict):
     SchemaParser.validate_schema(test_dict)
     assert True
@@ -242,15 +264,61 @@ def test_valid_plc(key, input_value, expected_value, test_dict):
     assert output['plcs'][0][key] == expected_value
 
 
-def test_attack_dicts(attack_dict_1, attack_dict_2):
+def test_attack_dicts(attack_dict_1, attack_dict_2, attack_dict_3, attack_dict_4):
     SchemaParser.network_attacks.validate(attack_dict_1)
     SchemaParser.network_attacks.validate(attack_dict_2)
+
+    SchemaParser.device_attacks.validate(attack_dict_3)
+    SchemaParser.device_attacks.validate(attack_dict_4)
 
 
 @pytest.mark.parametrize("key, input_value", [
     ('type', 9),
     ('type', 'hi'),
     ('trigger', 4),
+    ('name', 'device attack'),
+    ('name', 'network attack 5+10'),
+    ('trigger', {'type': 'Time', 'start': '5', 'end': 10}),
+    ('trigger', {'type': 'NoType', 'start': 5, 'end': 10}),
+    ('trigger', {'type': 'NoType', 'start': 5, 'end': '10'}),
+    ('tags', 3),
+    ('tags', [{'tag': 'T2', 'value': 'not_int'}]),
+    ('tags', [{'tag': 8, 'value': 0.2}]),
+    ('target', 5),
+    ('wrong', 1)
+])
+def test_invalid_device_attacks(key, input_value, attack_dict_3, attack_dict_4):
+    attack_dict_3[key] = input_value
+    with pytest.raises(SchemaError):
+        SchemaParser.device_attacks.validate(attack_dict_3)
+    attack_dict_4[key] = input_value
+    with pytest.raises(SchemaError):
+        SchemaParser.device_attacks.validate(attack_dict_4)
+
+
+@pytest.mark.parametrize("key, input_value, expected", [
+    ('name', 'hello', 'hello'),
+    ('name', 'device_attack', 'device_attack'),
+    ('name', 'network_attack_5->10', 'network_attack_5->10'),
+    ('name', 'close_when_5<T0<10', 'close_when_5<T0<10'),
+    ('name', '10', '10'),
+    ('trigger', {'type': 'Time', 'start': 5, 'end': 10}, {'type': 'time', 'start': 5, 'end': 10}),
+])
+def test_valid_device_attacks(key, input_value, expected, attack_dict_3, attack_dict_4):
+    attack_dict_3[key] = input_value
+    output = SchemaParser.device_attacks.validate(attack_dict_3)
+    assert output[key] == expected
+    attack_dict_4[key] = input_value
+    output = SchemaParser.device_attacks.validate(attack_dict_4)
+    assert output[key] == expected
+
+
+@pytest.mark.parametrize("key, input_value", [
+    ('type', 9),
+    ('type', 'hi'),
+    ('trigger', 4),
+    ('name', 'network attack'),
+    ('name', 'network_attack_5<10'),
     ('trigger', {'type': 'Time', 'start': '5', 'end': 10}),
     ('trigger', {'type': 'NoType', 'start': 5, 'end': 10}),
     ('trigger', {'type': 'NoType', 'start': 5, 'end': '10'}),
@@ -268,6 +336,9 @@ def test_invalid_network_attacks_mitm(key, input_value, attack_dict_1):
 
 @pytest.mark.parametrize("key, input_value, expected", [
     ('name', 'hello', 'hello'),
+    ('name', 'network_attack', 'network_attack'),
+    ('name', 'network_attack_5_to_10', 'network_attack_5_to_10'),
+    ('name', '10', '10'),
     ('trigger', {'type': 'Time', 'start': 5, 'end': 10}, {'type': 'time', 'start': 5, 'end': 10}),
     ('tags', [{'tag': 'T2', 'value': 0.2}], [{'tag': 'T2', 'value': 0.2}]),
 ])
@@ -282,6 +353,8 @@ def test_valid_network_attacks_mitm(key, input_value, expected, attack_dict_1):
     ('type', 'hi'),
     ('name', 9),
     ('trigger', 4),
+    ('name', 'network attack'),
+    ('name', 'network_attack_5<10'),
     ('trigger', {'type': 'Time', 'start': '5', 'end': 10}),
     ('trigger', {'type': 'NoType', 'start': 5, 'end': 10}),
     ('trigger', {'type': 'NoType', 'start': 5, 'end': '10'}),
@@ -296,6 +369,9 @@ def test_invalid_attacks_naive(key, input_value, attack_dict_2):
 
 @pytest.mark.parametrize("key, input_value, expected", [
     ('name', 'hello', 'hello'),
+    ('name', 'network_attack', 'network_attack'),
+    ('name', 'network_attack_5_to_10', 'network_attack_5_to_10'),
+    ('name', '10', '10'),
     ('trigger', {'type': 'Time', 'start': 5, 'end': 10}, {'type': 'time', 'start': 5, 'end': 10}),
 ])
 def test_valid_attacks_naive(key, input_value, expected, attack_dict_2):
