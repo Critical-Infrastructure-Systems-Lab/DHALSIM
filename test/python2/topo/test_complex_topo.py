@@ -6,7 +6,7 @@ import yaml
 from mininet.net import Mininet
 from mininet.link import TCLink
 
-from dhalsim.python2.topo.complex_topo import ComplexTopo
+from dhalsim.python2.topo.complex_topo import ComplexTopo, TooManyNodes
 
 
 def test_python_version():
@@ -93,3 +93,74 @@ def test_reachability(net, server, client, server_ip):
     time.sleep(0.1)
     response = net.get(client).cmd("wget -qO - {ip}:44818".format(ip=server_ip))
     assert response.rstrip() == "test"
+
+
+@pytest.mark.parametrize('plcs, network_attacks',
+                         [
+                             (10, 10),
+                             (0, 250),
+                             (250, 0),
+                             (10, 240),
+                         ])
+def test_not_to_many_nodes_good_weather(plcs, network_attacks):
+    plcs = [i for i in range(plcs)]
+    network_attacks = [i for i in range(network_attacks)]
+    ComplexTopo.check_amount_of_nodes({'plcs': plcs, 'network_attacks': network_attacks})
+
+
+@pytest.mark.parametrize('network_attacks',
+                         [
+                             10,
+                             250,
+                             0,
+                         ])
+def test_not_to_many_nodes_no_plcs_good_weather(network_attacks):
+    network_attacks = [i for i in range(network_attacks)]
+    ComplexTopo.check_amount_of_nodes({'network_attacks': network_attacks})
+
+
+@pytest.mark.parametrize('plcs',
+                         [
+                             10,
+                             250,
+                             0,
+                         ])
+def test_not_to_many_nodes_no_network_attacks_good_weather(plcs):
+    plcs = [i for i in range(plcs)]
+    ComplexTopo.check_amount_of_nodes({'plcs': plcs})
+
+
+@pytest.mark.parametrize('plcs, network_attacks',
+                         [
+                             (10, 241),
+                             (0, 251),
+                             (251, 0),
+                             (11, 240),
+                         ])
+def test_not_to_many_nodes_bad_weather(plcs, network_attacks):
+    plcs = [i for i in range(plcs)]
+    network_attacks = [i for i in range(network_attacks)]
+    with pytest.raises(TooManyNodes):
+        ComplexTopo.check_amount_of_nodes({'plcs': plcs, 'network_attacks': network_attacks})
+
+
+@pytest.mark.parametrize('network_attacks',
+                         [
+                             251,
+                             1000000,
+                         ])
+def test_not_to_many_nodes_no_plcs_bad_weather(network_attacks):
+    network_attacks = [i for i in range(network_attacks)]
+    with pytest.raises(TooManyNodes):
+        ComplexTopo.check_amount_of_nodes({'network_attacks': network_attacks})
+
+
+@pytest.mark.parametrize('plcs',
+                         [
+                             251,
+                             100000,
+                         ])
+def test_not_to_many_nodes_no_network_attacks_bad_weather(plcs):
+    plcs = [i for i in range(plcs)]
+    with pytest.raises(TooManyNodes):
+        ComplexTopo.check_amount_of_nodes({'plcs': plcs})

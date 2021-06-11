@@ -13,6 +13,10 @@ class NoSuchPlc(Error):
     """Raised when an attack targets a PLC that does not exist"""
 
 
+class TooManyNodes(Error):
+    """Raised when there will be too many nodes in the network"""
+
+
 class LinuxRouter(Node):
     """
     A node with IP forwarding enabled
@@ -55,6 +59,8 @@ class SimpleTopo(Topo):
         with self.intermediate_yaml_path.open(mode='r') as intermediate_yaml:
             self.data = yaml.safe_load(intermediate_yaml)
 
+        self.check_amount_of_nodes(self.data)
+
         # Generate PLC data and write back to file (mac addresses, ip addresses, interface names, ...)
         self.generate_data(self.data)
 
@@ -63,6 +69,31 @@ class SimpleTopo(Topo):
 
         # Initialize mininet topology
         Topo.__init__(self)
+
+    @staticmethod
+    def check_amount_of_nodes(data):
+        """
+        Check if there are not more then 250 plcs and network attacks.
+        This would cause trouble with assigning IP and MAC addresses.
+
+        :param data: the data to check on
+
+        :raise TooManyNodes: When there are more then 250 nodes in the network
+        """
+        if 'plcs' in data:
+            n_plcs = len(data["plcs"])
+            if n_plcs > 250:
+                raise TooManyNodes(
+                    "There are too many nodes in the network. Only 250 nodes are supported.")
+            if 'network_attacks' in data:
+                if n_plcs + len(data['network_attacks']) > 250:
+                    raise TooManyNodes(
+                        "There are too many nodes in the network. Only 250 nodes are supported.")
+        else:
+            if 'network_attacks' in data:
+                if len(data['network_attacks']) > 250:
+                    raise TooManyNodes(
+                        "There are too many nodes in the network. Only 250 nodes are supported.")
 
     def generate_data(self, data):
         """
