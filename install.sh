@@ -30,7 +30,7 @@ sudo pip install pyyaml
 cd ~
 git clone https://github.com/mininet/mininet.git || git -C mininet pull
 cd mininet
-sudo PYTHON=python2 ./util/install.sh -fnv
+./util/install.sh -fnv
 
 # Install DHALSIM
 cd ${cwd}
