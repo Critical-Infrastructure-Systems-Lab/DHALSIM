@@ -230,6 +230,7 @@ class PhysicalPlant:
                          .format(x=str(iteration_limit),
                                  step=str(self.wn.options.time.hydraulic_timestep)))
 
+        p_bar = None
         if self.data['log_level'] != 'debug':
             widgets = [' [', progressbar.Timer(), ' - ', progressbar.SimpleProgress(), '] ',
                        progressbar.Bar(), ' [', progressbar.ETA(), '] ', ]
@@ -250,10 +251,16 @@ class PhysicalPlant:
             self.logger.debug("Iteration {x} out of {y}.".format(x=str(self.master_time),
                                                                  y=str(iteration_limit)))
 
-            if self.data['log_level'] != 'debug':
+            if p_bar and self.data['log_level'] != 'debug':
                 p_bar.update(self.master_time)
 
-            self.sim.run_sim(convergence_error=True)
+            # Check for simulation error, print output on exception
+            try:
+                self.sim.run_sim(convergence_error=True)
+            except Exception as exp:
+                self.logger.error(f"Error in WNTR simulation: {exp}")
+                self.finish()
+
             values_list = self.register_results()
             self.results_list.append(values_list)
 
