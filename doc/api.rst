@@ -1,7 +1,7 @@
 API
-=======
+===
 
 .. toctree::
-   :maxdepth: 10
+   :maxdepth: 100
 
    dhalsim

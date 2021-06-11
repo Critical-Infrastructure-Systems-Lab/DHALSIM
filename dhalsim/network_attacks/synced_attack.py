@@ -13,17 +13,21 @@ from dhalsim.py3_logger import get_logger
 
 class SyncedAttack(metaclass=ABCMeta):
     """
-    This class can be used to make an attack script. It provides a lot of useful function.
+    This class can be used to make an attack script.
+    It provides a lot of useful function.
     It has a function that is called on every iteration of the simulation.
-    It also processes the trigger of this attack. It sets the `state` to 1 and calls :meth:`~dhalsim.network_attacks.synced_attack.SyncedAttack.setup` when the
-    attack should go from not running to running. It sets the `state` to 0 and calls :meth:`~dhalsim.network_attacks.synced_attack.SyncedAttack.teardown`when the
+    It also processes the trigger of this attack.
+    It sets the `state` to 1 and calls :meth:`~dhalsim.network_attacks.synced_attack.SyncedAttack.setup` when the
+    attack should go from not running to running.
+    It sets the `state` to 0 and calls :meth:`~dhalsim.network_attacks.synced_attack.SyncedAttack.teardown`when the
     attack should go from  running to not running.
 
     :param intermediate_yaml_path: The path to the intermediate yaml file.
-    This is where all the information is that a attacker needs to know.
+       This is where all the information is that a attacker needs to know.
     :type intermediate_yaml_path: Path
+
     :param yaml_index: The intermediate yaml has a list of network attacks.
-    This number is the index of this attack.
+       This number is the index of this attack.
     :type yaml_index: int
     """
 
@@ -110,28 +114,40 @@ class SyncedAttack(metaclass=ABCMeta):
         """
         Check if the trigger given is satisfied
         A trigger looks like this for a trigger basted on time:
+
         .. code-block:: yaml
+
             trigger:
               type: time
               start: 15
               end: 40
+
         A trigger looks like one of these for a trigger basted on a sensor value:
+
         .. code-block:: yaml
+
             trigger:
               type: above
               sensor: TANK
               value: 0.16
+
+
         .. code-block:: yaml
+
             trigger:
               type: below
               sensor: TANK
               value: 0.16
+
+
         .. code-block:: yaml
+
             trigger:
               type: between
               sensor: T2
               lower_value: 0.10
               upper_value: 0.16
+
         :return: Boolean indicating whether or not to run the attack
         """
         if self.intermediate_attack['trigger']['type'] == "time":
