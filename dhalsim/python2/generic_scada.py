@@ -37,7 +37,10 @@ class GenericScada(SCADAServer):
     """
 
     DB_TRIES = 10
-    """Amount of time a db query will retry on a exception"""
+    """Amount of times a db query will retry on a exception"""
+
+    DB_SLEEP_TIME = 0.01
+    """Amount of time a db query will wait before retrying"""
 
     def __init__(self, intermediate_yaml_path):
         with intermediate_yaml_path.open() as yaml_file:
@@ -157,6 +160,7 @@ class GenericScada(SCADAServer):
         """
         Get the sync flag of the scada.
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
 
         :return: False if physical process wants the plc to do a iteration, True if not.
 
@@ -172,6 +176,7 @@ class GenericScada(SCADAServer):
                 self.logger.debug(
                     "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
                         exc=exc, i=self.DB_TRIES - i - 1))
+                time.sleep(self.DB_SLEEP_TIME)
         else:
             self.logger.error(
                 "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
@@ -182,6 +187,7 @@ class GenericScada(SCADAServer):
         Set the scada's sync flag in the sync table. When this is 1, the physical process
         knows that the scada finished the requested iteration.
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
 
         :param flag: True for sync to 1, False for sync to 0
         :type flag: bool
@@ -199,6 +205,7 @@ class GenericScada(SCADAServer):
                 self.logger.debug(
                     "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
                         exc=exc, i=self.DB_TRIES - i - 1))
+                time.sleep(self.DB_SLEEP_TIME)
         else:
             self.logger.error(
                 "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
@@ -264,7 +271,7 @@ class GenericScada(SCADAServer):
         self.logger.debug("SCADA enters main_loop")
         while True:
             while self.get_sync():
-                time.sleep(0.01)
+                time.sleep(self.DB_SLEEP_TIME)
 
             master_time = self.get_master_clock()
 

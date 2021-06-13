@@ -37,7 +37,10 @@ class GenericPLC(BasePLC):
     """
 
     DB_TRIES = 10
-    """Amount of time a db query will retry on a exception"""
+    """Amount of times a db query will retry on a exception"""
+
+    DB_SLEEP_TIME = 0.01
+    """Amount of time a db query will wait before retrying"""
 
     def __init__(self, intermediate_yaml_path, yaml_index):
         self.yaml_index = yaml_index
@@ -311,6 +314,7 @@ class GenericPLC(BasePLC):
         """
         Get the value of the master clock of the physical process through the database.
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
 
         :return: Iteration in the physical process.
 
@@ -326,6 +330,7 @@ class GenericPLC(BasePLC):
                 self.logger.debug(
                     "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
                         exc=exc, i=self.DB_TRIES - i - 1))
+                time.sleep(self.DB_SLEEP_TIME)
         else:
             self.logger.error(
                 "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
@@ -335,6 +340,7 @@ class GenericPLC(BasePLC):
         """
         Get the sync flag of this plc.
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
 
         :return: False if physical process wants the plc to do a iteration, True if not.
 
@@ -350,6 +356,7 @@ class GenericPLC(BasePLC):
                 self.logger.debug(
                     "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
                         exc=exc, i=self.DB_TRIES - i - 1))
+                time.sleep(self.DB_SLEEP_TIME)
         else:
             self.logger.error(
                 "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
@@ -360,6 +367,7 @@ class GenericPLC(BasePLC):
         Set this plcs sync flag in the sync table. When this is 1, the physical process
         knows this plc finished the requested iteration.
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
 
         :param flag: True for sync to 1, False for sync to 0
         :type flag: bool
@@ -377,6 +385,7 @@ class GenericPLC(BasePLC):
                 self.logger.debug(
                     "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
                         exc=exc, i=self.DB_TRIES - i - 1))
+                time.sleep(self.DB_SLEEP_TIME)
         else:
             self.logger.error(
                 "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
@@ -387,6 +396,7 @@ class GenericPLC(BasePLC):
         Set a flag in the attack table. When it is 1, we know that the attack with the
         provided name is currently running. When it is 0, it is not.
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
 
         :param flag: True for running to 1, False for running to 0
         :type flag: bool
@@ -407,6 +417,7 @@ class GenericPLC(BasePLC):
                 self.logger.debug(
                     "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
                         exc=exc, i=self.DB_TRIES - i - 1))
+                time.sleep(self.DB_SLEEP_TIME)
         else:
             self.logger.error(
                 "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
@@ -422,7 +433,7 @@ class GenericPLC(BasePLC):
         self.logger.debug(self.intermediate_plc['name'] + ' enters main_loop')
         while True:
             while self.get_sync():
-                time.sleep(0.01)
+                time.sleep(self.DB_SLEEP_TIME)
 
             self.update_cache()
 
