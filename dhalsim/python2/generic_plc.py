@@ -26,11 +26,17 @@ class InvalidControlValue(Error):
     """Raised when tag you are looking for does not exist"""
 
 
+class DatabaseError(Error):
+    """Raised when not being able to connect to the database"""
+
+
 class GenericPLC(BasePLC):
     """
     This class represents a plc. This plc knows what it is connected to by reading the
     yaml file at intermediate_yaml_path and looking at index yaml_index in the plcs section.
     """
+
+    DB_TRIES = 10
 
     def __init__(self, intermediate_yaml_path, yaml_index):
         self.yaml_index = yaml_index
@@ -78,8 +84,8 @@ class GenericPLC(BasePLC):
         plc_server = {
             'address': self.intermediate_plc['local_ip'],
             'tags': self.generate_real_tags(plc_sensors,
-                                       list(set(dependant_sensors) - set(plc_sensors)),
-                                       self.intermediate_plc['actuators'])
+                                            list(set(dependant_sensors) - set(plc_sensors)),
+                                            self.intermediate_plc['actuators'])
         }
 
         # Create protocol
@@ -202,9 +208,6 @@ class GenericPLC(BasePLC):
                                          attack['trigger']['lower_value'], attack['trigger']['upper_value']))
         return attacks
 
-
-
-
     def pre_loop(self, sleep=0.5):
         """
         The pre loop of a PLC. In everything is setup. Like starting the sending thread through
@@ -306,46 +309,103 @@ class GenericPLC(BasePLC):
     def get_master_clock(self):
         """
         Get the value of the master clock of the physical process through the database.
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
 
-        :return: Iteration in the physical process
+        :return: Iteration in the physical process.
+
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
         """
-        # Fetch master_time
-        self.cur.execute("SELECT time FROM master_time WHERE id IS 1")
-        master_time = self.cur.fetchone()[0]
-        return master_time
+        for i in range(self.DB_TRIES):
+            try:
+                self.cur.execute("SELECT time FROM master_time WHERE id IS 1")
+                master_time = self.cur.fetchone()[0]
+                return master_time
+            except sqlite3.OperationalError as exc:
+                self.logger.debug(
+                    "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
+                        exc=exc, i=self.DB_TRIES - i - 1))
+        else:
+            self.logger.debug(
+                "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
+            raise DatabaseError("Failed to get master clock from database")
 
     def get_sync(self):
         """
         Get the sync flag of this plc.
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
 
         :return: False if physical process wants the plc to do a iteration, True if not.
+
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
         """
-        self.cur.execute("SELECT flag FROM sync WHERE name IS ?", (self.intermediate_plc["name"],))
-        flag = bool(self.cur.fetchone()[0])
-        return flag
+        for i in range(self.DB_TRIES):
+            try:
+                self.cur.execute("SELECT flag FROM sync WHERE name IS ?", (self.intermediate_plc["name"],))
+                flag = bool(self.cur.fetchone()[0])
+                return flag
+            except sqlite3.OperationalError as exc:
+                self.logger.debug(
+                    "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
+                        exc=exc, i=self.DB_TRIES - i - 1))
+        else:
+            self.logger.debug(
+                "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
+            raise DatabaseError("Failed to get master clock from database")
 
     def set_sync(self, flag):
         """
         Set this plcs sync flag in the sync table. When this is 1, the physical process
         knows this plc finished the requested iteration.
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
 
         :param flag: True for sync to 1, false for sync to 0
+
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
         """
-        self.cur.execute("UPDATE sync SET flag=? WHERE name IS ?",
-                         (int(flag), self.intermediate_plc["name"],))
-        self.conn.commit()
+        for i in range(self.DB_TRIES):
+            try:
+                self.cur.execute("UPDATE sync SET flag=? WHERE name IS ?",
+                                 (int(flag), self.intermediate_plc["name"],))
+                self.conn.commit()
+                return
+            except sqlite3.OperationalError as exc:
+                self.logger.debug(
+                    "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
+                        exc=exc, i=self.DB_TRIES - i - 1))
+        else:
+            self.logger.debug(
+                "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
+            raise DatabaseError("Failed to get master clock from database")
 
     def set_attack_flag(self, flag, attack_name):
         """
         Set a flag in the attack table. When it is 1, we know that the attack with the
         provided name is currently running. When it is 0, it is not.
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
 
         :param flag: True for running to 1, false for running to 0
         :param attack_name: The name of the attack
+
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
         """
-        self.cur.execute("UPDATE attack SET flag=? WHERE name IS ?",
-                         (int(flag), attack_name,))
-        self.conn.commit()
+        for i in range(self.DB_TRIES):
+            try:
+                self.cur.execute("UPDATE attack SET flag=? WHERE name IS ?",
+                                 (int(flag), attack_name,))
+                self.conn.commit()
+                return
+            except sqlite3.OperationalError as exc:
+                self.logger.debug(
+                    "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
+                        exc=exc, i=self.DB_TRIES - i - 1))
+        else:
+            self.logger.debug(
+                "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
+            raise DatabaseError("Failed to get master clock from database")
 
     def main_loop(self, sleep=0.5, test_break=False):
         """
