@@ -253,13 +253,28 @@ class GenericScada(SCADAServer):
     def get_master_clock(self):
         """
         Get the value of the master clock of the physical process through the database.
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
 
-        :return: Iteration in the physical process
+        :return: Iteration in the physical process.
+
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
         """
-        # Fetch master_time
-        self.cur.execute("SELECT time FROM master_time WHERE id IS 1")
-        master_time = self.cur.fetchone()[0]
-        return master_time
+        for i in range(self.DB_TRIES):
+            try:
+                self.cur.execute("SELECT time FROM master_time WHERE id IS 1")
+                master_time = self.cur.fetchone()[0]
+                return master_time
+            except sqlite3.OperationalError as exc:
+                self.logger.debug(
+                    "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
+                        exc=exc, i=self.DB_TRIES - i - 1))
+                time.sleep(self.DB_SLEEP_TIME)
+        else:
+            self.logger.error(
+                "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
+            raise DatabaseError("Failed to get master clock from database")
 
     def main_loop(self, sleep=0.5, test_break=False):
         """
