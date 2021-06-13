@@ -26,11 +26,18 @@ class InvalidControlValue(Error):
     """Raised when tag you are looking for does not exist"""
 
 
+class DatabaseError(Error):
+    """Raised when not being able to connect to the database"""
+
+
 class GenericScada(SCADAServer):
     """
     This class represents a scada. This scada knows what plcs it is collecting data from by reading the
     yaml file at intermediate_yaml_path and looking at the plcs.
     """
+
+    DB_TRIES = 10
+
     def __init__(self, intermediate_yaml_path):
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
@@ -48,7 +55,6 @@ class GenericScada(SCADAServer):
             'name': "plant",
             'path': self.intermediate_yaml['db_path']
         }
-
 
         # Create server, real tags are generated
         scada_server = {
@@ -148,24 +154,54 @@ class GenericScada(SCADAServer):
 
     def get_sync(self):
         """
-        Get the sync flag of this plc.
+        Get the sync flag of the scada.
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
 
         :return: False if physical process wants the plc to do a iteration, True if not.
+
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
         """
-        self.cur.execute("SELECT flag FROM sync WHERE name IS 'scada'")
-        flag = bool(self.cur.fetchone()[0])
-        return flag
+        for i in range(self.DB_TRIES):
+            try:
+                self.cur.execute("SELECT flag FROM sync WHERE name IS 'scada'")
+                flag = bool(self.cur.fetchone()[0])
+                return flag
+            except sqlite3.OperationalError as exc:
+                self.logger.debug(
+                    "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
+                        exc=exc, i=self.DB_TRIES - i - 1))
+        else:
+            self.logger.error(
+                "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
+            raise DatabaseError("Failed to get sync from database")
 
     def set_sync(self, flag):
         """
-        Set this plcs sync flag in the sync table. When this is 1, the physical process
-        knows this plc finished the requested iteration.
+        Set the scada's sync flag in the sync table. When this is 1, the physical process
+        knows that the scada finished the requested iteration.
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
 
-        :param flag: True for sync to 1, false for sync to 0
+        :param flag: True for sync to 1, False for sync to 0
+        :type flag: bool
+
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
         """
-        self.cur.execute("UPDATE sync SET flag=? WHERE name IS 'scada'",
-                         (int(flag),))
-        self.conn.commit()
+        for i in range(self.DB_TRIES):
+            try:
+                self.cur.execute("UPDATE sync SET flag=? WHERE name IS 'scada'",
+                                 (int(flag),))
+                self.conn.commit()
+                return
+            except sqlite3.OperationalError as exc:
+                self.logger.debug(
+                    "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
+                        exc=exc, i=self.DB_TRIES - i - 1))
+        else:
+            self.logger.error(
+                "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
+            raise DatabaseError("Failed to set sync in database")
 
     def sigint_handler(self, sig, frame):
         """
