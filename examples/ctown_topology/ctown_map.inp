@@ -1185,11 +1185,11 @@ LINK          PU11 CLOSED IF              NODE          T7            ABOVE     
 
 [TIMES]
  Duration           	24
- Hydraulic Timestep 	0:05
- Quality Timestep   	0:05
+ Hydraulic Timestep 	0:15
+ Quality Timestep   	0:15
  Pattern Timestep   	1:00
  Pattern Start      	0:00
- Report Timestep    	0:05
+ Report Timestep    	0:15
  Report Start       	0:00
  Start ClockTime    	0:00:00
  Statistic          	NONE
