@@ -326,7 +326,7 @@ class GenericPLC(BasePLC):
                     "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
                         exc=exc, i=self.DB_TRIES - i - 1))
         else:
-            self.logger.debug(
+            self.logger.error(
                 "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
             raise DatabaseError("Failed to get master clock from database")
 
@@ -350,9 +350,9 @@ class GenericPLC(BasePLC):
                     "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
                         exc=exc, i=self.DB_TRIES - i - 1))
         else:
-            self.logger.debug(
+            self.logger.error(
                 "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
-            raise DatabaseError("Failed to get master clock from database")
+            raise DatabaseError("Failed to get sync from database")
 
     def set_sync(self, flag):
         """
@@ -360,7 +360,8 @@ class GenericPLC(BasePLC):
         knows this plc finished the requested iteration.
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
 
-        :param flag: True for sync to 1, false for sync to 0
+        :param flag: True for sync to 1, False for sync to 0
+        :type flag: bool
 
         :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
            :code:`DB_TRIES` tries.
@@ -376,9 +377,9 @@ class GenericPLC(BasePLC):
                     "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
                         exc=exc, i=self.DB_TRIES - i - 1))
         else:
-            self.logger.debug(
+            self.logger.error(
                 "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
-            raise DatabaseError("Failed to get master clock from database")
+            raise DatabaseError("Failed to set sync in database")
 
     def set_attack_flag(self, flag, attack_name):
         """
@@ -386,8 +387,11 @@ class GenericPLC(BasePLC):
         provided name is currently running. When it is 0, it is not.
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
 
-        :param flag: True for running to 1, false for running to 0
+        :param flag: True for running to 1, False for running to 0
+        :type flag: bool
+
         :param attack_name: The name of the attack
+        :type attack_name: str
 
         :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
            :code:`DB_TRIES` tries.
@@ -403,9 +407,9 @@ class GenericPLC(BasePLC):
                     "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
                         exc=exc, i=self.DB_TRIES - i - 1))
         else:
-            self.logger.debug(
+            self.logger.error(
                 "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
-            raise DatabaseError("Failed to get master clock from database")
+            raise DatabaseError("Failed to set attack flag in database")
 
     def main_loop(self, sleep=0.5, test_break=False):
         """
