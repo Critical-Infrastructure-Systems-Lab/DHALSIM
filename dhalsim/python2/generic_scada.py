@@ -37,6 +37,7 @@ class GenericScada(SCADAServer):
     """
 
     DB_TRIES = 10
+    """Amount of time a db query will retry on a exception"""
 
     def __init__(self, intermediate_yaml_path):
         with intermediate_yaml_path.open() as yaml_file:

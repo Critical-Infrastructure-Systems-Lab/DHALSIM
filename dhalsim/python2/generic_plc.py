@@ -37,6 +37,7 @@ class GenericPLC(BasePLC):
     """
 
     DB_TRIES = 10
+    """Amount of time a db query will retry on a exception"""
 
     def __init__(self, intermediate_yaml_path, yaml_index):
         self.yaml_index = yaml_index
