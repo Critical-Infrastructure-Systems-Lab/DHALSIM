@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="dhalsim",
-    version="0.0.1",
+    version="1.0.0",
     url="https://gitlab.ewi.tudelft.nl/cse2000-software-project/2020-2021-q4/cluster-06/water-infrastructure/dhalsim",
     project_urls={
         "Bug Tracker": "https://gitlab.ewi.tudelft.nl/cse2000-software-project/2020-2021-q4/cluster-06/water-infrastructure/dhalsim/-/issues",
@@ -16,12 +16,17 @@ setuptools.setup(
     packages=['dhalsim'],
     install_requires=[
         'PyYAML',
-        'antlr4-python3-runtime',
+        'pyyaml-include',
+        'antlr4-python3-runtime==4.7.2',
+        'progressbar2',
         'wntr',
-        'pandas'
+        'pandas',
+        'schema',
+        'scapy',
+        'fnfqueue'
     ],
     extras_require={
-        'test': ['pytest', 'pytest-mock', 'mock', 'wget', 'netcat'],
+        'test': ['pytest', 'pytest-mock', 'mock', 'wget', 'coverage', 'pytest-cov', 'flaky', 'netaddr'],
         'doc': ['sphinx', 'sphinx-rtd-theme', 'sphinx-prompt'],
     },
     python_requires=">=3.8",

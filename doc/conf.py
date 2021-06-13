@@ -18,8 +18,8 @@ sys.path.insert(0, os.path.abspath('../..'))
 # -- Project information -----------------------------------------------------
 
 project = 'dhalsim'
-copyright = '2021, Andrés F. Murillo, Luc Jonker, Maarten Weyns, Robert van Dijk, Simcha Vos'
-author = 'Andrés F. Murillo, Luc Jonker, Maarten Weyns, Robert van Dijk, Simcha Vos'
+copyright = '2021, Andrés F. Murillo, Robert van Dijk, Luc Jonker, Simcha Vos, Maarten Weyns'
+author = 'Andrés F. Murillo, Robert van Dijk, Luc Jonker, Simcha Vos, Maarten Weyns'
 
 # -- General configuration ---------------------------------------------------
 import sphinx_rtd_theme
@@ -34,7 +34,7 @@ extensions = [
     'sphinx.ext.autosectionlabel',
 ]
 
-autodoc_mock_imports = ["thread", "topo", "basePLC", "control"]
+autodoc_mock_imports = ['thread', 'py2_logger', 'topo', 'basePLC', 'entities', 'automatic_node']
 
 # Add any paths that contain templates here, relative to this directory.
 # templates_path = ['_templates']
@@ -55,3 +55,20 @@ html_theme = 'sphinx_rtd_theme'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 # html_static_path = ['_static']
+
+# -- Options for Latex output ------------------------------------------------
+
+latex_toplevel_sectioning = 'section'
+
+latex_elements = {
+    'maketitle': r'',
+    'tableofcontents': r'',
+    'makeindex': r'',
+    'printindex': r'',
+    'fncychap': '',
+}
+
+latex_docclass = {
+    'howto': 'TUD-report2020',
+    'manual': 'TUD-report2020',
+}

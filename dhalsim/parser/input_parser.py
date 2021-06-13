@@ -1,14 +1,11 @@
-import logging
+import sys
 
+import pandas as pd
 import wntr
-import yaml
 from antlr4 import *
-from pathlib import Path
 
 from dhalsim.parser.antlr.controlsLexer import controlsLexer
 from dhalsim.parser.antlr.controlsParser import controlsParser
-
-logger = logging.getLogger(__name__)
 
 
 class Error(Exception):
@@ -17,6 +14,10 @@ class Error(Exception):
 
 class NoInpFileGiven(Error):
     """Raised when tag you are looking for does not exist"""
+
+
+class NotEnoughInitialValues(Error):
+    """Raised when there are not enough initial values in a csv"""
 
 
 def value_to_status(actuator_value):
@@ -36,12 +37,11 @@ class InputParser:
     """
     Class handling the parsing of .inp input files.
 
-    :param intermediate_yaml_path: The path of the inp file
+    :param intermediate_yaml: The intermediate yaml file
     """
 
     def __init__(self, intermediate_yaml):
-        """Constructor method
-        """
+        """Constructor method"""
         self.data = intermediate_yaml
 
         for plc in self.data['plcs']:
@@ -59,6 +59,8 @@ class InputParser:
         # Read the inp file with WNTR
         self.wn = wntr.network.WaterNetworkModel(self.inp_file_path)
 
+        self.batch_mode = 'batch_simulations' in self.data
+
     def write(self):
         """
         Writes all needed inp file sections into the intermediate_yaml.
@@ -69,10 +71,23 @@ class InputParser:
         self.generate_actuators_list()
         # Generate list of times
         self.generate_times()
+        # Generate initial values if batch mode is true
+        if 'initial_tank_data' in self.data:
+            self.generate_initial_tank_values()
+        # Generate network loss values if network loss is true
+        if 'network_loss_data' in self.data:
+            self.generate_network_losses()
+        # Generate network delay values if network delay is true
+        if 'network_delay_data' in self.data:
+            self.generate_network_delays()
         # Add iterations if not existing
         if "iterations" not in self.data.keys():
-            self.data["iterations"] = int(self.data["time"][0]["duration"]
-                                          / self.data["time"][1]["hydraulic_timestep"])
+            iterations = int(self.data["time"][0]["duration"] / self.data["time"][1]["hydraulic_timestep"])
+            if iterations <= 0:
+                print(f"Error in inp file section [TIMES]: (duration: {self.data['time'][0]['duration']} / "
+                      f"hydraultic timestep: {self.data['time'][1]['hydraulic_timestep']}) = {iterations}")
+                sys.exit(1)
+            self.data["iterations"] = iterations
 
         # Return the YAML object
         return self.data
@@ -153,3 +168,66 @@ class InputParser:
         # Append valves to pumps
         pumps.extend(valves)
         self.data['actuators'] = pumps
+
+    def generate_initial_tank_values(self):
+        """Generates all tanks with their initial values if running in batch mode"""
+
+        initial_values = {}
+        initial_tank_levels = pd.read_csv(self.data['initial_tank_data'])
+        self.verify_csv_input(initial_tank_levels, 'initial_tank_data')
+        # For all columns in csv
+        for index in range(len(initial_tank_levels.columns)):
+            name = initial_tank_levels.columns[index]
+            # Insert tank value into data
+            data_index = self.data["batch_index"] if self.batch_mode else 0
+            initial_values[str(name)] = \
+                float(initial_tank_levels.iloc[data_index, index])
+
+        self.data['initial_tank_values'] = initial_values
+
+    def generate_network_losses(self):
+        """Generates list of routers with their network losses from the input csv"""
+
+        network_loss = {}
+        network_loss_data = pd.read_csv(self.data['network_loss_data'])
+        self.verify_csv_input(network_loss_data, 'network_loss_data')
+        # For all columns in csv
+        for index in range(len(network_loss_data.columns)):
+            name = network_loss_data.columns[index]
+            # Insert loss  value into data
+            data_index = self.data["batch_index"] if self.batch_mode else 0
+            network_loss[str(name)] = \
+                float(network_loss_data.iloc[data_index, index])
+
+        self.data['network_loss_values'] = network_loss
+
+    def generate_network_delays(self):
+        """Generates list of routers with their network delays from the input csv"""
+
+        network_delay = {}
+        network_delay_data = pd.read_csv(self.data['network_delay_data'])
+        self.verify_csv_input(network_delay_data, 'network_delay_data')
+        # For all columns in csv
+        for index in range(len(network_delay_data.columns)):
+            name = network_delay_data.columns[index]
+            # Insert tank : value into data
+            data_index = self.data["batch_index"] if self.batch_mode else 0
+            network_delay[str(name)] = \
+                str(network_delay_data.iloc[data_index, index]) + "ms"
+
+        self.data['network_delay_values'] = network_delay
+
+    def verify_csv_input(self, dataframe, data):
+        """
+        Verifies the csv files have the proper number of rows for a simulation
+
+        :param dataframe: pandas dataframe containing csv data
+        :param data: name of data that is being verified
+        """
+        num_rows = len(dataframe)
+        if self.batch_mode:
+            if num_rows < self.data['batch_simulations']:
+                raise NotEnoughInitialValues("Provided csv has fewer rows than number of batch simulations: " + data)
+        else:
+            if num_rows <= 0:
+                raise NotEnoughInitialValues("Provided csv has no data: " + data)

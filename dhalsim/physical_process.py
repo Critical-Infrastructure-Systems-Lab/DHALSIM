@@ -2,22 +2,29 @@ import argparse
 import csv
 import os
 import signal
+import logging
+from datetime import datetime
 from decimal import Decimal
 
-import wntr
-import wntr.network.controls as controls
+import pandas as pd
+import progressbar
 import sqlite3
 import sys
 import time
-from datetime import datetime, timedelta
 from pathlib import Path
 
+from dhalsim.parser.file_generator import BatchReadMeGenerator, ReadMeGenerator
+from dhalsim.py3_logger import get_logger
 import wntr
 import wntr.network.controls as controls
 import yaml
 
 
 class PhysicalPlant:
+    """
+    Class representing the plant itself, runs each iteration. This class also deals with WNTR
+    and updates the database.
+    """
 
     def __init__(self, intermediate_yaml):
         signal.signal(signal.SIGINT, self.interrupt)
@@ -28,69 +35,66 @@ class PhysicalPlant:
         with self.intermediate_yaml.open(mode='r') as file:
             self.data = yaml.safe_load(file)
 
-        try:
-            self.ground_truth_path = Path(self.data["output_path"]) / "ground_truth.csv"
+        logging.getLogger('wntr').setLevel(logging.WARNING)
+        self.logger = get_logger(self.data['log_level'])
 
-            self.ground_truth_path.touch(exist_ok=True)
+        self.ground_truth_path = Path(self.data["output_path"]) / "ground_truth.csv"
+        self.ground_truth_path.touch(exist_ok=True)
 
-            # connection to the database
-            self.conn = sqlite3.connect(self.data["db_path"])
-            self.c = self.conn.cursor()
+        # connection to the database
+        self.conn = sqlite3.connect(self.data["db_path"])
+        self.c = self.conn.cursor()
 
-            # Create the network
-            self.wn = wntr.network.WaterNetworkModel(self.data['inp_file'])
+        # Create the network
+        self.wn = wntr.network.WaterNetworkModel(self.data['inp_file'])
 
-            self.node_list = list(self.wn.node_name_list)
-            self.link_list = list(self.wn.link_name_list)
+        self.node_list = list(self.wn.node_name_list)
+        self.link_list = list(self.wn.link_name_list)
 
-            self.tank_list = self.get_node_list_by_type(self.node_list, 'Tank')
-            self.junction_list = self.get_node_list_by_type(self.node_list, 'Junction')
-            self.pump_list = self.get_link_list_by_type(self.link_list, 'Pump')
-            self.valve_list = self.get_link_list_by_type(self.link_list, 'Valve')
+        self.tank_list = self.get_node_list_by_type(self.node_list, 'Tank')
+        self.junction_list = self.get_node_list_by_type(self.node_list, 'Junction')
+        self.pump_list = self.get_link_list_by_type(self.link_list, 'Pump')
+        self.valve_list = self.get_link_list_by_type(self.link_list, 'Valve')
 
-            list_header = ["Timestamps"]
+        list_header = ['iteration', 'timestamp']
+        list_header.extend(self.create_node_header(self.tank_list))
+        list_header.extend(self.create_node_header(self.junction_list))
+        list_header.extend(self.create_link_header(self.pump_list))
+        list_header.extend(self.create_link_header(self.valve_list))
 
-            list_header.extend(self.create_node_header(self.tank_list))
-            list_header.extend(self.create_node_header(self.junction_list))
-            list_header.extend(self.create_link_header(self.pump_list))
-            list_header.extend(self.create_link_header(self.valve_list))
+        list_header.extend(self.create_attack_header())
 
-            self.results_list = []
-            self.results_list.append(list_header)
+        self.results_list = []
+        self.results_list.append(list_header)
 
-            dummy_condition = controls.ValueCondition(self.wn.get_node(self.tank_list[0]), 'level',
-                                                      '>=', -1)
+        dummy_condition = controls.ValueCondition(self.wn.get_node(self.tank_list[0]), 'level',
+                                                  '>=', -1)
 
-            self.control_list = []
-            for valve in self.valve_list:
-                self.control_list.append(self.create_control_dict(valve, dummy_condition))
+        self.control_list = []
+        for valve in self.valve_list:
+            self.control_list.append(self.create_control_dict(valve, dummy_condition))
 
-            for pump in self.pump_list:
-                self.control_list.append(self.create_control_dict(pump, dummy_condition))
+        for pump in self.pump_list:
+            self.control_list.append(self.create_control_dict(pump, dummy_condition))
 
-            for control in self.control_list:
-                an_action = controls.ControlAction(control['actuator'], control['parameter'],
-                                                   control['value'])
-                a_control = controls.Control(control['condition'], an_action, name=control['name'])
-                self.wn.add_control(control['name'], a_control)
+        for control in self.control_list:
+            an_action = controls.ControlAction(control['actuator'], control['parameter'],
+                                               control['value'])
+            a_control = controls.Control(control['condition'], an_action, name=control['name'])
+            self.wn.add_control(control['name'], a_control)
 
-            simulator_string = self.data['simulator']
+        if self.data['simulator'] == 'pdd':
+            self.wn.options.hydraulic.demand_model = 'PDD'
 
-            if simulator_string == 'pdd':
-                print('Running simulation using PDD')
-                self.wn.options.hydraulic.demand_model = 'PDD'
-            elif simulator_string == 'dd':
-                print('Running simulation using DD')
-            else:
-                print('Invalid simulation mode, exiting...')
-                sys.exit(1)
+        # Set initial physical conditions
+        self.set_initial_values()
 
-            self.sim = wntr.sim.WNTRSimulator(self.wn)
+        self.sim = wntr.sim.WNTRSimulator(self.wn)
 
-            print("Starting simulation for " + str(self.data['inp_file']) + " topology ")
-        except KeyError as e:
-            print("ERROR: An incorrect YAML file has been supplied: " + str(e))
-            sys.exit(0)
+        self.logger.info("Starting simulation for " +
+                         os.path.basename(str(self.data['inp_file']))[:-4] + " topology.")
+
+        self.start_time = datetime.now()
 
     def get_node_list_by_type(self, a_list, a_type):
         result = []
@@ -121,6 +125,26 @@ class PhysicalPlant:
             result.append(link + "_STATUS")
         return result
 
+    def create_attack_header(self):
+        """
+        Function that creates csv list headers for device and network attacks
+
+        :return: list of attack names starting with device and ending with network
+        """
+        result = []
+        # Append device attacks
+        if "plcs" in self.data:
+            for plc in self.data["plcs"]:
+                if "attacks" in plc:
+                    for attack in plc["attacks"]:
+                        result.append(attack['name'])
+        # Append network attacks
+        if "network_attacks" in self.data:
+            for network_attack in self.data["network_attacks"]:
+                result.append(network_attack['name'])
+
+        return result
+
     def get_controls(self, a_list):
         result = []
         for control in a_list:
@@ -139,9 +163,8 @@ class PhysicalPlant:
             act_dict['value'] = act_dict['actuator'].status.value
         return act_dict
 
-    def register_results(self, results):
-        values_list = []
-        values_list.extend([results.timestamp])
+    def register_results(self):
+        values_list = [self.master_time, datetime.now()]
 
         # Results are divided into: nodes: reservoir and tanks, links: flows and status
         # Get tanks levels
@@ -163,7 +186,7 @@ class PhysicalPlant:
             else:
                 values_list.extend([self.wn.get_link(pump).status.value])
 
-                # Get valves flows and status
+        # Get valves flows and status
         for valve in self.valve_list:
             values_list.extend([self.wn.get_link(valve).flow])
 
@@ -172,140 +195,217 @@ class PhysicalPlant:
             else:
                 values_list.extend([self.wn.get_link(valve).status.value])
 
+        # Get device attacks
+        if "plcs" in self.data:
+            for plc in self.data["plcs"]:
+                if "attacks" in plc:
+                    for attack in plc["attacks"]:
+                        values_list.append(self.get_attack_flag(attack['name']))
+        # get network attacks
+        if "network_attacks" in self.data:
+            for network_attack in self.data["network_attacks"]:
+                values_list.append(self.get_attack_flag(network_attack['name']))
+
         return values_list
 
     def update_controls(self):
+        """Updates all controls in WNTR."""
         for control in self.control_list:
-            self.update_control(control)
+            rows_1 = self.c.execute('SELECT value FROM plant WHERE name = ?',
+                                    (control['name'],)).fetchone()
+            self.conn.commit()
+            new_status = int(rows_1[0])
 
-    def update_control(self, control):
-        rows_1 = self.c.execute('SELECT value FROM plant WHERE name = ?',
-                                (control['name'],)).fetchone()
-        self.conn.commit()
-        new_status = int(rows_1[0])
+            control['value'] = new_status
 
-        control['value'] = new_status
+            new_action = controls.ControlAction(control['actuator'], control['parameter'],
+                                                control['value'])
+            new_control = controls.Control(control['condition'], new_action, name=control['name'])
 
-        new_action = controls.ControlAction(control['actuator'], control['parameter'],
-                                            control['value'])
-        new_control = controls.Control(control['condition'], new_action, name=control['name'])
-
-        self.wn.remove_control(control['name'])
-        self.wn.add_control(control['name'], new_control)
+            self.wn.remove_control(control['name'])
+            self.wn.add_control(control['name'], new_control)
 
     def write_results(self, results):
+        """Writes ground truth file."""
         with self.ground_truth_path.open(mode='w') as f:
             writer = csv.writer(f)
             writer.writerows(results)
 
-    @staticmethod
-    def calculate_eta(start, iteration, total):
-        """
-        Calculates estimated time until finished simulation.
-
-        :start: start time
-        :iteration: current iteration
-        :total: total number of iterations
-        """
-        diff = datetime.now() - start
-        if iteration == round(total):
-            return timedelta(seconds=0)
-        return timedelta(seconds=(diff.days.real * 24 * 3600 + diff.seconds.real
-                                  / (float(iteration / float(round(total))) + 0.000001)
-                                  - diff.total_seconds()))
-
     def get_plcs_ready(self):
+        """
+        Checks whether all PLCs have finished their loop.
+        :return: boolean whether all PLCs have finished
+        """
         self.c.execute("""SELECT count(*)
                         FROM sync
                         WHERE flag <= 0""")
         flag = int(self.c.fetchone()[0]) == 0
         return flag
 
+    def get_attack_flag(self, name):
+        """
+        Get the attack flag of this attack.
+
+        :return: False if attack not running, true otherwise
+        """
+        self.c.execute("SELECT flag FROM attack WHERE name IS ?", (name,))
+        flag = int(self.c.fetchone()[0])
+        return flag
+
     def main(self):
-        # We want to simulate only 1 hydraulic timestep each time MiniCPS processes the simulation data
+        """Runs the simulation for x iterations."""
+
+        # We want to simulate only one hydraulic timestep each time MiniCPS processes the
+        # simulation data
         self.wn.options.time.duration = self.wn.options.time.hydraulic_timestep
 
-        master_time = 0
-        start = datetime.now()
-
+        self.master_time = -1
         iteration_limit = self.data["iterations"]
 
-        print("Simulation will run for", iteration_limit, "iterations")
-        print("Hydraulic timestep is", self.wn.options.time.hydraulic_timestep)
+        self.logger.debug("Temporary file location: " + str(Path(self.data["db_path"]).parent))
 
-        while master_time <= iteration_limit:
-            self.c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(master_time),))
+        if 'batch_index' in self.data:
+            self.logger.info("Running batch simulation {x} out of {y}."
+                             .format(x=self.data['batch_index'] + 1,
+                                     y=self.data['batch_simulations']))
+
+        self.logger.info("Simulation will run for {x} iterations with hydraulic timestep {step}."
+                         .format(x=str(iteration_limit),
+                                 step=str(self.wn.options.time.hydraulic_timestep)))
+
+        p_bar = None
+        if self.data['log_level'] != 'debug':
+            widgets = [' [', progressbar.Timer(), ' - ', progressbar.SimpleProgress(), '] ',
+                       progressbar.Bar(), ' [', progressbar.ETA(), '] ', ]
+            p_bar = progressbar.ProgressBar(max_value=iteration_limit, widgets=widgets)
+            p_bar.start()
+
+        while self.master_time < iteration_limit:
+            self.c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(self.master_time),))
             self.conn.commit()
 
-            self.c.execute("UPDATE sync SET flag=0")
-            self.conn.commit()
+            self.master_time = self.master_time + 1
 
             while not self.get_plcs_ready():
                 time.sleep(0.01)
 
             self.update_controls()
-            eta = self.calculate_eta(start, master_time, iteration_limit)
-            print("Iteration %d out of %d. Estimated remaining time: %s" % (
-                master_time, iteration_limit, eta))
 
-            results = self.sim.run_sim(convergence_error=True)
-            values_list = self.register_results(results)
+            self.logger.debug("Iteration {x} out of {y}.".format(x=str(self.master_time),
+                                                                 y=str(iteration_limit)))
+
+            if p_bar and self.data['log_level'] != 'debug':
+                p_bar.update(self.master_time)
+
+            # Check for simulation error, print output on exception
+            try:
+                self.sim.run_sim(convergence_error=True)
+            except Exception as exp:
+                self.logger.error(f"Error in WNTR simulation: {exp}")
+                self.finish()
+
+            values_list = self.register_results()
             self.results_list.append(values_list)
 
-            # Fetch master_time
-            # query = "SELECT * FROM master_time"
-            # execute = self.c.execute(query)
-            # self.conn.commit()
+            self.update_tanks()
+            self.update_pumps()
+            self.update_valves()
+            self.update_junctions()
 
-            # master_time = int(execute.fetchall()[0][1]) + 1
+            # Write results of this iteration if needed
+            if 'saving_interval' in self.data:
+                if self.master_time != 0 and self.master_time % self.data['saving_interval'] == 0:
+                    self.write_results(self.results_list)
 
-            # Update master_time
-
-            # Update tanks in database
-            for tank in self.tank_list:
-                a_level = self.wn.get_node(tank).level
-                self.c.execute("UPDATE plant SET value = ? WHERE name = ?",
-                               (str(a_level), tank,))
-                self.conn.commit()
-
-            # Update pumps in database
-            for pump in self.pump_list:
-                flow = Decimal(self.wn.get_link(pump).flow)
-                self.c.execute("UPDATE plant SET value = ? WHERE name = ?",
-                               (str(flow), pump+"F",))
-                self.conn.commit()
-
-            # Update valve in database
-            for valve in self.valve_list:
-                flow = Decimal(self.wn.get_link(valve).flow)
-                self.c.execute("UPDATE plant SET value = ? WHERE name = ?",
-                               (str(flow), valve+"F",))
-                self.conn.commit()
-
-            # Update junction pressure:
-            for junction in self.junction_list:
-                level = Decimal(self.wn.get_node(junction).head - self.wn.get_node(junction).elevation)
-                # pressure = Decimal(self.wn.get_node(junction).pressure)
-                self.c.execute("UPDATE plant SET value = ? WHERE name = ?",
-                               (str(level), junction,))
-                self.conn.commit()
-
-            master_time = master_time + 1
+            # Set sync flags for nodes
+            self.c.execute("UPDATE sync SET flag=0")
+            self.conn.commit()
 
         self.finish()
+
+    def update_tanks(self):
+        """Update tanks in database."""
+        for tank in self.tank_list:
+            a_level = self.wn.get_node(tank).level
+            self.c.execute("UPDATE plant SET value = ? WHERE name = ?",
+                           (str(a_level), tank,))
+            self.conn.commit()
+
+    def update_pumps(self):
+        """"Update pumps in database."""
+        for pump in self.pump_list:
+            flow = Decimal(self.wn.get_link(pump).flow)
+            self.c.execute("UPDATE plant SET value = ? WHERE name = ?",
+                           (str(flow), pump + "F",))
+            self.conn.commit()
+
+    def update_valves(self):
+        """Update valve in database."""
+        for valve in self.valve_list:
+            flow = Decimal(self.wn.get_link(valve).flow)
+            self.c.execute("UPDATE plant SET value = ? WHERE name = ?",
+                           (str(flow), valve + "F",))
+            self.conn.commit()
+
+    def update_junctions(self):
+        """Update junction pressure in database."""
+        for junction in self.junction_list:
+            level = Decimal(self.wn.get_node(junction).head - self.wn.get_node(junction).elevation)
+            # pressure = Decimal(self.wn.get_node(junction).pressure)
+            self.c.execute("UPDATE plant SET value = ? WHERE name = ?",
+                           (str(level), junction,))
+            self.conn.commit()
 
     def interrupt(self, sig, frame):
         self.finish()
+        self.logger.info("Simulation ended.")
         sys.exit(0)
 
     def finish(self):
         self.write_results(self.results_list)
+        end_time = datetime.now()
+
+        if 'batch_simulations' in self.data:
+            BatchReadMeGenerator(self.intermediate_yaml).write_batch(self.start_time, end_time, self.wn,
+                                                                     self.master_time)
+            if self.data['batch_index'] == self.data['batch_simulations'] - 1:
+                ReadMeGenerator(self.intermediate_yaml).write_readme(self.data['start_time'],
+                                                                     datetime.now(), True,
+                                                                     self.master_time, self.wn)
+        else:
+            ReadMeGenerator(self.intermediate_yaml).write_readme(self.data['start_time'],
+                                                                 datetime.now(), False,
+                                                                 self.master_time, self.wn)
         sys.exit(0)
+
+    def set_initial_values(self):
+        """Sets custom initial values for tanks and demand patterns in the WNTR simulation"""
+
+        if "initial_tank_values" in self.data:
+            # Initial tank values
+            for tank in self.tank_list:
+                if str(tank) in self.data["initial_tank_values"]:
+                    value = self.data["initial_tank_values"][str(tank)]
+                    self.logger.debug("Setting tank " + tank + " initial value to " + str(value))
+                    self.wn.get_node(tank).init_level = value
+                else:
+                    self.logger.debug("Tank " + tank + " has no specified initial values, using default...")
+
+        if "demand_patterns_data" in self.data:
+            # Demand patterns for batch
+            demands = pd.read_csv(self.data["demand_patterns_data"])
+            for name, pat in self.wn.patterns():
+                if name in demands:
+                    self.logger.debug("Setting demands for " + name +
+                                      " to demands defined at: " + self.data["demand_patterns_data"])
+                    pat.multipliers = demands[name].values.tolist()
+                else:
+                    self.logger.debug("Consumer " + name + " has no demands defined, using default...")
 
 
 def is_valid_file(test_parser, arg):
     if not os.path.exists(arg):
-        test_parser.error(arg + " does not exist")
+        test_parser.error(arg + " does not exist.")
     else:
         return arg
 

@@ -11,6 +11,7 @@ import yaml
 from basePLC import BasePLC
 from entities.attack import TimeAttack, TriggerBelowAttack, TriggerAboveAttack, TriggerBetweenAttack
 from entities.control import AboveControl, BelowControl, TimeControl
+from py2_logger import get_logger
 
 
 class Error(Exception):
@@ -25,76 +26,6 @@ class InvalidControlValue(Error):
     """Raised when tag you are looking for does not exist"""
 
 
-def generate_real_tags(sensors, dependants, actuators):
-    real_tags = []
-
-    for sensor_tag in sensors:
-        if sensor_tag != "":
-            real_tags.append((sensor_tag, 1, 'REAL'))
-    for dependant_tag in dependants:
-        if dependant_tag != "":
-            real_tags.append((dependant_tag, 1, 'REAL'))
-    for actuator_tag in actuators:
-        if actuator_tag != "":
-            real_tags.append((actuator_tag, 1, 'REAL'))
-
-    return tuple(real_tags)
-
-
-def generate_tags(taggable):
-    tags = []
-
-    if taggable:
-        for tag in taggable:
-            if tag and tag != "":
-                tags.append((tag, 1))
-
-    return tags
-
-
-def create_controls(controls_list):
-    ret = []
-    for control in controls_list:
-        if control["type"].lower() == "above":
-            control_instance = AboveControl(control["actuator"], control["action"],
-                                            control["dependant"],
-                                            control["value"])
-            ret.append(control_instance)
-        if control["type"].lower() == "below":
-            control_instance = BelowControl(control["actuator"], control["action"],
-                                            control["dependant"],
-                                            control["value"])
-            ret.append(control_instance)
-        if control["type"].lower() == "time":
-            control_instance = TimeControl(control["actuator"], control["action"], control["value"])
-            ret.append(control_instance)
-    return ret
-
-
-def create_attacks(attack_list):
-    """This function will create an array of DeviceAttacks
-
-    :param attack_list: A list of attack dicts that need to be converted to DeviceAttacks
-    """
-    attacks = []
-    for attack in attack_list:
-        if attack['type'].lower() == "time":
-            attacks.append(TimeAttack(attack['name'], attack['actuators'], attack['command'], attack['start'], attack['end']))
-        elif attack['type'].lower() == "above":
-            attacks.append(
-                TriggerAboveAttack(attack['name'], attack['actuators'], attack['command'], attack['sensor'],
-                                   attack['value']))
-        elif attack['type'].lower() == "below":
-            attacks.append(
-                TriggerBelowAttack(attack['name'], attack['actuators'], attack['command'], attack['sensor'],
-                                   attack['value']))
-        elif attack['type'].lower() == "between":
-            attacks.append(
-                TriggerBetweenAttack(attack['name'], attack['actuators'], attack['command'], attack['sensor'],
-                                   attack['lower_value'], attack['upper_value']))
-    return attacks
-
-
 class GenericPLC(BasePLC):
     """
     This class represents a plc. This plc knows what it is connected to by reading the
@@ -106,6 +37,8 @@ class GenericPLC(BasePLC):
 
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
+
+        self.logger = get_logger(self.intermediate_yaml['log_level'])
 
         self.intermediate_plc = self.intermediate_yaml["plcs"][self.yaml_index]
 
@@ -119,10 +52,10 @@ class GenericPLC(BasePLC):
         self.initialize_db()
 
         self.intermediate_controls = self.intermediate_plc['controls']
-        self.controls = create_controls(self.intermediate_controls)
+        self.controls = self.create_controls(self.intermediate_controls)
 
         if 'attacks' in self.intermediate_plc.keys():
-            self.attacks = create_attacks(self.intermediate_plc['attacks'])
+            self.attacks = self.create_attacks(self.intermediate_plc['attacks'])
         else:
             self.attacks = []
 
@@ -144,7 +77,7 @@ class GenericPLC(BasePLC):
         # Create server, real tags are generated
         plc_server = {
             'address': self.intermediate_plc['local_ip'],
-            'tags': generate_real_tags(plc_sensors,
+            'tags': self.generate_real_tags(plc_sensors,
                                        list(set(dependant_sensors) - set(plc_sensors)),
                                        self.intermediate_plc['actuators'])
         }
@@ -156,9 +89,11 @@ class GenericPLC(BasePLC):
             'server': plc_server
         }
 
-        # print "DEBUG INIT: " + self.intermediate_plc['name']
-        # print "state = " + str(state)
-        # print "plc_protocol = " + str(plc_protocol)
+        # create cache
+        self.cache = {}
+
+        for tag in set(dependant_sensors) - set(plc_sensors):
+            self.cache[tag] = Decimal(0)
 
         self.do_super_construction(plc_protocol, state)
 
@@ -178,6 +113,98 @@ class GenericPLC(BasePLC):
         self.conn = sqlite3.connect(self.intermediate_yaml["db_path"])
         self.cur = self.conn.cursor()
 
+    @staticmethod
+    def generate_real_tags(sensors, dependants, actuators):
+        """
+        Generates real tags with all sensors, dependants, and actuators
+        attached to the plc.
+
+        :param sensors: list of sensors attached to the plc
+        :param dependants: list of dependant sensors (from other plcs)
+        :param actuators: list of actuators controlled by the plc
+        """
+        real_tags = []
+
+        for sensor_tag in sensors:
+            if sensor_tag != "":
+                real_tags.append((sensor_tag, 1, 'REAL'))
+        for dependant_tag in dependants:
+            if dependant_tag != "":
+                real_tags.append((dependant_tag, 1, 'REAL'))
+        for actuator_tag in actuators:
+            if actuator_tag != "":
+                real_tags.append((actuator_tag, 1, 'REAL'))
+
+        return tuple(real_tags)
+
+    @staticmethod
+    def generate_tags(taggable):
+        """
+        Generates tags from a list of taggable entities (sensor or actuator)
+
+        :param taggable: a list of strings containing names of things like tanks, pumps, and valves
+        """
+        tags = []
+
+        if taggable:
+            for tag in taggable:
+                if tag and tag != "":
+                    tags.append((tag, 1))
+
+        return tags
+
+    @staticmethod
+    def create_controls(controls_list):
+        """
+        Generates list of control objects for a plc
+
+        :param controls_list: a list of the control dicts to be converted to Control objects
+        """
+        ret = []
+        for control in controls_list:
+            if control["type"].lower() == "above":
+                control_instance = AboveControl(control["actuator"], control["action"],
+                                                control["dependant"],
+                                                control["value"])
+                ret.append(control_instance)
+            if control["type"].lower() == "below":
+                control_instance = BelowControl(control["actuator"], control["action"],
+                                                control["dependant"],
+                                                control["value"])
+                ret.append(control_instance)
+            if control["type"].lower() == "time":
+                control_instance = TimeControl(control["actuator"], control["action"], control["value"])
+                ret.append(control_instance)
+        return ret
+
+    @staticmethod
+    def create_attacks(attack_list):
+        """This function will create an array of DeviceAttacks
+
+        :param attack_list: A list of attack dicts that need to be converted to DeviceAttacks
+        """
+        attacks = []
+        for attack in attack_list:
+            if attack['trigger']['type'].lower() == "time":
+                attacks.append(
+                    TimeAttack(attack['name'], attack['actuator'], attack['command'], attack['trigger']['start'], attack['trigger']['end']))
+            elif attack['trigger']['type'].lower() == "above":
+                attacks.append(
+                    TriggerAboveAttack(attack['name'], attack['actuator'], attack['command'], attack['trigger']['sensor'],
+                                       attack['trigger']['value']))
+            elif attack['trigger']['type'].lower() == "below":
+                attacks.append(
+                    TriggerBelowAttack(attack['name'], attack['actuator'], attack['command'], attack['trigger']['sensor'],
+                                       attack['trigger']['value']))
+            elif attack['trigger']['type'].lower() == "between":
+                attacks.append(
+                    TriggerBetweenAttack(attack['name'], attack['actuator'], attack['command'], attack['trigger']['sensor'],
+                                         attack['trigger']['lower_value'], attack['trigger']['upper_value']))
+        return attacks
+
+
+
+
     def pre_loop(self, sleep=0.5):
         """
         The pre loop of a PLC. In everything is setup. Like starting the sending thread through
@@ -185,12 +212,12 @@ class GenericPLC(BasePLC):
 
         :param sleep:  (Default value = 0.5) The time to sleep after setting everything up
         """
-        print('DEBUG: ' + self.intermediate_plc['name'] + ' enters pre_loop')
+        self.logger.debug(self.intermediate_plc['name'] + ' enters pre_loop')
 
         reader = True
 
-        sensors = generate_tags(self.intermediate_plc['sensors'])
-        actuators = generate_tags(self.intermediate_plc['actuators'])
+        sensors = self.generate_tags(self.intermediate_plc['sensors'])
+        actuators = self.generate_tags(self.intermediate_plc['actuators'])
 
         values = []
         for tag in sensors:
@@ -221,13 +248,39 @@ class GenericPLC(BasePLC):
         if tag in self.intermediate_plc["sensors"] or tag in self.intermediate_plc["actuators"]:
             return Decimal(self.get((tag, 1)))
 
+        for cached_tag in self.cache:
+            if tag == cached_tag:
+                return self.cache[tag]
+
+        self.logger.warning("Cache miss in {plc} for tag {tag}".format(plc=self.intermediate_plc["name"], tag=tag))
+
         for i, plc_data in enumerate(self.intermediate_yaml["plcs"]):
             if i == self.yaml_index:
                 continue
             if tag in plc_data["sensors"] or tag in plc_data["actuators"]:
                 received = Decimal(self.receive((tag, 1), plc_data["public_ip"]))
                 return received
+
         raise TagDoesNotExist(tag)
+
+    def update_cache(self):
+        """
+        Update the cache of this plc by receiving all the required tags.
+        When something cannot be received, the previous value is used.
+        """
+        for cached_tag in self.cache:
+            for i, plc_data in enumerate(self.intermediate_yaml["plcs"]):
+                if i == self.yaml_index:
+                    continue
+                if cached_tag in plc_data["sensors"] or cached_tag in plc_data["actuators"]:
+                    try:
+                        received = Decimal(self.receive((cached_tag, 1), plc_data["public_ip"]))
+                        self.cache[cached_tag] = received
+                    except Exception as e:
+                        self.logger.debug(
+                            "{plc} receive {tag} from {ip} failed with exception '{e}'".format(
+                                plc=self.intermediate_plc["name"], tag=cached_tag,
+                                ip=plc_data["public_ip"], e=str(e)))
 
     def set_tag(self, tag, value):
         """
@@ -282,6 +335,18 @@ class GenericPLC(BasePLC):
                          (int(flag), self.intermediate_plc["name"],))
         self.conn.commit()
 
+    def set_attack_flag(self, flag, attack_name):
+        """
+        Set a flag in the attack table. When it is 1, we know that the attack with the
+        provided name is currently running. When it is 0, it is not.
+
+        :param flag: True for running to 1, false for running to 0
+        :param attack_name: The name of the attack
+        """
+        self.cur.execute("UPDATE attack SET flag=? WHERE name IS ?",
+                         (int(flag), attack_name,))
+        self.conn.commit()
+
     def main_loop(self, sleep=0.5, test_break=False):
         """
         The main loop of a PLC. In here all the controls will be applied.
@@ -289,10 +354,12 @@ class GenericPLC(BasePLC):
         :param sleep:  (Default value = 0.5) Not used
         :param test_break:  (Default value = False) used for unit testing, breaks the loop after one iteration
         """
-        print('DEBUG: ' + self.intermediate_plc['name'] + ' enters main_loop')
+        self.logger.debug(self.intermediate_plc['name'] + ' enters main_loop')
         while True:
             while self.get_sync():
                 time.sleep(0.01)
+
+            self.update_cache()
 
             for control in self.controls:
                 control.apply(self)
@@ -323,7 +390,6 @@ if __name__ == "__main__":
                         metavar="N")
 
     args = parser.parse_args()
-
     plc = GenericPLC(
         intermediate_yaml_path=Path(args.intermediate_yaml),
         yaml_index=args.index)

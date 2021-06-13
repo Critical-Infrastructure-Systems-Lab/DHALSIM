@@ -1,6 +1,5 @@
 inp_file: test/auxilary_testing_files/wadi_map_pda_original.inp
 iterations: 8640
-
 plcs:
   - name: PLC1
     sensors:

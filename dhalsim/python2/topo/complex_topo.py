@@ -4,16 +4,28 @@ from mininet.net import Mininet
 import yaml
 
 
+class Error(Exception):
+    """Base class for exceptions in this module."""
+
+
+class NoSuchPlc(Error):
+    """Raised when an attack targets a PLC that does not exist"""
+
+
+class TooManyNodes(Error):
+    """Raised when there will be too many nodes in the network"""
+
+
 class LinuxRouter(Node):
     """A node with IP forwarding enabled"""
 
     def config(self, **params):
         super(LinuxRouter, self).config(**params)
         # Enable forwarding on the router
-        self.cmd('sysctl net.ipv4.ip_foward=1')
+        self.cmd('sysctl net.ipv4.ip_forward=1')
 
     def terminate(self):
-        self.cmd('sysctl net.ipv4.ip_foward=0')
+        self.cmd('sysctl net.ipv4.ip_forward=0')
 
 
 class ComplexTopo(Topo):
@@ -42,6 +54,8 @@ class ComplexTopo(Topo):
         with self.intermediate_yaml_path.open(mode='r') as intermediate_yaml:
             self.data = yaml.safe_load(intermediate_yaml)
 
+        self.check_amount_of_nodes(self.data)
+
         # Generate PLC and SCADA data and write back to file
         self.generate_data(self.data)
         with self.intermediate_yaml_path.open(mode='w') as intermediate_yaml:
@@ -50,6 +64,31 @@ class ComplexTopo(Topo):
         # Initialize mininet topology
         Topo.__init__(self)
 
+    @staticmethod
+    def check_amount_of_nodes(data):
+        """
+        Check if there are not more then 250 plcs and network attacks.
+        This would cause trouble with assigning IP and MAC addresses.
+
+        :param data: the data to check on
+
+        :raise TooManyNodes: When there are more then 250 nodes in the network
+        """
+        if 'plcs' in data:
+            n_plcs = len(data["plcs"])
+            if n_plcs > 250:
+                raise TooManyNodes(
+                    "There are too many nodes in the network. Only 250 nodes are supported.")
+            if 'network_attacks' in data:
+                if n_plcs + len(data['network_attacks']) > 250:
+                    raise TooManyNodes(
+                        "There are too many nodes in the network. Only 250 nodes are supported.")
+        else:
+            if 'network_attacks' in data:
+                if len(data['network_attacks']) > 250:
+                    raise TooManyNodes(
+                        "There are too many nodes in the network. Only 250 nodes are supported.")
+
     def generate_data(self, data):
         """
         Generate all the ips, interfaces, etc. from every plc and the scada.
@@ -57,20 +96,7 @@ class ComplexTopo(Topo):
 
         :param data: the dict resulting from a dump of the intermediate yaml
         """
-        plcs = data["plcs"]
         index = 1
-        for plc in plcs:
-            # Store the data in self.data
-            plc['local_ip'] = self.local_plc_ips
-            plc['public_ip'] = "10.0." + str(index) + ".1"
-            plc['provider_ip'] = "10.0." + str(index) + ".254"
-            plc['mac'] = Mininet.randMac()
-            plc['interface'] = plc['name'] + "-eth0"
-            plc['provider_interface'] = "r0-eth" + str(index)
-            plc['gateway_name'] = "r" + str(index)
-            plc['switch_name'] = "s" + str(index)
-            plc['gateway_ip'] = self.local_router_ips
-            index += 1
 
         data["scada"] = {}
         scada = data["scada"]
@@ -78,14 +104,57 @@ class ComplexTopo(Topo):
         scada['local_ip'] = self.local_plc_ips
         scada['public_ip'] = "10.0." + str(index) + ".1"
         scada['provider_ip'] = "10.0." + str(index) + ".254"
-        scada['mac'] = Mininet.randMac()
+        scada['provider_mac'] = 'AA:BB:CC:DD:00:' + "{:02x}".format(index)
+        scada['mac'] = 'AA:BB:CC:DD:01:' + "{:02x}".format(index)
         scada['interface'] = scada['name'] + "-eth0"
         scada['provider_interface'] = "r0-eth" + str(index)
         scada['gateway_name'] = "r" + str(index)
         scada['switch_name'] = "s" + str(index)
+        scada['gateway_inbound_mac'] = 'AA:BB:CC:DD:03:' + "{:02x}".format(index)
+        scada['gateway_outbound_mac'] = 'AA:BB:CC:DD:04:' + "{:02x}".format(index)
         scada['gateway_ip'] = self.local_router_ips
 
-    def build(self, *args, **params ):
+        index += 1
+
+        if 'plcs' in self.data.keys():
+            for plc in data["plcs"]:
+                # Store the data in self.data
+                plc['local_ip'] = self.local_plc_ips
+                plc['public_ip'] = "10.0." + str(index) + ".1"
+                plc['provider_ip'] = "10.0." + str(index) + ".254"
+                plc['mac'] = 'AA:BB:CC:DD:02:' + "{:02x}".format(index)
+                plc['interface'] = plc['name'] + "-eth0"
+                plc['provider_interface'] = "r0-eth" + str(index)
+                plc['provider_mac'] = 'AA:BB:CC:DD:00:' + "{:02x}".format(index)
+                plc['gateway_name'] = "r" + str(index)
+                plc['switch_name'] = "s" + str(index)
+                plc['gateway_ip'] = self.local_router_ips
+                plc['gateway_inbound_mac'] = 'AA:BB:CC:DD:03:' + "{:02x}".format(index)
+                plc['gateway_outbound_mac'] = 'AA:BB:CC:DD:04:' + "{:02x}".format(index)
+                index += 1
+
+        if 'network_attacks' in self.data.keys():
+            for attack in data['network_attacks']:
+                target = next((plc for plc in data['plcs'] if plc['name'] == attack['target']), None)
+                if attack['target'] == 'scada':
+                    target = data['scada']
+                if not target:
+                    raise NoSuchPlc("The target plc {name} does not exist".format(name=attack['target']))
+                attack['local_ip'] = "192.168.1." + str(index)
+                attack['public_ip'] = target['public_ip']
+                attack['provider_ip'] = target['provider_ip']
+                attack['mac'] = 'AA:BB:CC:DD:05:' + "{:02x}".format(index)
+                attack['interface'] = attack['name'] + "-eth0"
+                attack['provider_interface'] = target['provider_interface']
+                attack['provider_mac'] = target['provider_mac']
+                attack['gateway_name'] = target['gateway_name']
+                attack['switch_name'] = target['switch_name']
+                attack['gateway_ip'] = target['gateway_ip']
+                attack['gateway_inbound_mac'] = target['gateway_inbound_mac']
+                attack['gateway_outbound_mac'] = target['gateway_outbound_mac']
+                index += 1
+
+    def build(self, *args, **params):
         """
         Build the topology. This make nodes for every router, switch, plc and scada
         and add links to connect them.
@@ -104,8 +173,17 @@ class ComplexTopo(Topo):
 
         self.build_for_node(scada, provider_router)
 
-        # -- PLANT -- #
-        self.addHost('plant')
+        # -- ATACKERS -- #
+        if 'network_attacks' in self.data.keys():
+            # Add attackers to the mininet network
+            for attack in self.data['network_attacks']:
+                attacker = self.addHost(
+                    attack['name'],
+                    mac=attack['mac'],
+                    ip=attack['local_ip'] + "/24",
+                    defaultRoute='via ' + attack['gateway_ip'] + '/24')
+                self.addLink(attacker, attack["switch_name"], intfName=attack['interface'])
+
 
     def build_for_node(self, node, provider_router):
         """
@@ -123,9 +201,39 @@ class ComplexTopo(Topo):
             ip=node['local_ip'] + "/24",
             defaultRoute='via ' + node['gateway_ip'] + '/24')
         self.addLink(node_router, provider_router, intfName2=node['provider_interface'],
-                     params2={'ip': node['provider_ip'] + "/24"})
-        self.addLink(node_switch, node_router, params2={'ip': node['gateway_ip'] + "/24"})
-        self.addLink(node_node, node_switch, intfName=node['interface'])
+                     params2={'ip': node['provider_ip'] + "/24"},
+                     addr1=node['gateway_outbound_mac'],
+                     addr2=node['provider_mac'])
+        self.addLink(node_switch, node_router, params2={'ip': node['gateway_ip'] + "/24"},
+                     addr2=node['gateway_inbound_mac'])
+        self.add_node_switch_link(node_node, node_switch, node)
+
+    def add_node_switch_link(self, node, switch, yaml_node_data):
+        """
+        This function adds the link between the node and its switch,
+        and configures network losses/delays as nececarry
+
+        :param switch: The switch to link
+        :param node: The node to link
+        :param yaml_node_data: The yaml data for the given node
+        """
+        # TODO: figure out which of these parameters are necessary
+        link_params = dict(bw=1000, delay="0ms", loss=0, max_queue_size=1000, use_htb=True)
+        # If delays enabled
+        if 'network_delay_data' in self.data:
+            # If delay value for this node defined
+            if self.data['network_delay_values'][yaml_node_data['name']]:
+                link_params['delay'] = self.data['network_delay_values'][yaml_node_data['name']]
+        # If losses enabled
+        if 'network_loss_data' in self.data:
+            # If loss value for this node defined
+            if self.data['network_loss_values'][yaml_node_data['name']]:
+                link_params['loss'] = self.data['network_loss_values'][yaml_node_data['name']]
+        # Add link with network parameters
+        self.addLink(node, switch, intfName=yaml_node_data['interface'],
+                     addr1=yaml_node_data['mac'],
+                     **link_params
+                     )
 
     def setup_network(self, net):
         """
@@ -146,6 +254,12 @@ class ComplexTopo(Topo):
         scada_data = self.data['scada']
 
         self.setup_network_for_node(net, scada_data, provider)
+
+        # Set default gateway for the attackers
+        if 'network_attacks' in self.data.keys():
+            for attack in self.data['network_attacks']:
+                node = net.get(attack['name'])
+                node.cmd('route add default gw {ip}'.format(ip=attack['gateway_ip']))
 
     def setup_network_for_node(self, net, node_data, provider_router):
         """

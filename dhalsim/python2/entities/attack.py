@@ -8,10 +8,17 @@ class Attack:
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, name, actuators, command):
+    def __init__(self, name, actuator, command):
         self.name = name
-        self.actuators = actuators
+        self.actuator = actuator
         self.command = command
+
+    @abstractmethod
+    def __str__(self):
+        """Returns a to string for the current object"""
+        return "{type} \"{name}\" commencing, executing command {command} on actuator" \
+               " {actuator}.".format(type=self.__class__.__name__, name=self.name,
+                                      command=self.command, actuator=self.actuator)
 
     @abstractmethod
     def apply(self, plc):
@@ -32,10 +39,16 @@ class TimeAttack(Attack):
     :param start: The start time of the attack
     :param end: The end time of the attack
     """
-    def __init__(self, name, actuators, command, start, end):
-        super(TimeAttack, self).__init__(name, actuators, command)
+
+    def __init__(self, name, actuator, command, start, end):
+        super(TimeAttack, self).__init__(name, actuator, command)
         self.start = start
         self.end = end
+
+    def __str__(self):
+        return super(TimeAttack, self).__str__() + " Triggered because {start} iterations have" \
+                                                   " occured. Ends at {end} iterations.".format(
+            start=self.start, end=self.end)
 
     def apply(self, plc):
         """Applies the Device Attack on a given PLC
@@ -44,9 +57,12 @@ class TimeAttack(Attack):
         """
         curr_time = plc.get_master_clock()
         if self.start <= curr_time <= self.end:
-            print("Time attack applied")
-            for actuator in self.actuators:
-                plc.set_tag(actuator, self.command)
+            plc.set_attack_flag(True, self.name)
+            plc.logger.debug(self.__str__())
+            plc.set_tag(self.actuator, self.command)
+        else:
+            plc.set_attack_flag(False, self.name)
+
 
 class TriggerBelowAttack(Attack):
     """
@@ -60,10 +76,16 @@ class TriggerBelowAttack(Attack):
     :param sensor: The tag that will be used as the trigger
     :param value: The value that will be compared to the value of the trigger
     """
-    def __init__(self, name, actuators, command, sensor, value):
-        super(TriggerBelowAttack, self).__init__(name, actuators, command)
+
+    def __init__(self, name, actuator, command, sensor, value):
+        super(TriggerBelowAttack, self).__init__(name, actuator, command)
         self.sensor = sensor
         self.value = value
+
+    def __str__(self):
+        return super(TriggerBelowAttack, self).__str__() + " Triggered because sensor {sensor}" \
+                                                           " fell below {value}."\
+            .format(sensor=self.sensor, value=self.value)
 
     def apply(self, plc):
         """
@@ -73,9 +95,12 @@ class TriggerBelowAttack(Attack):
         """
         sensor_value = plc.get_tag(self.sensor)
         if sensor_value < self.value:
-            print("Below attack applied")
-            for actuator in self.actuators:
-                plc.set_tag(actuator, self.command)
+            plc.set_attack_flag(True, self.name)
+            plc.logger.debug(self.__str__())
+            plc.set_tag(self.actuator, self.command)
+        else:
+            plc.set_attack_flag(False, self.name)
+
 
 class TriggerAboveAttack(Attack):
     """
@@ -90,10 +115,15 @@ class TriggerAboveAttack(Attack):
     :param value: The value that will be compared to the value of the trigger
     """
 
-    def __init__(self, name, actuators, command, sensor, value):
-        super(TriggerAboveAttack, self).__init__(name, actuators, command)
+    def __init__(self, name, actuator, command, sensor, value):
+        super(TriggerAboveAttack, self).__init__(name, actuator, command)
         self.sensor = sensor
         self.value = value
+
+    def __str__(self):
+        return super(TriggerAboveAttack, self).__str__() + " Triggered because sensor {sensor}" \
+                                                           " fell above {value}."\
+            .format(sensor=self.sensor, value=self.value)
 
     def apply(self, plc):
         """
@@ -103,9 +133,12 @@ class TriggerAboveAttack(Attack):
         """
         sensor_value = plc.get_tag(self.sensor)
         if sensor_value > self.value:
-            print("Above attack applied")
-            for actuator in self.actuators:
-                plc.set_tag(actuator, self.command)
+            plc.set_attack_flag(True, self.name)
+            plc.logger.debug(self.__str__())
+            plc.set_tag(self.actuator, self.command)
+        else:
+            plc.set_attack_flag(False, self.name)
+
 
 class TriggerBetweenAttack(Attack):
     """
@@ -120,11 +153,16 @@ class TriggerBetweenAttack(Attack):
     :param value: The value that will be compared to the value of the trigger
     """
 
-    def __init__(self, name, actuators, command, sensor, lower_value, upper_value):
-        super(TriggerBetweenAttack, self).__init__(name, actuators, command)
+    def __init__(self, name, actuator, command, sensor, lower_value, upper_value):
+        super(TriggerBetweenAttack, self).__init__(name, actuator, command)
         self.sensor = sensor
         self.lower_value = lower_value
         self.upper_value = upper_value
+
+    def __str__(self):
+        return super(TriggerBetweenAttack, self).__str__() + " Triggered because sensor {sensor}" \
+                                                             " fell between {lower} and {upper}"\
+            .format(sensor=self.sensor, lower=self.lower_value, upper=self.upper_value)
 
     def apply(self, plc):
         """
@@ -134,6 +172,8 @@ class TriggerBetweenAttack(Attack):
         """
         sensor_value = plc.get_tag(self.sensor)
         if self.lower_value < sensor_value < self.upper_value:
-            print("Between attack applied")
-            for actuator in self.actuators:
-                plc.set_tag(actuator, self.command)
+            plc.set_attack_flag(True, self.name)
+            plc.logger.debug(self.__str__())
+            plc.set_tag(self.actuator, self.command)
+        else:
+            plc.set_attack_flag(False, self.name)
