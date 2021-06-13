@@ -177,10 +177,10 @@ class GenericScada(SCADAServer):
                     "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
                         exc=exc, i=self.DB_TRIES - i - 1))
                 time.sleep(self.DB_SLEEP_TIME)
-        else:
-            self.logger.error(
-                "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
-            raise DatabaseError("Failed to get sync from database")
+
+        self.logger.error(
+            "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
+        raise DatabaseError("Failed to get sync from database")
 
     def set_sync(self, flag):
         """
@@ -206,10 +206,10 @@ class GenericScada(SCADAServer):
                     "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
                         exc=exc, i=self.DB_TRIES - i - 1))
                 time.sleep(self.DB_SLEEP_TIME)
-        else:
-            self.logger.error(
-                "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
-            raise DatabaseError("Failed to set sync in database")
+
+        self.logger.error(
+            "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
+        raise DatabaseError("Failed to set sync in database")
 
     def sigint_handler(self, sig, frame):
         """
@@ -271,10 +271,10 @@ class GenericScada(SCADAServer):
                     "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
                         exc=exc, i=self.DB_TRIES - i - 1))
                 time.sleep(self.DB_SLEEP_TIME)
-        else:
-            self.logger.error(
-                "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
-            raise DatabaseError("Failed to get master clock from database")
+
+        self.logger.error(
+            "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
+        raise DatabaseError("Failed to get master clock from database")
 
     def main_loop(self, sleep=0.5, test_break=False):
         """

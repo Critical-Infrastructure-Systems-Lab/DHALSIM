@@ -331,10 +331,10 @@ class GenericPLC(BasePLC):
                     "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
                         exc=exc, i=self.DB_TRIES - i - 1))
                 time.sleep(self.DB_SLEEP_TIME)
-        else:
-            self.logger.error(
-                "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
-            raise DatabaseError("Failed to get master clock from database")
+
+        self.logger.error(
+            "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
+        raise DatabaseError("Failed to get master clock from database")
 
     def get_sync(self):
         """
@@ -357,10 +357,10 @@ class GenericPLC(BasePLC):
                     "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
                         exc=exc, i=self.DB_TRIES - i - 1))
                 time.sleep(self.DB_SLEEP_TIME)
-        else:
-            self.logger.error(
-                "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
-            raise DatabaseError("Failed to get sync from database")
+
+        self.logger.error(
+            "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
+        raise DatabaseError("Failed to get sync from database")
 
     def set_sync(self, flag):
         """
@@ -386,10 +386,10 @@ class GenericPLC(BasePLC):
                     "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
                         exc=exc, i=self.DB_TRIES - i - 1))
                 time.sleep(self.DB_SLEEP_TIME)
-        else:
-            self.logger.error(
-                "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
-            raise DatabaseError("Failed to set sync in database")
+
+        self.logger.error(
+            "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
+        raise DatabaseError("Failed to set sync in database")
 
     def set_attack_flag(self, flag, attack_name):
         """
@@ -418,10 +418,10 @@ class GenericPLC(BasePLC):
                     "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
                         exc=exc, i=self.DB_TRIES - i - 1))
                 time.sleep(self.DB_SLEEP_TIME)
-        else:
-            self.logger.error(
-                "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
-            raise DatabaseError("Failed to set attack flag in database")
+
+        self.logger.error(
+            "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
+        raise DatabaseError("Failed to set attack flag in database")
 
     def main_loop(self, sleep=0.5, test_break=False):
         """
