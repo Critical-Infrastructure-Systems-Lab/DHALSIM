@@ -375,9 +375,9 @@ class ConfigParser:
             n_plcs = len(data["plcs"])
             if n_plcs > 250:
                 raise TooManyNodes(raise_message)
-            if 'network_attacks' in data and n_plcs + len(data['network_attacks']) > 250:
+            if 'attacks' in data and 'network_attacks' in data['attacks'] and n_plcs + len(data['attacks']['network_attacks']) > 250:
                 raise TooManyNodes(raise_message)
-        elif 'network_attacks' in data and len(data['network_attacks']) > 250:
+        elif 'attacks' in data and 'network_attacks' in data['attacks'] and len(data['attacks']['network_attacks']) > 250:
             raise TooManyNodes(raise_message)
 
     @staticmethod
