@@ -156,6 +156,37 @@ class GenericScada(SCADAServer):
 
         time.sleep(sleep)
 
+    def db_query(self, query, parameters=None):
+        """
+        Execute a query on the database
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
+        This is necessary because of the limited concurrency in SQLite.
+
+        :param query: The SQL query to execute in the db
+        :type query: str
+
+        :param parameters: The parameters to put in the query. This must be a tuple.
+
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
+        """
+        for i in range(self.DB_TRIES):
+            try:
+                if parameters:
+                    self.cur.execute(query, parameters)
+                else:
+                    self.cur.execute(query)
+                return
+            except sqlite3.OperationalError as exc:
+                self.logger.debug(
+                    "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
+                        exc=exc, i=self.DB_TRIES - i - 1))
+                time.sleep(self.DB_SLEEP_TIME)
+        self.logger.error(
+            "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
+        raise DatabaseError("Failed to get master clock from database")
+
     def get_sync(self):
         """
         Get the sync flag of the scada.
@@ -167,20 +198,9 @@ class GenericScada(SCADAServer):
         :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
            :code:`DB_TRIES` tries.
         """
-        for i in range(self.DB_TRIES):
-            try:
-                self.cur.execute("SELECT flag FROM sync WHERE name IS 'scada'")
-                flag = bool(self.cur.fetchone()[0])
-                return flag
-            except sqlite3.OperationalError as exc:
-                self.logger.debug(
-                    "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
-                        exc=exc, i=self.DB_TRIES - i - 1))
-                time.sleep(self.DB_SLEEP_TIME)
-
-        self.logger.error(
-            "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
-        raise DatabaseError("Failed to get sync from database")
+        self.db_query("SELECT flag FROM sync WHERE name IS 'scada'")
+        flag = bool(self.cur.fetchone()[0])
+        return flag
 
     def set_sync(self, flag):
         """
@@ -195,21 +215,9 @@ class GenericScada(SCADAServer):
         :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
            :code:`DB_TRIES` tries.
         """
-        for i in range(self.DB_TRIES):
-            try:
-                self.cur.execute("UPDATE sync SET flag=? WHERE name IS 'scada'",
-                                 (int(flag),))
-                self.conn.commit()
-                return
-            except sqlite3.OperationalError as exc:
-                self.logger.debug(
-                    "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
-                        exc=exc, i=self.DB_TRIES - i - 1))
-                time.sleep(self.DB_SLEEP_TIME)
-
-        self.logger.error(
-            "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
-        raise DatabaseError("Failed to set sync in database")
+        self.db_query("UPDATE sync SET flag=? WHERE name IS 'scada'",
+                         (int(flag),))
+        self.conn.commit()
 
     def sigint_handler(self, sig, frame):
         """
@@ -261,20 +269,9 @@ class GenericScada(SCADAServer):
         :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
            :code:`DB_TRIES` tries.
         """
-        for i in range(self.DB_TRIES):
-            try:
-                self.cur.execute("SELECT time FROM master_time WHERE id IS 1")
-                master_time = self.cur.fetchone()[0]
-                return master_time
-            except sqlite3.OperationalError as exc:
-                self.logger.debug(
-                    "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
-                        exc=exc, i=self.DB_TRIES - i - 1))
-                time.sleep(self.DB_SLEEP_TIME)
-
-        self.logger.error(
-            "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
-        raise DatabaseError("Failed to get master clock from database")
+        self.db_query("SELECT time FROM master_time WHERE id IS 1")
+        master_time = self.cur.fetchone()[0]
+        return master_time
 
     def main_loop(self, sleep=0.5, test_break=False):
         """
