@@ -126,6 +126,7 @@ class GeneralCPS(MiniCPS):
         self.logger.debug("Launched the plant processes.")
 
     def poll_processes(self):
+        """Polls for all processes and finishes if one closes"""
         processes = []
         processes.extend(self.plc_processes)
         processes.extend(self.attacker_processes)
