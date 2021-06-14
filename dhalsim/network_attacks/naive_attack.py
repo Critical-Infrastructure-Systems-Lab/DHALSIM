@@ -33,7 +33,8 @@ class PacketAttack(SyncedAttack):
     def __init__(self, intermediate_yaml_path: Path, yaml_index: int):
         super().__init__(intermediate_yaml_path, yaml_index)
         os.system('sysctl net.ipv4.ip_forward=1')
-        self.queue = fnfqueue.Connection()
+        self.queue = None
+        self.q = None
         self.thread = None
         self.run_thread = False
 
@@ -61,6 +62,7 @@ class PacketAttack(SyncedAttack):
                           f"{self.intermediate_attack['gateway_ip']}")
 
         try:
+            self.queue = fnfqueue.Connection()
             self.q = self.queue.bind(1)
             self.q.set_mode(fnfqueue.MAX_PAYLOAD, fnfqueue.COPY_PACKET)
         except PermissionError:
@@ -129,6 +131,7 @@ class PacketAttack(SyncedAttack):
         os.system('iptables -D OUTPUT -p icmp -j DROP')
 
         self.run_thread = False
+        self.q.unbind()
         self.queue.close()
         self.thread.join()
 
