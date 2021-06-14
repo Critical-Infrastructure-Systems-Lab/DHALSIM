@@ -24,6 +24,9 @@ class BatchReadMeGenerator:
                            / self.intermediate_yaml['output_path'] / 'configuration'\
                            / 'batch_readme.md'
 
+        self.data_string = "\n\n{data}"
+        self.time_format = "%Y-%m-%d %H:%M:%S"
+
     def write_batch(self, start_time: datetime.datetime, end_time: datetime.datetime,
                     wn: WaterNetworkModel, master_time: int):
         """
@@ -44,13 +47,13 @@ class BatchReadMeGenerator:
             # Batch specific values.
             if 'initial_tank_values' in self.intermediate_yaml:
                 readme.write("\n\n## Initial tank data")
-                readme.write("\n\n{data}".format(data=str(self.intermediate_yaml['initial_tank_values'])))
+                readme.write(self.data_string.format(data=str(self.intermediate_yaml['initial_tank_values'])))
             if 'network_loss_values' in self.intermediate_yaml:
                 readme.write("\n\n## Network loss values")
-                readme.write("\n\n{data}".format(data=str(self.intermediate_yaml['network_loss_values'])))
+                readme.write(self.data_string.format(data=str(self.intermediate_yaml['network_loss_values'])))
             if 'network_delay_values' in self.intermediate_yaml:
                 readme.write("\n\n## Network delay values")
-                readme.write("\n\n{data}".format(data=str(self.intermediate_yaml['network_delay_values'])))
+                readme.write(self.data_string.format(data=str(self.intermediate_yaml['network_delay_values'])))
 
             # Information about this batch.
             readme.write("\n\n## Information about this batch")
@@ -59,12 +62,12 @@ class BatchReadMeGenerator:
                                  y=str(self.intermediate_yaml['iterations']),
                                  step=str(wn.options.time.hydraulic_timestep)))
             readme.write("\n\nStarted at {start} and finished at {end}."
-                         .format(start=str(start_time.strftime("%Y-%m-%d %H:%M:%S")),
-                                 end=str(end_time.strftime("%Y-%m-%d %H:%M:%S"))))
+                         .format(start=str(start_time.strftime(self.time_format)),
+                                 end=str(end_time.strftime(self.time_format))))
             readme.write("\n\nThe duration of this batch was {time}."
                          .format(time=str(end_time - start_time)))
             readme.write("\n\nFor more information with regard to this experiment, consult "
-                         "```configuration/readme_experiment.md``` in the root of the output "
+                         "```configuration/general_readme.md``` in the root of the output "
                          "folder.")
 
 
@@ -130,6 +133,9 @@ class ReadMeGenerator:
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
+        self.data_string = "\n\n{data}"
+        self.time_format = "%Y-%m-%d %H:%M:%S"
+
     def get_value(self, parameter: str) -> str:
         """
         Gets the value of a required parameter.
@@ -155,11 +161,12 @@ class ReadMeGenerator:
         :param parameter: parameter to evaluate
         :return: complete string with checkbox in it
         """
-        if parameter in self.intermediate_yaml:
-            if len(self.intermediate_yaml[parameter]) > 0:
-                return "\n\n- [x] {para}".format(para=parameter)
+        if parameter in self.intermediate_yaml and len(self.intermediate_yaml[parameter]) > 0:
+            case_checkbox = "[x]"
+        else:
+            case_checkbox = "[ ]"
 
-        return "\n\n- [ ] {para}".format(para=parameter)
+        return "\n\n- {checkbox} {para}".format(checkbox=case_checkbox, para=parameter)
 
     def write_readme(self, start_time: datetime.datetime, end_time: datetime.datetime,
                      batch: bool, master_time: int, wn: WaterNetworkModel):
@@ -222,13 +229,13 @@ class ReadMeGenerator:
             if not batch:
                 if 'initial_tank_values' in self.intermediate_yaml:
                     readme.write("\n\n## Initial tank data")
-                    readme.write("\n\n{data}".format(data=str(self.intermediate_yaml['initial_tank_values'])))
+                    readme.write(self.data_string.format(data=str(self.intermediate_yaml['initial_tank_values'])))
                 if 'network_loss_values' in self.intermediate_yaml:
                     readme.write("\n\n## Network loss values")
-                    readme.write("\n\n{data}".format(data=str(self.intermediate_yaml['network_loss_values'])))
+                    readme.write(self.data_string.format(data=str(self.intermediate_yaml['network_loss_values'])))
                 if 'network_delay_values' in self.intermediate_yaml:
                     readme.write("\n\n## Network delay values")
-                    readme.write("\n\n{data}".format(data=str(self.intermediate_yaml['network_delay_values'])))
+                    readme.write(self.data_string.format(data=str(self.intermediate_yaml['network_delay_values'])))
 
             # About this experiment
             readme.write("\n\n## About this experiment")
@@ -242,7 +249,7 @@ class ReadMeGenerator:
                                      step=str(wn.options.time.hydraulic_timestep)))
 
             readme.write("\n\nStarted at {start} and finished at {end}."
-                         .format(start=str(start_time.strftime("%Y-%m-%d %H:%M:%S")),
-                                 end=str(end_time.strftime("%Y-%m-%d %H:%M:%S"))))
+                         .format(start=str(start_time.strftime(self.time_format)),
+                                 end=str(end_time.strftime(self.time_format))))
             readme.write("\n\nThe duration of this simulation was {time}."
                          .format(time=str(end_time - start_time)))

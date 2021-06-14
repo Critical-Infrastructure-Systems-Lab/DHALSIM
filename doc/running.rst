@@ -28,4 +28,4 @@ show the real value and the :code:`scada_values.csv` will show the modified valu
 
 Configuration save
 ~~~~~~~~~~~~~~~~~~
-For your convenience, all input files are automatically saved in the :code:`output_folder` specified in the configuration file. Using these input files, the exact same experiment can be recreated and ran later. In addition, a :code:`/configuration/readme_experiment.md` is provided. This file contains the most important information about the experiment. In addition, batch mode will have :code:`/configuration/readme_batch.md` in each batch output folder.
+For your convenience, all input files are automatically saved in the :code:`output_folder` specified in the configuration file. Using these input files, the exact same experiment can be recreated and ran later. In addition, a :code:`/configuration/general_readme.md` is provided. This file contains the most important information about the experiment. In addition, batch mode will have :code:`/configuration/batch_readme.md` in each batch output folder.
