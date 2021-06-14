@@ -36,6 +36,7 @@ def patched_auto_run(mocker):
     return auto_run, logger_mock
 
 
+@pytest.mark.timeout(1)
 def test_plant_shutdown_normal(patched_auto_run, online_process, offline_after_five_process):
     auto_run, logger_mock = patched_auto_run
     auto_run.plc_processes = [online_process]
@@ -50,6 +51,7 @@ def test_plant_shutdown_normal(patched_auto_run, online_process, offline_after_f
     assert online_process.poll.call_count == 15
 
 
+@pytest.mark.timeout(1)
 def test_plc_process_shutdown(patched_auto_run, online_process, offline_after_three_process):
     auto_run, logger_mock = patched_auto_run
     auto_run.plc_processes = [online_process, offline_after_three_process]
@@ -64,6 +66,7 @@ def test_plc_process_shutdown(patched_auto_run, online_process, offline_after_th
     assert online_process.poll.call_count == 9
 
 
+@pytest.mark.timeout(1)
 def test_attacker_process_shutdown(patched_auto_run, online_process, offline_after_three_process):
     auto_run, logger_mock = patched_auto_run
     auto_run.plc_processes = [online_process]
@@ -78,6 +81,7 @@ def test_attacker_process_shutdown(patched_auto_run, online_process, offline_aft
     assert online_process.poll.call_count == 10
 
 
+@pytest.mark.timeout(1)
 def test_scada_process_shutdown(patched_auto_run, online_process, offline_after_five_process):
     auto_run, logger_mock = patched_auto_run
     auto_run.plc_processes = [online_process]
