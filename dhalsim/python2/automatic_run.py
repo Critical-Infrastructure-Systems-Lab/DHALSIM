@@ -79,7 +79,7 @@ class GeneralCPS(MiniCPS):
 
         self.automatic_start()
         self.poll_processes()
-        self.net.stop()
+        self.finish()
 
     def interrupt(self, sig, frame):
         """
@@ -139,7 +139,7 @@ class GeneralCPS(MiniCPS):
                     pass
                 else:
                     self.logger.debug("process has finished, stopping simulation...")
-                    self.finish()
+                    return
 
     @staticmethod
     def end_process(process):
