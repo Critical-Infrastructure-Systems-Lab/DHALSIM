@@ -2,7 +2,7 @@ import signal
 import subprocess
 
 import pytest
-from mock import call
+from mock import call, ANY
 from pathlib import Path
 
 from dhalsim.python2.automatic_plc import PlcControl
@@ -33,6 +33,7 @@ def subprocess_mock(mocker):
     process = mocker.Mock()
     process.Popen.return_value = 42
     process.open.return_value = "testLoc"
+    Path(__file__).parent.absolute()
     return process
 
 
@@ -100,3 +101,15 @@ def test_start_tcpdump_capture(patched_auto_plc, subprocess_mock):
     subprocess_mock.Popen.assert_called_once_with(
         ['tcpdump', '-i', "testInterface", '-w',
          "testPath/testInterface.pcap"], shell=False, stderr="testLoc", stdout="testLoc")
+
+
+def test_start_plc(patched_auto_plc, subprocess_mock):
+    auto_plc, logger_mock = patched_auto_plc
+    auto_plc.intermediate_yaml = "testYaml"
+    auto_plc.plc_index = 1
+    auto_plc.data = {"log_level": "info"}
+
+    assert auto_plc.start_plc() == 42
+    subprocess_mock.Popen.assert_called_once_with(
+        ["python2", ANY, "testYaml", "1"], shell=False,
+        stderr="testLoc", stdout="testLoc")
