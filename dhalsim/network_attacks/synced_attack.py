@@ -268,5 +268,5 @@ class SyncedAttack(metaclass=ABCMeta):
     def interrupt(self):
         """
         This function is the function that will bee called when there is a interrupt.
-        This function needs to be if you want to do any cleanup on a interrupt.
+        This function needs to be overwritten if you want to do any cleanup on a interrupt.
         """
