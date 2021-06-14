@@ -40,7 +40,7 @@ cd mininet
 sudo PYTHON=python2 ./util/install.sh -fnv
 
 # Install DHALSIM
-cd ${cwd}
+cd "${cwd}" || { echo "Failure: Could not find DHALSIM directory"; exit 1; }
 sudo python3 -m pip install -e .
 sudo service openvswitch-switch start
 
