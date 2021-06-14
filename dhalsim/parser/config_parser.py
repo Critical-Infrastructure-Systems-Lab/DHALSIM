@@ -344,23 +344,7 @@ class ConfigParser:
 
         :param data: The data to check
         """
-        ConfigParser.network_attack_only_complex(data)
         ConfigParser.not_to_many_nodes(data)
-
-    @staticmethod
-    def network_attack_only_complex(data: dict):
-        """
-        Check if a network attack is applied on a complex topology
-
-        :param data: the data to check on
-
-        :raise NetworkAttackError: When Network attacks are applied in a simple topology
-        """
-        if 'attacks' in data and 'network_attacks' in data['attacks'] and len(
-                data['attacks']['network_attacks']) > 0:
-            if data['network_topology_type'] == 'simple':
-                raise NetworkAttackError(
-                    "Network attacks can only be applied on a complex topology")
 
     @staticmethod
     def not_to_many_nodes(data: dict):
