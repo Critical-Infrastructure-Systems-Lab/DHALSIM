@@ -402,3 +402,38 @@ def test_required_attack_fields_naive(required_key, attack_dict_2):
     del attack_dict_2[required_key]
     with pytest.raises(SchemaError):
         SchemaParser.network_attacks.validate(attack_dict_2)
+
+
+@pytest.mark.parametrize("trigger, expected", [
+    ({'type': 'Time', 'start': 5, 'end': 10},{'type': 'time', 'start': 5, 'end': 10}),
+    ({'type': 'Above', 'sensor': 'T1', 'value': 3.0},{'type': 'above', 'sensor': 'T1', 'value': 3.0}),
+    ({'type': 'Below', 'sensor': 't_5', 'value': 3.0},{'type': 'below', 'sensor': 't_5', 'value': 3.0}),
+    ({'type': 'Between', 'sensor': 't_5', 'lower_value': 3.0, 'upper_value': 4.0},{'type': 'between', 'sensor': 't_5', 'lower_value': 3.0, 'upper_value': 4.0}),
+    ({'type': 'Above', 'sensor': 'T1', 'value': 3},{'type': 'above', 'sensor': 'T1', 'value': 3.0}),
+    ({'type': 'Below', 'sensor': 't_5', 'value': 3},{'type': 'below', 'sensor': 't_5', 'value': 3.0}),
+    ({'type': 'Between', 'sensor': 't_5', 'lower_value': 3, 'upper_value': 4.0},{'type': 'between', 'sensor': 't_5', 'lower_value': 3.0, 'upper_value': 4.0}),
+    ({'type': 'Between', 'sensor': 't_5', 'lower_value': 3.0, 'upper_value': 4},{'type': 'between', 'sensor': 't_5', 'lower_value': 3.0, 'upper_value': 4.0}),
+])
+def test_valid_trigger(trigger, expected):
+    assert SchemaParser.trigger.validate(trigger) == expected
+
+
+@pytest.mark.parametrize("trigger", [
+    {'type': 'Time', 'start': 5},
+    {'type': 'Time', 'start': 5, 'end': "10"},
+    {'type': 'Time', 'start': "5", 'end': 10},
+    {'type': 'Time',  'end': 10},
+    {'type': 'Above', 'sensor': 'T1', 'value': '3.0'},
+    {'type': 'Below', 'sensor': 't_5', 'value': '3.0'},
+    {'type': 'Above', 'value': 3.0},
+    {'type': 'Below', 'sensor': 't_5'},
+    {'type': 'Below', 'value': 3.0},
+    {'type': 'Above', 'sensor': 't_5'},
+    {'type': 'Between', 'sensor': 't_5', 'lower_value': '3.0', 'upper_value': 4.0},
+    {'type': 'Between', 'lower_value': '3.0', 'upper_value': 4.0},
+    {'type': 'Between', 'sensor': 't_5', 'upper_value': 4.0},
+    {'type': 'Between', 'sensor': 't_5', 'lower_value': '3.0'},
+])
+def test_invalid_trigger(trigger):
+    with pytest.raises(SchemaError):
+        SchemaParser.trigger.validate(trigger)
