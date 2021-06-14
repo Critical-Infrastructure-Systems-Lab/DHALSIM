@@ -88,7 +88,7 @@ class SchemaParser:
                     string_pattern,
                 ),
                 'value': And(
-                    float,
+                    Or(float, And(int, Use(float))),
                 ),
             },
             {
@@ -102,10 +102,10 @@ class SchemaParser:
                     string_pattern,
                 ),
                 'lower_value': And(
-                    float,
+                    Or(float, And(int, Use(float))),
                 ),
                 'upper_value': And(
-                    float,
+                    Or(float, And(int, Use(float))),
                 ),
             },
         )
