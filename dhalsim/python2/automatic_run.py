@@ -4,6 +4,7 @@ import os
 import signal
 import subprocess
 import sys
+import py2_logger
 from pathlib import Path
 
 import yaml
@@ -13,7 +14,6 @@ from mininet.net import Mininet
 from mininet.cli import CLI
 from mininet.link import TCLink
 
-from py2_logger import get_logger
 from topo.simple_topo import SimpleTopo
 from topo.complex_topo import ComplexTopo
 
@@ -39,7 +39,7 @@ class GeneralCPS(MiniCPS):
         with self.intermediate_yaml.open(mode='r') as file:
             self.data = yaml.safe_load(file)
 
-        self.logger = get_logger(self.data['log_level'])
+        self.logger = py2_logger.get_logger(self.data['log_level'])
 
         if self.data['log_level'] == 'debug':
             logging.getLogger('mininet').setLevel(logging.DEBUG)
@@ -78,7 +78,7 @@ class GeneralCPS(MiniCPS):
         self.attacker_processes = None
 
         self.automatic_start()
-
+        self.poll_processes()
         self.net.stop()
 
     def interrupt(self, sig, frame):
@@ -125,10 +125,20 @@ class GeneralCPS(MiniCPS):
 
         self.logger.debug("Launched the plant processes.")
 
+    def poll_processes(self):
+        processes = []
+        processes.extend(self.plc_processes)
+        processes.extend(self.attacker_processes)
+        processes.append(self.scada_process)
+        processes.append(self.plant_process)
         # We wait until the simulation ends
-        while self.plant_process.poll() is None:
-            pass
-        self.finish()
+        while True:
+            for process in processes:
+                if process.poll() is None:
+                    pass
+                else:
+                    self.logger.debug("process has finished, stopping simulation...")
+                    self.finish()
 
     @staticmethod
     def end_process(process):
