@@ -220,13 +220,18 @@ connected switch. The attacker will then route all TCP packets that are destined
 and can for example modify the responses to the other PLCs.
 
 .. figure:: static/simple_topo_attack.svg
+    :align: center
     :alt: A simple topology with an attacker
-    :width: 50%
+    :figclass: align-center
 
+    A simple topology with an attacker
 
 .. figure:: static/complex_topo_attack.svg
+    :align: center
     :alt: A complex topology with an attacker
-    :width: 50%
+    :figclass: align-center
+
+    A complex topology with an attacker
 
 
 This is an example of a :code:`naive_mitm` attack definition:
