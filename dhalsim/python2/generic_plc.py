@@ -26,11 +26,21 @@ class InvalidControlValue(Error):
     """Raised when tag you are looking for does not exist"""
 
 
+class DatabaseError(Error):
+    """Raised when not being able to connect to the database"""
+
+
 class GenericPLC(BasePLC):
     """
     This class represents a plc. This plc knows what it is connected to by reading the
     yaml file at intermediate_yaml_path and looking at index yaml_index in the plcs section.
     """
+
+    DB_TRIES = 10
+    """Amount of times a db query will retry on a exception"""
+
+    DB_SLEEP_TIME = 0.01
+    """Amount of time a db query will wait before retrying"""
 
     def __init__(self, intermediate_yaml_path, yaml_index):
         self.yaml_index = yaml_index
@@ -78,8 +88,8 @@ class GenericPLC(BasePLC):
         plc_server = {
             'address': self.intermediate_plc['local_ip'],
             'tags': self.generate_real_tags(plc_sensors,
-                                       list(set(dependant_sensors) - set(plc_sensors)),
-                                       self.intermediate_plc['actuators'])
+                                            list(set(dependant_sensors) - set(plc_sensors)),
+                                            self.intermediate_plc['actuators'])
         }
 
         # Create protocol
@@ -173,7 +183,8 @@ class GenericPLC(BasePLC):
                                                 control["value"])
                 ret.append(control_instance)
             if control["type"].lower() == "time":
-                control_instance = TimeControl(control["actuator"], control["action"], control["value"])
+                control_instance = TimeControl(control["actuator"], control["action"],
+                                               control["value"])
                 ret.append(control_instance)
         return ret
 
@@ -187,23 +198,25 @@ class GenericPLC(BasePLC):
         for attack in attack_list:
             if attack['trigger']['type'].lower() == "time":
                 attacks.append(
-                    TimeAttack(attack['name'], attack['actuator'], attack['command'], attack['trigger']['start'], attack['trigger']['end']))
+                    TimeAttack(attack['name'], attack['actuator'], attack['command'],
+                               attack['trigger']['start'], attack['trigger']['end']))
             elif attack['trigger']['type'].lower() == "above":
                 attacks.append(
-                    TriggerAboveAttack(attack['name'], attack['actuator'], attack['command'], attack['trigger']['sensor'],
+                    TriggerAboveAttack(attack['name'], attack['actuator'], attack['command'],
+                                       attack['trigger']['sensor'],
                                        attack['trigger']['value']))
             elif attack['trigger']['type'].lower() == "below":
                 attacks.append(
-                    TriggerBelowAttack(attack['name'], attack['actuator'], attack['command'], attack['trigger']['sensor'],
+                    TriggerBelowAttack(attack['name'], attack['actuator'], attack['command'],
+                                       attack['trigger']['sensor'],
                                        attack['trigger']['value']))
             elif attack['trigger']['type'].lower() == "between":
                 attacks.append(
-                    TriggerBetweenAttack(attack['name'], attack['actuator'], attack['command'], attack['trigger']['sensor'],
-                                         attack['trigger']['lower_value'], attack['trigger']['upper_value']))
+                    TriggerBetweenAttack(attack['name'], attack['actuator'], attack['command'],
+                                         attack['trigger']['sensor'],
+                                         attack['trigger']['lower_value'],
+                                         attack['trigger']['upper_value']))
         return attacks
-
-
-
 
     def pre_loop(self, sleep=0.5):
         """
@@ -252,7 +265,8 @@ class GenericPLC(BasePLC):
             if tag == cached_tag:
                 return self.cache[tag]
 
-        self.logger.warning("Cache miss in {plc} for tag {tag}".format(plc=self.intermediate_plc["name"], tag=tag))
+        self.logger.warning(
+            "Cache miss in {plc} for tag {tag}".format(plc=self.intermediate_plc["name"], tag=tag))
 
         for i, plc_data in enumerate(self.intermediate_yaml["plcs"]):
             if i == self.yaml_index:
@@ -303,24 +317,64 @@ class GenericPLC(BasePLC):
         else:
             raise TagDoesNotExist(tag + " cannot be set from " + self.intermediate_plc["name"])
 
+    def db_query(self, query, parameters=None):
+        """
+        Execute a query on the database
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
+        This is necessary because of the limited concurrency in SQLite.
+
+        :param query: The SQL query to execute in the db
+        :type query: str
+
+        :param parameters: The parameters to put in the query. This must be a tuple.
+
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
+        """
+        for i in range(self.DB_TRIES):
+            try:
+                if parameters:
+                    self.cur.execute(query, parameters)
+                else:
+                    self.cur.execute(query)
+                return
+            except sqlite3.OperationalError as exc:
+                self.logger.debug(
+                    "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
+                        exc=exc, i=self.DB_TRIES - i - 1))
+                time.sleep(self.DB_SLEEP_TIME)
+        self.logger.error(
+            "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
+        raise DatabaseError("Failed to get master clock from database")
+
     def get_master_clock(self):
         """
         Get the value of the master clock of the physical process through the database.
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
 
-        :return: Iteration in the physical process
+        :return: Iteration in the physical process.
+
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
         """
-        # Fetch master_time
-        self.cur.execute("SELECT time FROM master_time WHERE id IS 1")
+        self.db_query("SELECT time FROM master_time WHERE id IS 1")
         master_time = self.cur.fetchone()[0]
         return master_time
 
     def get_sync(self):
         """
         Get the sync flag of this plc.
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
 
         :return: False if physical process wants the plc to do a iteration, True if not.
+
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
         """
-        self.cur.execute("SELECT flag FROM sync WHERE name IS ?", (self.intermediate_plc["name"],))
+        self.db_query("SELECT flag FROM sync WHERE name IS ?", (self.intermediate_plc["name"],))
         flag = bool(self.cur.fetchone()[0])
         return flag
 
@@ -328,22 +382,36 @@ class GenericPLC(BasePLC):
         """
         Set this plcs sync flag in the sync table. When this is 1, the physical process
         knows this plc finished the requested iteration.
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
 
-        :param flag: True for sync to 1, false for sync to 0
+        :param flag: True for sync to 1, False for sync to 0
+        :type flag: bool
+
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
         """
-        self.cur.execute("UPDATE sync SET flag=? WHERE name IS ?",
-                         (int(flag), self.intermediate_plc["name"],))
+        self.db_query("UPDATE sync SET flag=? WHERE name IS ?",
+                      (int(flag), self.intermediate_plc["name"],))
         self.conn.commit()
 
     def set_attack_flag(self, flag, attack_name):
         """
         Set a flag in the attack table. When it is 1, we know that the attack with the
         provided name is currently running. When it is 0, it is not.
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
 
-        :param flag: True for running to 1, false for running to 0
+        :param flag: True for running to 1, False for running to 0
+        :type flag: bool
+
         :param attack_name: The name of the attack
+        :type attack_name: str
+
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
         """
-        self.cur.execute("UPDATE attack SET flag=? WHERE name IS ?",
+        self.db_query("UPDATE attack SET flag=? WHERE name IS ?",
                          (int(flag), attack_name,))
         self.conn.commit()
 
@@ -357,7 +425,7 @@ class GenericPLC(BasePLC):
         self.logger.debug(self.intermediate_plc['name'] + ' enters main_loop')
         while True:
             while self.get_sync():
-                time.sleep(0.01)
+                time.sleep(self.DB_SLEEP_TIME)
 
             self.update_cache()
 
