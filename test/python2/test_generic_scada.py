@@ -1,4 +1,5 @@
 import sys
+from collections import OrderedDict
 from datetime import datetime
 from decimal import Decimal
 
@@ -143,13 +144,16 @@ def test_generic_scada_init(generic_scada, magic_mock_scada_init, yaml_scada_fil
     # Load test yaml
     with yaml_scada_file.open() as yaml_file_test:
         test_yaml = yaml.load(yaml_file_test, Loader=yaml.FullLoader)
-    # Assert same as plc yaml
+    # Assert same as scada yaml
     assert generic_scada.intermediate_yaml == test_yaml
-    # Assert intermediate_plc correct
+    # Assert output path
     assert str(generic_scada.output_path) == "/home/test/dhalsim/output/scada_values.csv"
     # Assert plc data generation
-    assert generic_scada.plc_data == [('192.168.1.1', [('T0', 1), ('P_RAW1', 1)]),
-                                      ('192.168.1.2', [('T2', 1), ('V_ER2i', 1)])]
+    assert generic_scada.plc_data == OrderedDict([('192.168.1.1', [('T0', 1), ('P_RAW1', 1)]),
+                                                  ('192.168.1.2', [('T2', 1), ('V_ER2i', 1)])])
+    # Assert scada initial cache
+    assert generic_scada.cache == {'192.168.1.1': [0, 0],
+                                   '192.168.1.2': [0, 0]}
     # Assert plc saved values generation
     assert generic_scada.saved_values == [['iteration', 'timestamp', 'T0', 'P_RAW1', 'T2', 'V_ER2i']]
     # Assert proper function calls
@@ -175,10 +179,10 @@ def test_generic_scada_mainloop(generic_scada, magic_mock_scada_network, magic_m
     assert generic_scada.saved_values == [['iteration', 'timestamp', 'T0', 'P_RAW1', 'T2', 'V_ER2i'],
                                           [2, generic_scada.saved_values[1][1], '0.420420', '1', '0.420420', '1']]
     # Assert proper function calls
-    expected_network_calls = [call.get_sync(),
-                              call.receive_multiple([('T0', 1), ('P_RAW1', 1)], '192.168.1.1'),
-                              call.receive_multiple([('T2', 1), ('V_ER2i', 1)], '192.168.1.2'),
-                              call.set_sync(1)]
+    expected_network_calls = sorted([call.get_sync(),
+                                     call.receive_multiple([('T0', 1), ('P_RAW1', 1)], '192.168.1.1'),
+                                     call.receive_multiple([('T2', 1), ('V_ER2i', 1)], '192.168.1.2'),
+                                     call.set_sync(1)])
     expected_clock_calls = [call.get_master_clock()]
-    assert magic_mock_scada_network.mock_calls == expected_network_calls
+    assert sorted(magic_mock_scada_network.mock_calls) == expected_network_calls
     assert magic_mock_scada_clock.mock_calls == expected_clock_calls
