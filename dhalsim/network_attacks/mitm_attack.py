@@ -77,7 +77,8 @@ class MitmAttack(SyncedAttack):
         launch_arp_poison(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
         if self.intermediate_yaml['network_topology_type'] == "simple":
             for plc in self.intermediate_yaml['plcs']:
-                launch_arp_poison(self.target_plc_ip, plc['local_ip'])
+                if plc['name'] != self.intermediate_plc['name']:
+                    launch_arp_poison(self.target_plc_ip, plc['local_ip'])
 
         self.logger.debug(f"MITM Attack ARP Poison between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
@@ -186,7 +187,8 @@ class MitmAttack(SyncedAttack):
         restore_arp(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
         if self.intermediate_yaml['network_topology_type'] == "simple":
             for plc in self.intermediate_yaml['plcs']:
-                restore_arp(self.target_plc_ip, plc['local_ip'])
+                if plc['name'] != self.intermediate_plc['name']:
+                    restore_arp(self.target_plc_ip, plc['local_ip'])
 
         self.logger.debug(f"MITM Attack ARP Restore between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
