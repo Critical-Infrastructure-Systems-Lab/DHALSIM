@@ -16,15 +16,15 @@ test=false
 while getopts ":dt" opt; do
   case $opt in
     d)
-      printf "Installing with documentation dependencies."
+      printf "Installing with documentation dependencies.\n"
       doc=true
       ;;
     t)
-      printf "Installing with testing dependencies."
+      printf "Installing with testing dependencies.\n"
       test=true
       ;;
     \?)
-      printf "Unkown option. Proceeding without installing documentation and testing dependencies."
+      printf "Unknown option. Proceeding without installing documentation and testing dependencies.\n"
       ;;
   esac
 done
@@ -71,7 +71,7 @@ then
 fi
 
 # Install DHALSIM
-cd "${cwd}" || { printf "Failure: Could not find DHALSIM directory"; exit 1; }
+cd "${cwd}" || { printf "Failure: Could not find DHALSIM directory\n"; exit 1; }
 
 # Install without doc and test
 if [ "$test" = false ] && [ "$doc" = false ]
@@ -101,7 +101,7 @@ then
 fi
 
 # Install test and doc
-sudo python3 -m pip install -e .[test][doc]
+sudo python3 -m pip install -e .[test,doc]
 
 printf "\nInstallation finished. You can now run DHALSIM by using \n\t<sudo dhalsim your_config.yaml>.\n"
 exit 0;
