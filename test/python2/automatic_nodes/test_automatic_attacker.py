@@ -58,7 +58,8 @@ def test_terminate(patched_auto_attack, offline_after_three_process, offline_aft
 
     auto_attack.terminate()
 
-    assert logger_mock.debug.call_count == 2
+    logger_mock.debug.assert_called()
+
     offline_after_three_process.send_signal.assert_called_once_with(signal.SIGINT)
     assert offline_after_three_process.wait.call_count == 1
     assert offline_after_three_process.poll.call_count == 2

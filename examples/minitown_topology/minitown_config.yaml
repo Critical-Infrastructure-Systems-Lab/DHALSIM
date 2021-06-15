@@ -1,6 +1,7 @@
 inp_file: minitown_map.inp
 output_path: output
-iterations: 500
+iterations: 10
 plcs: !include minitown_plcs.yaml
-batch_simulations: 7
-initial_tank_data: initial_tank.csv
+log_level: debug
+#batch_simulations: 7
+#initial_tank_data: initial_tank.csv
