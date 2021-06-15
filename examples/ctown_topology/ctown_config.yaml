@@ -5,7 +5,7 @@ plcs: !include ctown_plcs.yaml
 
 attacks:
   network_attacks:
-    - name: attack3
+    - name: plc9_attack
       offset: 1.0
       target: PLC9
       trigger:
