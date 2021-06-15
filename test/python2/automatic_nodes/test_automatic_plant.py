@@ -73,6 +73,7 @@ def test_terminate(patched_auto_plant, offline_after_three_process):
     assert offline_after_three_process.kill.call_count == 1
 
 
+@pytest.mark.timeout(1)
 def test_main(mocker, patched_auto_plant, offline_after_three_process, subprocess_mock):
     auto_plant, logger_mock = patched_auto_plant
     mocker.patch.object(PlantControl, "terminate", return_value=None)

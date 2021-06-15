@@ -91,6 +91,7 @@ def test_terminate(patched_auto_scada, offline_after_three_process, offline_afte
     assert offline_after_one_process.kill.call_count == 0
 
 
+@pytest.mark.timeout(1)
 def test_main(mocker, patched_auto_scada, offline_after_three_process, offline_after_one_process):
     auto_scada, logger_mock = patched_auto_scada
     mocker.patch.object(ScadaControl, "start_tcpdump_capture", return_value=offline_after_one_process)
