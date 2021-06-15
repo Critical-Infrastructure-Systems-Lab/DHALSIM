@@ -5,11 +5,11 @@ plcs: !include ctown_plcs.yaml
 
 attacks:
   network_attacks:
-  - name: attack3
-    offset: 1.0
-    target: PLC9
-    trigger:
-      sensor: T7
-      type: below
-      value: 2.6
-    type: naive_mitm
+    - name: attack3
+      offset: 1.0
+      target: PLC9
+      trigger:
+        sensor: T7
+        type: below
+        value: 2.6
+      type: naive_mitm
