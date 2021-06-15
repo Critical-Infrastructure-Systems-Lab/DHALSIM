@@ -5,7 +5,10 @@ import signal
 import sqlite3
 import sys
 import time
+from collections import OrderedDict
 from datetime import datetime
+from decimal import Decimal
+
 from pathlib import Path
 
 import yaml
@@ -84,6 +87,10 @@ class GenericScada(SCADAServer):
                 PLC['actuators'] = list()
             self.saved_values[0].extend(PLC['sensors'])
             self.saved_values[0].extend(PLC['actuators'])
+
+        self.cache = {}
+        for ip in self.plc_data:
+            self.cache[ip] = [0] * len(self.plc_data[ip])
 
         self.do_super_construction(scada_protocol, state)
 
@@ -240,7 +247,7 @@ class GenericScada(SCADAServer):
         Generates a list of tuples, the first part being the ip of a PLC,
         and the second  being a list of tags attached to that PLC.
         """
-        plcs = []
+        plcs = OrderedDict()
 
         for PLC in self.intermediate_yaml['plcs']:
             if 'sensors' not in PLC:
@@ -254,7 +261,7 @@ class GenericScada(SCADAServer):
             tags.extend(self.generate_tags(PLC['sensors']))
             tags.extend(self.generate_tags(PLC['actuators']))
 
-            plcs.append((PLC['public_ip'], tags))
+            plcs[PLC['public_ip']] = tags
 
         return plcs
 
@@ -273,6 +280,21 @@ class GenericScada(SCADAServer):
         master_time = self.cur.fetchone()[0]
         return master_time
 
+    def update_cache(self):
+        """
+        Update the cache of the scada by receiving all the required tags.
+        When something cannot be received, the previous values are used.
+        """
+        for plc_ip in self.cache:
+            try:
+                values = self.receive_multiple(self.plc_data[plc_ip], plc_ip)
+                self.cache[plc_ip] = values
+            except Exception as e:
+                self.logger.debug(
+                    "PLC receive_multiple with tags {tags} from {ip} failed with exception '{e}'".format(
+                        tags=self.plc_data[plc_ip],
+                        ip=plc_ip, e=str(e)))
+
     def main_loop(self, sleep=0.5, test_break=False):
         """
         The main loop of a PLC. In here all the controls will be applied.
@@ -287,23 +309,21 @@ class GenericScada(SCADAServer):
 
             master_time = self.get_master_clock()
 
-            try:
-                results = [master_time, datetime.now()]
-                for plc_datum in self.plc_data:
-                    plc_value = self.receive_multiple(plc_datum[1], plc_datum[0])
-                    self.logger.debug("PLC value received by SCADA from IP: " + str(plc_datum[0])
-                                      + " is " + str(plc_value) + ".")
-                    results.extend(plc_value)
-                self.saved_values.append(results)
+            self.update_cache()
 
-                # Save scada_values.csv when needed
-                if 'saving_interval' in self.intermediate_yaml:
-                    if master_time != 0 and \
-                            master_time % self.intermediate_yaml['saving_interval'] == 0:
-                        self.write_output()
-            except Exception as msg:
-                self.logger.error(msg)
-                continue
+            results = [master_time, datetime.now()]
+            for plc_ip in self.plc_data:
+                plc_value = self.cache[plc_ip]
+                self.logger.debug("PLC values received by SCADA from IP: " + str(plc_ip)
+                                  + " is " + str(plc_value) + ".")
+                results.extend(plc_value)
+            self.saved_values.append(results)
+
+            # Save scada_values.csv when needed
+            if 'saving_interval' in self.intermediate_yaml:
+                if master_time != 0 and \
+                        master_time % self.intermediate_yaml['saving_interval'] == 0:
+                    self.write_output()
 
             self.set_sync(1)
 
