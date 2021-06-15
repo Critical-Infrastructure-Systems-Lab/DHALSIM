@@ -40,6 +40,17 @@ def patched_auto_plant(mocker, subprocess_mock):
     return auto_plant, logger_mock
 
 
+@pytest.fixture
+def network_attack_yaml():
+    return Path("test/auxilary_testing_files/intermediate.yaml")
+
+
+def test_init(network_attack_yaml):
+    attacker = PlantControl(network_attack_yaml)
+    assert attacker.simulation_process is None
+    assert attacker.logger is not None
+
+
 def test_terminate(patched_auto_plant, offline_after_three_process):
     auto_plant, logger_mock = patched_auto_plant
     auto_plant.simulation_process = offline_after_three_process
