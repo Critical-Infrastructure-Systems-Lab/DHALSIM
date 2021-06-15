@@ -2,6 +2,7 @@ import signal
 import subprocess
 
 import pytest
+import yaml
 from mock import call, ANY
 from pathlib import Path
 
@@ -57,6 +58,7 @@ def plc_yaml():
 
 def test_init(plc_yaml):
     plc = PlcControl(plc_yaml, 0)
+    assert plc.intermediate_yaml == plc_yaml
     assert plc.plc_index == 0
     assert plc.output_path == Path("temp/test/path")
     assert plc.process_tcp_dump is None
@@ -106,6 +108,11 @@ def test_init(plc_yaml):
                                                'value': 0}],
                                  'name': 'PLC1',
                                  'sensors': ['T0']}
+
+    with plc_yaml.open(mode='r') as file:
+        expected = yaml.safe_load(file)
+
+    assert plc.data == expected
 
 
 def test_terminate(patched_auto_plc, offline_after_three_process, offline_after_one_process):

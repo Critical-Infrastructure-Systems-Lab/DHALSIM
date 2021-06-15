@@ -2,6 +2,7 @@ import signal
 import subprocess
 
 import pytest
+import yaml
 from mock import call, ANY
 from pathlib import Path
 
@@ -49,6 +50,24 @@ def patched_auto_scada(mocker, subprocess_mock):
 
     return auto_scada, logger_mock
 
+
+@pytest.fixture
+def scada_yaml():
+    return Path("test/auxilary_testing_files/intermediate.yaml")
+
+
+def test_init(scada_yaml):
+    scada = ScadaControl(scada_yaml)
+    assert scada.intermediate_yaml == scada_yaml
+    assert scada.output_path == Path("temp/test/path")
+    assert scada.process_tcp_dump is None
+    assert scada.scada_process is None
+    assert scada.logger is not None
+
+    with scada_yaml.open(mode='r') as file:
+        expected = yaml.safe_load(file)
+
+    assert scada.data == expected
 
 def test_terminate(patched_auto_scada, offline_after_three_process, offline_after_one_process):
     auto_scada, logger_mock = patched_auto_scada
@@ -107,7 +126,6 @@ def test_start_tcpdump_capture(patched_auto_scada, subprocess_mock):
 def test_start_scada(patched_auto_scada, subprocess_mock):
     auto_scada, logger_mock = patched_auto_scada
     auto_scada.intermediate_yaml = "testYaml"
-    auto_scada.plc_index = 1
     auto_scada.data = {"log_level": "info"}
 
     assert auto_scada.start_scada() == 42

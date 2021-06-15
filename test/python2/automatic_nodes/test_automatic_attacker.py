@@ -3,6 +3,7 @@ import subprocess
 import sys
 
 import pytest
+import yaml
 from mock import call, ANY
 from pathlib import Path
 
@@ -58,12 +59,18 @@ def network_attack_yaml():
 
 def test_init(network_attack_yaml):
     attacker = AttackerControl(network_attack_yaml, 1)
+    assert attacker.intermediate_yaml == network_attack_yaml
     assert attacker.attacker_index == 1
     assert attacker.output_path == Path("fakeOutputPath")
     assert attacker.this_attacker_data == "fakeData2"
     assert attacker.tcp_dump_process is None
     assert attacker.attacker_process is None
     assert attacker.logger is not None
+
+    with network_attack_yaml.open(mode='r') as file:
+        expected = yaml.safe_load(file)
+
+    assert attacker.data == expected
 
 
 def test_terminate(patched_auto_attack, offline_after_three_process, offline_after_one_process):

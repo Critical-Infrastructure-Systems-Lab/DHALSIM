@@ -2,6 +2,7 @@ import signal
 import subprocess
 
 import pytest
+import yaml
 from mock import call, ANY
 from pathlib import Path
 
@@ -47,8 +48,14 @@ def plant_yaml():
 
 def test_init(plant_yaml):
     plant = PlantControl(plant_yaml)
+    assert plant.intermediate_yaml == plant_yaml
     assert plant.simulation_process is None
     assert plant.logger is not None
+
+    with plant_yaml.open(mode='r') as file:
+        expected = yaml.safe_load(file)
+
+    assert plant.data == expected
 
 
 def test_terminate(patched_auto_plant, offline_after_three_process):
