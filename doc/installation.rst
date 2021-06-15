@@ -4,7 +4,7 @@ In this guide we will describe how DHALSIM can be installed on an Ubuntu machine
 
 Ubuntu version
 ~~~~~~~~~~~~~~~~~~~~~~~~
-DHALSIM has been developed and tested on Ubuntu 20.04. We recommend installing and running DHALSIM on Ubuntu 20.04, however other versions may also work but are not tested. It is possible the automatic installation script will not work for other versions. In this case we recommend a manual installation.
+DHALSIM has been developed and tested on Ubuntu 20.04 LTS. We recommend installing and running DHALSIM on Ubuntu 20.04, as the installation script has not been tested on other versions. If you want to use another version, we recommend a manual installation.
 
 Automatic installation
 ----------------------
@@ -32,7 +32,7 @@ Mininet and MiniCPS installation
 The installation instructions for MiniCPS and Mininet can be found `here
 <https://github.com/scy-phy/minicps/blob/master/docs/userguide.rst>`_.
 
-Please note that the cpppo installation should be replaced by ``cpppo==4.0.4``.
+Please note that the cpppo installation should be replaced by ``cpppo==4.0.*``.
 
 Other dependencies
 ~~~~~~~~~~~~~~~~~~~~~~

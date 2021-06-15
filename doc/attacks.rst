@@ -219,6 +219,13 @@ Naive Man-in-the-middle (MITM) attacks are attacks where the attacker will sit i
 connected switch. The attacker will then route all TCP packets that are destined for the PLC through itself
 and can for example modify the responses to the other PLCs.
 
+.. figure:: static/simple_topo_attack.svg
+    :align: center
+    :alt: A simple topology with an attacker
+    :figclass: align-center
+
+    A simple topology with an attacker
+
 .. figure:: static/complex_topo_attack.svg
     :align: center
     :alt: A complex topology with an attacker

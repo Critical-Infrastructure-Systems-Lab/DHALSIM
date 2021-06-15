@@ -46,6 +46,8 @@ class PlantControl(NodeControl):
         while self.simulation_process.poll() is None:
             pass
 
+        self.terminate()
+
 
 def is_valid_file(parser_instance, arg):
     """
