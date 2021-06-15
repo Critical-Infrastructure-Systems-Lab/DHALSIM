@@ -1,0 +1,5 @@
+network_attacks:
+  - fakeData1
+  - fakeData2
+output_path: fakeOutputPath
+log_level: info

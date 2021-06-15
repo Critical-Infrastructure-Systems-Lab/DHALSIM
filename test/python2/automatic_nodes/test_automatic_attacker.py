@@ -51,6 +51,21 @@ def patched_auto_attack(mocker, subprocess_mock):
     return auto_attack, logger_mock
 
 
+@pytest.fixture
+def network_attack_yaml():
+    return Path("test/auxilary_testing_files/automatic_attacker_files.yaml")
+
+
+def test_init(network_attack_yaml):
+    attacker = AttackerControl(network_attack_yaml, 1)
+    assert attacker.attacker_index == 1
+    assert attacker.output_path == Path("fakeOutputPath")
+    assert attacker.this_attacker_data == "fakeData2"
+    assert attacker.tcp_dump_process is None
+    assert attacker.attacker_process is None
+    assert attacker.logger is not None
+
+
 def test_terminate(patched_auto_attack, offline_after_three_process, offline_after_one_process):
     auto_attack, logger_mock = patched_auto_attack
     auto_attack.tcp_dump_process = offline_after_three_process
