@@ -1,5 +1,7 @@
 import argparse
 import os
+import time
+import traceback
 from pathlib import Path
 import threading
 
@@ -104,6 +106,9 @@ class PacketAttack(SyncedAttack):
 
             except fnfqueue.BufferOverflowException:
                 print("Buffer Overflow in a MITM attack!")
+            except Exception as exc:
+                print("Exception in a MITM attack!:", exc)
+                print(traceback.format_exc())
 
     def interrupt(self):
         """
@@ -132,6 +137,7 @@ class PacketAttack(SyncedAttack):
 
         self.run_thread = False
         self.q.unbind()
+        time.sleep(0.5)
         self.queue.close()
         self.thread.join()
 
