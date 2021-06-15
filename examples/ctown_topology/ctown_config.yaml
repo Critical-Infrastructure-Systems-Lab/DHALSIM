@@ -1,19 +1,15 @@
 inp_file: ctown_map.inp
-output_path: /home/robert/ctown_attack1
 iterations: 672
 network_topology_type: complex
 plcs: !include ctown_plcs.yaml
-log_level: debug
 
 attacks:
   network_attacks:
-  - name: attack1
-    type: mitm
+  - name: attack3
+    offset: 1.0
+    target: PLC9
     trigger:
+      sensor: T7
       type: below
-      sensor: T1
-      value: 1.1
-    tags:
-      - tag: T1
-        value: 1.1
-    target: PLC2
+      value: 2.6
+    type: naive_mitm
