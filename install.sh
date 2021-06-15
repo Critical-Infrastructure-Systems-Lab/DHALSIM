@@ -69,6 +69,7 @@ then
   sudo pip2 install pytest==4.6.*
   sudo pip2 install pytest-timeout==1.4.*
   sudo pip2 install pytest-cov==2.12.*
+  sudo pip2 install pytest-mock==3.6.*
 fi
 
 # Install DHALSIM
