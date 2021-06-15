@@ -50,6 +50,64 @@ def patched_auto_plc(mocker, subprocess_mock):
     return auto_plc, logger_mock
 
 
+@pytest.fixture
+def plc_yaml():
+    return Path("test/auxilary_testing_files/intermediate.yaml")
+
+
+def test_init(plc_yaml):
+    plc = PlcControl(plc_yaml, 0)
+    assert plc.plc_index == 0
+    assert plc.output_path == Path("temp/test/path")
+    assert plc.process_tcp_dump is None
+    assert plc.plc_process is None
+    assert plc.logger is not None
+    assert plc.this_plc_data == {'actuators': ['P_RAW1', 'V_PUB'],
+                                 'attacks': [{'actuator': 'P_RAW1',
+                                              'command': 'closed',
+                                              'name': 'Close_PRAW1_from_iteration_5_to_10',
+                                              'trigger': {'end': 10, 'start': 5, 'type': 'time'}},
+                                             {'actuator': 'P_RAW1',
+                                              'command': 'closed',
+                                              'name': 'Close_PRAW1_when_T2_<_0.16',
+                                              'trigger': {'sensor': 'T2', 'type': 'below', 'value': 0.16}}],
+                                 'controls': [{'action': 'open',
+                                               'actuator': 'V_PUB',
+                                               'dependant': 'T0',
+                                               'type': 'below',
+                                               'value': 0.256},
+                                              {'action': 'closed',
+                                               'actuator': 'V_PUB',
+                                               'dependant': 'T0',
+                                               'type': 'above',
+                                               'value': 0.448},
+                                              {'action': 'closed',
+                                               'actuator': 'P_RAW1',
+                                               'dependant': 'T0',
+                                               'type': 'below',
+                                               'value': 0.256},
+                                              {'action': 'open',
+                                               'actuator': 'P_RAW1',
+                                               'dependant': 'T2',
+                                               'type': 'below',
+                                               'value': 0.16},
+                                              {'action': 'closed',
+                                               'actuator': 'P_RAW1',
+                                               'dependant': 'T2',
+                                               'type': 'above',
+                                               'value': 0.32},
+                                              {'action': 'open',
+                                               'actuator': 'V_PUB',
+                                               'type': 'time',
+                                               'value': 0},
+                                              {'action': 'closed',
+                                               'actuator': 'P_RAW1',
+                                               'type': 'time',
+                                               'value': 0}],
+                                 'name': 'PLC1',
+                                 'sensors': ['T0']}
+
+
 def test_terminate(patched_auto_plc, offline_after_three_process, offline_after_one_process):
     auto_plc, logger_mock = patched_auto_plc
     auto_plc.process_tcp_dump = offline_after_three_process
