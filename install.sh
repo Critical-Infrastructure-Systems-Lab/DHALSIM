@@ -68,6 +68,7 @@ then
   sudo pip2 install flaky==3.7.*
   sudo pip2 install pytest==4.6.*
   sudo pip2 install pytest-timeout==1.4.*
+  sudo pip2 install pytest-cov==2.12.*
 fi
 
 # Install DHALSIM
