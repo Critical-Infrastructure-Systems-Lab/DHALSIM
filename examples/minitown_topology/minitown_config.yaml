@@ -1,6 +1,8 @@
 inp_file: minitown_map.inp
 output_path: output
-iterations: 500
+iterations: 1000
+
 plcs: !include minitown_plcs.yaml
-batch_simulations: 7
+attacks: !include minitown_attacks.yaml
+
 initial_tank_data: initial_tank.csv
