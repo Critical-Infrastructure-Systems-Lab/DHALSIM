@@ -75,7 +75,7 @@ def test_get_input_files_w_batch(rm_gen):
 def test_get_input_files_wo_batch(rm_gen):
     rm_gen.intermediate_yaml = {'output_path': Path('tmp/readme')}
     assert rm_gen.get_input_files() == "\n\n## Input files\n\nInput files have been copied to" \
-                                       " ```tmp/readmejjj```. In case any extra files were used," \
+                                       " ```tmp/readme```. In case any extra files were used," \
                                        " these files will be copied to the /output/configuration" \
                                        " folder as well."
 
