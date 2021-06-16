@@ -8,7 +8,7 @@ from wntr.network import WaterNetworkModel
 import yaml
 
 
-class BatchReadMeGenerator:
+class BatchReadmeGenerator:
     """
     Class which deals with generating a readme for each batch.
     :param intermediate_yaml_path: contains the path to intermediate yaml
@@ -145,7 +145,7 @@ class InputFilesCopier:
                      self.configuration_folder / 'demand_patterns.csv')
 
 
-class ReadMeGenerator:
+class GeneralReadmeGenerator:
     """
     Class which deals with generating a readme.
     :param intermediate_yaml_path: contains the path to intermediate yaml

@@ -5,14 +5,14 @@ import pytest
 from mock import patch
 from wntr.network import WaterNetworkModel, Options
 
-from dhalsim.parser.file_generator import BatchReadMeGenerator
+from dhalsim.parser.file_generator import BatchReadmeGenerator
 
 
 @pytest.fixture
 def batch_gen(mocker):
-    mocker.patch.object(BatchReadMeGenerator, "__init__", return_value=None)
+    mocker.patch.object(BatchReadmeGenerator, "__init__", return_value=None)
 
-    return BatchReadMeGenerator(None)
+    return BatchReadmeGenerator(None)
 
 
 @pytest.fixture
@@ -30,7 +30,7 @@ def tmp_path(tmpdir_factory):
 
 
 def test_init(water_network_model):
-    batch_rm_gen = BatchReadMeGenerator(Path(__file__).parent.parent / 'auxilary_testing_files'
+    batch_rm_gen = BatchReadmeGenerator(Path(__file__).parent.parent / 'auxilary_testing_files'
                                         / 'intermediate.yaml', Path('../readme.md'),
                                         datetime(year=2021, month=6, day=1, second=1),
                                         datetime(year=2021, month=6, day=1, second=2),
@@ -100,6 +100,4 @@ def test_verify_written(batch_gen, tmp_path, water_network_model):
     batch_gen.write_batch()
 
     open(tmp_path, 'r')
-
-
 

@@ -13,7 +13,7 @@ import sys
 import time
 from pathlib import Path
 
-from dhalsim.parser.file_generator import BatchReadMeGenerator, ReadMeGenerator
+from dhalsim.parser.file_generator import BatchReadmeGenerator, GeneralReadmeGenerator
 from dhalsim.py3_logger import get_logger
 import wntr
 import wntr.network.controls as controls
@@ -366,14 +366,14 @@ class PhysicalPlant:
         end_time = datetime.now()
 
         if 'batch_simulations' in self.data:
-            BatchReadMeGenerator(self.intermediate_yaml).write_batch(self.start_time, end_time, self.wn,
+            BatchReadmeGenerator(self.intermediate_yaml).write_batch(self.start_time, end_time, self.wn,
                                                                      self.master_time)
             if self.data['batch_index'] == self.data['batch_simulations'] - 1:
-                ReadMeGenerator(self.intermediate_yaml).write_readme(self.data['start_time'],
+                GeneralReadmeGenerator(self.intermediate_yaml).write_readme(self.data['start_time'],
                                                                      datetime.now(), True,
                                                                      self.master_time, self.wn)
         else:
-            ReadMeGenerator(self.intermediate_yaml).write_readme(self.data['start_time'],
+            GeneralReadmeGenerator(self.intermediate_yaml).write_readme(self.data['start_time'],
                                                                  datetime.now(), False,
                                                                  self.master_time, self.wn)
         sys.exit(0)
