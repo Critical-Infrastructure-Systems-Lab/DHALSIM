@@ -2,7 +2,6 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
-from mock import patch
 from wntr.network import WaterNetworkModel, Options
 
 from dhalsim.parser.file_generator import BatchReadmeGenerator
