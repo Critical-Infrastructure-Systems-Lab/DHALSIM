@@ -140,7 +140,7 @@ class SchemaParser:
                     str,
                     string_pattern,
                     Schema(lambda name: 1 <= len(name) <= 10,
-                           error="Length of name must be between 1 and 10, {} has invalid length")
+                           error="Length of name must be between 1 and 10, '{}' has invalid length")
                 ),
                 'trigger': trigger,
                 Or('value', 'offset', only_one=True,
@@ -160,7 +160,7 @@ class SchemaParser:
                     str,
                     string_pattern,
                     Schema(lambda name: 1 <= len(name) <= 10,
-                           error="Length of name must be between 1 and 10, {} has invalid length")
+                           error="Length of name must be between 1 and 10, '{}' has invalid length")
                 ),
                 'trigger': trigger,
                 'target': And(
@@ -257,7 +257,7 @@ class SchemaParser:
                 str,
                 SchemaParser.string_pattern,
                 Schema(lambda name: 1 <= len(name) <= 10,
-                       error="Length of name must be between 1 and 10, {} has invalid length")
+                       error="Length of name must be between 1 and 10, '{}' has invalid length")
             ),
             Optional('sensors'): [And(
                 str,
