@@ -99,13 +99,15 @@ class InputFilesCopier:
     :param config_file: contains the location of the config file
     """
 
-    def __init__(self, config_file: str):
-        self.config_file = config_file
+    def __init__(self, config_file: Path):
 
-        with self.config_file.open(mode='r') as conf:
+        with config_file.open(mode='r') as conf:
             self.config = yaml.load(conf, Loader=yaml.FullLoader)
 
-        self.configuration_folder = self.config_file.parent / self.config['output_path'] / 'configuration'
+        if 'output_path' in self.config:
+            self.configuration_folder = config_file.parent / self.config['output_path'] / 'configuration'
+        else:
+            self.configuration_folder = config_file.absolute().parent / 'configuration'
 
     def copy_input_files(self):
         """Copies all input files, mandatory and optional ones included."""
