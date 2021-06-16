@@ -61,7 +61,7 @@ actuator
 ~~~~~~~~~
 *This option is required*
 
-This parameters defines the actuator on which the :code:`command` should be executed.
+This parameter defines the actuator on which the :code:`command` should be executed.
 
 command
 ~~~~~~~
@@ -108,7 +108,7 @@ network attacks
 ---------------
 
 Network attacks are attacks where a new node is added to the mininet network topology. This node is an
-"attacker" and it can perform various attacks on the network. There are different types of attacks possible.
+"attacker" and can perform various attacks on the network. There are different types of attacks possible.
 These are explained in the following sections.
 
 Man-in-the-middle Attack
@@ -158,7 +158,7 @@ type
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 *This option is required*
 
-This defines the type of network attack. For a MITM attack this should be :code:`mitm`.
+This defines the type of network attack. For a MITM attack, this should be :code:`mitm`.
 
 trigger
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -264,7 +264,7 @@ type
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 *This option is required*
 
-This defines the type of network attack. For a Naive MITM attack this should be :code:`naive_mitm`.
+This defines the type of network attack. For a Naive MITM attack, this should be :code:`naive_mitm`.
 
 trigger
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -296,7 +296,7 @@ value/offset
 ^^^^^^^^^^^^^^^^
 *One of these options is required*
 
-If you want to overwrite everything with a absolute value, use the :code:`value` option, and set it to the desired value.
+If you want to overwrite everything with an absolute value, use the :code:`value` option, and set it to the desired value.
 If you want to overwrite everything with a relative value, use the :code:`offset` option, and set it to the desired offset.
 
 target

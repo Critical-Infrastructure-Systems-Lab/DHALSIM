@@ -1,7 +1,7 @@
 Configuration
 =======================
 
-To run DHALSIM, you will need a configuration yaml file. In this chapter every parameter is explained.
+To run DHALSIM, you will need a configuration YAML file. On this page, every parameter is explained.
 
 Example with all options:
 
@@ -79,7 +79,7 @@ The inp file is the file used primarily in the EPANET water simulation, it store
 along with simulation values such as duration; and control rules for valves, pumps, etc.
 
 The :code:`inp_file` option should be the path to the inp file to use in the experiment.
-This can be either a absolute path, or relative to the configuration file.
+This can be either an absolute path or relative to the configuration file.
 
 plcs
 ------------------------
@@ -143,7 +143,7 @@ local network. The PLCs connect to one switch and the SCADA to another, and thos
     Diagram of simple topology
 
 If you use the :code:`complex` option then a network topology will be generated that has all of the PLCs and the SCADA in their
-own independent network. They will all have a switch and a router, these then connect to a central router through their public ip
+own independent network. They will all have a switch and a router, these then connect to a central router through their public IP
 addresses. This makes testing of attacks such as man in the middle more realistic.
 
 .. figure:: static/complex_topo.svg
@@ -166,14 +166,14 @@ iterations
 ------------------------
 *This is an optional value with default*: duration / hydraulic time-step
 
-The iterations value represents for how many iterations you would like the water simulation to run.
+The iterations value represents how many iterations you would like the water simulation to run.
 One iteration represents one hydraulic time-step.
 
 mininet_cli
 ------------------------
 *This is an optional value with default*: :code:`False`
 
-If the :code:`mininet_cli` option is :code:`True`, then after the network is setup, the mininet CLI interface will start.
+If the :code:`mininet_cli` option is :code:`True`, then after the network is set up, the mininet CLI interface will start.
 See the `mininet tutorial on the CLI <http://mininet.org/walkthrough/#part-3-mininet-command-line-interface-cli-commands>`_ for more information
 
 :code:`mininet_cli` should be a boolean.
@@ -182,7 +182,7 @@ log_level
 ------------------------
 *This is an optional value with default*: :code:`info`
 
-DHALSIM uses Python's built-in :code:`logging` module to log events. Using the `log_level` attribute in the configuration file, one can change the severity level of events that should be reported by DHALSIM. There are five different logging levels that are accepted, with each logging level also printing the logs of a higher priority. For example, setting `log_level` to `warning`, will log all `warning`, `error`, and `critical` statements to the console.
+DHALSIM uses Python's built-in :code:`logging` module to log events. Using the `log_level` attribute in the configuration file, one can change the severity level of events that should be reported by DHALSIM. Five different logging levels are accepted, with each logging level also printing the logs of a higher priority. For example, setting `log_level` to `warning`, will log all `warning`, `error`, and `critical` statements to the console.
 
 * :code:`debug`
     * Debug is a special kind of logging level: this will print all debug statements of DHALSIM, as well as all logs printed by MiniCPS and mininet. Since MiniCPS uses print statements as their logging system, MiniCPS will not be able to make use of our logging system.
@@ -217,7 +217,7 @@ saving_interval
 ------------------------
 *This is an optional value*
 
-When this option is set with value, the simulation will save the :code:`ground_truth.csv` and :code:`scada_values.csv` files
+When this option is set with a value, the simulation will save the :code:`ground_truth.csv` and :code:`scada_values.csv` files
 every x iterations, where x is the value set.
 
 :code:`saving_interval` should be an integer greater than 0.
@@ -228,7 +228,7 @@ initial_tank_data
 
 The :code:`initial_tank_data` field provides the name of the :code:`.csv` files with initial tank values for a simulation. Each column should be a tank
 with rows being initial values. If you run in batch mode, then it will use the row corresponding to the number of the simulation (e.g. for simulation 3 it will
-use the column with index 3); if you do not run in batch mode then it will use the first row (row 0).If you want to only provide initial values for some tanks,
+use the column with index 3); if you do not run in batch mode then it will use the first row (row 0). If you want to only provide initial values for some tanks,
 then you can do so and the remaining tanks will use the default initial value from the :code:`.inp` file.
 
 An example would look like this :
@@ -274,9 +274,9 @@ batch, so for batch 5 it will use the 5th data row).
 
 If the :code:`network_loss_data` field is not provided, then the simulation will run without network losses (0% packet loss).
 
-Each column of the :code:`.csv` file should be a plc/scada with rows being the loss values (where each value is a percentage from 0-100).
+Each column of the :code:`.csv` file should be a PLC/SCADA with rows being the loss values (where each value is a percentage from 0-100).
 If you want to only provide losses for some nodes, then you can do that and the remaining nodes will use the default value (none). Note
-that the plc name must be the same as in the :code:`plcs` section, and the scada name must be 'scada'.
+that the plc name must be the same as in the :code:`plcs` section, and the SCADA name must be 'scada'.
 
 An example would look like this :
 
@@ -300,11 +300,11 @@ batch, so for batch 5 it will use the 5th data row).
 
 If the :code:`network_delay_data` field is not provided, then the simulation will run without network delays (0ms delay).
 
-Each column should be a plc/scada with rows being the delay values (where each value is the delay in milliseconds).
+Each column should be a PLC/SCADA with rows being the delay values (where each value is the delay in milliseconds).
 If you want to only provide delays for some nodes, then you can do that and the remaining
 nodes will use the default value (none).
 
-Note that the plc name must be the same as in the :code:`plcs` section, and the scada name must be 'scada'.
+Note that the plc name must be the same as in the :code:`plcs` section, and the SCADA name must be 'scada'.
 
 An example would look like this :
 
@@ -320,8 +320,8 @@ attacks
 ------------------------
 *This is an optional value*
 
-There are multiple types of attack available. They are described in the :ref:`Attacks` section.
-If this option is left out, or commented out, the simulation will run without attacks.
+There are multiple types of attacks available. They are described in the :ref:`Attacks` section.
+If this option is left out or commented out, the simulation will run without attacks.
 
 If you want to put the attacks in a separate file, see the section :ref:`Attacks in a separate file`.
 
