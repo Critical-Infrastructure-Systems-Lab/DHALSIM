@@ -88,4 +88,82 @@ def test_get_configuration_parameters(rm_gen):
                                                     "mininet_cli: False\n\nlog_level: info\n\n" \
                                                     "simulator: pdd\n\nbatch_simulations: None"
 
-# TODO
+
+def test_get_optional_data_parameters_all(rm_gen):
+    rm_gen.intermediate_yaml = {'initial_tank_data': [1], 'demand_patterns': [1],
+                                'network_loss_data': [1], 'network_delay_data': [1],
+                                'network_attacks': [1]}
+    assert rm_gen.get_optional_data_parameters() == "\n\n## Extra parameters\n\n- [x] initial_" \
+                                                    "tank_data\n\n- [x] demand_patterns\n\n- [x]" \
+                                                    " network_loss_data\n\n- [x] network_delay" \
+                                                    "_data\n\n- [x] network_attacks"
+
+
+def test_get_optional_data_parameters_none(rm_gen):
+    rm_gen.intermediate_yaml = {}
+    assert rm_gen.get_optional_data_parameters() == "\n\n## Extra parameters\n\n- [ ] initial_" \
+                                                    "tank_data\n\n- [ ] demand_patterns\n\n- [ ]" \
+                                                    " network_loss_data\n\n- [ ] network_delay" \
+                                                    "_data\n\n- [ ] network_attacks"
+
+
+def test_get_optional_data_parameters_some(rm_gen):
+    rm_gen.intermediate_yaml = {'initial_tank_data': [1], 'demand_patterns': [1],
+                                'network_delay_data': [], 'network_attacks': [1]}
+    assert rm_gen.get_optional_data_parameters() == "\n\n## Extra parameters\n\n- [x] initial_" \
+                                                    "tank_data\n\n- [x] demand_patterns\n\n- [ ]" \
+                                                    " network_loss_data\n\n- [ ] network_delay" \
+                                                    "_data\n\n- [x] network_attacks"
+
+
+def test_get_standalone_parameter_information_batch(rm_gen):
+    rm_gen.batch = True
+    assert rm_gen.get_standalone_parameter_information() == ""
+
+
+def test_get_standalone_parameter_information_no_batch_some(rm_gen):
+    rm_gen.batch = False
+    rm_gen.intermediate_yaml = {'network_loss_values': {'PLC1': 0.1427168730880501},
+                                'network_delay_values': {}}
+    assert rm_gen.get_standalone_parameter_information() == "\n\n## Network loss values\n\n" \
+                                                            "{'PLC1': 0.1427168730880501}"
+
+
+def test_get_standalone_parameter_information_no_batch_all(rm_gen):
+    rm_gen.batch = False
+    rm_gen.intermediate_yaml = {'network_loss_values': {'PLC1': 0.1427168730880501},
+                                'network_delay_values': {'PLC1': '89.55084013904876ms'},
+                                'initial_tank_values': {'T2': 2.08023668123243, 'T3': 2.34}}
+    assert rm_gen.get_standalone_parameter_information() == "\n\n## Initial tank values\n\n" \
+                                                            "{'T2': 2.08023668123243, 'T3': 2.34}" \
+                                                            "\n\n## Network loss values\n\n" \
+                                                            "{'PLC1': 0.1427168730880501}" \
+                                                            "\n\n## Network delay values\n\n" \
+                                                            "{'PLC1': '89.55084013904876ms'}"
+
+
+def test_get_versioning(rm_gen):
+    rm_gen.version = "1.0.0"
+    assert rm_gen.get_versioning() == "\n\n## About this experiment\n\nRan with DHALSIM v1.0.0."
+
+
+def test_get_standalone_iteration_information_batch(rm_gen):
+    rm_gen.batch = True
+    assert rm_gen.get_standalone_iteration_information() == ""
+
+
+def test_get_standalone_iteration_information_no_batch(rm_gen, water_network_model):
+    rm_gen.batch = False
+    rm_gen.master_time = 1
+    rm_gen.intermediate_yaml = {'iterations': 5}
+    rm_gen.wn = water_network_model
+    assert rm_gen.get_standalone_iteration_information() == "\n\nRan for 1 out of 5 iterations " \
+                                                            "with hydraulic timestep 100."
+
+
+def test_get_time_information(rm_gen):
+    rm_gen.start_time = datetime(year=2021, month=6, day=1, second=1)
+    rm_gen.end_time = datetime(year=2021, month=6, day=1, second=2)
+    assert rm_gen.get_time_information() == "\n\nStarted at 2021-06-01 00:00:01 and finished at" \
+                                            " 2021-06-01 00:00:02.\n\nThe duration of this" \
+                                            " simulation was 0:00:01."
