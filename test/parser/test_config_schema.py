@@ -319,6 +319,7 @@ def test_valid_device_attacks(key, input_value, expected, attack_dict_3, attack_
     ('trigger', 4),
     ('name', 'network attack'),
     ('name', 'network_attack_5<10'),
+    ('name', 'networkattack_5to10'),
     ('trigger', {'type': 'Time', 'start': '5', 'end': 10}),
     ('trigger', {'type': 'NoType', 'start': 5, 'end': 10}),
     ('trigger', {'type': 'NoType', 'start': 5, 'end': '10'}),
@@ -336,9 +337,10 @@ def test_invalid_network_attacks_mitm(key, input_value, attack_dict_1):
 
 @pytest.mark.parametrize("key, input_value, expected", [
     ('name', 'hello', 'hello'),
-    ('name', 'network_attack', 'network_attack'),
-    ('name', 'network_attack_5_to_10', 'network_attack_5_to_10'),
+    ('name', 'network_at', 'network_at'),
+    ('name', 'nwk_atk___', 'nwk_atk___'),
     ('name', '10', '10'),
+    ('name', 'atak', 'atak'),
     ('trigger', {'type': 'Time', 'start': 5, 'end': 10}, {'type': 'time', 'start': 5, 'end': 10}),
     ('tags', [{'tag': 'T2', 'value': 0.2}], [{'tag': 'T2', 'value': 0.2}]),
 ])
@@ -355,6 +357,7 @@ def test_valid_network_attacks_mitm(key, input_value, expected, attack_dict_1):
     ('trigger', 4),
     ('name', 'network attack'),
     ('name', 'network_attack_5<10'),
+    ('name', 'networkattack_5to10'),
     ('trigger', {'type': 'Time', 'start': '5', 'end': 10}),
     ('trigger', {'type': 'NoType', 'start': 5, 'end': 10}),
     ('trigger', {'type': 'NoType', 'start': 5, 'end': '10'}),
@@ -369,9 +372,10 @@ def test_invalid_attacks_naive(key, input_value, attack_dict_2):
 
 @pytest.mark.parametrize("key, input_value, expected", [
     ('name', 'hello', 'hello'),
-    ('name', 'network_attack', 'network_attack'),
-    ('name', 'network_attack_5_to_10', 'network_attack_5_to_10'),
+    ('name', 'network_at', 'network_at'),
+    ('name', 'nwk_atk___', 'nwk_atk___'),
     ('name', '10', '10'),
+    ('name', 'atak', 'atak'),
     ('trigger', {'type': 'Time', 'start': 5, 'end': 10}, {'type': 'time', 'start': 5, 'end': 10}),
 ])
 def test_valid_attacks_naive(key, input_value, expected, attack_dict_2):
