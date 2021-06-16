@@ -1,3 +1,4 @@
+import subprocess
 import threading
 
 import pytest
@@ -29,9 +30,9 @@ def os_mock(mocker):
 @pytest.fixture
 def subprocess_mock(mocker):
     process = mocker.Mock()
-    process.Popen.return_value = None
+    process.communicate.return_value = None
 
-    mocker.patch("subprocess.Popen", process.Popen)
+    mocker.patch("subprocess.Popen", return_value=process)
     return process
 
 
@@ -40,7 +41,7 @@ def thread_mock(mocker):
     thread = mocker.Mock()
     thread.start.return_value = None
 
-    mocker.patch("threading.Thread", return_value = thread)
+    mocker.patch("threading.Thread", return_value=thread)
     return thread
 
 
@@ -56,6 +57,7 @@ def attack(intermediate_yaml_path, yaml_index):
 
 def test_init(intermediate_yaml_path, yaml_index, os_mock):
     mitm_attack = MitmAttack(intermediate_yaml_path, yaml_index)
+
     assert mitm_attack.yaml_index == yaml_index
     assert mitm_attack.attacker_ip == "192.168.1.4"
     assert mitm_attack.target_plc_ip == "192.168.1.1"
@@ -64,13 +66,38 @@ def test_init(intermediate_yaml_path, yaml_index, os_mock):
 
 def test_setup(os_mock, subprocess_mock, attack, thread_mock, launch_arp_poison_mock, mocker):
     # Mock self.update_tags_dict()
-    mocker.patch.object(MitmAttack, "update_tags_dict", return_value = None)
+    mocker.patch.object(MitmAttack, "update_tags_dict", return_value=None)
     attack.setup()
+
     assert os_mock.system.call_count == 5
-    subprocess_mock.Popen.assert_called_with(
+    subprocess.Popen.assert_called_with(
         ['/usr/bin/python2', '-m', 'cpppo.server.enip', '--print', '--address', '192.168.1.4:44818',
          'V_ER2i:1=REAL', 'T2:1=REAL'], shell=False)
     assert attack.update_tags_dict.call_count == 1
     assert threading.Thread.call_count == 1
     assert thread_mock.start.call_count == 1
     assert launch_arp_poison_mock.call_count == 1
+
+
+def test_receive_original_tags(subprocess_mock, attack, mocker):
+    attack.receive_original_tags()
+
+    subprocess.Popen.assert_called_with(
+        ['/usr/bin/python2', '-m', 'cpppo.server.enip.client', '--print', '--address',
+         '192.168.1.1:44818', 'V_ER2i:1', 'T2:1'], shell=False, stdout=-1)
+    assert subprocess_mock.communicate.call_count == 1
+
+
+def test_update_tags_dict(mocker, attack):
+    # Mock self.receive_original_tags() as this function is already tested
+    mocker.patch.object(MitmAttack, "receive_original_tags", return_value=None)
+    attack.tags = {
+        "V_ER2i": 1,
+        "T2": 0.1
+    }
+    attack.update_tags_dict()
+
+    assert attack.tags == {
+        "V_ER2i": 1,
+        "T2": 0.2
+    }
