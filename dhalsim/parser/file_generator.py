@@ -285,13 +285,16 @@ class GeneralReadmeGenerator:
         ret_str = ""
 
         if not self.batch:
-            if 'initial_tank_values' in self.intermediate_yaml:
-                ret_str += "\n\n## Initial tank data\n\n{data}" \
+            if 'initial_tank_values' in self.intermediate_yaml\
+                    and len(self.intermediate_yaml['initial_tank_values']) > 0:
+                ret_str += "\n\n## Initial tank values\n\n{data}" \
                     .format(data=str(self.intermediate_yaml['initial_tank_values']))
-            if 'network_loss_values' in self.intermediate_yaml:
+            if 'network_loss_values' in self.intermediate_yaml\
+                    and len(self.intermediate_yaml['network_loss_values']) > 0:
                 ret_str += "\n\n## Network loss values\n\n{data}" \
                     .format(data=str(self.intermediate_yaml['network_loss_values']))
-            if 'network_delay_values' in self.intermediate_yaml:
+            if 'network_delay_values' in self.intermediate_yaml\
+                    and len(self.intermediate_yaml['network_delay_values']) > 0:
                 ret_str += "\n\n## Network delay values\n\n{data}" \
                     .format(data=str(self.intermediate_yaml['network_delay_values']))
 
