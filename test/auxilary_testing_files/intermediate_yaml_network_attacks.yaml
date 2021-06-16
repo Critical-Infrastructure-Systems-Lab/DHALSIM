@@ -19,8 +19,10 @@ network_attacks:
   public_ip: 10.0.3.1
   switch_name: s3
   tags:
+  - tag: V_ER2i
+    value: 0
   - tag: T2
-    value: 0.2
+    offset: 3
   target: PLC2
   trigger:
     end: 10
