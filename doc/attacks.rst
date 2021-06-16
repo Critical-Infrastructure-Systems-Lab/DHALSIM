@@ -118,10 +118,19 @@ Man-in-the-middle (MITM) attacks are attacks where the attacker will sit in betw
 connected switch. The attacker will then route host a CPPPO server and respond to the CIP requests
 for the PLC.
 
+.. figure:: static/simple_topo_attack.svg
+    :align: center
+    :alt: A simple topology with an attacker
+    :figclass: align-center
+    :width: 50%
+
+    A simple topology with an attacker
+
 .. figure:: static/complex_topo_attack.svg
     :align: center
     :alt: A complex topology with an attacker
     :figclass: align-center
+    :width: 50%
 
     A complex topology with an attacker
 
@@ -225,6 +234,7 @@ and can for example modify the responses to the other PLCs.
     :align: center
     :alt: A simple topology with an attacker
     :figclass: align-center
+    :width: 50%
 
     A simple topology with an attacker
 
@@ -232,6 +242,7 @@ and can for example modify the responses to the other PLCs.
     :align: center
     :alt: A complex topology with an attacker
     :figclass: align-center
+    :width: 50%
 
     A complex topology with an attacker
 

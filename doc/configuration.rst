@@ -139,6 +139,7 @@ local network. The PLCs connect to one switch and the SCADA to another, and thos
     :align: center
     :alt: Diagram of a simple topology
     :figclass: align-center
+    :width: 50%
 
     Diagram of simple topology
 
@@ -150,6 +151,7 @@ addresses. This makes testing of attacks such as man in the middle more realisti
     :align: center
     :alt: Diagram of a complex topology
     :figclass: align-center
+    :width: 50%
 
     Diagram of complex topology
 
