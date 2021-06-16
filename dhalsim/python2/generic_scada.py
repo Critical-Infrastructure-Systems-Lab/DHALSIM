@@ -289,6 +289,8 @@ class GenericScada(SCADAServer):
             try:
                 values = self.receive_multiple(self.plc_data[plc_ip], plc_ip)
                 self.cache[plc_ip] = values
+                self.logger.debug("PLC values received by SCADA from IP: " + str(plc_ip)
+                                  + " is " + str(values) + ".")
             except Exception as e:
                 self.logger.debug(
                     "PLC receive_multiple with tags {tags} from {ip} failed with exception '{e}'".format(
@@ -314,8 +316,6 @@ class GenericScada(SCADAServer):
             results = [master_time, datetime.now()]
             for plc_ip in self.plc_data:
                 plc_value = self.cache[plc_ip]
-                self.logger.debug("PLC values received by SCADA from IP: " + str(plc_ip)
-                                  + " is " + str(plc_value) + ".")
                 results.extend(plc_value)
             self.saved_values.append(results)
 
