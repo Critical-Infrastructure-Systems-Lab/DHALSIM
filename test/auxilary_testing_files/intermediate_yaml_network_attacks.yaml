@@ -1,0 +1,118 @@
+config_path: /home/maarten/dhalsim/examples/wadi_topology/wadi_config.yaml
+db_path: /tmp/dhalsim_k6kd9elm/dhalsim.sqlite
+inp_file: /home/maarten/dhalsim/examples/wadi_topology/wadi_map_newer.inp
+iterations: 15
+log_level: info
+mininet_cli: false
+network_attacks:
+- gateway_inbound_mac: AA:BB:CC:DD:03:03
+  gateway_ip: 192.168.1.254
+  gateway_name: r3
+  gateway_outbound_mac: AA:BB:CC:DD:04:03
+  interface: test1-eth0
+  local_ip: 192.168.1.4
+  mac: AA:BB:CC:DD:05:04
+  name: test1
+  provider_interface: r0-eth3
+  provider_ip: 10.0.3.254
+  provider_mac: AA:BB:CC:DD:00:03
+  public_ip: 10.0.3.1
+  switch_name: s3
+  tags:
+  - tag: T2
+    value: 0.2
+  target: PLC2
+  trigger:
+    end: 10
+    start: 5
+    type: time
+  type: mitm
+network_topology_type: complex
+output_path: /home/maarten/dhalsim/examples/wadi_topology/output
+plcs:
+- actuators:
+  - P_RAW1
+  - V_PUB
+  controls:
+  - action: open
+    actuator: V_PUB
+    dependant: T0
+    type: below
+    value: 0.256
+  - action: closed
+    actuator: V_PUB
+    dependant: T0
+    type: above
+    value: 0.448
+  - action: closed
+    actuator: P_RAW1
+    dependant: T0
+    type: below
+    value: 0.256
+  - action: open
+    actuator: P_RAW1
+    dependant: T2
+    type: below
+    value: 0.16
+  - action: closed
+    actuator: P_RAW1
+    dependant: T2
+    type: above
+    value: 0.32
+  gateway_inbound_mac: AA:BB:CC:DD:03:02
+  gateway_ip: 192.168.1.254
+  gateway_name: r2
+  gateway_outbound_mac: AA:BB:CC:DD:04:02
+  interface: PLC1-eth0
+  local_ip: 192.168.1.1
+  mac: AA:BB:CC:DD:02:02
+  name: PLC1
+  provider_interface: r0-eth2
+  provider_ip: 10.0.2.254
+  provider_mac: AA:BB:CC:DD:00:02
+  public_ip: 10.0.2.1
+  sensors:
+  - T0
+  switch_name: s2
+- actuators:
+  - V_ER2i
+  controls:
+  - action: closed
+    actuator: V_ER2i
+    dependant: T2
+    type: above
+    value: 0.32
+  - action: open
+    actuator: V_ER2i
+    dependant: T2
+    type: below
+    value: 0.16
+  gateway_inbound_mac: AA:BB:CC:DD:03:03
+  gateway_ip: 192.168.1.254
+  gateway_name: r3
+  gateway_outbound_mac: AA:BB:CC:DD:04:03
+  interface: PLC2-eth0
+  local_ip: 192.168.1.1
+  mac: AA:BB:CC:DD:02:03
+  name: PLC2
+  provider_interface: r0-eth3
+  provider_ip: 10.0.3.254
+  provider_mac: AA:BB:CC:DD:00:03
+  public_ip: 10.0.3.1
+  sensors:
+  - T2
+  switch_name: s3
+scada:
+  gateway_inbound_mac: AA:BB:CC:DD:03:01
+  gateway_ip: 192.168.1.254
+  gateway_name: r1
+  gateway_outbound_mac: AA:BB:CC:DD:04:01
+  interface: scada-eth0
+  local_ip: 192.168.1.1
+  mac: AA:BB:CC:DD:01:01
+  name: scada
+  provider_interface: r0-eth1
+  provider_ip: 10.0.1.254
+  provider_mac: AA:BB:CC:DD:00:01
+  public_ip: 10.0.1.1
+  switch_name: s1
