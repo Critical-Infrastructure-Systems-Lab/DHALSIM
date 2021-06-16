@@ -1,5 +1,4 @@
 config_path: /home/maarten/dhalsim/examples/wadi_topology/wadi_config.yaml
-db_path: /tmp/dhalsim_k6kd9elm/dhalsim.sqlite
 inp_file: /home/maarten/dhalsim/examples/wadi_topology/wadi_map_newer.inp
 iterations: 15
 log_level: info
