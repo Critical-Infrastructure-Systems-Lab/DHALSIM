@@ -496,7 +496,7 @@ class ConfigParser:
         # Create temp directory and intermediate yaml files in /tmp/
         temp_directory = tempfile.mkdtemp(prefix='dhalsim_')
         # Change read permissions in tempdir
-        os.chmod(temp_directory, 0o777)
+        os.chmod(temp_directory, 0o775)
         self.yaml_path = Path(temp_directory + '/intermediate.yaml')
         self.db_path = temp_directory + '/dhalsim.sqlite'
 
