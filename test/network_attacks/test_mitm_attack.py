@@ -1,8 +1,9 @@
 import subprocess
 import threading
+from pathlib import Path
 
 import pytest
-from pathlib import Path
+import yaml
 
 from dhalsim.network_attacks.mitm_attack import SyncedAttack, MitmAttack
 
@@ -68,6 +69,11 @@ def test_init(intermediate_yaml_path, yaml_index, os_mock, mocker):
     mitm_attack = MitmAttack(intermediate_yaml_path, yaml_index)
 
     assert mitm_attack.yaml_index == yaml_index
+    with intermediate_yaml_path.open() as yaml_file:
+        data = yaml.load(yaml_file, Loader=yaml.FullLoader)
+        assert mitm_attack.intermediate_yaml == data
+        assert mitm_attack.intermediate_attack == data['network_attacks'][0]
+        assert mitm_attack.intermediate_plc == data['plcs'][1]
     assert mitm_attack.attacker_ip == "192.168.1.4"
     assert mitm_attack.target_plc_ip == "192.168.1.1"
     assert os_mock.system.call_count == 1

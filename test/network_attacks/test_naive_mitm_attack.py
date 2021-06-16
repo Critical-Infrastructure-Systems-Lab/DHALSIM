@@ -1,9 +1,9 @@
 import threading
+from pathlib import Path
 
 import fnfqueue
-
 import pytest
-from pathlib import Path
+import yaml
 
 from dhalsim.network_attacks.naive_attack import SyncedAttack, PacketAttack
 
@@ -101,6 +101,11 @@ def test_init(intermediate_yaml_path, os_mock, mocker):
     packet_attack = PacketAttack(intermediate_yaml_path, 1)
 
     assert packet_attack.yaml_index == 1
+    with intermediate_yaml_path.open() as yaml_file:
+        data = yaml.load(yaml_file, Loader=yaml.FullLoader)
+        assert packet_attack.intermediate_yaml == data
+        assert packet_attack.intermediate_attack == data['network_attacks'][1]
+        assert packet_attack.intermediate_plc == data['plcs'][1]
     assert packet_attack.attacker_ip == "192.168.1.5"
     assert packet_attack.target_plc_ip == "192.168.1.1"
     assert os_mock.system.call_count == 1
