@@ -28,6 +28,87 @@ network_attacks:
     start: 5
     type: time
   type: mitm
+- gateway_inbound_mac: AA:BB:CC:DD:03:03
+  gateway_ip: 192.168.1.254
+  gateway_name: r3
+  gateway_outbound_mac: AA:BB:CC:DD:04:03
+  interface: test2-eth0
+  local_ip: 192.168.1.5
+  mac: AA:BB:CC:DD:05:05
+  name: test2
+  provider_interface: r0-eth3
+  provider_ip: 10.0.3.254
+  provider_mac: AA:BB:CC:DD:00:03
+  public_ip: 10.0.3.1
+  switch_name: s3
+  target: PLC2
+  trigger:
+    end: 10
+    start: 5
+    type: time
+  type: naive_mitm
+  value: 0.2
+- gateway_inbound_mac: AA:BB:CC:DD:03:03
+  gateway_ip: 192.168.1.254
+  gateway_name: r3
+  gateway_outbound_mac: AA:BB:CC:DD:04:03
+  interface: test2-eth0
+  local_ip: 192.168.1.5
+  mac: AA:BB:CC:DD:05:05
+  name: test2
+  provider_interface: r0-eth3
+  provider_ip: 10.0.3.254
+  provider_mac: AA:BB:CC:DD:00:03
+  public_ip: 10.0.3.1
+  switch_name: s3
+  target: PLC2
+  trigger:
+    sensor: T2
+    value: 0.20
+    type: above
+  type: naive_mitm
+  value: 0.2
+- gateway_inbound_mac: AA:BB:CC:DD:03:03
+  gateway_ip: 192.168.1.254
+  gateway_name: r3
+  gateway_outbound_mac: AA:BB:CC:DD:04:03
+  interface: test2-eth0
+  local_ip: 192.168.1.5
+  mac: AA:BB:CC:DD:05:05
+  name: test2
+  provider_interface: r0-eth3
+  provider_ip: 10.0.3.254
+  provider_mac: AA:BB:CC:DD:00:03
+  public_ip: 10.0.3.1
+  switch_name: s3
+  target: PLC2
+  trigger:
+    sensor: T2
+    value: 0.10
+    type: below
+  type: naive_mitm
+  value: 0.2
+- gateway_inbound_mac: AA:BB:CC:DD:03:03
+  gateway_ip: 192.168.1.254
+  gateway_name: r3
+  gateway_outbound_mac: AA:BB:CC:DD:04:03
+  interface: test2-eth0
+  local_ip: 192.168.1.5
+  mac: AA:BB:CC:DD:05:05
+  name: test2
+  provider_interface: r0-eth3
+  provider_ip: 10.0.3.254
+  provider_mac: AA:BB:CC:DD:00:03
+  public_ip: 10.0.3.1
+  switch_name: s3
+  target: PLC2
+  trigger:
+    lower_value: 0.10
+    upper_value: 0.20
+    sensor: T2
+    type: between
+  type: naive_mitm
+  value: 0.2
 network_topology_type: complex
 output_path: /home/maarten/dhalsim/examples/wadi_topology/output
 plcs:

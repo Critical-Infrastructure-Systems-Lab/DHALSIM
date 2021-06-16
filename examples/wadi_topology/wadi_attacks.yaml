@@ -33,3 +33,11 @@ network_attacks:
       - tag: T2
         value: 0.2
     target: PLC2
+  - name: "test2"
+    type: naive_mitm
+    trigger:
+      type: Time
+      start: 5
+      end: 10
+    value: 0.2
+    target: PLC2
