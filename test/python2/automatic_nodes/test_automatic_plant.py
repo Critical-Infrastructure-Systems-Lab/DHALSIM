@@ -68,9 +68,9 @@ def test_terminate(patched_auto_plant, offline_after_three_process):
 
     offline_after_three_process.send_signal.assert_called_once_with(signal.SIGINT)
     assert offline_after_three_process.wait.call_count == 1
-    assert offline_after_three_process.poll.call_count == 2
+    assert offline_after_three_process.poll.call_count == 3
     assert offline_after_three_process.terminate.call_count == 1
-    assert offline_after_three_process.kill.call_count == 1
+    assert offline_after_three_process.kill.call_count == 0
 
 
 @pytest.mark.timeout(1)

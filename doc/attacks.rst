@@ -15,7 +15,7 @@ Example:
 .. code-block:: yaml
 
    device_attacks:
-     - name: "Close PRAW1 from iteration 5 to 10"
+     - name: "Close_PRAW1_from_iteration_5_to_10"
        trigger:
          type: time
          start: 5
@@ -29,7 +29,7 @@ name
 ~~~~
 *This option is required*
 
-This defines the name of the attack.
+This defines the name of the attack. It cannot have whitespaces.
 
 trigger
 ~~~~~~~~
@@ -81,21 +81,21 @@ Here is an example of a :code:`device_attacks` section in an attack YAML file:
 .. code-block:: yaml
 
     device_attacks:
-      - name: "Close PRAW1 from iteration 5 to 10"
+      - name: "Close_PRAW_from_iteration_5_to_10"
        trigger:
          type: time
          start: 5
          end: 10
        actuator: P_RAW1
        command: closed
-      - name: "Close PRAW1 when T2 < 0.16"
+      - name: "Close_PRAW1_when_T2_<_0.16"
        trigger:
          type: below
          sensor: T2
          value: 0.16
        actuators: P_RAW1
        command: closed
-      - name: "Close PRAW1 when 0.10 < T2 < 0.16"
+      - name: "Close_PRAW1_when_0.10_<_T2_<_0.16"
        trigger:
          type: between
          sensor: T2
@@ -151,6 +151,8 @@ name
 *This option is required*
 
 This defines the name of the attack. It is also used as the name of the attacker node on the mininet network.
+The name can only contain the the characters :code:`a-z`, :code:`A-Z`, :code:`0-9` and :code:`_`. And
+must have a length between 1 and 10 characters.
 
 type
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -255,6 +257,8 @@ name
 *This option is required*
 
 This defines the name of the attack. It is also used as the name of the attacker node on the mininet network.
+The name can only contain the the characters :code:`a-z`, :code:`A-Z`, :code:`0-9` and :code:`_`. And
+must have a length between 1 and 10 characters.
 
 type
 ^^^^^^^^^^^^^^^^^^^^^^^^^

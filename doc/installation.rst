@@ -4,7 +4,9 @@ In this guide we will describe how DHALSIM can be installed on an Ubuntu machine
 
 Ubuntu version
 ~~~~~~~~~~~~~~~~~~~~~~~~
-DHALSIM has been developed and tested on Ubuntu 20.04 LTS. We recommend installing and running DHALSIM on Ubuntu 20.04, as the installation script has not been tested on other versions. If you want to use another version, we recommend a manual installation.
+DHALSIM has been developed and tested on Ubuntu 20.04 LTS. Therefore, we recommend installing and running DHALSIM on Ubuntu 20.04. The installation script can be ran using ``./install.sh``. The installation script has not been tested on other versions. If you want to use another version, we recommend a manual installation.
+
+The installation script can also install all testing dependencies. In order to do this, simply run ``./install.sh test``.
 
 Automatic installation
 ----------------------

@@ -25,7 +25,8 @@ class PlantControl(NodeControl):
         This function stops the physical process (child of this process).
         """
         self.logger.debug("Stopping plant.")
-        self.simulation_process.send_signal(signal.SIGINT)
+        if self.simulation_process.poll() is None:
+            self.simulation_process.send_signal(signal.SIGINT)
         self.simulation_process.wait()
         if self.simulation_process.poll() is None:
             self.simulation_process.terminate()

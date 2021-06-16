@@ -98,7 +98,8 @@ those PLCs control. :code:`plcs` is a list of PLCs. A PLC has the following form
       - actuator_1
       - actuator_2
 
-The :code:`name`, :code:`sensors` and :code:`actuators` can only contain the the characters :code:`a-z`, :code:`A-Z`, :code:`0-9` and :code:`_`.
+The :code:`name`, :code:`sensors` and :code:`actuators` can only contain the the characters :code:`a-z`, :code:`A-Z`, :code:`0-9` and :code:`_`. And
+must have a length between 1 and 10 characters.
 
 If you want to put the PLCs in a separate file, see the section :ref:`PLCs in a separate file`.
 
