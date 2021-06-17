@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 from wntr.network import WaterNetworkModel, Options
 
-from dhalsim.parser.file_generator import GeneralReadmeGenerator
+from dhalsim.parser.file_generator import GeneralReadmeGenerator, get_mininet_links
 
 
 @pytest.fixture
@@ -167,3 +167,8 @@ def test_get_time_information(rm_gen):
     assert rm_gen.get_time_information() == "\n\nStarted at 2021-06-01 00:00:01 and finished at" \
                                             " 2021-06-01 00:00:02.\n\nThe duration of this" \
                                             " simulation was 0:00:01."
+
+
+def test_get_mininet_links():
+    assert get_mininet_links() == "\n\n## Mininet links\n\nMininet links can be found in the" \
+                                  " file mininet_links.md in this configuration folder."

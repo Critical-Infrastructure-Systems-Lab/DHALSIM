@@ -366,16 +366,18 @@ class PhysicalPlant:
         end_time = datetime.now()
 
         if 'batch_simulations' in self.data:
-            BatchReadmeGenerator(self.intermediate_yaml).write_batch(self.start_time, end_time, self.wn,
-                                                                     self.master_time)
+            readme_path = Path(self.data['config_path']).parent / self.data['output_path']\
+                          / 'configuration' / 'batch_readme.md'
+            os.makedirs(str(readme_path.parent), exist_ok=True)
+
+            BatchReadmeGenerator(self.intermediate_yaml, readme_path, self.start_time, end_time,
+                                 self.wn, self.master_time).write_batch()
             if self.data['batch_index'] == self.data['batch_simulations'] - 1:
-                GeneralReadmeGenerator(self.intermediate_yaml).write_readme(self.data['start_time'],
-                                                                     datetime.now(), True,
-                                                                     self.master_time, self.wn)
+                GeneralReadmeGenerator(self.intermediate_yaml, self.data['start_time'],
+                                       end_time, True, self.master_time, self.wn).write_readme()
         else:
-            GeneralReadmeGenerator(self.intermediate_yaml).write_readme(self.data['start_time'],
-                                                                 datetime.now(), False,
-                                                                 self.master_time, self.wn)
+            GeneralReadmeGenerator(self.intermediate_yaml, self.data['start_time'],
+                                   end_time, False, self.master_time, self.wn).write_readme()
         sys.exit(0)
 
     def set_initial_values(self):

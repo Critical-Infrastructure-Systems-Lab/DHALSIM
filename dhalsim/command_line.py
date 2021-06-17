@@ -52,7 +52,7 @@ class Runner():
             self.run_simulation(intermediate_yaml_path)
 
     def run_simulation(self, intermediate_yaml_path):
-        InputFilesCopier(self.config_file).copy_input_files()
+        InputFilesCopier(self.config_file, intermediate_yaml_path).copy_input_files()
 
         db_initializer = DatabaseInitializer(intermediate_yaml_path)
         db_initializer.drop()

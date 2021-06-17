@@ -99,15 +99,22 @@ class InputFilesCopier:
     :param config_file: contains the location of the config file
     """
 
-    def __init__(self, config_file: Path):
+    def __init__(self, config_file: Path, intermediate_yaml_path: Path):
+        self.config_file = config_file
 
-        with config_file.open(mode='r') as conf:
+        with self.config_file.open(mode='r') as conf:
             self.config = yaml.load(conf, Loader=yaml.FullLoader)
 
-        if 'output_path' in self.config:
-            self.configuration_folder = config_file.parent / self.config['output_path'] / 'configuration'
+        with intermediate_yaml_path.open() as yaml_file:
+            self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
+
+        if 'batch_simulations' in self.intermediate_yaml:
+            self.configuration_folder = Path(self.intermediate_yaml['output_path']).parent\
+                                        / 'configuration'
         else:
-            self.configuration_folder = config_file.absolute().parent / 'configuration'
+            self.configuration_folder = Path(self.intermediate_yaml['output_path']) / 'configuration'
+
+        print(self.configuration_folder)
 
     def copy_input_files(self):
         """Copies all input files, mandatory and optional ones included."""
@@ -218,6 +225,7 @@ class GeneralReadmeGenerator:
 
             readme.write(self.get_input_files())
             readme.write(self.get_optional_data_parameters())
+            readme.write(get_mininet_links())
 
             readme.write(self.get_standalone_parameter_information())
 
@@ -325,3 +333,9 @@ class GeneralReadmeGenerator:
                " was {time}.".format(start=str(self.start_time.strftime("%Y-%m-%d %H:%M:%S")),
                                      end=str(self.end_time.strftime("%Y-%m-%d %H:%M:%S")),
                                      time=str(self.end_time - self.start_time))
+
+
+def get_mininet_links() -> str:
+    """Gets a string which informs reader about mininet links."""
+    return "\n\n## Mininet links\n\nMininet links can be found in the file mininet_links.md " \
+           "in this configuration folder."
