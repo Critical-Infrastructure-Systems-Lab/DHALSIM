@@ -353,7 +353,7 @@ class ConfigParser:
         ConfigParser.not_to_many_nodes(data)
 
     @staticmethod
-    def not_to_many_nodes(data: dict):
+    def not_too_many_nodes(data: dict):
         """
         Check if there are not more then 250 plcs and network attacks.
         This would cause trouble with assigning IP and MAC addresses.
