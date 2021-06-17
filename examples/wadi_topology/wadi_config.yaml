@@ -1,19 +1,16 @@
 ---
 # General simulation parameters
-inp_file: "wadi_map_newer.inp"
+inp_file: wadi_map.inp
 network_topology_type: complex
-output_path: "output/"
-iterations: 15
+iterations: 500
+log_level: info
 mininet_cli: false
 
 plcs: !include wadi_plcs.yaml
 
 attacks: !include wadi_attacks.yaml
 
-#batch_simulations: 3
 #Initial Conditions
-#initial_tank_data: initial_tank_wadi.csv
-#demand_patterns: demand_patterns/
-#demand_patterns: demand_patterns/2.csv
-#network_loss_data: losses_wadi.csv
-#network_delay_data: delays_wadi.csv
+initial_tank_data: initial_tank_wadi.csv
+network_loss_data: losses_wadi.csv
+network_delay_data: delays_wadi.csv

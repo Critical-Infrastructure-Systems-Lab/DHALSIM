@@ -1,8 +1,10 @@
 network_attacks:
-  - name: "attack1"
+  - name: plc1attack
     type: mitm
-    start: 250
-    end: 750
+    trigger:
+      type: Time
+      start: 250
+      end: 750
     tags:
       - tag: TANK
         offset: -3
