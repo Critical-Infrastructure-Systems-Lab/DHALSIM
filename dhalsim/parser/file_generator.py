@@ -177,7 +177,7 @@ class GeneralReadmeGenerator:
         self.batch = batch
         self.master_time = master_time
         self.wn = wn
-        self.forced_path = None
+        self.readme_path = self.get_readme_path()
         self.version = pkg_resources.require('dhalsim')[0].version
 
     def get_value(self, parameter: str) -> str:
@@ -216,9 +216,7 @@ class GeneralReadmeGenerator:
         Writes a readme about the current experiment.
 
         """
-        readme_path = self.get_readme_path()
-
-        with open(readme_path, 'w') as readme:
+        with open(self.readme_path, 'w') as readme:
             readme.write("# Auto-generated README of {file}"
                          .format(file=os.path.basename(str(self.intermediate_yaml['inp_file']))[:-4]))
 
@@ -235,9 +233,6 @@ class GeneralReadmeGenerator:
     def get_readme_path(self) -> str:
         """Gets the path of the readme, bearing in mind batch mode and possibility of forced
         output path using parameter forced_path."""
-        if self.forced_path:
-            return str(self.forced_path)
-
         if 'batch_simulations' in self.intermediate_yaml:
             configuration_folder = Path(self.intermediate_yaml['config_path']).parent \
                                    / Path(self.intermediate_yaml['output_path']).parent \
