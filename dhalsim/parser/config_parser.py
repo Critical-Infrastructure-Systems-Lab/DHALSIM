@@ -350,7 +350,7 @@ class ConfigParser:
 
         :param data: The data to check
         """
-        ConfigParser.not_to_many_nodes(data)
+        ConfigParser.not_too_many_nodes(data)
 
     @staticmethod
     def not_too_many_nodes(data: dict):
