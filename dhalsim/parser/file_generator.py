@@ -44,7 +44,7 @@ class BatchReadmeGenerator:
             # Information about this batch.
             readme.write(self.get_time_information())
             readme.write("\n\nFor more information with regard to this experiment, consult "
-                         "```configuration/readme_experiment.md``` in the root of the output "
+                         "```configuration/general_readme.md``` in the root of the output "
                          "folder.")
 
     def get_batch_information(self) -> str:
@@ -205,11 +205,12 @@ class GeneralReadmeGenerator:
         :param parameter: parameter to evaluate
         :return: complete string with checkbox in it
         """
-        if parameter in self.intermediate_yaml:
-            if len(self.intermediate_yaml[parameter]) > 0:
-                return "\n\n- [x] {para}".format(para=parameter)
+        if parameter in self.intermediate_yaml and len(self.intermediate_yaml[parameter]) > 0:
+            case_checkbox = "[x]"
+        else:
+            case_checkbox = "[ ]"
 
-        return "\n\n- [ ] {para}".format(para=parameter)
+        return "\n\n- {checkbox} {para}".format(checkbox=case_checkbox, para=parameter)
 
     def write_readme(self):
         """
@@ -245,7 +246,7 @@ class GeneralReadmeGenerator:
 
         # Create directories in output folder
         os.makedirs(str(configuration_folder), exist_ok=True)
-            
+
         return readme_path
             
     def get_input_files(self) -> str:

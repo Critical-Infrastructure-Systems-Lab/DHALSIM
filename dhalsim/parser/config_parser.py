@@ -350,34 +350,29 @@ class ConfigParser:
 
         :param data: The data to check
         """
-        ConfigParser.not_to_many_nodes(data)
+        ConfigParser.not_too_many_nodes(data)
 
     @staticmethod
-    def not_to_many_nodes(data: dict):
+    def not_too_many_nodes(data: dict):
         """
         Check if there are not more then 250 plcs and network attacks.
         This would cause trouble with assigning IP and MAC addresses.
 
         :param data: the data to check on
-
         :raise TooManyNodes: When there are more then 250 nodes in the network
         """
+        raise_message = "There are too many nodes in the network. Only 250 nodes are supported."
+
         if 'plcs' in data:
             n_plcs = len(data["plcs"])
             if n_plcs > 250:
-                raise TooManyNodes(
-                    "There are too many nodes in the network. Only 250 nodes are supported.")
-            if 'attacks' in data and 'network_attacks' in data['attacks']:
-                if n_plcs + len(data['attacks']['network_attacks']) > 250:
-                    raise TooManyNodes(
-                        "There are too many nodes in the network. Only 250 nodes are supported.")
-        else:
-            if 'attacks' in data and 'network_attacks' in data['attacks']:
-                if len(data['attacks']['network_attacks']) > 250:
-                    raise TooManyNodes(
-                        "There are too many nodes in the network. Only 250 nodes are supported.")
-
-
+                raise TooManyNodes(raise_message)
+            if 'attacks' in data and 'network_attacks' in data['attacks'] and \
+                    n_plcs + len(data['attacks']['network_attacks']) > 250:
+                raise TooManyNodes(raise_message)
+        elif 'attacks' in data and 'network_attacks' in data['attacks'] and \
+                len(data['attacks']['network_attacks']) > 250:
+            raise TooManyNodes(raise_message)
 
     @staticmethod
     def apply_schema(config_path: Path) -> dict:

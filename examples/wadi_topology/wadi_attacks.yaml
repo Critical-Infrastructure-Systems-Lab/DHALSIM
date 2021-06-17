@@ -1,35 +1,8 @@
 device_attacks:
-  - name: "Close_PRAW1_from_iteration_5_to_10"
+  - name: V_ER2i_attack
     trigger:
-      type: Time
-      start: 5
-      end: 10
-    actuator: P_RAW1
+      type: time
+      start: 125
+      end: 375
+    actuator: V_ER2i
     command: closed
-  - name: "Close_PRAW1_when_T2<0.16"
-    trigger:
-      type: Below
-      sensor: T2
-      value: 0.16
-    actuator: P_RAW1
-    command: "closed"
-  - name: "Close_PRAW1_when_0.10<T2<0.16"
-    trigger:
-      type: "Between"
-      sensor: "T2"
-      lower_value: 0.10
-      upper_value: 0.16
-    actuator: P_RAW1
-    command: "closed"
-
-network_attacks:
-  - name: "test1"
-    type: mitm
-    trigger:
-      type: Time
-      start: 5
-      end: 10
-    tags:
-      - tag: T2
-        value: 0.2
-    target: PLC2

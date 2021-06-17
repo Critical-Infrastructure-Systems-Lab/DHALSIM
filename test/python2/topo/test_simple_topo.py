@@ -177,7 +177,7 @@ def test_reachability(net, server, client, server_ip):
                              (250, 0),
                              (10, 240),
                          ])
-def test_not_to_many_nodes_good_weather(plcs, network_attacks):
+def test_not_too_many_nodes_good_weather(plcs, network_attacks):
     plcs = [i for i in range(plcs)]
     network_attacks = [i for i in range(network_attacks)]
     SimpleTopo.check_amount_of_nodes({'plcs': plcs, 'network_attacks': network_attacks})
@@ -189,7 +189,7 @@ def test_not_to_many_nodes_good_weather(plcs, network_attacks):
                              250,
                              0,
                          ])
-def test_not_to_many_nodes_no_plcs_good_weather(network_attacks):
+def test_not_too_many_nodes_no_plcs_good_weather(network_attacks):
     network_attacks = [i for i in range(network_attacks)]
     SimpleTopo.check_amount_of_nodes({'network_attacks': network_attacks})
 
@@ -200,7 +200,7 @@ def test_not_to_many_nodes_no_plcs_good_weather(network_attacks):
                              250,
                              0,
                          ])
-def test_not_to_many_nodes_no_network_attacks_good_weather(plcs):
+def test_not_too_many_nodes_no_network_attacks_good_weather(plcs):
     plcs = [i for i in range(plcs)]
     SimpleTopo.check_amount_of_nodes({'plcs': plcs})
 
@@ -212,7 +212,7 @@ def test_not_to_many_nodes_no_network_attacks_good_weather(plcs):
                              (251, 0),
                              (11, 240),
                          ])
-def test_not_to_many_nodes_bad_weather(plcs, network_attacks):
+def test_not_too_many_nodes_bad_weather(plcs, network_attacks):
     plcs = [i for i in range(plcs)]
     network_attacks = [i for i in range(network_attacks)]
     with pytest.raises(TooManyNodes):
@@ -224,7 +224,7 @@ def test_not_to_many_nodes_bad_weather(plcs, network_attacks):
                              251,
                              1000000,
                          ])
-def test_not_to_many_nodes_no_plcs_bad_weather(network_attacks):
+def test_not_too_many_nodes_no_plcs_bad_weather(network_attacks):
     network_attacks = [i for i in range(network_attacks)]
     with pytest.raises(TooManyNodes):
         SimpleTopo.check_amount_of_nodes({'network_attacks': network_attacks})
@@ -235,7 +235,7 @@ def test_not_to_many_nodes_no_plcs_bad_weather(network_attacks):
                              251,
                              100000,
                          ])
-def test_not_to_many_nodes_no_network_attacks_bad_weather(plcs):
+def test_not_too_many_nodes_no_network_attacks_bad_weather(plcs):
     plcs = [i for i in range(plcs)]
     with pytest.raises(TooManyNodes):
         SimpleTopo.check_amount_of_nodes({'plcs': plcs})

@@ -279,10 +279,9 @@ class SyncedAttack(metaclass=ABCMeta):
                 if run:
                     self.state = 1
                     self.setup()
-            elif self.state == 1:
-                if not run:
-                    self.state = 0
-                    self.teardown()
+            elif self.state == 1 and (not run):
+                self.state = 0
+                self.teardown()
 
             self.attack_step()
 
