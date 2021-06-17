@@ -1,11 +1,15 @@
 import argparse
 import csv
 import os.path
+import random
 import signal
 import sqlite3
 import sys
 import time
+from collections import OrderedDict
 from datetime import datetime
+from decimal import Decimal
+
 from pathlib import Path
 
 import yaml
@@ -26,11 +30,22 @@ class InvalidControlValue(Error):
     """Raised when tag you are looking for does not exist"""
 
 
+class DatabaseError(Error):
+    """Raised when not being able to connect to the database"""
+
+
 class GenericScada(SCADAServer):
     """
     This class represents a scada. This scada knows what plcs it is collecting data from by reading the
     yaml file at intermediate_yaml_path and looking at the plcs.
     """
+
+    DB_TRIES = 10
+    """Amount of times a db query will retry on a exception"""
+
+    DB_SLEEP_TIME = random.uniform(0.01, 0.1)
+    """Amount of time a db query will wait before retrying"""
+
     def __init__(self, intermediate_yaml_path):
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
@@ -48,7 +63,6 @@ class GenericScada(SCADAServer):
             'name': "plant",
             'path': self.intermediate_yaml['db_path']
         }
-
 
         # Create server, real tags are generated
         scada_server = {
@@ -74,6 +88,10 @@ class GenericScada(SCADAServer):
                 PLC['actuators'] = list()
             self.saved_values[0].extend(PLC['sensors'])
             self.saved_values[0].extend(PLC['actuators'])
+
+        self.cache = {}
+        for ip in self.plc_data:
+            self.cache[ip] = [0] * len(self.plc_data[ip])
 
         self.do_super_construction(scada_protocol, state)
 
@@ -146,24 +164,66 @@ class GenericScada(SCADAServer):
 
         time.sleep(sleep)
 
+    def db_query(self, query, parameters=None):
+        """
+        Execute a query on the database
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
+        This is necessary because of the limited concurrency in SQLite.
+
+        :param query: The SQL query to execute in the db
+        :type query: str
+
+        :param parameters: The parameters to put in the query. This must be a tuple.
+
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
+        """
+        for i in range(self.DB_TRIES):
+            try:
+                if parameters:
+                    self.cur.execute(query, parameters)
+                else:
+                    self.cur.execute(query)
+                return
+            except sqlite3.OperationalError as exc:
+                self.logger.debug(
+                    "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
+                        exc=exc, i=self.DB_TRIES - i - 1))
+                time.sleep(self.DB_SLEEP_TIME)
+        self.logger.error(
+            "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
+        raise DatabaseError("Failed to get master clock from database")
+
     def get_sync(self):
         """
-        Get the sync flag of this plc.
+        Get the sync flag of the scada.
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
 
         :return: False if physical process wants the plc to do a iteration, True if not.
+
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
         """
-        self.cur.execute("SELECT flag FROM sync WHERE name IS 'scada'")
+        self.db_query("SELECT flag FROM sync WHERE name IS 'scada'")
         flag = bool(self.cur.fetchone()[0])
         return flag
 
     def set_sync(self, flag):
         """
-        Set this plcs sync flag in the sync table. When this is 1, the physical process
-        knows this plc finished the requested iteration.
+        Set the scada's sync flag in the sync table. When this is 1, the physical process
+        knows that the scada finished the requested iteration.
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
 
-        :param flag: True for sync to 1, false for sync to 0
+        :param flag: True for sync to 1, False for sync to 0
+        :type flag: bool
+
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
         """
-        self.cur.execute("UPDATE sync SET flag=? WHERE name IS 'scada'",
+        self.db_query("UPDATE sync SET flag=? WHERE name IS 'scada'",
                          (int(flag),))
         self.conn.commit()
 
@@ -188,7 +248,7 @@ class GenericScada(SCADAServer):
         Generates a list of tuples, the first part being the ip of a PLC,
         and the second  being a list of tags attached to that PLC.
         """
-        plcs = []
+        plcs = OrderedDict()
 
         for PLC in self.intermediate_yaml['plcs']:
             if 'sensors' not in PLC:
@@ -202,20 +262,41 @@ class GenericScada(SCADAServer):
             tags.extend(self.generate_tags(PLC['sensors']))
             tags.extend(self.generate_tags(PLC['actuators']))
 
-            plcs.append((PLC['public_ip'], tags))
+            plcs[PLC['public_ip']] = tags
 
         return plcs
 
     def get_master_clock(self):
         """
         Get the value of the master clock of the physical process through the database.
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
 
-        :return: Iteration in the physical process
+        :return: Iteration in the physical process.
+
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
         """
-        # Fetch master_time
-        self.cur.execute("SELECT time FROM master_time WHERE id IS 1")
+        self.db_query("SELECT time FROM master_time WHERE id IS 1")
         master_time = self.cur.fetchone()[0]
         return master_time
+
+    def update_cache(self):
+        """
+        Update the cache of the scada by receiving all the required tags.
+        When something cannot be received, the previous values are used.
+        """
+        for plc_ip in self.cache:
+            try:
+                values = self.receive_multiple(self.plc_data[plc_ip], plc_ip)
+                self.cache[plc_ip] = values
+                self.logger.debug("PLC values received by SCADA from IP: " + str(plc_ip)
+                                  + " is " + str(values) + ".")
+            except Exception as e:
+                self.logger.debug(
+                    "PLC receive_multiple with tags {tags} from {ip} failed with exception '{e}'".format(
+                        tags=self.plc_data[plc_ip],
+                        ip=plc_ip, e=str(e)))
 
     def main_loop(self, sleep=0.5, test_break=False):
         """
@@ -227,27 +308,23 @@ class GenericScada(SCADAServer):
         self.logger.debug("SCADA enters main_loop")
         while True:
             while self.get_sync():
-                time.sleep(0.01)
+                time.sleep(self.DB_SLEEP_TIME)
 
             master_time = self.get_master_clock()
 
-            try:
-                results = [master_time, datetime.now()]
-                for plc_datum in self.plc_data:
-                    plc_value = self.receive_multiple(plc_datum[1], plc_datum[0])
-                    self.logger.debug("PLC value received by SCADA from IP: " + str(plc_datum[0])
-                                      + " is " + str(plc_value) + ".")
-                    results.extend(plc_value)
-                self.saved_values.append(results)
+            self.update_cache()
 
-                # Save scada_values.csv when needed
-                if 'saving_interval' in self.intermediate_yaml:
-                    if master_time != 0 and \
-                            master_time % self.intermediate_yaml['saving_interval'] == 0:
-                        self.write_output()
-            except Exception as msg:
-                self.logger.error(msg)
-                continue
+            results = [master_time, datetime.now()]
+            for plc_ip in self.plc_data:
+                plc_value = self.cache[plc_ip]
+                results.extend(plc_value)
+            self.saved_values.append(results)
+
+            # Save scada_values.csv when needed
+            if 'saving_interval' in self.intermediate_yaml:
+                if master_time != 0 and \
+                        master_time % self.intermediate_yaml['saving_interval'] == 0:
+                    self.write_output()
 
             self.set_sync(1)
 

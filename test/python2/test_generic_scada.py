@@ -1,4 +1,5 @@
 import sys
+from collections import OrderedDict
 from datetime import datetime
 from decimal import Decimal
 
@@ -14,8 +15,10 @@ from dhalsim.python2.generic_scada import GenericScada
 @pytest.fixture
 def magic_mock_scada_network():
     mock = MagicMock()
-    # network
-    mock.receive_multiple.return_value = ['0.420420', '1']
+    # network, with three loops worth of calls with the second pair being exceptions, and last only once
+    mock.receive_multiple.side_effect = [['0.420420', '1'], ['0.350420', '0'],
+                                         Exception, Exception,
+                                         ['100', '100'], Exception]
     # database
     mock.get_sync.return_value = 0
     mock.set_sync.return_value = None
@@ -143,13 +146,16 @@ def test_generic_scada_init(generic_scada, magic_mock_scada_init, yaml_scada_fil
     # Load test yaml
     with yaml_scada_file.open() as yaml_file_test:
         test_yaml = yaml.load(yaml_file_test, Loader=yaml.FullLoader)
-    # Assert same as plc yaml
+    # Assert same as scada yaml
     assert generic_scada.intermediate_yaml == test_yaml
-    # Assert intermediate_plc correct
+    # Assert output path
     assert str(generic_scada.output_path) == "/home/test/dhalsim/output/scada_values.csv"
     # Assert plc data generation
-    assert generic_scada.plc_data == [('192.168.1.1', [('T0', 1), ('P_RAW1', 1)]),
-                                      ('192.168.1.2', [('T2', 1), ('V_ER2i', 1)])]
+    assert generic_scada.plc_data == OrderedDict([('192.168.1.1', [('T0', 1), ('P_RAW1', 1)]),
+                                                  ('192.168.1.2', [('T2', 1), ('V_ER2i', 1)])])
+    # Assert scada initial cache
+    assert generic_scada.cache == {'192.168.1.1': [0, 0],
+                                   '192.168.1.2': [0, 0]}
     # Assert plc saved values generation
     assert generic_scada.saved_values == [['iteration', 'timestamp', 'T0', 'P_RAW1', 'T2', 'V_ER2i']]
     # Assert proper function calls
@@ -173,12 +179,24 @@ def test_generic_scada_mainloop(generic_scada, magic_mock_scada_network, magic_m
     generic_scada.main_loop(test_break=True)
     # Assert saved_values has been properly modified
     assert generic_scada.saved_values == [['iteration', 'timestamp', 'T0', 'P_RAW1', 'T2', 'V_ER2i'],
-                                          [2, generic_scada.saved_values[1][1], '0.420420', '1', '0.420420', '1']]
+                                          [2, generic_scada.saved_values[1][1], '0.350420', '0', '0.420420', '1']]
     # Assert proper function calls
-    expected_network_calls = [call.get_sync(),
-                              call.receive_multiple([('T0', 1), ('P_RAW1', 1)], '192.168.1.1'),
-                              call.receive_multiple([('T2', 1), ('V_ER2i', 1)], '192.168.1.2'),
-                              call.set_sync(1)]
+    expected_network_calls = sorted([call.get_sync(),
+                                     call.receive_multiple([('T0', 1), ('P_RAW1', 1)], '192.168.1.1'),
+                                     call.receive_multiple([('T2', 1), ('V_ER2i', 1)], '192.168.1.2'),
+                                     call.set_sync(1)])
     expected_clock_calls = [call.get_master_clock()]
-    assert magic_mock_scada_network.mock_calls == expected_network_calls
+    assert sorted(magic_mock_scada_network.mock_calls) == expected_network_calls
     assert magic_mock_scada_clock.mock_calls == expected_clock_calls
+
+
+def test_generic_scada_cache(generic_scada, magic_mock_scada_network, magic_mock_scada_clock, yaml_scada_file):
+    generic_scada.main_loop(test_break=True)  # Both values are fine
+    generic_scada.main_loop(test_break=True)  # Both values throw exceptions
+    generic_scada.main_loop(test_break=True)  # Only First call throws exception
+
+    # Assert saved_values has been properly modified (expect it to re-use old values)
+    assert generic_scada.saved_values == [['iteration', 'timestamp', 'T0', 'P_RAW1', 'T2', 'V_ER2i'],
+                                          [2, generic_scada.saved_values[1][1], '0.350420', '0', '0.420420', '1'],
+                                          [2, generic_scada.saved_values[2][1], '0.350420', '0', '0.420420', '1'],
+                                          [2, generic_scada.saved_values[3][1], '0.350420', '0', '100', '100']]

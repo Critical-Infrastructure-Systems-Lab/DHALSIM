@@ -1,3 +1,4 @@
+import random
 import signal
 import sqlite3
 import subprocess
@@ -9,6 +10,14 @@ from pathlib import Path
 import yaml
 
 from dhalsim.py3_logger import get_logger
+
+
+class Error(Exception):
+    """Base class for exceptions in this module."""
+
+
+class DatabaseError(Error):
+    """Raised when not being able to connect to the database"""
 
 
 class SyncedAttack(metaclass=ABCMeta):
@@ -30,6 +39,12 @@ class SyncedAttack(metaclass=ABCMeta):
        This number is the index of this attack.
     :type yaml_index: int
     """
+
+    DB_TRIES = 10
+    """Amount of times a db query will retry on a exception"""
+
+    DB_SLEEP_TIME = random.uniform(0.01, 0.1)
+    """Amount of time a db query will wait before retrying"""
 
     def __init__(self, intermediate_yaml_path: Path, yaml_index: int):
         signal.signal(signal.SIGINT, self.sigint_handler)
@@ -174,6 +189,37 @@ class SyncedAttack(metaclass=ABCMeta):
         else:
             return False
 
+    def db_query(self, query, parameters=None):
+        """
+        Execute a query on the database
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
+        This is necessary because of the limited concurrency in SQLite.
+
+        :param query: The SQL query to execute in the db
+        :type query: str
+
+        :param parameters: The parameters to put in the query. This must be a tuple.
+
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
+        """
+        for i in range(self.DB_TRIES):
+            try:
+                if parameters:
+                    self.cur.execute(query, parameters)
+                else:
+                    self.cur.execute(query)
+                return
+            except sqlite3.OperationalError as exc:
+                self.logger.debug(
+                    "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
+                        exc=exc, i=self.DB_TRIES - i - 1))
+                time.sleep(self.DB_SLEEP_TIME)
+        self.logger.error(
+            "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
+        raise DatabaseError("Failed to get master clock from database")
+
     def get_master_clock(self) -> int:
         """
         Get the value of the master clock of the physical process through the database.
@@ -181,7 +227,7 @@ class SyncedAttack(metaclass=ABCMeta):
         :return: Iteration in the physical process
         """
         # Fetch master_time
-        self.cur.execute("SELECT time FROM master_time WHERE id IS 1")
+        self.db_query("SELECT time FROM master_time WHERE id IS 1")
         master_time = self.cur.fetchone()[0]
         return master_time
 
@@ -191,7 +237,7 @@ class SyncedAttack(metaclass=ABCMeta):
 
         :return: False if physical process wants the attack to do a iteration, True if not.
         """
-        self.cur.execute("SELECT flag FROM sync WHERE name IS ?",
+        self.db_query("SELECT flag FROM sync WHERE name IS ?",
                          (self.intermediate_attack["name"],))
         flag = bool(self.cur.fetchone()[0])
         return flag
@@ -203,7 +249,7 @@ class SyncedAttack(metaclass=ABCMeta):
 
         :param flag: True for sync to 1, false for sync to 0
         """
-        self.cur.execute("UPDATE sync SET flag=? WHERE name IS ?",
+        self.db_query("UPDATE sync SET flag=? WHERE name IS ?",
                          (int(flag), self.intermediate_attack["name"],))
         self.conn.commit()
 
@@ -214,7 +260,7 @@ class SyncedAttack(metaclass=ABCMeta):
 
         :param flag: True for running to 1, false for running to 0
         """
-        self.cur.execute("UPDATE attack SET flag=? WHERE name IS ?",
+        self.db_query("UPDATE attack SET flag=? WHERE name IS ?",
                          (int(flag), self.intermediate_attack['name']))
         self.conn.commit()
 
@@ -267,5 +313,5 @@ class SyncedAttack(metaclass=ABCMeta):
     def interrupt(self):
         """
         This function is the function that will bee called when there is a interrupt.
-        This function needs to be if you want to do any cleanup on a interrupt.
+        This function needs to be overwritten if you want to do any cleanup on a interrupt.
         """

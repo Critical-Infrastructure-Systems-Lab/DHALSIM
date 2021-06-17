@@ -88,7 +88,7 @@ class SchemaParser:
                     string_pattern,
                 ),
                 'value': And(
-                    float,
+                    Or(float, And(int, Use(float))),
                 ),
             },
             {
@@ -102,10 +102,10 @@ class SchemaParser:
                     string_pattern,
                 ),
                 'lower_value': And(
-                    float,
+                    Or(float, And(int, Use(float))),
                 ),
                 'upper_value': And(
-                    float,
+                    Or(float, And(int, Use(float))),
                 ),
             },
         )
@@ -139,6 +139,8 @@ class SchemaParser:
                 'name': And(
                     str,
                     string_pattern,
+                    Schema(lambda name: 1 <= len(name) <= 10,
+                           error="Length of name must be between 1 and 10, '{}' has invalid length")
                 ),
                 'trigger': trigger,
                 Or('value', 'offset', only_one=True,
@@ -157,6 +159,8 @@ class SchemaParser:
                 'name': And(
                     str,
                     string_pattern,
+                    Schema(lambda name: 1 <= len(name) <= 10,
+                           error="Length of name must be between 1 and 10, '{}' has invalid length")
                 ),
                 'trigger': trigger,
                 'target': And(
@@ -251,7 +255,9 @@ class SchemaParser:
         plc_schema = Schema([{
             'name': And(
                 str,
-                SchemaParser.string_pattern
+                SchemaParser.string_pattern,
+                Schema(lambda name: 1 <= len(name) <= 10,
+                       error="Length of name must be between 1 and 10, '{}' has invalid length")
             ),
             Optional('sensors'): [And(
                 str,
@@ -344,24 +350,10 @@ class ConfigParser:
 
         :param data: The data to check
         """
-        ConfigParser.network_attack_only_complex(data)
-        ConfigParser.not_too_many_nodes(data)
+        ConfigParser.not_to_many_nodes(data)
 
     @staticmethod
-    def network_attack_only_complex(data: dict):
-        """
-        Check if a network attack is applied on a complex topology
-
-        :param data: the data to check on
-        :raise NetworkAttackError: When Network attacks are applied in a simple topology
-        """
-        if 'attacks' in data and 'network_attacks' in data['attacks'] and \
-                len(data['attacks']['network_attacks']) > 0 and \
-                data['network_topology_type'] == 'simple':
-            raise NetworkAttackError("Network attacks can only be applied on a complex topology")
-
-    @staticmethod
-    def not_too_many_nodes(data: dict):
+    def not_to_many_nodes(data: dict):
         """
         Check if there are not more then 250 plcs and network attacks.
         This would cause trouble with assigning IP and MAC addresses.
@@ -499,7 +491,7 @@ class ConfigParser:
         # Create temp directory and intermediate yaml files in /tmp/
         temp_directory = tempfile.mkdtemp(prefix='dhalsim_')
         # Change read permissions in tempdir
-        os.chmod(temp_directory, 0o777)
+        os.chmod(temp_directory, 0o775)
         self.yaml_path = Path(temp_directory + '/intermediate.yaml')
         self.db_path = temp_directory + '/dhalsim.sqlite'
 

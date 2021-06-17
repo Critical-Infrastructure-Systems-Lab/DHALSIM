@@ -136,3 +136,4 @@ simulator: pdd
 time:
 - duration: 518400.0
 - hydraulic_timestep: 60.0
+output_path: temp/test/path
