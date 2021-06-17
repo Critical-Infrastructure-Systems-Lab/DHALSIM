@@ -5,9 +5,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+from automatic_node import NodeControl
 from py2_logger import get_logger
 
-from automatic_node import NodeControl
+empty_loc = '/dev/null'
 
 
 class ScadaControl(NodeControl):
@@ -66,7 +67,7 @@ class ScadaControl(NodeControl):
         pcap = self.output_path / "scada-eth0.pcap"
 
         # Output is not printed to console
-        no_output = open('/dev/null', 'w')
+        no_output = open(empty_loc, 'w')
         tcp_dump = subprocess.Popen(['tcpdump', '-i', self.data["scada"]["interface"], '-w',
                                      str(pcap)], shell=False, stdout=no_output, stderr=no_output)
         return tcp_dump
@@ -81,8 +82,8 @@ class ScadaControl(NodeControl):
             err_put = sys.stderr
             out_put = sys.stdout
         else:
-            err_put = open('/dev/null', 'w')
-            out_put = open('/dev/null', 'w')
+            err_put = open(empty_loc, 'w')
+            out_put = open(empty_loc, 'w')
         cmd = ["python2", str(generic_scada_path), str(self.intermediate_yaml)]
         scada_process = subprocess.Popen(cmd, shell=False, stderr=err_put, stdout=out_put)
         return scada_process

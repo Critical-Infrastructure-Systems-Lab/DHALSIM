@@ -321,10 +321,9 @@ class GenericScada(SCADAServer):
             self.saved_values.append(results)
 
             # Save scada_values.csv when needed
-            if 'saving_interval' in self.intermediate_yaml:
-                if master_time != 0 and \
-                        master_time % self.intermediate_yaml['saving_interval'] == 0:
-                    self.write_output()
+            if 'saving_interval' in self.intermediate_yaml and master_time != 0 and \
+                    master_time % self.intermediate_yaml['saving_interval'] == 0:
+                self.write_output()
 
             self.set_sync(1)
 

@@ -8,7 +8,7 @@ from pathlib import Path
 from automatic_node import NodeControl
 from py2_logger import get_logger
 
-from py2_logger import get_logger
+empty_loc = '/dev/null'
 
 
 class PlcControl(NodeControl):
@@ -68,7 +68,7 @@ class PlcControl(NodeControl):
         pcap = self.output_path / (self.this_plc_data["interface"] + '.pcap')
 
         # Output is not printed to console
-        no_output = open('/dev/null', 'w')
+        no_output = open(empty_loc, 'w')
         tcp_dump = subprocess.Popen(['tcpdump', '-i', self.this_plc_data["interface"], '-w',
                                      str(pcap)], shell=False, stderr=no_output, stdout=no_output)
         return tcp_dump
@@ -83,8 +83,8 @@ class PlcControl(NodeControl):
             err_put = sys.stderr
             out_put = sys.stdout
         else:
-            err_put = open('/dev/null', 'w')
-            out_put = open('/dev/null', 'w')
+            err_put = open(empty_loc, 'w')
+            out_put = open(empty_loc, 'w')
         cmd = ["python2", str(generic_plc_path), str(self.intermediate_yaml), str(self.plc_index)]
         plc_process = subprocess.Popen(cmd, shell=False, stderr=err_put, stdout=out_put)
         return plc_process
