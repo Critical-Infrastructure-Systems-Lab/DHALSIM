@@ -7,6 +7,8 @@ import pkg_resources
 from wntr.network import WaterNetworkModel
 import yaml
 
+time_format = "%Y-%m-%d %H:%M:%S"
+
 
 class BatchReadmeGenerator:
     """
@@ -87,8 +89,8 @@ class BatchReadmeGenerator:
             .format(x=str(self.master_time), y=str(self.intermediate_yaml['iterations']),
                     step=str(self.wn.options.time.hydraulic_timestep))
         ret_str += ("\n\nStarted at {start} and finished at {end}."
-                    .format(start=str(self.start_time.strftime("%Y-%m-%d %H:%M:%S")),
-                            end=str(self.end_time.strftime("%Y-%m-%d %H:%M:%S"))))
+                    .format(start=str(self.start_time.strftime(time_format)),
+                            end=str(self.end_time.strftime(time_format))))
         return ret_str + ("\n\nThe duration of this batch was {time}."
                           .format(time=str(self.end_time - self.start_time)))
 
@@ -325,8 +327,8 @@ class GeneralReadmeGenerator:
 
     def get_time_information(self) -> str:
         return "\n\nStarted at {start} and finished at {end}.\n\nThe duration of this simulation" \
-               " was {time}.".format(start=str(self.start_time.strftime("%Y-%m-%d %H:%M:%S")),
-                                     end=str(self.end_time.strftime("%Y-%m-%d %H:%M:%S")),
+               " was {time}.".format(start=str(self.start_time.strftime(time_format)),
+                                     end=str(self.end_time.strftime(time_format)),
                                      time=str(self.end_time - self.start_time))
 
 

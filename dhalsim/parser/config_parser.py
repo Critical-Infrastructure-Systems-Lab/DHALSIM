@@ -3,7 +3,6 @@ import sys
 import tempfile
 from datetime import datetime
 
-import pkg_resources
 from pathlib import Path
 
 import yaml
