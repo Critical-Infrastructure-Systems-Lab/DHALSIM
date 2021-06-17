@@ -77,23 +77,18 @@ class SimpleTopo(Topo):
         This would cause trouble with assigning IP and MAC addresses.
 
         :param data: the data to check on
-
         :raise TooManyNodes: When there are more then 250 nodes in the network
         """
+        raise_message = "There are too many nodes in the network. Only 250 nodes are supported."
+
         if 'plcs' in data:
             n_plcs = len(data["plcs"])
             if n_plcs > 250:
-                raise TooManyNodes(
-                    "There are too many nodes in the network. Only 250 nodes are supported.")
-            if 'network_attacks' in data:
-                if n_plcs + len(data['network_attacks']) > 250:
-                    raise TooManyNodes(
-                        "There are too many nodes in the network. Only 250 nodes are supported.")
-        else:
-            if 'network_attacks' in data:
-                if len(data['network_attacks']) > 250:
-                    raise TooManyNodes(
-                        "There are too many nodes in the network. Only 250 nodes are supported.")
+                raise TooManyNodes(raise_message)
+            if 'network_attacks' in data and n_plcs + len(data['network_attacks']) > 250:
+                raise TooManyNodes(raise_message)
+        elif 'network_attacks' in data and len(data['network_attacks']) > 250:
+            raise TooManyNodes(raise_message)
 
     def generate_data(self, data):
         """
