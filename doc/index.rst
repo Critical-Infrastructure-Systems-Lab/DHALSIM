@@ -1,6 +1,6 @@
 Welcome to DHALSIM's documentation!
 ===================================
-A Digital Twin for Water Distribution Systems. A work by the SUTD Resilient Water Systems Group and iTrust, along with an undergrad development team at TU Delft.
+A digital twin for Water Distribution Systems. A work by the SUTD Resilient Water Systems Group and iTrust, along with an undergrad development team at TU Delft.
 This digital twin uses Mininet and MiniCPS to emulate the behavior of water distribution systems and the industrial control system controlling them.
 
 DHALSIM uses the WNTR EPANET wrapper to simulate the behavior of water distribution systems. In addition to physical data, the digital twin emulates the industrial
