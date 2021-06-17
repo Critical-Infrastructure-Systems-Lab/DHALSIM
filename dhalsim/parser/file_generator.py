@@ -167,8 +167,7 @@ class GeneralReadmeGenerator:
     """
 
     def __init__(self, intermediate_yaml_path: Path, start_time: datetime.datetime,
-                 end_time: datetime.datetime, batch: bool, master_time: int, wn: WaterNetworkModel,
-                 forced_path: Path = None):
+                 end_time: datetime.datetime, batch: bool, master_time: int, wn: WaterNetworkModel):
 
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
@@ -178,7 +177,7 @@ class GeneralReadmeGenerator:
         self.batch = batch
         self.master_time = master_time
         self.wn = wn
-        self.forced_path = forced_path
+        self.forced_path = None
         self.version = pkg_resources.require('dhalsim')[0].version
 
     def get_value(self, parameter: str) -> str:
@@ -236,6 +235,9 @@ class GeneralReadmeGenerator:
     def get_readme_path(self) -> str:
         """Gets the path of the readme, bearing in mind batch mode and possibility of forced
         output path using parameter forced_path."""
+        if self.forced_path:
+            return str(self.forced_path)
+
         if 'batch_simulations' in self.intermediate_yaml:
             configuration_folder = Path(self.intermediate_yaml['config_path']).parent \
                                    / Path(self.intermediate_yaml['output_path']).parent \
@@ -246,11 +248,8 @@ class GeneralReadmeGenerator:
 
         readme_path = str(configuration_folder / 'general_readme.md')
 
-        if self.forced_path:
-            readme_path = str(self.forced_path)
-        else:
-            # Create directories in output folder
-            os.makedirs(str(configuration_folder), exist_ok=True)
+        # Create directories in output folder
+        os.makedirs(str(configuration_folder), exist_ok=True)
             
         return readme_path
             

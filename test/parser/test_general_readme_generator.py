@@ -25,7 +25,38 @@ def water_network_model(mocker):
 
 @pytest.fixture(scope="session")
 def tmp_path(tmpdir_factory):
-    return tmpdir_factory.mktemp("data").join("batch_readme.md")
+    return tmpdir_factory.mktemp("data").join("general_readme.md")
+
+
+def test_init(water_network_model):
+    general_rm_gen = GeneralReadmeGenerator(Path(__file__).parent.parent / 'auxilary_testing_files'
+                                        / 'intermediate.yaml',
+                                        datetime(year=2021, month=6, day=1, second=1),
+                                        datetime(year=2021, month=6, day=1, second=2),
+                                        False, 5, water_network_model)
+
+    assert general_rm_gen.start_time == datetime(year=2021, month=6, day=1, second=1)
+    assert general_rm_gen.end_time == datetime(year=2021, month=6, day=1, second=2)
+    assert general_rm_gen.batch == False
+    assert general_rm_gen.master_time == 5
+    assert general_rm_gen.wn == water_network_model
+    assert general_rm_gen.forced_path == None
+
+
+def test_verifies_written(rm_gen, tmp_path, water_network_model):
+    rm_gen.forced_path = tmp_path
+    rm_gen.intermediate_yaml = {'inp_file': 'map.inp', 'iterations': 1, 'output_path': 'output',
+                                'network_topology_type': 'Simple', 'mininet_cli': False,
+                                'log_level': 'info', 'simulator': 'pdd'}
+    rm_gen.batch = False
+    rm_gen.version = '1.0.0'
+    rm_gen.master_time = 1
+    rm_gen.wn = water_network_model
+    rm_gen.start_time = datetime(year=2021, month=6, day=1, second=1)
+    rm_gen.end_time = datetime(year=2021, month=6, day=1, second=2)
+    rm_gen.write_readme()
+    rm_file = open(tmp_path, 'r')
+    assert rm_file is not None
 
 
 def test_get_value(rm_gen):
