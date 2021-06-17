@@ -15,7 +15,7 @@ Example:
 .. code-block:: yaml
 
    device_attacks:
-     - name: "Close PRAW1 from iteration 5 to 10"
+     - name: "Close_PRAW1_from_iteration_5_to_10"
        trigger:
          type: time
          start: 5
@@ -29,7 +29,7 @@ name
 ~~~~
 *This option is required*
 
-This defines the name of the attack.
+This defines the name of the attack. It cannot have whitespaces.
 
 trigger
 ~~~~~~~~
@@ -61,7 +61,7 @@ actuator
 ~~~~~~~~~
 *This option is required*
 
-This parameters defines the actuator on which the :code:`command` should be executed.
+This parameter defines the actuator on which the :code:`command` should be executed.
 
 command
 ~~~~~~~
@@ -81,21 +81,21 @@ Here is an example of a :code:`device_attacks` section in an attack YAML file:
 .. code-block:: yaml
 
     device_attacks:
-      - name: "Close PRAW1 from iteration 5 to 10"
+      - name: "Close_PRAW_from_iteration_5_to_10"
        trigger:
          type: time
          start: 5
          end: 10
        actuator: P_RAW1
        command: closed
-      - name: "Close PRAW1 when T2 < 0.16"
+      - name: "Close_PRAW1_when_T2_<_0.16"
        trigger:
          type: below
          sensor: T2
          value: 0.16
        actuators: P_RAW1
        command: closed
-      - name: "Close PRAW1 when 0.10 < T2 < 0.16"
+      - name: "Close_PRAW1_when_0.10_<_T2_<_0.16"
        trigger:
          type: between
          sensor: T2
@@ -108,7 +108,7 @@ network attacks
 ---------------
 
 Network attacks are attacks where a new node is added to the mininet network topology. This node is an
-"attacker" and it can perform various attacks on the network. There are different types of attacks possible.
+"attacker" and can perform various attacks on the network. There are different types of attacks possible.
 These are explained in the following sections.
 
 Man-in-the-middle Attack
@@ -118,10 +118,19 @@ Man-in-the-middle (MITM) attacks are attacks where the attacker will sit in betw
 connected switch. The attacker will then route host a CPPPO server and respond to the CIP requests
 for the PLC.
 
+.. figure:: static/simple_topo_attack.svg
+    :align: center
+    :alt: A simple topology with an attacker
+    :figclass: align-center
+    :width: 50%
+
+    A simple topology with an attacker
+
 .. figure:: static/complex_topo_attack.svg
     :align: center
     :alt: A complex topology with an attacker
     :figclass: align-center
+    :width: 50%
 
     A complex topology with an attacker
 
@@ -151,12 +160,14 @@ name
 *This option is required*
 
 This defines the name of the attack. It is also used as the name of the attacker node on the mininet network.
+The name can only contain the the characters :code:`a-z`, :code:`A-Z`, :code:`0-9` and :code:`_`. And
+must have a length between 1 and 10 characters.
 
 type
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 *This option is required*
 
-This defines the type of network attack. For a MITM attack this should be :code:`mitm`.
+This defines the type of network attack. For a MITM attack, this should be :code:`mitm`.
 
 trigger
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -223,6 +234,7 @@ and can for example modify the responses to the other PLCs.
     :align: center
     :alt: A simple topology with an attacker
     :figclass: align-center
+    :width: 50%
 
     A simple topology with an attacker
 
@@ -230,6 +242,7 @@ and can for example modify the responses to the other PLCs.
     :align: center
     :alt: A complex topology with an attacker
     :figclass: align-center
+    :width: 50%
 
     A complex topology with an attacker
 
@@ -255,12 +268,14 @@ name
 *This option is required*
 
 This defines the name of the attack. It is also used as the name of the attacker node on the mininet network.
+The name can only contain the the characters :code:`a-z`, :code:`A-Z`, :code:`0-9` and :code:`_`. And
+must have a length between 1 and 10 characters.
 
 type
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 *This option is required*
 
-This defines the type of network attack. For a Naive MITM attack this should be :code:`naive_mitm`.
+This defines the type of network attack. For a Naive MITM attack, this should be :code:`naive_mitm`.
 
 trigger
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -292,7 +307,7 @@ value/offset
 ^^^^^^^^^^^^^^^^
 *One of these options is required*
 
-If you want to overwrite everything with a absolute value, use the :code:`value` option, and set it to the desired value.
+If you want to overwrite everything with an absolute value, use the :code:`value` option, and set it to the desired value.
 If you want to overwrite everything with a relative value, use the :code:`offset` option, and set it to the desired offset.
 
 target

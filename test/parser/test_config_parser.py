@@ -84,7 +84,7 @@ def test_generate_intermediate_yaml(mocker, tmpdir, wadi_config_yaml_path, fille
 
     assert actual == expected
     directory_mock.mkdtemp.assert_called_with(prefix='dhalsim_')
-    directory_mock.chmod.assert_called_with(directory_mock.mkdtemp(), 0o777)
+    directory_mock.chmod.assert_called_with(directory_mock.mkdtemp(), 0o775)
 
 
 @pytest.mark.parametrize('plcs, network_attacks',

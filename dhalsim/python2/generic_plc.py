@@ -5,6 +5,7 @@ import threading
 import time
 from decimal import Decimal
 from pathlib import Path
+import random
 
 import yaml
 
@@ -39,7 +40,7 @@ class GenericPLC(BasePLC):
     DB_TRIES = 10
     """Amount of times a db query will retry on a exception"""
 
-    DB_SLEEP_TIME = 0.01
+    DB_SLEEP_TIME = random.uniform(0.01, 0.1)
     """Amount of time a db query will wait before retrying"""
 
     def __init__(self, intermediate_yaml_path, yaml_index):
