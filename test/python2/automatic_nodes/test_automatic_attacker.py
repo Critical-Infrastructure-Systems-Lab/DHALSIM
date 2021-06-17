@@ -128,11 +128,22 @@ def test_start_tcpdump_capture(patched_auto_attack, subprocess_mock):
          "testPath/testInterface.pcap"], shell=False)
 
 
-def test_start_attack_exists(patched_auto_attack, subprocess_mock):
+def test_start_attack_exists_mitm(patched_auto_attack, subprocess_mock):
     auto_attack, logger_mock = patched_auto_attack
     auto_attack.intermediate_yaml = "testYaml"
     auto_attack.attacker_index = 1
     auto_attack.this_attacker_data = {"type": "mitm"}
+
+    assert auto_attack.start_attack() == 42
+    subprocess_mock.Popen.assert_called_once_with(
+        ["python3", ANY, "testYaml", "1"], shell=False, stderr=sys.stderr, stdout=sys.stdout)
+
+
+def test_start_attack_exists_naive_mitm(patched_auto_attack, subprocess_mock):
+    auto_attack, logger_mock = patched_auto_attack
+    auto_attack.intermediate_yaml = "testYaml"
+    auto_attack.attacker_index = 1
+    auto_attack.this_attacker_data = {"type": "naive_mitm"}
 
     assert auto_attack.start_attack() == 42
     subprocess_mock.Popen.assert_called_once_with(
