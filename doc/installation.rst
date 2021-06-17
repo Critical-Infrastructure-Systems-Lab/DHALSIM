@@ -1,10 +1,12 @@
 Installation
 ============
-In this guide we will describe how DHALSIM can be installed on an Ubuntu machine. We offer two modes of installation, an automatic installation which uses a script which will install every dependency. In case the automatic installation is not able to complete, a walkthrough for a manual installation is also available.
+In this guide, we will describe how DHALSIM can be installed on an Ubuntu machine. We offer two modes of installation, an automatic installation that uses a script that will install every dependency. In case the automatic installation is not able to complete, a walkthrough for a manual installation is also available.
 
 Ubuntu version
 ~~~~~~~~~~~~~~~~~~~~~~~~
-DHALSIM has been developed and tested on Ubuntu 20.04 LTS. We recommend installing and running DHALSIM on Ubuntu 20.04, however other versions may also work but are not tested. It is possible the automatic installation script will not work for other versions. In this case we recommend a manual installation.
+DHALSIM has been developed and tested on Ubuntu 20.04 LTS. Therefore, we recommend installing and running DHALSIM on Ubuntu 20.04. The installation script can be ran using ``./install.sh``. The installation script has not been tested on other versions. If you want to use another version, we recommend a manual installation.
+
+The installation script can also install all testing dependencies. To do this, simply run ``./install.sh test``.
 
 Automatic installation
 ----------------------
@@ -19,7 +21,7 @@ After cloning the repository, you can use the install script to install DHALSIM 
 
 Manual installation
 -------------------
-DHALSIM can also be installed manually for other Ubuntu versions. To this end you can use the following instructions.
+DHALSIM can also be installed manually for other Ubuntu versions. To this end, you can use the following instructions.
 
 Python and pip
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -32,7 +34,7 @@ Mininet and MiniCPS installation
 The installation instructions for MiniCPS and Mininet can be found `here
 <https://github.com/scy-phy/minicps/blob/master/docs/userguide.rst>`_.
 
-Please note that the cpppo installation should be replaced by ``cpppo==4.0.6``.
+Please note that the cpppo installation should be replaced by ``cpppo==4.0.*``.
 
 Other dependencies
 ~~~~~~~~~~~~~~~~~~~~~~

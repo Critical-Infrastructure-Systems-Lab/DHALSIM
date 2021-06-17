@@ -13,7 +13,7 @@ import sys
 import time
 from pathlib import Path
 
-from dhalsim.parser.file_generator import BatchReadMeGenerator, ReadMeGenerator
+from dhalsim.parser.file_generator import BatchReadmeGenerator, GeneralReadmeGenerator
 from dhalsim.py3_logger import get_logger
 import wntr
 import wntr.network.controls as controls
@@ -55,6 +55,7 @@ class PhysicalPlant:
         self.junction_list = self.get_node_list_by_type(self.node_list, 'Junction')
         self.pump_list = self.get_link_list_by_type(self.link_list, 'Pump')
         self.valve_list = self.get_link_list_by_type(self.link_list, 'Valve')
+        self.values_list = list()
 
         list_header = ['iteration', 'timestamp']
         list_header.extend(self.create_node_header(self.tank_list))
@@ -95,6 +96,8 @@ class PhysicalPlant:
                          os.path.basename(str(self.data['inp_file']))[:-4] + " topology.")
 
         self.start_time = datetime.now()
+        self.master_time = -1
+        self.db_update_string = "UPDATE plant SET value = ? WHERE name = ?"
 
     def get_node_list_by_type(self, a_list, a_type):
         result = []
@@ -164,49 +167,57 @@ class PhysicalPlant:
         return act_dict
 
     def register_results(self):
-        values_list = [self.master_time, datetime.now()]
-
         # Results are divided into: nodes: reservoir and tanks, links: flows and status
+        self.values_list = [self.master_time, datetime.now()]
+        self.extend_tanks()
+        self.extend_junctions()
+        self.extend_pumps()
+        self.extend_valves()
+        self.extend_attacks()
+
+    def extend_tanks(self):
         # Get tanks levels
         for tank in self.tank_list:
-            values_list.extend([self.wn.get_node(tank).level])
+            self.values_list.extend([self.wn.get_node(tank).level])
 
+    def extend_junctions(self):
         # Get junction  levels
         for junction in self.junction_list:
-            values_list.extend(
+            self.values_list.extend(
                 [self.wn.get_node(junction).head - self.wn.get_node(junction).elevation])
 
+    def extend_pumps(self):
         # Get pumps flows and status
         for pump in self.pump_list:
 
-            values_list.extend([self.wn.get_link(pump).flow])
+            self.values_list.extend([self.wn.get_link(pump).flow])
 
             if type(self.wn.get_link(pump).status) is int:
-                values_list.extend([self.wn.get_link(pump).status])
+                self.values_list.extend([self.wn.get_link(pump).status])
             else:
-                values_list.extend([self.wn.get_link(pump).status.value])
+                self.values_list.extend([self.wn.get_link(pump).status.value])
 
+    def extend_valves(self):
         # Get valves flows and status
         for valve in self.valve_list:
-            values_list.extend([self.wn.get_link(valve).flow])
+            self.values_list.extend([self.wn.get_link(valve).flow])
 
             if type(self.wn.get_link(valve).status) is int:
-                values_list.extend([self.wn.get_link(valve).status])
+                self.values_list.extend([self.wn.get_link(valve).status])
             else:
-                values_list.extend([self.wn.get_link(valve).status.value])
+                self.values_list.extend([self.wn.get_link(valve).status.value])
 
+    def extend_attacks(self):
         # Get device attacks
         if "plcs" in self.data:
             for plc in self.data["plcs"]:
                 if "attacks" in plc:
                     for attack in plc["attacks"]:
-                        values_list.append(self.get_attack_flag(attack['name']))
+                        self.values_list.append(self.get_attack_flag(attack['name']))
         # get network attacks
         if "network_attacks" in self.data:
             for network_attack in self.data["network_attacks"]:
-                values_list.append(self.get_attack_flag(network_attack['name']))
-
-        return values_list
+                self.values_list.append(self.get_attack_flag(network_attack['name']))
 
     def update_controls(self):
         """Updates all controls in WNTR."""
@@ -259,7 +270,6 @@ class PhysicalPlant:
         # simulation data
         self.wn.options.time.duration = self.wn.options.time.hydraulic_timestep
 
-        self.master_time = -1
         iteration_limit = self.data["iterations"]
 
         self.logger.debug("Temporary file location: " + str(Path(self.data["db_path"]).parent))
@@ -294,7 +304,7 @@ class PhysicalPlant:
             self.logger.debug("Iteration {x} out of {y}.".format(x=str(self.master_time),
                                                                  y=str(iteration_limit)))
 
-            if p_bar and self.data['log_level'] != 'debug':
+            if p_bar:
                 p_bar.update(self.master_time)
 
             # Check for simulation error, print output on exception
@@ -304,8 +314,8 @@ class PhysicalPlant:
                 self.logger.error(f"Error in WNTR simulation: {exp}")
                 self.finish()
 
-            values_list = self.register_results()
-            self.results_list.append(values_list)
+            self.register_results()
+            self.results_list.append(self.values_list)
 
             self.update_tanks()
             self.update_pumps()
@@ -313,9 +323,9 @@ class PhysicalPlant:
             self.update_junctions()
 
             # Write results of this iteration if needed
-            if 'saving_interval' in self.data:
-                if self.master_time != 0 and self.master_time % self.data['saving_interval'] == 0:
-                    self.write_results(self.results_list)
+            if 'saving_interval' in self.data and self.master_time != 0 and \
+                    self.master_time % self.data['saving_interval'] == 0:
+                self.write_results(self.results_list)
 
             # Set sync flags for nodes
             self.c.execute("UPDATE sync SET flag=0")
@@ -327,33 +337,28 @@ class PhysicalPlant:
         """Update tanks in database."""
         for tank in self.tank_list:
             a_level = self.wn.get_node(tank).level
-            self.c.execute("UPDATE plant SET value = ? WHERE name = ?",
-                           (str(a_level), tank,))
+            self.c.execute(self.db_update_string, (str(a_level), tank,))
             self.conn.commit()
 
     def update_pumps(self):
         """"Update pumps in database."""
         for pump in self.pump_list:
             flow = Decimal(self.wn.get_link(pump).flow)
-            self.c.execute("UPDATE plant SET value = ? WHERE name = ?",
-                           (str(flow), pump + "F",))
+            self.c.execute(self.db_update_string, (str(flow), pump + "F",))
             self.conn.commit()
 
     def update_valves(self):
         """Update valve in database."""
         for valve in self.valve_list:
             flow = Decimal(self.wn.get_link(valve).flow)
-            self.c.execute("UPDATE plant SET value = ? WHERE name = ?",
-                           (str(flow), valve + "F",))
+            self.c.execute(self.db_update_string, (str(flow), valve + "F",))
             self.conn.commit()
 
     def update_junctions(self):
         """Update junction pressure in database."""
         for junction in self.junction_list:
             level = Decimal(self.wn.get_node(junction).head - self.wn.get_node(junction).elevation)
-            # pressure = Decimal(self.wn.get_node(junction).pressure)
-            self.c.execute("UPDATE plant SET value = ? WHERE name = ?",
-                           (str(level), junction,))
+            self.c.execute(self.db_update_string, (str(level), junction,))
             self.conn.commit()
 
     def interrupt(self, sig, frame):
@@ -366,16 +371,18 @@ class PhysicalPlant:
         end_time = datetime.now()
 
         if 'batch_simulations' in self.data:
-            BatchReadMeGenerator(self.intermediate_yaml).write_batch(self.start_time, end_time, self.wn,
-                                                                     self.master_time)
+            readme_path = Path(self.data['config_path']).parent / self.data['output_path']\
+                          / 'configuration' / 'batch_readme.md'
+            os.makedirs(str(readme_path.parent), exist_ok=True)
+
+            BatchReadmeGenerator(self.intermediate_yaml, readme_path, self.start_time, end_time,
+                                 self.wn, self.master_time).write_batch()
             if self.data['batch_index'] == self.data['batch_simulations'] - 1:
-                ReadMeGenerator(self.intermediate_yaml).write_readme(self.data['start_time'],
-                                                                     datetime.now(), True,
-                                                                     self.master_time, self.wn)
+                GeneralReadmeGenerator(self.intermediate_yaml, self.data['start_time'],
+                                       end_time, True, self.master_time, self.wn).write_readme()
         else:
-            ReadMeGenerator(self.intermediate_yaml).write_readme(self.data['start_time'],
-                                                                 datetime.now(), False,
-                                                                 self.master_time, self.wn)
+            GeneralReadmeGenerator(self.intermediate_yaml, self.data['start_time'],
+                                   end_time, False, self.master_time, self.wn).write_readme()
         sys.exit(0)
 
     def set_initial_values(self):

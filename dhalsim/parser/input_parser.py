@@ -97,8 +97,8 @@ class InputParser:
         Generates list of controls with their types, values, actuators, and
         potentially dependant; then adds that to self.data to be written to the yaml.
         """
-        input = FileStream(self.inp_file_path)
-        tree = controlsParser(CommonTokenStream(controlsLexer(input))).controls()
+        input_file = FileStream(self.inp_file_path)
+        tree = controlsParser(CommonTokenStream(controlsLexer(input_file))).controls()
 
         controls = []
         for i in range(0, tree.getChildCount()):

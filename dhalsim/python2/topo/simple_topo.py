@@ -77,23 +77,18 @@ class SimpleTopo(Topo):
         This would cause trouble with assigning IP and MAC addresses.
 
         :param data: the data to check on
-
         :raise TooManyNodes: When there are more then 250 nodes in the network
         """
+        raise_message = "There are too many nodes in the network. Only 250 nodes are supported."
+
         if 'plcs' in data:
             n_plcs = len(data["plcs"])
             if n_plcs > 250:
-                raise TooManyNodes(
-                    "There are too many nodes in the network. Only 250 nodes are supported.")
-            if 'network_attacks' in data:
-                if n_plcs + len(data['network_attacks']) > 250:
-                    raise TooManyNodes(
-                        "There are too many nodes in the network. Only 250 nodes are supported.")
-        else:
-            if 'network_attacks' in data:
-                if len(data['network_attacks']) > 250:
-                    raise TooManyNodes(
-                        "There are too many nodes in the network. Only 250 nodes are supported.")
+                raise TooManyNodes(raise_message)
+            if 'network_attacks' in data and n_plcs + len(data['network_attacks']) > 250:
+                raise TooManyNodes(raise_message)
+        elif 'network_attacks' in data and len(data['network_attacks']) > 250:
+            raise TooManyNodes(raise_message)
 
     def generate_data(self, data):
         """
@@ -224,16 +219,14 @@ class SimpleTopo(Topo):
         """
         # TODO: figure out which of these parameters are necessary
         link_params = dict(bw=1000, delay="0ms", loss=0, max_queue_size=1000, use_htb=True)
-        # If delays enabled
-        if 'network_delay_data' in self.data:
-            # If delay value for this node defined
-            if self.data['network_delay_values'][yaml_node_data['name']]:
-                link_params['delay'] = self.data['network_delay_values'][yaml_node_data['name']]
-        # If losses enabled
-        if 'network_loss_data' in self.data:
-            # If loss value for this node defined
-            if self.data['network_loss_values'][yaml_node_data['name']]:
-                link_params['loss'] = self.data['network_loss_values'][yaml_node_data['name']]
+        # If delays enabled and delay value for this node defined
+        if 'network_delay_data' in self.data and\
+                self.data['network_delay_values'][yaml_node_data['name']]:
+            link_params['delay'] = self.data['network_delay_values'][yaml_node_data['name']]
+        # If losses enabled and loss value for this node defined
+        if 'network_loss_data' in self.data and\
+                self.data['network_loss_values'][yaml_node_data['name']]:
+            link_params['loss'] = self.data['network_loss_values'][yaml_node_data['name']]
         # Add link with network parameters
         self.addLink(node, switch, addr1=yaml_node_data['mac'],
                      intfName=yaml_node_data['interface'], **link_params)
