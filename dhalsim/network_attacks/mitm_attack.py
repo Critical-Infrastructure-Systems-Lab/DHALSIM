@@ -156,7 +156,7 @@ class MitmAttack(SyncedAttack):
 
         return cmd
 
-    def cpppo_thread(self):
+    def cpppo_thread(self, interrupt_test=False):
         """Start the CPPPO client to respond to requests."""
         while self.run_thread:
             cmd = self.make_client_cmd()
@@ -167,6 +167,8 @@ class MitmAttack(SyncedAttack):
                 client.wait()
             except Exception as error:
                 self.logger.error(f"ERROR MITM Attack client ENIP send_multiple: {error}")
+            if interrupt_test:
+                break
             time.sleep(0.05)
 
     def interrupt(self):
