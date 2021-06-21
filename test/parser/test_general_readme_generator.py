@@ -88,11 +88,6 @@ def test_checkbox_absent(rm_gen):
     assert rm_gen.checkbox('parameter') == "\n\n- [ ] parameter"
 
 
-# todo
-def test_get_readme_path(rm_gen):
-    assert True
-
-
 def test_get_input_files_w_batch(rm_gen):
     rm_gen.intermediate_yaml = {'batch_simulations': 3,
                                 'output_path': Path('tmp/readme/batch0')}
