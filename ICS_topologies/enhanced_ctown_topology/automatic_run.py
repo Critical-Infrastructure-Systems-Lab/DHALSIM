@@ -199,7 +199,7 @@ class CTown(MiniCPS):
             plc_number = str(self.attack_options['source_plc'])[-1]
             print("Attacker is node: " + 'attacker_' + str(plc_number))
             attacker = net.get('attacker_' + str(plc_number))
-            cmd_string = "../../../attack-experiments/env/bin/python ../../attack_repository/mitm_plc/mitm_attack.py 192.168.1.1 192.168.1.254 "\
+            cmd_string = "../../../attack-experiments/bin/python ../../attack_repository/mitm_plc/mitm_attack.py 192.168.1.1 192.168.1.254 "\
                          + str(self.attack_options['name']) + " "\
                          + str(self.attack_options['values'][0])
             mitm_cmd = shlex.split(cmd_string)
@@ -286,10 +286,6 @@ class CTown(MiniCPS):
         if self.simulation.poll() is None:  
             self.end_process(self.simulation)
             print "Physical Simulation process terminated"
-
-        # toDo: This method is not working
-        #self.parse_pcap_files()
-        #self.merge_pcap_files()
 
         # moves all the results to a folder named week_<week_index>
         self.move_output_files(self.week_index)

@@ -50,11 +50,13 @@ class SimulationControl():
         wntr_environment_path = home_path + str("/wntr-experiments/bin/python")
         print "Launching simulation for week index: " + str(sys.argv[2])
 
-        #cmd_string = wntr_environment_path + " physical_process.py " + sys.argv[1] + " " + sys.argv[2]
-        cmd_string = wntr_environment_path + " physical_process_epynet.py " + sys.argv[1] + " " + sys.argv[2]
-        #argv[3] is the attack repository path
+        cmd_string = wntr_environment_path + " physical_process.py " + sys.argv[1] + " " + sys.argv[2]
+        #cmd_string = wntr_environment_path + " physical_process_epynet.py " + sys.argv[1] + " " + sys.argv[2]
         if len(sys.argv) >= 4:
-            cmd_string = wntr_environment_path + " physical_process_epynet.py " + sys.argv[1] + " " + sys.argv[2] + \
+            #cmd_string = wntr_environment_path + " physical_process_epynet.py " + sys.argv[1] + " " + sys.argv[2] + \
+            #             " " + sys.argv[3]
+
+            cmd_string = wntr_environment_path + " physical_process.py " + sys.argv[1] + " " + sys.argv[2] + \
                          " " + sys.argv[3]
 
         cmd = shlex.split(cmd_string)
