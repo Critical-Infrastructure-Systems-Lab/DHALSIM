@@ -15,7 +15,8 @@ class PLC1(BasePLC):
         self.reader = True
         self.tank_level = Decimal(self.get(TANK))
         self.saved_tank_levels = [["iteration", "timestamp", "TANK_LEVEL"]]
-        path = 'plc1_saved_tank_levels_received.csv'        self.lock = threading.Lock()
+        path = 'plc1_saved_tank_levels_received.csv'
+        self.lock = threading.Lock()
         lastPLC = True
         week_index = int(sys.argv[1])
         BasePLC.set_parameters(self, path, self.saved_tank_levels, [TANK], [self.tank_level],
@@ -34,7 +35,6 @@ class PLC1(BasePLC):
             if control == 0:
                 self.local_time += 1
                 tank_level = Decimal(self.get(TANK))
-                #self.saved_tank_levels.append([datetime.now(), tank_level])
 if __name__ == "__main__":
     plc1 = PLC1(
         name='plc1',

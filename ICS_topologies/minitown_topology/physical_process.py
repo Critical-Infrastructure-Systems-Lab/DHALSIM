@@ -45,7 +45,6 @@ class Simulation:
         list_header.extend(aux)
         aux = self.create_link_header(self.pump_list)
         list_header.extend(aux)
-        list_header.extend(aux)
         aux = self.create_link_header(self.valve_list)
         list_header.extend(aux)
         list_header.extend(["Attack#01", "Attack#02"])
