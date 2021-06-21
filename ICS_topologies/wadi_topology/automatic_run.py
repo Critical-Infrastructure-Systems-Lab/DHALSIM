@@ -137,7 +137,7 @@ class WADI(MiniCPS):
             plc_number = str(self.attack_options['source_plc'])[-1]
             print("Attacker is node: " + 'attacker_1')
             attacker = net.get('attacker_1')
-            cmd_string = "../../../attack-experiments/env/bin/python ../../attack_repository/mitm_plc/wadi_mitm_attack.py 192.168.1.20 192.168.1.10 "\
+            cmd_string = "../../../attack-experiments/bin/python ../../attack_repository/mitm_plc/wadi_mitm_attack.py 192.168.1.20 192.168.1.10 "\
                          + str(self.attack_options['name']) + " "\
                          + str(self.attack_options['values'][0])
             mitm_cmd = shlex.split(cmd_string)
