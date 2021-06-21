@@ -2,9 +2,9 @@
 # Simulation initialization parameters
 initial_custom_flag: "True"
 week_index: 0
-demand_patterns_path: "../../Demand_patterns/second_batch_three_year_demands_minitown.csv"
-starting_demand_path: "../../Demand_patterns/second_batch_random_init_points.csv"
-initial_tank_levels_path: "../../Demand_patterns/second_batch_minitown_tank_initial_conditions.csv"
+demand_patterns_path: "../../Demand_patterns/minitown_three_year_demands.csv"
+starting_demand_path: "../../Demand_patterns/minitown_starting_demand_points.csv"
+initial_tank_levels_path: "../../Demand_patterns/minitown_tank_initial_conditions.csv"
 
 # General simulation parameters
 db_path: "minitown_db.sqlite"
