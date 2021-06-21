@@ -111,7 +111,7 @@ class Simulation:
         for node in a_list:
             if self.wn.get_node(node).node_type == a_type:
                 result.append(str(node))
-        return resul
+        return result
 
     def get_link_list_by_type(self, a_list, a_type):
         result = []
@@ -232,13 +232,13 @@ class Simulation:
                     self.c.execute(query)  # UPDATE TANKS IN THE DATABASE
                     self.conn.commit()
                 self.c.execute("UPDATE " + str(self.db_name) + " SET value = 0 WHERE name = 'CONTROL'")
-                self.conn.commit(
+                self.conn.commit()
                 if results:
                     time.sleep(0.5)
         self.write_results(self.results_list)
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     simulation = Simulation()
     simulation.main()
     exit(0)

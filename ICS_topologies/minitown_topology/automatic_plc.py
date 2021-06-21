@@ -31,7 +31,7 @@ class NodeControl():
     def main(self):
         args = self.get_arguments()
         self.process_arguments(args)
-        signal.signal(signal.SIGINT, self.sigint_handle)
+        signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
         self.configure_routing()
         self.delete_log()
