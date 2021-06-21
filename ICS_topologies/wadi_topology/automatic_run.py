@@ -201,7 +201,7 @@ class WADI(MiniCPS):
             self.end_process(self.simulation)
             print "Physical Simulation process terminated"
 
-        self.merge_pcap_files()
+        #self.merge_pcap_files()
         self.move_output_files(self.week_index)
 
         cmd = shlex.split("./kill_cppo.sh")
