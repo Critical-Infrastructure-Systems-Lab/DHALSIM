@@ -289,7 +289,7 @@ class CTown(MiniCPS):
 
         # toDo: This method is not working
         #self.parse_pcap_files()
-        self.merge_pcap_files()
+        #self.merge_pcap_files()
 
         # moves all the results to a folder named week_<week_index>
         self.move_output_files(self.week_index)

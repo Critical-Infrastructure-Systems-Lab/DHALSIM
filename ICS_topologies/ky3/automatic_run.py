@@ -216,7 +216,7 @@ class CTown(MiniCPS):
             print "Physical Simulation process terminated"
 
         print "[*] All processes terminated"
-        self.merge_pcap_files()
+        #self.merge_pcap_files()
         self.move_output_files(self.week_index)
 
         cmd = shlex.split("./kill_cppo.sh")
