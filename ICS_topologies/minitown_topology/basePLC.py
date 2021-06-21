@@ -43,9 +43,10 @@ class BasePLC(PLC):
         self.isScada = isScada
 
     def write_output(self):
-        with open('output/' + self.path, 'w') as f:
-            writer = csv.writer(f)
-            writer.writerows(self.result_list)
+        if self.isScada:
+            with open('output/' + self.path, 'w') as f:
+                writer = csv.writer(f)
+                writer.writerows(self.result_list)
 
     def sigint_handler(self, sig, frame):
         print 'DEBUG PLC shutdown'

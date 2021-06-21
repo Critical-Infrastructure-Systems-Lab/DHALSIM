@@ -15,7 +15,7 @@ class SCADAServer(BasePLC):
         self.saved_tank_levels = [["timestamp", "TANK_LEVEL", "PUMP1", "PUMP2"]]
         self.plc1_tags = [TANK]
         self.plc2_tags = [PUMP1, PUMP2]
-        path = 'scada_saved_tank_levels_received.csv'
+        path = 'scada_values.csv'
         isScada = True
         # Used in handling of sigint and sigterm signals, also sets the parameters to save the system state variable values into a persistent file
         BasePLC.set_parameters(self, path, self.saved_tank_levels, None, None, None, None, None, False, 0, isScada)
@@ -31,7 +31,7 @@ class SCADAServer(BasePLC):
                 results = [datetime.now()]
                 results.extend(plc1_values)
                 results.extend(plc2_values)
-                #self.saved_tank_levels.append(results)
+                self.saved_tank_levels.append(results)
                 time.sleep(0.3)
             except Exception, msg:
                 print (msg)

@@ -10,7 +10,7 @@ initial_tank_levels_path: "../../Demand_patterns/minitown_tank_initial_condition
 db_path: "minitown_db.sqlite"
 db_name: "minitown"
 output_ground_truth_path: "physical_process.csv"
-duration_days: 7
+duration_days: 1
 inp_file: "minitown_map.inp"
 simulator: "pdd"
 simulation_tpye: "Batch"
