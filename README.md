@@ -27,3 +27,7 @@ Finally, DHALSIM needs pathlib and pyyaml installed. Other dependencies should b
 ## Running
 
 DHALSIM can be run using the command ```sudo dhalsim path/to/config.yaml```.
+
+## Repository structure
+
+The repository is structured as follows. The ```dhalsim``` package contains all source files and the ```test``` package contains all tests. Documentation can be found in the ```doc``` folder. Some example topologies and configurations can be found in the ```examples``` folder. An important file in the root is the installation script ```install.sh```.
