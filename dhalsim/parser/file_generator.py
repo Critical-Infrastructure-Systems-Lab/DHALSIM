@@ -116,7 +116,6 @@ class InputFilesCopier:
         else:
             self.configuration_folder = Path(self.intermediate_yaml['output_path']) / 'configuration'
 
-        print(self.configuration_folder)
 
     def copy_input_files(self):
         """Copies all input files, mandatory and optional ones included."""
@@ -279,7 +278,7 @@ class GeneralReadmeGenerator:
     
     def get_optional_data_parameters(self) -> str:
         """Get optional data parameters."""
-        ret_str = "\n\n## Extra parameters"
+        ret_str = "\n\n## Initial conditions"
         ret_str += self.checkbox('initial_tank_data')
         ret_str += self.checkbox('demand_patterns')
         ret_str += self.checkbox('network_loss_data')
