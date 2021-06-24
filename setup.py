@@ -3,7 +3,7 @@ import setuptools
 setuptools.setup(
     name="dhalsim",
     version="1.1.0",
-    url="https://gitlab.ewi.tudelft.nl/cse2000-software-project/2020-2021-q4/cluster-06/water-infrastructure/dhalsim",
+    url="https://github.com/afmurillo/DHALSIM",
     project_urls={
         "Bug Tracker": "https://gitlab.ewi.tudelft.nl/cse2000-software-project/2020-2021-q4/cluster-06/water-infrastructure/dhalsim/-/issues",
     },
