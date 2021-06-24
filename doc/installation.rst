@@ -6,7 +6,7 @@ Ubuntu version
 ~~~~~~~~~~~~~~~~~~~~~~~~
 DHALSIM has been developed and tested on Ubuntu 20.04 LTS. Therefore, we recommend installing and running DHALSIM on Ubuntu 20.04. The installation script can be ran using ``./install.sh``. The installation script has not been tested on other versions. If you want to use another version, we recommend a manual installation.
 
-The installation script can also install all testing dependencies. To do this, simply run ``./install.sh test``.
+The installation script can also install all testing and documentation dependencies. To do this, simply run ``./install.sh`` with the option `-t` for testing or `-d` for documentation, for example ``./install.sh -t -d``.
 
 Automatic installation
 ----------------------
@@ -14,7 +14,7 @@ After cloning the repository, you can use the install script to install DHALSIM 
 
 .. prompt:: bash $
 
-    git clone git@gitlab.ewi.tudelft.nl:cse2000-software-project/2020-2021-q4/cluster-06/water-infrastructure/dhalsim.git
+    git clone git@github.com:afmurillo/DHALSIM.git
     cd dhalsim
     sudo chmod +x install.sh
     ./install.sh
