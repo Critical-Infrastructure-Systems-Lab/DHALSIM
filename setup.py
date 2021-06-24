@@ -5,7 +5,7 @@ setuptools.setup(
     version="1.1.0",
     url="https://github.com/afmurillo/DHALSIM",
     project_urls={
-        "Bug Tracker": "https://gitlab.ewi.tudelft.nl/cse2000-software-project/2020-2021-q4/cluster-06/water-infrastructure/dhalsim/-/issues",
+        "Bug Tracker": "https://github.com/afmurillo/DHALSIM/issues",
     },
     classifiers=[
         "Programming Language :: Python :: 3",
