@@ -1,14 +1,6 @@
 dhalsim.parser package
 ======================
 
-Subpackages
------------
-
-.. toctree::
-   :maxdepth: 100
-
-   dhalsim.parser.antlr
-
 Submodules
 ----------
 

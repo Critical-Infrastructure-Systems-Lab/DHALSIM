@@ -88,11 +88,6 @@ def test_checkbox_absent(rm_gen):
     assert rm_gen.checkbox('parameter') == "\n\n- [ ] parameter"
 
 
-# todo
-def test_get_readme_path(rm_gen):
-    assert True
-
-
 def test_get_input_files_w_batch(rm_gen):
     rm_gen.intermediate_yaml = {'batch_simulations': 3,
                                 'output_path': Path('tmp/readme/batch0')}
@@ -123,7 +118,7 @@ def test_get_optional_data_parameters_all(rm_gen):
     rm_gen.intermediate_yaml = {'initial_tank_data': [1], 'demand_patterns': [1],
                                 'network_loss_data': [1], 'network_delay_data': [1],
                                 'network_attacks': [1]}
-    assert rm_gen.get_optional_data_parameters() == "\n\n## Extra parameters\n\n- [x] initial_" \
+    assert rm_gen.get_optional_data_parameters() == "\n\n## Initial conditions\n\n- [x] initial_" \
                                                     "tank_data\n\n- [x] demand_patterns\n\n- [x]" \
                                                     " network_loss_data\n\n- [x] network_delay" \
                                                     "_data\n\n- [x] network_attacks"
@@ -131,7 +126,7 @@ def test_get_optional_data_parameters_all(rm_gen):
 
 def test_get_optional_data_parameters_none(rm_gen):
     rm_gen.intermediate_yaml = {}
-    assert rm_gen.get_optional_data_parameters() == "\n\n## Extra parameters\n\n- [ ] initial_" \
+    assert rm_gen.get_optional_data_parameters() == "\n\n## Initial conditions\n\n- [ ] initial_" \
                                                     "tank_data\n\n- [ ] demand_patterns\n\n- [ ]" \
                                                     " network_loss_data\n\n- [ ] network_delay" \
                                                     "_data\n\n- [ ] network_attacks"
@@ -140,7 +135,7 @@ def test_get_optional_data_parameters_none(rm_gen):
 def test_get_optional_data_parameters_some(rm_gen):
     rm_gen.intermediate_yaml = {'initial_tank_data': [1], 'demand_patterns': [1],
                                 'network_delay_data': [], 'network_attacks': [1]}
-    assert rm_gen.get_optional_data_parameters() == "\n\n## Extra parameters\n\n- [x] initial_" \
+    assert rm_gen.get_optional_data_parameters() == "\n\n## Initial conditions\n\n- [x] initial_" \
                                                     "tank_data\n\n- [x] demand_patterns\n\n- [ ]" \
                                                     " network_loss_data\n\n- [ ] network_delay" \
                                                     "_data\n\n- [x] network_attacks"
