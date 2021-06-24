@@ -1,0 +1,8 @@
+device_attacks:
+  - name: V_ER2i_attack
+    trigger:
+      type: time
+      start: 125
+      end: 375
+    actuator: V_ER2i
+    command: closed

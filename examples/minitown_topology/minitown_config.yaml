@@ -1,0 +1,8 @@
+inp_file: minitown_map.inp
+output_path: output
+iterations: 1000
+
+plcs: !include minitown_plcs.yaml
+attacks: !include minitown_attacks.yaml
+
+initial_tank_data: initial_tank.csv
