@@ -83,6 +83,19 @@ Inside this environment we will install scapy and netfilterqueue
 
 This finishes the configuration of the python2 virtual environment
 
+#### DHALSIM Epynet
+The enhanced-ctown topology example does not use WNTR as a hydraulic simulator. Instead, it is configured to use the experimental as physical process simulator DHALSIM-epynet library developed by Davide Salaorni.
+DHALSIM-epynet is a wrapper around EPANET2.2 and runs in a more natively way the EPANET simulator. Future releases of DHALSIM will have configured DHALSIM-epynet by default.
+
+To install DHALSIM-epynet, clone the repository at: https://github.com/Daveonwave/DHALSIM-epynet.git
+
+And create a symbolic link to the enhanced c-town topology:
+
+ ln -s ~/DHALSIM-epynet/ ~/DHALSIM/ICS_topologies/enhanced_ctown_topology/
+ 
+ In future versions, DHALSIM-epynet will be released as Python pip module.   
+ 
+
 ## How to use the Digital Twin
 
 The Makefile inside the ICS_topologies has example topologies already implemented. To run an example topology use: 
