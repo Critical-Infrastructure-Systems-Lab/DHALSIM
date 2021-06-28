@@ -1,5 +1,5 @@
 # Digital HydrAuLic SIMulator (DHALSIM)
-_A Digital Twin for Water Distribution Systems. A work by the SUTD Resilient Water Systems Group, iTrust and TU Delft Department of Water Infrastructure_
+_A Digital Twin for Water Distribution Systems. A work by the SUTD Resilient Water Systems Group, iTrust, and TU Delft Department of Water Infrastructure_
 
 This digital twin uses Mininet and MiniCPS to emulate the behavior of water distribution systems and the industrial control system controlling them. In addition to physical data, the digital twin emulates the industrial network and also generates .pcap files with this network data. Several example topologies with attacks have been provided in the examples folder.
 
