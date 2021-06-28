@@ -4,6 +4,7 @@ import sys
 import os
 import pandas as pd
 import yaml
+import traceback
 from decimal import Decimal
 from datetime import datetime
 from utils import T1, T2, T3, T4, T5, T6, T7, PU1, PU2, PU1F, PU2F
@@ -11,12 +12,12 @@ from utils import V2, PU3, PU4, PU5, PU6, PU7, PU8, PU9, PU10, PU11
 from utils import V2F, PU3F, PU4F, PU5F, PU6F, PU7F, PU8F, PU9F, PU10F, PU11F
 from utils import J280, J269, J300, J256, J289, J415, J14, J422, J302, J306, J307, J317, ATT_1, ATT_2
 
-sys.path.insert(1, sys.path[0] + '/epynet/scripts')
+sys.path.insert(1, sys.path[0] + '/DHALSIM-epynet')
 
 print(sys.path)
 
 import network
-import epynet_utils
+import epynetUtils
 
 class PhysicalPlant:
 
@@ -188,16 +189,15 @@ class PhysicalPlant:
             options = yaml.load(config_file, Loader=yaml.FullLoader)
         return options
 
-
     def configure_demand_patterns(self, patterns_path, starting_demand):
         limit = (self.simulation_days * 24) - 1
-        total_demands = pd.read_csv(patterns_path, index_col=0)
+        total_demands = pd.read_csv(patterns_path)
         demand_starting_points = pd.read_csv(starting_demand, index_col=0)
 
         week_start = demand_starting_points.iloc[self.week_index][0]
         week_demands = total_demands.loc[week_start:week_start + limit, :]
 
-        for pattern in list(self.wn.patterns.keys()):
+        for pattern in self.wn.patterns.uid:
             self.wn.set_demand_pattern(pattern, week_demands[pattern].values.tolist())
 
     def configure_initial_tank_levels(self, tank_levels_path):
@@ -368,15 +368,16 @@ class PhysicalPlant:
         internal_epynet_step = 1
         simulation_time = 0
 
-        # FOR DEBUG
-        #status = [1.0, 0.0]
-        #actuators_status_dict = {uid: status for uid in self.wn.pumps.uid.append(self.wn.valves.uid)}
-
         while internal_epynet_step > 0:
 
             self.update_actuators()
-            #print("Simulating with actuators: " + str(self.actuator_list))
-            internal_epynet_step, network_state = self.wn.simulate_step(simulation_time, self.actuator_list)
+
+            try:
+                internal_epynet_step, network_state = self.wn.simulate_step(simulation_time, self.actuator_list)
+            except IndexError as i_error:
+                print("ERROR: ", i_error)
+                traceback.print_exc()
+                break
 
             if internal_epynet_step == simluation_step:
                 master_time += 1
@@ -384,19 +385,11 @@ class PhysicalPlant:
             print("Internal epynet step: " + str(internal_epynet_step))
             print("ITERATION %d ------------- " % master_time)
 
-            #print("Network State")
-            #print(network_state)
-
             step_results = self.register_results(network_state)
-
-            #print("Step Results")
-            #print(step_results)
 
             self.results_list.append(step_results)
 
             simulation_time = simulation_time + internal_epynet_step
-            #continue
-
 
             try:
                 # Update tank pressure
