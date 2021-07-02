@@ -17,6 +17,9 @@ from minicps.devices import SCADAServer
 
 from py2_logger import get_logger
 
+import thread
+import multiprocessing
+from multiprocessing import Lock
 
 class Error(Exception):
     """Base class for exceptions in this module."""
@@ -88,6 +91,8 @@ class GenericScada(SCADAServer):
                 PLC['actuators'] = list()
             self.saved_values[0].extend(PLC['sensors'])
             self.saved_values[0].extend(PLC['actuators'])
+
+        self.keep_updating_flag = False
 
         self.cache = {}
         for ip in self.plc_data:
@@ -162,6 +167,9 @@ class GenericScada(SCADAServer):
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
 
+        self.keep_updating_flag = True
+        self.cache_update_process = None
+
         time.sleep(sleep)
 
     def db_query(self, query, parameters=None):
@@ -187,7 +195,7 @@ class GenericScada(SCADAServer):
                     self.cur.execute(query)
                 return
             except sqlite3.OperationalError as exc:
-                self.logger.debug(
+                self.logger.info(
                     "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
                         exc=exc, i=self.DB_TRIES - i - 1))
                 time.sleep(self.DB_SLEEP_TIME)
@@ -227,10 +235,18 @@ class GenericScada(SCADAServer):
                          (int(flag),))
         self.conn.commit()
 
+    def stop_cache_update(self):
+        self.keep_updating_flag = False
+
+        if self.cache_update_process.is_alive():
+            self.cache_update_process.terminate()
+
     def sigint_handler(self, sig, frame):
         """
         Shutdown protocol for the scada, writes the output before exiting.
         """
+
+        #self.stop_cache_update()
         self.logger.debug("SCADA shutdown")
         self.write_output()
         sys.exit(0)
@@ -293,10 +309,11 @@ class GenericScada(SCADAServer):
                 self.logger.debug("PLC values received by SCADA from IP: " + str(plc_ip)
                                   + " is " + str(values) + ".")
             except Exception as e:
-                self.logger.debug(
+                self.logger.error(
                     "PLC receive_multiple with tags {tags} from {ip} failed with exception '{e}'".format(
                         tags=self.plc_data[plc_ip],
                         ip=plc_ip, e=str(e)))
+
 
     def main_loop(self, sleep=0.5, test_break=False):
         """
@@ -306,6 +323,10 @@ class GenericScada(SCADAServer):
         :param test_break:  (Default value = False) used for unit testing, breaks the loop after one iteration
         """
         self.logger.debug("SCADA enters main_loop")
+        #lock = Lock()
+        #self.cache_update_process = multiprocessing.Process(target=self.update_cache, args=(lock,))
+        #self.cache_update_process.start()
+
         while True:
             while self.get_sync():
                 time.sleep(self.DB_SLEEP_TIME)
@@ -316,8 +337,7 @@ class GenericScada(SCADAServer):
 
             results = [master_time, datetime.now()]
             for plc_ip in self.plc_data:
-                plc_value = self.cache[plc_ip]
-                results.extend(plc_value)
+                results.extend(self.cache[plc_ip])
             self.saved_values.append(results)
 
             # Save scada_values.csv when needed
@@ -329,7 +349,6 @@ class GenericScada(SCADAServer):
 
             if test_break:
                 break
-
 
 def is_valid_file(parser_instance, arg):
     """
