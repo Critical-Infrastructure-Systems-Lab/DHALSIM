@@ -52,6 +52,10 @@ class Runner():
             self.run_simulation(intermediate_yaml_path)
 
     def run_simulation(self, intermediate_yaml_path):
+
+        subprocess.run(["sudo", "pkill - f - u", "root", "python -m cpppo.server.enip"])
+        subprocess.run(["sudo", "mn", "-c"])
+
         InputFilesCopier(self.config_file, intermediate_yaml_path).copy_input_files()
 
         db_initializer = DatabaseInitializer(intermediate_yaml_path)

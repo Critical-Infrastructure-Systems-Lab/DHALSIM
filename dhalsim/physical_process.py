@@ -53,6 +53,9 @@ class PhysicalPlant:
 
         self.tank_list = self.get_node_list_by_type(self.node_list, 'Tank')
         self.junction_list = self.get_node_list_by_type(self.node_list, 'Junction')
+
+        self.scada_junction_list = self.get_scada_junction_list(self.data['plcs'])
+
         self.pump_list = self.get_link_list_by_type(self.link_list, 'Pump')
         self.valve_list = self.get_link_list_by_type(self.link_list, 'Valve')
         self.values_list = list()
@@ -98,6 +101,20 @@ class PhysicalPlant:
         self.start_time = datetime.now()
         self.master_time = -1
         self.db_update_string = "UPDATE plant SET value = ? WHERE name = ?"
+
+    def get_scada_junction_list(self, plcs):
+
+        junction_list = []
+
+        for PLC in plcs:
+            if 'sensors' not in PLC:
+                PLC['sensors'] = list()
+
+            for sensor in PLC['sensors']:
+                if sensor != "" and sensor in self.junction_list:
+                    junction_list.append(sensor)
+
+        return junction_list
 
     def get_node_list_by_type(self, a_list, a_type):
         result = []
@@ -356,7 +373,11 @@ class PhysicalPlant:
 
     def update_junctions(self):
         """Update junction pressure in database."""
-        for junction in self.junction_list:
+
+        # todo: Test this
+        # for junction in self.junction_list:
+        for junction in self.scada_junction_list:
+
             level = Decimal(self.wn.get_node(junction).head - self.wn.get_node(junction).elevation)
             self.c.execute(self.db_update_string, (str(level), junction,))
             self.conn.commit()
