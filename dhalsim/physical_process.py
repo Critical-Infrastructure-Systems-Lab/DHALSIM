@@ -4,7 +4,7 @@ import os
 import signal
 import logging
 from datetime import datetime
-from decimal import Decimal
+import random
 
 import pandas as pd
 import progressbar
@@ -15,18 +15,31 @@ from pathlib import Path
 
 from dhalsim.parser.file_generator import BatchReadmeGenerator, GeneralReadmeGenerator
 from dhalsim.py3_logger import get_logger
-import wntr
-import wntr.network.controls as controls
 import yaml
 
 from epynet.network import WaterDistributionNetwork
 from epynet import epynetUtils
+
+
+class Error(Exception):
+    """Base class for exceptions in this module."""
+
+
+class DatabaseError(Error):
+    """Raised when not being able to connect to the database"""
+
 
 class PhysicalPlant:
     """
     Class representing the plant itself, runs each iteration. This class also deals with WNTR
     and updates the database.
     """
+
+    DB_TRIES = 10
+    """Amount of times a db query will retry on a exception"""
+
+    DB_SLEEP_TIME = random.uniform(0.01, 0.1)
+    """Amount of time a db query will wait before retrying"""
 
     def __init__(self, intermediate_yaml):
         signal.signal(signal.SIGINT, self.interrupt)
@@ -60,13 +73,19 @@ class PhysicalPlant:
         # connection to the database
         self.db_path = self.data["db_path"]
 
-
-        # Create the network
-        # WNTR
-        #self.wn = wntr.network.WaterNetworkModel(self.data['inp_file'])
-
         # epynet
-        self.wn = WaterDistributionNetwork(self.data['inp_file'])
+        original_inp_filename = self.data['inp_file'].rsplit('.', 1)[0]
+        processed_inp_filename = original_inp_filename+'_processed.inp'
+
+        try:
+            self.remove_controls_from_inp_file(self.data['inp_file'], processed_inp_filename)
+        except IOError as ioe:
+            self.logger.error('IO Exception writing an EPANET file without [CONTROLS], aborting')
+            sys.exit(1)
+
+        # using an epynet water network object we do not have a way of removing the controls, so we write a new
+        # EPANET inp file without the [CONTROLS] section
+        self.wn = WaterDistributionNetwork(processed_inp_filename)
 
         # epynet
         self.simulation_step = epynetUtils.get_time_parameter(
@@ -112,6 +131,20 @@ class PhysicalPlant:
         self.start_time = datetime.now()
         self.master_time = 0
         self.db_update_string = "UPDATE plant SET value = ? WHERE name = ?"
+
+    # toDo: Develop a test for this method
+    def remove_controls_from_inp_file(self, in_file, out_file):
+        write_out = True
+        with open(in_file) as infile, open(out_file, "w") as outfile:
+            for line in infile:
+                if write_out:
+                    outfile.write(line)
+                if line.startswith('[CONTROLS]'):
+                    write_out = False
+                    continue
+
+                if write_out and line.startswith('['):
+                    write_out = True
 
     def get_scada_junction_list(self, plcs):
 
@@ -242,42 +275,37 @@ class PhysicalPlant:
 
     def _init_what(self):
         """Save a ordered tuple of pk field names in self._what."""
-
-        # https://sqlite.org/pragma.html#pragma_table_info
         query = "PRAGMA table_info(%s)" % self._name
-        # print "DEBUG query: ", query
 
         with sqlite3.connect(self._path) as conn:
             try:
                 cursor = conn.cursor()
                 cursor.execute(query)
                 table_info = cursor.fetchall()
-                # print "DEBUG table_info: ", table_info
 
                 # last tuple element
                 pks = []
                 for field in table_info:
                     if field[-1] > 0:
-                        # print 'DEBUG pk field: ', field
                         pks.append(field)
 
                 if not pks:
-                    print("ERROR: please provide at least 1 primary key")
+                    self.logger.error('Please provide at least 1 primary key. Has sqlite DB been initialized?.'
+                                      ' Aborting')
+                    sys.exit(1)
                 else:
                     # sort by pk order
                     pks.sort(key=lambda x: x[5])
-                    # print 'DEBUG sorted pks: ', pks
 
                     what_list = []
                     for pk in pks:
                         what_list.append(pk[1])
-                    # print 'DEBUG what list: ', what_list
 
                     self._what = tuple(what_list)
-                    #print('DEBUG self._what: ', self._what)
 
             except sqlite3.Error as e:
-                print('ERROR: %s: ' % e.args[0])
+                self.logger.error('Error initializing the sqlite DB. Exiting. Error: ' + str(e))
+                sys.exit(1)
 
     def _init_set_query(self):
         """Use prepared statements."""
@@ -292,7 +320,6 @@ class PhysicalPlant:
             set_query += ' AND %s = ?' % (
                 pk)
 
-        #print('DEBUG set_query:', set_query)
         self._set_query = set_query
 
     def _init_get_query(self):
@@ -308,7 +335,6 @@ class PhysicalPlant:
             get_query += ' AND %s = ?' % (
                 pk)
 
-        #print('DEBUG get_query:', get_query)
         self._get_query = get_query
 
     def write_results(self, results):
@@ -366,28 +392,41 @@ class PhysicalPlant:
             what_list.append(pk)
         what = tuple(what_list)
 
-        with sqlite3.connect(self._path) as conn:
-            try:
-                cursor = conn.cursor()
-                cursor.execute(self._set_query, what)
-                conn.commit()
-                return value
+        for i in range(self.DB_TRIES):
+            with sqlite3.connect(self._path) as conn:
+                try:
+                    cursor = conn.cursor()
+                    cursor.execute(self._set_query, what)
+                    conn.commit()
+                    return value
 
-            except sqlite3.Error as e:
-                print('_set ERROR: %s: ' % e.args[0])
+                except sqlite3.OperationalError as e:
+                    self.logger.info('Failed writing to DB')
+                    time.sleep(self.DB_SLEEP_TIME)
+        self.logger.error(
+            "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
+        raise DatabaseError("Failed to get master clock from database")
+
 
     def get_from_db(self, what):
         """Returns the first element of the result tuple."""
         what_tuple = self.convert_to_tuple(what)
-        with sqlite3.connect(self.db_path) as conn:
-            try:
-                cursor = conn.cursor()
-                cursor.execute(self._get_query, what_tuple)
-                record = cursor.fetchone()
-                return record[0]
 
-            except sqlite3.Error as e:
-                print('_get ERROR: %s: ' % e.args[0])
+        for i in range(self.DB_TRIES):
+            with sqlite3.connect(self.db_path) as conn:
+                try:
+                    cursor = conn.cursor()
+                    cursor.execute(self._get_query, what_tuple)
+                    record = cursor.fetchone()
+                    return record[0]
+
+                except sqlite3.OperationalError as e:
+                    self.logger.info('Failed reading to DB')
+                    time.sleep(self.DB_SLEEP_TIME)
+        self.logger.error(
+            "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
+        raise DatabaseError("Failed to get master clock from database")
+
 
     def main(self):
         """Runs the simulation for x iterations."""
