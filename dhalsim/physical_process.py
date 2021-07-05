@@ -19,6 +19,8 @@ import wntr
 import wntr.network.controls as controls
 import yaml
 
+from epynet.network import WaterDistributionNetwork
+from epynet import epynetUtils
 
 class PhysicalPlant:
     """
@@ -41,23 +43,43 @@ class PhysicalPlant:
         self.ground_truth_path = Path(self.data["output_path"]) / "ground_truth.csv"
         self.ground_truth_path.touch(exist_ok=True)
 
+        # Use of prepared statements
+        self._name = 'plant'
+        self._path = self.data["db_path"]
+        self._value = 'value'
+        self._what = ()
+
+        self._init_what()
+
+        if not self._what:
+            raise ValueError('Primary key not found.')
+        else:
+            self._init_get_query()
+            self._init_set_query()
+
         # connection to the database
-        self.conn = sqlite3.connect(self.data["db_path"])
-        self.c = self.conn.cursor()
+        self.db_path = self.data["db_path"]
+
 
         # Create the network
-        self.wn = wntr.network.WaterNetworkModel(self.data['inp_file'])
+        # WNTR
+        #self.wn = wntr.network.WaterNetworkModel(self.data['inp_file'])
 
-        self.node_list = list(self.wn.node_name_list)
-        self.link_list = list(self.wn.link_name_list)
+        # epynet
+        self.wn = WaterDistributionNetwork(self.data['inp_file'])
 
-        self.tank_list = self.get_node_list_by_type(self.node_list, 'Tank')
-        self.junction_list = self.get_node_list_by_type(self.node_list, 'Junction')
+        # epynet
+        self.simulation_step = epynetUtils.get_time_parameter(
+            self.wn, epynetUtils.get_time_param_code('EN_HYDSTEP'))[1]
+
+        # epynet
+        self.tank_list = list(self.wn.tanks.keys())
+        self.junction_list = list(self.wn.junctions.keys())
+        self.pump_list = list(self.wn.pumps.keys())
+        self.valve_list = list(self.wn.valves.keys())
 
         self.scada_junction_list = self.get_scada_junction_list(self.data['plcs'])
 
-        self.pump_list = self.get_link_list_by_type(self.link_list, 'Pump')
-        self.valve_list = self.get_link_list_by_type(self.link_list, 'Valve')
         self.values_list = list()
 
         list_header = ['iteration', 'timestamp']
@@ -71,35 +93,24 @@ class PhysicalPlant:
         self.results_list = []
         self.results_list.append(list_header)
 
-        dummy_condition = controls.ValueCondition(self.wn.get_node(self.tank_list[0]), 'level',
-                                                  '>=', -1)
+        # epynet
+        self.actuator_list = None
 
-        self.control_list = []
-        for valve in self.valve_list:
-            self.control_list.append(self.create_control_dict(valve, dummy_condition))
-
-        for pump in self.pump_list:
-            self.control_list.append(self.create_control_dict(pump, dummy_condition))
-
-        for control in self.control_list:
-            an_action = controls.ControlAction(control['actuator'], control['parameter'],
-                                               control['value'])
-            a_control = controls.Control(control['condition'], an_action, name=control['name'])
-            self.wn.add_control(control['name'], a_control)
-
-        if self.data['simulator'] == 'pdd':
-            self.wn.options.hydraulic.demand_model = 'PDD'
+        # Todo: Update documentation, the demand model will now be defined in the EPANET file
+        #if self.data['simulator'] == 'pdd':
+        #    self.wn.options.hydraulic.demand_model = 'PDD'
 
         # Set initial physical conditions
         self.set_initial_values()
 
-        self.sim = wntr.sim.WNTRSimulator(self.wn)
+        # Build initial list of actuators
+        self.build_initial_actuator_dict()
 
         self.logger.info("Starting simulation for " +
                          os.path.basename(str(self.data['inp_file']))[:-4] + " topology.")
 
         self.start_time = datetime.now()
-        self.master_time = -1
+        self.master_time = 0
         self.db_update_string = "UPDATE plant SET value = ? WHERE name = ?"
 
     def get_scada_junction_list(self, plcs):
@@ -165,56 +176,49 @@ class PhysicalPlant:
 
         return result
 
-    def get_controls(self, a_list):
-        result = []
-        for control in a_list:
-            result.append(self.wn.get_control(control))
-        return result
+    def build_initial_actuator_dict(self):
+        actuator_status = []
+        actuator_names = self.pump_list
+        actuator_names.extend(self.valve_list)
 
-    def create_control_dict(self, actuator, dummy_condition):
-        act_dict = dict.fromkeys(['actuator', 'parameter', 'value', 'condition', 'name'])
-        act_dict['actuator'] = self.wn.get_link(actuator)
-        act_dict['parameter'] = 'status'
-        act_dict['condition'] = dummy_condition
-        act_dict['name'] = actuator
-        if type(self.wn.get_link(actuator).status) is int:
-            act_dict['value'] = act_dict['actuator'].status
-        else:
-            act_dict['value'] = act_dict['actuator'].status.value
-        return act_dict
+        for actuator in actuator_names:
+            if actuator in self.wn.pumps:
+                actuator_status.append(self.wn.pumps[actuator].status)
+            elif actuator in self.wn.valves:
+                actuator_status.append(self.wn.valves[actuator].status)
+            else:
+                self.logger.error('Invalid actuator!')
 
-    def register_results(self):
+        self.actuator_list = dict(zip(actuator_names, actuator_status))
+
+    def register_results(self, results):
         # Results are divided into: nodes: reservoir and tanks, links: flows and status
         self.values_list = [self.master_time, datetime.now()]
-        self.extend_tanks()
-        self.extend_junctions()
-        self.extend_pumps()
-        self.extend_valves()
+        self.extend_tanks(results)
+        self.extend_junctions(results)
+        self.extend_pumps(results)
+
+        # epynet current's version includes valves status in pumps
+        #self.extend_valves(results)
         self.extend_attacks()
 
-    def extend_tanks(self):
+    def extend_tanks(self, results):
         # Get tanks levels
         for tank in self.tank_list:
-            self.values_list.extend([self.wn.get_node(tank).level])
+            self.values_list.extend([results[tank]['pressure']])
 
-    def extend_junctions(self):
+    def extend_junctions(self, results):
         # Get junction  levels
         for junction in self.junction_list:
             self.values_list.extend(
-                [self.wn.get_node(junction).head - self.wn.get_node(junction).elevation])
+                [self.wn.junctions[junction].pressure.iloc[-1]])
 
-    def extend_pumps(self):
+    def extend_pumps(self, results):
         # Get pumps flows and status
         for pump in self.pump_list:
+            self.values_list.extend([results[pump]['flow'], results[pump]['status']])
 
-            self.values_list.extend([self.wn.get_link(pump).flow])
-
-            if type(self.wn.get_link(pump).status) is int:
-                self.values_list.extend([self.wn.get_link(pump).status])
-            else:
-                self.values_list.extend([self.wn.get_link(pump).status.value])
-
-    def extend_valves(self):
+    def extend_valves(self, results):
         # Get valves flows and status
         for valve in self.valve_list:
             self.values_list.extend([self.wn.get_link(valve).flow])
@@ -236,22 +240,76 @@ class PhysicalPlant:
             for network_attack in self.data["network_attacks"]:
                 self.values_list.append(self.get_attack_flag(network_attack['name']))
 
-    def update_controls(self):
-        """Updates all controls in WNTR."""
-        for control in self.control_list:
-            rows_1 = self.c.execute('SELECT value FROM plant WHERE name = ?',
-                                    (control['name'],)).fetchone()
-            self.conn.commit()
-            new_status = int(rows_1[0])
+    def _init_what(self):
+        """Save a ordered tuple of pk field names in self._what."""
 
-            control['value'] = new_status
+        # https://sqlite.org/pragma.html#pragma_table_info
+        query = "PRAGMA table_info(%s)" % self._name
+        # print "DEBUG query: ", query
 
-            new_action = controls.ControlAction(control['actuator'], control['parameter'],
-                                                control['value'])
-            new_control = controls.Control(control['condition'], new_action, name=control['name'])
+        with sqlite3.connect(self._path) as conn:
+            try:
+                cursor = conn.cursor()
+                cursor.execute(query)
+                table_info = cursor.fetchall()
+                # print "DEBUG table_info: ", table_info
 
-            self.wn.remove_control(control['name'])
-            self.wn.add_control(control['name'], new_control)
+                # last tuple element
+                pks = []
+                for field in table_info:
+                    if field[-1] > 0:
+                        # print 'DEBUG pk field: ', field
+                        pks.append(field)
+
+                if not pks:
+                    print("ERROR: please provide at least 1 primary key")
+                else:
+                    # sort by pk order
+                    pks.sort(key=lambda x: x[5])
+                    # print 'DEBUG sorted pks: ', pks
+
+                    what_list = []
+                    for pk in pks:
+                        what_list.append(pk[1])
+                    # print 'DEBUG what list: ', what_list
+
+                    self._what = tuple(what_list)
+                    #print('DEBUG self._what: ', self._what)
+
+            except sqlite3.Error as e:
+                print('ERROR: %s: ' % e.args[0])
+
+    def _init_set_query(self):
+        """Use prepared statements."""
+
+        set_query = 'UPDATE %s SET %s = ? WHERE %s = ?' % (
+            self._name,
+            self._value,
+            self._what[0])
+
+        # for composite pk
+        for pk in self._what[1:]:
+            set_query += ' AND %s = ?' % (
+                pk)
+
+        #print('DEBUG set_query:', set_query)
+        self._set_query = set_query
+
+    def _init_get_query(self):
+        """Use prepared statement."""
+
+        get_query = 'SELECT %s FROM %s WHERE %s = ?' % (
+            self._value,
+            self._name,
+            self._what[0])
+
+        # for composite pk
+        for pk in self._what[1:]:
+            get_query += ' AND %s = ?' % (
+                pk)
+
+        #print('DEBUG get_query:', get_query)
+        self._get_query = get_query
 
     def write_results(self, results):
         """Writes ground truth file."""
@@ -264,10 +322,14 @@ class PhysicalPlant:
         Checks whether all PLCs have finished their loop.
         :return: boolean whether all PLCs have finished
         """
-        self.c.execute("""SELECT count(*)
+
+        #todo: Prepare query statements for this
+        conn = sqlite3.connect(self.data["db_path"])
+        c = conn.cursor()
+        c.execute("""SELECT count(*)
                         FROM sync
                         WHERE flag <= 0""")
-        flag = int(self.c.fetchone()[0]) == 0
+        flag = int(c.fetchone()[0]) == 0
         return flag
 
     def get_attack_flag(self, name):
@@ -280,15 +342,57 @@ class PhysicalPlant:
         flag = int(self.c.fetchone()[0])
         return flag
 
+    def get_actuator_status(self, actuator):
+        return int(self.get_from_db(actuator))
+
+    def update_actuators(self):
+        for actuator in self.actuator_list:
+            self.actuator_list[actuator] = self.get_actuator_status(actuator)
+
+    def convert_to_tuple(self, what):
+        return what, 1
+
+    def set_to_db(self, what, value):
+        """Returns setted value.
+        ``value``'s type is not checked, the client has to specify the correct
+        one.
+        what_list overwrites the given what tuple,
+        eg new what tuple: ``(value, what[0], what[1], ...)``
+        """
+        what_list = [value]
+
+        what_tuple = self.convert_to_tuple(what)
+        for pk in what_tuple:
+            what_list.append(pk)
+        what = tuple(what_list)
+
+        with sqlite3.connect(self._path) as conn:
+            try:
+                cursor = conn.cursor()
+                cursor.execute(self._set_query, what)
+                conn.commit()
+                return value
+
+            except sqlite3.Error as e:
+                print('_set ERROR: %s: ' % e.args[0])
+
+    def get_from_db(self, what):
+        """Returns the first element of the result tuple."""
+        what_tuple = self.convert_to_tuple(what)
+        with sqlite3.connect(self.db_path) as conn:
+            try:
+                cursor = conn.cursor()
+                cursor.execute(self._get_query, what_tuple)
+                record = cursor.fetchone()
+                return record[0]
+
+            except sqlite3.Error as e:
+                print('_get ERROR: %s: ' % e.args[0])
+
     def main(self):
         """Runs the simulation for x iterations."""
 
-        # We want to simulate only one hydraulic timestep each time MiniCPS processes the
-        # simulation data
-        self.wn.options.time.duration = self.wn.options.time.hydraulic_timestep
-
         iteration_limit = self.data["iterations"]
-
         self.logger.debug("Temporary file location: " + str(Path(self.data["db_path"]).parent))
 
         if 'batch_index' in self.data:
@@ -298,7 +402,7 @@ class PhysicalPlant:
 
         self.logger.info("Simulation will run for {x} iterations with hydraulic timestep {step}."
                          .format(x=str(iteration_limit),
-                                 step=str(self.wn.options.time.hydraulic_timestep)))
+                                 step=str(self.simulation_step)))
 
         p_bar = None
         if self.data['log_level'] != 'debug':
@@ -307,37 +411,52 @@ class PhysicalPlant:
             p_bar = progressbar.ProgressBar(max_value=iteration_limit, widgets=widgets)
             p_bar.start()
 
-        while self.master_time < iteration_limit:
-            self.c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(self.master_time),))
-            self.conn.commit()
+        simulation_duration = iteration_limit*self.simulation_step
 
-            self.master_time = self.master_time + 1
+        self.wn.set_time_params(duration=simulation_duration, hydraulic_step=self.simulation_step)
+        self.wn.init_simulation(interactive=True)
+
+        internal_epynet_step = 1
+        simulation_time = 0
+        step_results = None
+
+        while internal_epynet_step:
+
+            conn = sqlite3.connect(self.data["db_path"])
+            c = conn.cursor()
+            c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(self.master_time),))
+            conn.commit()
 
             while not self.get_plcs_ready():
                 time.sleep(0.01)
 
-            self.update_controls()
-
-            self.logger.debug("Iteration {x} out of {y}.".format(x=str(self.master_time),
-                                                                 y=str(iteration_limit)))
+            self.update_actuators()
 
             if p_bar:
                 p_bar.update(self.master_time)
 
             # Check for simulation error, print output on exception
             try:
-                self.sim.run_sim(convergence_error=True)
+                internal_epynet_step, step_results = self.wn.simulate_step(simulation_time, self.actuator_list)
+                #self.sim.run_sim(convergence_error=True)
             except Exception as exp:
                 self.logger.error(f"Error in WNTR simulation: {exp}")
                 self.finish()
 
-            self.register_results()
+            # epynet
+            if internal_epynet_step == self.simulation_step:
+                self.master_time += 1
+
+            self.logger.debug("Iteration {x} out of {y}. Internal timestep {z}".format(x=str(self.master_time),
+                                                                 y=str(iteration_limit), z=str(internal_epynet_step)))
+
+            self.register_results(step_results)
             self.results_list.append(self.values_list)
 
-            self.update_tanks()
-            self.update_pumps()
-            self.update_valves()
-            self.update_junctions()
+            self.update_tanks(step_results)
+            self.update_pumps(step_results)
+            self.update_valves(step_results)
+            self.update_junctions(step_results)
 
             # Write results of this iteration if needed
             if 'saving_interval' in self.data and self.master_time != 0 and \
@@ -345,42 +464,40 @@ class PhysicalPlant:
                 self.write_results(self.results_list)
 
             # Set sync flags for nodes
-            self.c.execute("UPDATE sync SET flag=0")
-            self.conn.commit()
+            conn = sqlite3.connect(self.data["db_path"])
+            c = conn.cursor()
+            c.execute("UPDATE sync SET flag=0")
+            conn.commit()
+
+            simulation_time = simulation_time + internal_epynet_step
 
         self.finish()
 
-    def update_tanks(self):
+    def update_tanks(self, network_state):
         """Update tanks in database."""
         for tank in self.tank_list:
-            a_level = self.wn.get_node(tank).level
-            self.c.execute(self.db_update_string, (str(a_level), tank,))
-            self.conn.commit()
+            level = network_state[tank]['pressure']
+            self.set_to_db(tank, level)
 
-    def update_pumps(self):
+    def update_pumps(self, network_state):
         """"Update pumps in database."""
         for pump in self.pump_list:
-            flow = Decimal(self.wn.get_link(pump).flow)
-            self.c.execute(self.db_update_string, (str(flow), pump + "F",))
-            self.conn.commit()
+            flow = network_state[pump]['flow']
+            pump_name = pump + 'F'
+            self.set_to_db(pump_name, flow)
 
-    def update_valves(self):
+    def update_valves(self, network_state):
         """Update valve in database."""
         for valve in self.valve_list:
-            flow = Decimal(self.wn.get_link(valve).flow)
-            self.c.execute(self.db_update_string, (str(flow), valve + "F",))
-            self.conn.commit()
+            flow = network_state[valve]['flow']
+            valve_name = valve + 'F'
+            self.set_to_db(valve_name, flow)
 
-    def update_junctions(self):
+    def update_junctions(self, network_state):
         """Update junction pressure in database."""
-
-        # todo: Test this
-        # for junction in self.junction_list:
         for junction in self.scada_junction_list:
-
-            level = Decimal(self.wn.get_node(junction).head - self.wn.get_node(junction).elevation)
-            self.c.execute(self.db_update_string, (str(level), junction,))
-            self.conn.commit()
+            level = self.wn.junctions[junction].pressure.iloc[-1]
+            self.set_to_db(junction, level)
 
     def interrupt(self, sig, frame):
         self.finish()
@@ -397,13 +514,13 @@ class PhysicalPlant:
             os.makedirs(str(readme_path.parent), exist_ok=True)
 
             BatchReadmeGenerator(self.intermediate_yaml, readme_path, self.start_time, end_time,
-                                 self.wn, self.master_time).write_batch()
+                                 self.wn, self.master_time, self.simulation_step).write_batch()
             if self.data['batch_index'] == self.data['batch_simulations'] - 1:
                 GeneralReadmeGenerator(self.intermediate_yaml, self.data['start_time'],
-                                       end_time, True, self.master_time, self.wn).write_readme()
+                                       end_time, True, self.master_time, self.wn, self.simulation_step).write_readme()
         else:
             GeneralReadmeGenerator(self.intermediate_yaml, self.data['start_time'],
-                                   end_time, False, self.master_time, self.wn).write_readme()
+                                   end_time, False, self.master_time, self.wn, self.simulation_step).write_readme()
         sys.exit(0)
 
     def set_initial_values(self):

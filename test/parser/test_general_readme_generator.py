@@ -34,7 +34,7 @@ def test_init(water_network_model, mocker):
                                             / 'intermediate.yaml',
                                             datetime(year=2021, month=6, day=1, second=1),
                                             datetime(year=2021, month=6, day=1, second=2),
-                                            False, 5, water_network_model)
+                                            False, 5, water_network_model, 300)
     assert general_rm_gen.start_time == datetime(year=2021, month=6, day=1, second=1)
     assert general_rm_gen.end_time == datetime(year=2021, month=6, day=1, second=2)
     assert general_rm_gen.batch == False
