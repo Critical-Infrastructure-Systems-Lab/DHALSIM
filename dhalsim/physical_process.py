@@ -143,7 +143,7 @@ class PhysicalPlant:
                     write_out = False
                     continue
 
-                if write_out and line.startswith('['):
+                if not write_out and line.startswith('['):
                     write_out = True
 
     def get_scada_junction_list(self, plcs):
@@ -482,7 +482,7 @@ class PhysicalPlant:
                 self.logger.error(f"Error in WNTR simulation: {exp}")
                 self.finish()
 
-            # epynet
+            # epynet - we skip intermediate timesteps
             if internal_epynet_step == self.simulation_step:
                 self.master_time += 1
 
