@@ -364,8 +364,14 @@ class PhysicalPlant:
 
         :return: False if attack not running, true otherwise
         """
-        self.c.execute("SELECT flag FROM attack WHERE name IS ?", (name,))
-        flag = int(self.c.fetchone()[0])
+
+        conn = sqlite3.connect(self.data["db_path"])
+        c = conn.cursor()
+        c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(self.master_time),))
+        conn.commit()
+
+        c.execute("SELECT flag FROM attack WHERE name IS ?", (name,))
+        flag = int(c.fetchone()[0])
         return flag
 
     def get_actuator_status(self, actuator):
