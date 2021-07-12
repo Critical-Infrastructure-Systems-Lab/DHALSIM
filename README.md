@@ -1,7 +1,7 @@
 # Digital HydrAuLic SIMulator (DHALSIM)
 _A Digital Twin for Water Distribution Systems. A work by the SUTD Resilient Water Systems Group, iTrust, and TU Delft Department of Water Infrastructure_
 
-DHALSIM uses the WNTR EPANET wrapper to simulate the behaviour of water distribution systems. In addition, DHALSIM uses Mininet and MiniCPS to emulate the behavior of industrial control system controlling a water distribution system. This means that in addition to physical data, DHALSIM can also provide network captures of the PLCs, SCADA server, and other network and industrial devices present in the a water distribution system.
+DHALSIM uses the [WNTR](https://wntr.readthedocs.io/en/latest/index.html) EPANET wrapper to simulate the behaviour of water distribution systems. In addition, DHALSIM uses Mininet and MiniCPS to emulate the behavior of industrial control system controlling a water distribution system. This means that in addition to physical data, DHALSIM can also provide network captures of the PLCs, SCADA server, and other network and industrial devices present in the a water distribution system.
 
 DHALSIM was presented in the ICSS Workshop in ACSAC'20, with the paper: [Co-Simulating Physical Processes and Network Data for High-Fidelity Cyber-Security Experiments](https://dl.acm.org/doi/abs/10.1145/3442144.3442147)
 
