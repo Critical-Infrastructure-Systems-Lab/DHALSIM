@@ -13,11 +13,12 @@ from decimal import Decimal
 from pathlib import Path
 
 import yaml
-from minicps.devices import SCADAServer
+from basePLC import BasePLC
 
 from py2_logger import get_logger
 import threading
 import thread
+
 
 
 class Error(Exception):
@@ -36,7 +37,7 @@ class DatabaseError(Error):
     """Raised when not being able to connect to the database"""
 
 
-class GenericScada(SCADAServer):
+class GenericScada(BasePLC):
     """
     This class represents a scada. This scada knows what plcs it is collecting data from by reading the
     yaml file at intermediate_yaml_path and looking at the plcs.
@@ -316,6 +317,8 @@ class GenericScada(SCADAServer):
                         "PLC receive_multiple with tags {tags} from {ip} failed with exception '{e}'".format(
                             tags=self.plc_data[plc_ip],
                             ip=plc_ip, e=str(e)))
+                    time.sleep(cache_update_time)
+                    continue
             time.sleep(cache_update_time)
 
     def main_loop(self, sleep=0.5, test_break=False):
@@ -335,6 +338,7 @@ class GenericScada(SCADAServer):
             if not self.plcs_ready:
                 self.plcs_ready = True
                 self.update_cache_flag = True
+                self.logger.debug("SCADA starting update cache thread")
                 lock = threading.Lock()
                 thread.start_new_thread(self.update_cache, (lock, self.SCADA_CACHE_UPDATE_TIME))
 
