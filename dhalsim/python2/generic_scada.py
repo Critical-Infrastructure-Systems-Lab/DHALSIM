@@ -329,6 +329,7 @@ class GenericScada(BasePLC):
         :param test_break:  (Default value = False) used for unit testing, breaks the loop after one iteration
         """
         self.logger.debug("SCADA enters main_loop")
+        lock = None
 
         while True:
             while self.get_sync():
