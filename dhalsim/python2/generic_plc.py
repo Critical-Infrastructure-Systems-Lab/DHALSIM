@@ -292,7 +292,7 @@ class GenericPLC(BasePLC):
                         received = Decimal(self.receive((cached_tag, 1), plc_data["public_ip"]))
                         self.cache[cached_tag] = received
                     except Exception as e:
-                        self.logger.debug(
+                        self.logger.info(
                             "{plc} receive {tag} from {ip} failed with exception '{e}'".format(
                                 plc=self.intermediate_plc["name"], tag=cached_tag,
                                 ip=plc_data["public_ip"], e=str(e)))
@@ -341,7 +341,7 @@ class GenericPLC(BasePLC):
                     self.cur.execute(query)
                 return
             except sqlite3.OperationalError as exc:
-                self.logger.debug(
+                self.logger.info(
                     "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
                         exc=exc, i=self.DB_TRIES - i - 1))
                 time.sleep(self.DB_SLEEP_TIME)

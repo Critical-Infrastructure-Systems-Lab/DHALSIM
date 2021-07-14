@@ -16,10 +16,9 @@ import yaml
 from minicps.devices import SCADAServer
 
 from py2_logger import get_logger
-
+import threading
 import thread
-import multiprocessing
-from multiprocessing import Lock
+
 
 class Error(Exception):
     """Base class for exceptions in this module."""
@@ -48,6 +47,9 @@ class GenericScada(SCADAServer):
 
     DB_SLEEP_TIME = random.uniform(0.01, 0.1)
     """Amount of time a db query will wait before retrying"""
+
+    SCADA_CACHE_UPDATE_TIME = 2
+    """ Time in seconds the SCADA server updates its cache"""
 
     def __init__(self, intermediate_yaml_path):
         with intermediate_yaml_path.open() as yaml_file:
@@ -92,7 +94,8 @@ class GenericScada(SCADAServer):
             self.saved_values[0].extend(PLC['sensors'])
             self.saved_values[0].extend(PLC['actuators'])
 
-        self.keep_updating_flag = False
+        self.update_cache_flag = False
+        self.plcs_ready = False
 
         self.cache = {}
         for ip in self.plc_data:
@@ -236,19 +239,16 @@ class GenericScada(SCADAServer):
         self.conn.commit()
 
     def stop_cache_update(self):
-        self.keep_updating_flag = False
-
-        if self.cache_update_process.is_alive():
-            self.cache_update_process.terminate()
+        self.update_cache_flag = False
 
     def sigint_handler(self, sig, frame):
         """
         Shutdown protocol for the scada, writes the output before exiting.
         """
-
-        #self.stop_cache_update()
+        self.stop_cache_update()
         self.logger.debug("SCADA shutdown")
         self.write_output()
+
         sys.exit(0)
 
     def write_output(self):
@@ -297,23 +297,26 @@ class GenericScada(SCADAServer):
         master_time = self.cur.fetchone()[0]
         return master_time
 
-    def update_cache(self):
+    def update_cache(self, lock, cache_update_time):
         """
         Update the cache of the scada by receiving all the required tags.
         When something cannot be received, the previous values are used.
         """
-        for plc_ip in self.cache:
-            try:
-                values = self.receive_multiple(self.plc_data[plc_ip], plc_ip)
-                self.cache[plc_ip] = values
-                self.logger.debug("PLC values received by SCADA from IP: " + str(plc_ip)
-                                  + " is " + str(values) + ".")
-            except Exception as e:
-                self.logger.error(
-                    "PLC receive_multiple with tags {tags} from {ip} failed with exception '{e}'".format(
-                        tags=self.plc_data[plc_ip],
-                        ip=plc_ip, e=str(e)))
 
+        while self.update_cache_flag:
+            for plc_ip in self.cache:
+                try:
+                    values = self.receive_multiple(self.plc_data[plc_ip], plc_ip)
+                    with lock:
+                        self.cache[plc_ip] = values
+                    self.logger.debug("PLC values received by SCADA from IP: " + str(plc_ip)
+                                      + " is " + str(values) + ".")
+                except Exception as e:
+                    self.logger.error(
+                        "PLC receive_multiple with tags {tags} from {ip} failed with exception '{e}'".format(
+                            tags=self.plc_data[plc_ip],
+                            ip=plc_ip, e=str(e)))
+            time.sleep(cache_update_time)
 
     def main_loop(self, sleep=0.5, test_break=False):
         """
@@ -323,21 +326,24 @@ class GenericScada(SCADAServer):
         :param test_break:  (Default value = False) used for unit testing, breaks the loop after one iteration
         """
         self.logger.debug("SCADA enters main_loop")
-        #lock = Lock()
-        #self.cache_update_process = multiprocessing.Process(target=self.update_cache, args=(lock,))
-        #self.cache_update_process.start()
 
         while True:
             while self.get_sync():
                 time.sleep(self.DB_SLEEP_TIME)
 
+            # Wait until we acquire the first sync before polling the PLCs
+            if not self.plcs_ready:
+                self.plcs_ready = True
+                self.update_cache_flag = True
+                lock = threading.Lock()
+                thread.start_new_thread(self.update_cache, (lock, self.SCADA_CACHE_UPDATE_TIME))
+
             master_time = self.get_master_clock()
-
-            self.update_cache()
-
+            #self.update_cache()
             results = [master_time, datetime.now()]
-            for plc_ip in self.plc_data:
-                results.extend(self.cache[plc_ip])
+            with lock:
+                for plc_ip in self.plc_data:
+                    results.extend(self.cache[plc_ip])
             self.saved_values.append(results)
 
             # Save scada_values.csv when needed
