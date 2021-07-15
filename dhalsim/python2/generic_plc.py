@@ -14,6 +14,10 @@ from entities.attack import TimeAttack, TriggerBelowAttack, TriggerAboveAttack, 
 from entities.control import AboveControl, BelowControl, TimeControl
 from py2_logger import get_logger
 
+import threading
+import thread
+
+
 
 class Error(Exception):
     """Base class for exceptions in this module."""
@@ -42,6 +46,10 @@ class GenericPLC(BasePLC):
 
     DB_SLEEP_TIME = random.uniform(0.01, 0.1)
     """Amount of time a db query will wait before retrying"""
+
+    PLC_CACHE_UPDATE_TIME = 0.5
+    """ Time in seconds the SCADA server updates its cache"""
+
 
     def __init__(self, intermediate_yaml_path, yaml_index):
         self.yaml_index = yaml_index
@@ -102,6 +110,9 @@ class GenericPLC(BasePLC):
 
         # create cache
         self.cache = {}
+
+        self.update_cache_flag = False
+        self.plcs_ready = False
 
         for tag in set(dependant_sensors) - set(plc_sensors):
             self.cache[tag] = Decimal(0)
@@ -247,6 +258,9 @@ class GenericPLC(BasePLC):
                                self.intermediate_plc['local_ip'])
         self.startup()
 
+        self.keep_updating_flag = True
+        self.cache_update_process = None
+
         time.sleep(sleep)
 
     def get_tag(self, tag):
@@ -278,24 +292,30 @@ class GenericPLC(BasePLC):
 
         raise TagDoesNotExist(tag)
 
-    def update_cache(self):
+    def update_cache(self, lock, cache_update_time):
         """
         Update the cache of this plc by receiving all the required tags.
         When something cannot be received, the previous value is used.
         """
-        for cached_tag in self.cache:
-            for i, plc_data in enumerate(self.intermediate_yaml["plcs"]):
-                if i == self.yaml_index:
-                    continue
-                if cached_tag in plc_data["sensors"] or cached_tag in plc_data["actuators"]:
-                    try:
-                        received = Decimal(self.receive((cached_tag, 1), plc_data["public_ip"]))
-                        self.cache[cached_tag] = received
-                    except Exception as e:
-                        self.logger.info(
-                            "{plc} receive {tag} from {ip} failed with exception '{e}'".format(
-                                plc=self.intermediate_plc["name"], tag=cached_tag,
-                                ip=plc_data["public_ip"], e=str(e)))
+
+        while self.update_cache_flag:
+            for cached_tag in self.cache:
+                for i, plc_data in enumerate(self.intermediate_yaml["plcs"]):
+                    if i == self.yaml_index:
+                        continue
+                    if cached_tag in plc_data["sensors"] or cached_tag in plc_data["actuators"]:
+                        try:
+                            received = Decimal(self.receive((cached_tag, 1), plc_data["public_ip"]))
+                            with lock:
+                                self.cache[cached_tag] = received
+                        except Exception as e:
+                            self.logger.info(
+                                "{plc} receive {tag} from {ip} failed with exception '{e}'".format(
+                                    plc=self.intermediate_plc["name"], tag=cached_tag,
+                                    ip=plc_data["public_ip"], e=str(e)))
+                            time.sleep(cache_update_time)
+                            continue
+            time.sleep(cache_update_time)
 
     def set_tag(self, tag, value):
         """
@@ -416,6 +436,9 @@ class GenericPLC(BasePLC):
                          (int(flag), attack_name,))
         self.conn.commit()
 
+    def stop_cache_update(self):
+        self.update_cache_flag = False
+
     def main_loop(self, sleep=0.5, test_break=False):
         """
         The main loop of a PLC. In here all the controls will be applied.
@@ -428,7 +451,15 @@ class GenericPLC(BasePLC):
             while self.get_sync():
                 time.sleep(self.DB_SLEEP_TIME)
 
-            self.update_cache()
+            # Wait until we acquire the first sync before polling the PLCs
+            if not self.plcs_ready:
+                self.plcs_ready = True
+                self.update_cache_flag = True
+                self.logger.debug("PLC starting update cache thread")
+                update_cache_lock = threading.Lock()
+                thread.start_new_thread(self.update_cache, (update_cache_lock, self.PLC_CACHE_UPDATE_TIME))
+
+            #self.update_cache()
 
             for control in self.controls:
                 control.apply(self)
@@ -440,8 +471,6 @@ class GenericPLC(BasePLC):
 
             if test_break:
                 break
-            # time.sleep(0.05)
-
 
 def is_valid_file(parser_instance, arg):
     if not os.path.exists(arg):
