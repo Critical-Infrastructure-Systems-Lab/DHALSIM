@@ -123,6 +123,7 @@ class PhysicalPlant:
         self.db_update_string = "UPDATE plant SET value = ? WHERE name = ?"
 
     def prepare_wntr_simulator(self):
+        self.logger.info("Preparing wntr simulation")
         self.wn = wntr.network.WaterNetworkModel(self.data['inp_file'])
 
         self.node_list = list(self.wn.node_name_list)
@@ -150,12 +151,13 @@ class PhysicalPlant:
             a_control = controls.Control(control['condition'], an_action, name=control['name'])
             self.wn.add_control(control['name'], a_control)
 
-        if self.data['simulator'] == 'pdd':
+        if self.data['demand'] == 'pdd':
             self.wn.options.hydraulic.demand_model = 'PDD'
 
         self.simulation_step = self.wn.options.time.hydraulic_timestep
 
     def prepare_epynet_simulator(self):
+        self.logger.info("Preparing eoynet simulation")
         original_inp_filename = self.data['inp_file'].rsplit('.', 1)[0]
         processed_inp_filename = original_inp_filename + '_processed.inp'
         try:
@@ -567,6 +569,7 @@ class PhysicalPlant:
         self.finish()
 
     def simulate_with_epynet(self, iteration_limit, p_bar):
+        self.logger.info("Starting epynet simulation")
         simulation_duration = iteration_limit*self.simulation_step
         self.wn.set_time_params(duration=simulation_duration, hydraulic_step=self.simulation_step)
         self.wn.init_simulation(interactive=True)
@@ -626,6 +629,7 @@ class PhysicalPlant:
             simulation_time = simulation_time + internal_epynet_step
 
     def simulate_with_wntr(self, iteration_limit, p_bar):
+        self.logger.info("Starting wntr simulation")
         self.wn.options.time.duration = self.wn.options.time.hydraulic_timestep
 
         while self.master_time < iteration_limit:
@@ -665,59 +669,74 @@ class PhysicalPlant:
     def update_tanks(self, network_state=None):
         """Update tanks in database."""
 
-        for tank in self.tank_list:
-            if self.simulator == 'epynet':
+        if self.simulator == 'epynet':
+            for tank in self.tank_list:
                 level = network_state[tank]['pressure']
                 tank_name = tank
-            elif self.simulator == 'wntr':
-                level = self.wn.get_node(tank).level
-                tank_name = tank
-            else:
-                return
-            self.set_to_db(tank_name, level)
+                self.set_to_db(tank_name, level)
+
+        elif self.simulator == 'wntr':
+            conn = sqlite3.connect(self.data["db_path"])
+            c = conn.cursor()
+            for tank in self.tank_list:
+                a_level = self.wn.get_node(tank).level
+                c.execute(self.db_update_string, (str(a_level), tank,))
+                conn.commit()
+        else:
+            return
 
     def update_pumps(self, network_state=None):
         """"Update pumps in database."""
-
-        for pump in self.pump_list:
-            if self.simulator == 'epynet':
+        if self.simulator == 'epynet':
+            for pump in self.pump_list:
                 flow = network_state[pump]['flow']
                 pump_name = pump + 'F'
-            elif self.simulator == 'wntr':
-                flow = self.wn.get_link(pump).flow
-                pump_name = pump + 'F'
-            else:
-                return
+                self.set_to_db(pump_name, flow)
 
-            self.set_to_db(pump_name, flow)
+        elif self.simulator == 'wntr':
+            conn = sqlite3.connect(self.data["db_path"])
+            c = conn.cursor()
+            for pump in self.pump_list:
+                flow = self.wn.get_link(pump).flow
+                c.execute(self.db_update_string, (str(flow), pump + "F",))
+                conn.commit()
+        else:
+            return
 
     def update_valves(self, network_state=None):
         """Update valve in database."""
-
-        for valve in self.valve_list:
-            if self.simulator == 'epynet':
+        if self.simulator == 'epynet':
+            for valve in self.valve_list:
                 flow = network_state[valve]['flow']
                 valve_name = valve + 'F'
-            elif self.simulator == 'wntr':
+                self.set_to_db(valve_name, flow)
+
+        elif self.simulator == 'wntr':
+            conn = sqlite3.connect(self.data["db_path"])
+            c = conn.cursor()
+            for valve in self.valve_list:
                 flow = self.wn.get_link(valve).flow
-                valve_name = valve + 'F'
-            else:
-                return
-            self.set_to_db(valve_name, flow)
+                c.execute(self.db_update_string, (str(flow), valve + "F",))
+                conn.commit()
+        else:
+            return
 
     def update_junctions(self, network_state=None):
         """Update junction pressure in database."""
-
-        for junction in self.scada_junction_list:
-            if self.simulator == 'epynet':
+        if self.simulator == 'epynet':
+            for junction in self.scada_junction_list:
                 level = self.wn.junctions[junction].pressure.iloc[-1]
                 junction_name = junction
-            elif self.simulator == 'wntr':
+                self.set_to_db(junction_name, level)
+        elif self.simulator == 'wntr':
+            conn = sqlite3.connect(self.data["db_path"])
+            c = conn.cursor()
+            for junction in self.scada_junction_list:
                 level = self.wn.get_node(junction).head - self.wn.get_node(junction).elevation
-                junction_name = junction
-            else:
-                return
-            self.set_to_db(junction_name, level)
+                c.execute(self.db_update_string, (str(level), junction,))
+                conn.commit()
+        else:
+            return
 
     def interrupt(self, sig, frame):
         self.finish()
