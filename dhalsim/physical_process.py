@@ -89,6 +89,7 @@ class PhysicalPlant:
             self.simulator = 'epynet'
             self.prepare_epynet_simulator()
 
+        self.scada_junction_list = self.get_scada_junction_list(self.data['plcs'])
         self.values_list = list()
 
         list_header = ['iteration', 'timestamp']
@@ -133,8 +134,6 @@ class PhysicalPlant:
         self.pump_list = self.get_link_list_by_type(self.link_list, 'Pump')
         self.valve_list = self.get_link_list_by_type(self.link_list, 'Valve')
 
-        self.scada_junction_list = self.get_scada_junction_list(self.data['plcs'])
-
         dummy_condition = controls.ValueCondition(self.wn.get_node(self.tank_list[0]), 'level',
                                                   '>=', -1)
 
@@ -178,8 +177,6 @@ class PhysicalPlant:
         self.junction_list = list(self.wn.junctions.keys())
         self.pump_list = list(self.wn.pumps.keys())
         self.valve_list = list(self.wn.valves.keys())
-
-        self.scada_junction_list = self.get_scada_junction_list(self.data['plcs'])
 
         # epynet
         self.actuator_list = None
@@ -297,7 +294,7 @@ class PhysicalPlant:
         self.extend_pumps(results)
 
         # epynet current's version includes valves status in pumps
-        if self.simulator == 'wntr':
+        if self.simulator != 'epynet':
             self.extend_valves()
 
         self.extend_attacks()

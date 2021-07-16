@@ -1,8 +1,10 @@
 inp_file: ctown_map.inp
-iterations: 4
+iterations: 288
 network_topology_type: complex
 plcs: !include ctown_plcs.yaml
 
+#log_level: debug
+simulator: epynet
 #attacks:
 #  network_attacks:
 #    - name: plc9attack
