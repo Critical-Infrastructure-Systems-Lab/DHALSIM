@@ -73,10 +73,48 @@ class PhysicalPlant:
         # connection to the database
         self.db_path = self.data["db_path"]
 
-        # epynet
-        original_inp_filename = self.data['inp_file'].rsplit('.', 1)[0]
-        processed_inp_filename = original_inp_filename+'_processed.inp'
+        # get simulator: WNTR or epynet. This will impact how the controls, actuator status, and results are handled
+        self.simulator = self.data["simulator"]
 
+        if self.simulator == 'epynet':
+            self.prepare_epanet_simulator()
+
+        self.scada_junction_list = self.get_scada_junction_list(self.data['plcs'])
+
+        self.values_list = list()
+
+        list_header = ['iteration', 'timestamp']
+        list_header.extend(self.create_node_header(self.tank_list))
+        list_header.extend(self.create_node_header(self.junction_list))
+        list_header.extend(self.create_link_header(self.pump_list))
+        list_header.extend(self.create_link_header(self.valve_list))
+
+        list_header.extend(self.create_attack_header())
+
+        self.results_list = []
+        self.results_list.append(list_header)
+
+        # Todo: Update documentation, the demand model will now be defined in the EPANET file
+        #if self.data['simulator'] == 'pdd':
+        #    self.wn.options.hydraulic.demand_model = 'PDD'
+
+        # Set initial physical conditions
+        self.set_initial_values()
+
+        # Build initial list of actuators
+        self.build_initial_actuator_dict()
+
+        self.logger.info("Starting simulation for " +
+                         os.path.basename(str(self.data['inp_file']))[:-4] + " topology." + "Simulator is: " +
+                         str(self.simulator))
+
+        self.start_time = datetime.now()
+        self.master_time = 0
+        self.db_update_string = "UPDATE plant SET value = ? WHERE name = ?"
+
+    def prepare_epanet_simulator(self):
+        original_inp_filename = self.data['inp_file'].rsplit('.', 1)[0]
+        processed_inp_filename = original_inp_filename + '_processed.inp'
         try:
             self.remove_controls_from_inp_file(self.data['inp_file'], processed_inp_filename)
         except IOError as ioe:
@@ -97,40 +135,8 @@ class PhysicalPlant:
         self.pump_list = list(self.wn.pumps.keys())
         self.valve_list = list(self.wn.valves.keys())
 
-        self.scada_junction_list = self.get_scada_junction_list(self.data['plcs'])
-
-        self.values_list = list()
-
-        list_header = ['iteration', 'timestamp']
-        list_header.extend(self.create_node_header(self.tank_list))
-        list_header.extend(self.create_node_header(self.junction_list))
-        list_header.extend(self.create_link_header(self.pump_list))
-        list_header.extend(self.create_link_header(self.valve_list))
-
-        list_header.extend(self.create_attack_header())
-
-        self.results_list = []
-        self.results_list.append(list_header)
-
         # epynet
         self.actuator_list = None
-
-        # Todo: Update documentation, the demand model will now be defined in the EPANET file
-        #if self.data['simulator'] == 'pdd':
-        #    self.wn.options.hydraulic.demand_model = 'PDD'
-
-        # Set initial physical conditions
-        self.set_initial_values()
-
-        # Build initial list of actuators
-        self.build_initial_actuator_dict()
-
-        self.logger.info("Starting simulation for " +
-                         os.path.basename(str(self.data['inp_file']))[:-4] + " topology.")
-
-        self.start_time = datetime.now()
-        self.master_time = 0
-        self.db_update_string = "UPDATE plant SET value = ? WHERE name = ?"
 
     # toDo: Develop a test for this method
     def remove_controls_from_inp_file(self, in_file, out_file):
@@ -224,7 +230,8 @@ class PhysicalPlant:
 
         self.actuator_list = dict(zip(actuator_names, actuator_status))
 
-    def register_results(self, results):
+    def register_results(self, results=None):
+
         # Results are divided into: nodes: reservoir and tanks, links: flows and status
         self.values_list = [self.master_time, datetime.now()]
         self.extend_tanks(results)
@@ -232,34 +239,44 @@ class PhysicalPlant:
         self.extend_pumps(results)
 
         # epynet current's version includes valves status in pumps
-        #self.extend_valves(results)
+        if self.simulator != 'epynet':
+            self.extend_valves(results)
+
         self.extend_attacks()
 
-    def extend_tanks(self, results):
-        # Get tanks levels
-        for tank in self.tank_list:
-            self.values_list.extend([results[tank]['pressure']])
+    def extend_tanks(self, results=None):
 
-    def extend_junctions(self, results):
-        # Get junction  levels
-        for junction in self.junction_list:
-            self.values_list.extend(
-                [self.wn.junctions[junction].pressure.iloc[-1]])
+        if self.simulator == 'epynet':
+            # Get tanks levels
+            for tank in self.tank_list:
+                self.values_list.extend([results[tank]['pressure']])
 
-    def extend_pumps(self, results):
-        # Get pumps flows and status
-        for pump in self.pump_list:
-            self.values_list.extend([results[pump]['flow'], results[pump]['status']])
+    def extend_junctions(self, results=None):
 
-    def extend_valves(self, results):
-        # Get valves flows and status
-        for valve in self.valve_list:
-            self.values_list.extend([self.wn.get_link(valve).flow])
+        if self.simulator == 'epynet':
+            # Get junction  levels
+            for junction in self.junction_list:
+                self.values_list.extend(
+                    [self.wn.junctions[junction].pressure.iloc[-1]])
 
-            if type(self.wn.get_link(valve).status) is int:
-                self.values_list.extend([self.wn.get_link(valve).status])
-            else:
-                self.values_list.extend([self.wn.get_link(valve).status.value])
+    def extend_pumps(self, results=None):
+
+        if self.simulator == 'epynet':
+            # Get pumps flows and status
+            for pump in self.pump_list:
+                self.values_list.extend([results[pump]['flow'], results[pump]['status']])
+
+    def extend_valves(self, results=None):
+
+        if self.simulator == 'epynet':
+            # Get valves flows and status
+            for valve in self.valve_list:
+                self.values_list.extend([self.wn.get_link(valve).flow])
+
+                if type(self.wn.get_link(valve).status) is int:
+                    self.values_list.extend([self.wn.get_link(valve).status])
+                else:
+                    self.values_list.extend([self.wn.get_link(valve).status.value])
 
     def extend_attacks(self):
         # Get device attacks
@@ -456,11 +473,14 @@ class PhysicalPlant:
             p_bar = progressbar.ProgressBar(max_value=iteration_limit, widgets=widgets)
             p_bar.start()
 
-        simulation_duration = iteration_limit*self.simulation_step
+        if self.simulator == 'epynet':
+            self.simulate_with_epynet(iteration_limit, p_bar)
+        self.finish()
 
+    def simulate_with_epynet(self, iteration_limit, p_bar):
+        simulation_duration = iteration_limit*self.simulation_step
         self.wn.set_time_params(duration=simulation_duration, hydraulic_step=self.simulation_step)
         self.wn.init_simulation(interactive=True)
-
         internal_epynet_step = 1
         simulation_time = 0
         step_results = None
@@ -483,7 +503,6 @@ class PhysicalPlant:
             # Check for simulation error, print output on exception
             try:
                 internal_epynet_step, step_results = self.wn.simulate_step(simulation_time, self.actuator_list)
-                #self.sim.run_sim(convergence_error=True)
             except Exception as exp:
                 self.logger.error(f"Error in WNTR simulation: {exp}")
                 self.finish()
@@ -492,8 +511,9 @@ class PhysicalPlant:
             if internal_epynet_step == self.simulation_step:
                 self.master_time += 1
 
-            self.logger.debug("Iteration {x} out of {y}. Internal timestep {z}".format(x=str(self.master_time),
-                                                                 y=str(iteration_limit), z=str(internal_epynet_step)))
+            self.logger.debug("Iteration {x} out of {y}. Internal timestep {z}".format
+                              (x=str(self.master_time),
+                               y=str(iteration_limit), z=str(internal_epynet_step)))
 
             self.register_results(step_results)
             self.results_list.append(self.values_list)
@@ -515,8 +535,6 @@ class PhysicalPlant:
             conn.commit()
 
             simulation_time = simulation_time + internal_epynet_step
-
-        self.finish()
 
     def update_tanks(self, network_state):
         """Update tanks in database."""

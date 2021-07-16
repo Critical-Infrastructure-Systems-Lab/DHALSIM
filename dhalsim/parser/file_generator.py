@@ -283,6 +283,7 @@ class GeneralReadmeGenerator:
         ret_str += self.get_value('network_topology_type')
         ret_str += self.get_value('mininet_cli')
         ret_str += self.get_value('log_level')
+        ret_str += self.get_value('demand')
         ret_str += self.get_value('simulator')
         return ret_str + self.get_optional('batch_simulations')
     

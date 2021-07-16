@@ -287,10 +287,10 @@ class SchemaParser:
                                                                           "one of the following: "
                                                                           "'debug', 'info', 'warning', "
                                                                           "'error' or 'critical'.")),
-            Optional('simulator', default='pdd'): And(
+            Optional('demand', default='pdd'): And(
                 str,
                 Use(str.lower),
-                Or('pdd', 'dd'), error="'simulator' should be one of the following: 'pdd' or 'dd'."),
+                Or('pdd', 'dd'), error="'demand' should be one of the following: 'pdd' or 'dd'."),
             Optional('attacks'): {
                 Optional('device_attacks'): [SchemaParser.device_attacks],
                 Optional('network_attacks'): [SchemaParser.network_attacks],
@@ -305,6 +305,10 @@ class SchemaParser:
             Optional('demand_patterns'): Path,
             Optional('network_loss_data'): Path,
             Optional('network_delay_data'): Path,
+            Optional('simulator', default='wntr'): And(
+                str,
+                Use(str.lower),
+                Or('wntr', 'epynet')),
         })
 
         return config_schema.validate(data)
@@ -514,6 +518,9 @@ class ConfigParser:
         yaml_data['db_path'] = self.db_path
         yaml_data['network_topology_type'] = self.data['network_topology_type']
 
+        # Simulator to be used, it can be EPANET WNTR or EPANET epynet
+        yaml_data['simulator'] = self.data['simulator']
+
         # Add batch mode parameters
         if self.batch_mode:
             yaml_data['batch_index'] = self.batch_index
@@ -535,8 +542,8 @@ class ConfigParser:
         if 'saving_interval' in self.data:
             yaml_data['saving_interval'] = self.data['saving_interval']
 
-        # Simulator
-        yaml_data['simulator'] = self.data['simulator']
+        # Demand
+        yaml_data['demand'] = self.data['demand']
 
         # Note: if iterations not present then default value will be written in InputParser
         if 'iterations' in self.data:
