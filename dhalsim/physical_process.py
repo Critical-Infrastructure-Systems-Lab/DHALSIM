@@ -89,8 +89,6 @@ class PhysicalPlant:
             self.simulator = 'epynet'
             self.prepare_epynet_simulator()
 
-        self.scada_junction_list = self.get_scada_junction_list(self.data['plcs'])
-
         self.values_list = list()
 
         list_header = ['iteration', 'timestamp']
@@ -103,10 +101,6 @@ class PhysicalPlant:
 
         self.results_list = []
         self.results_list.append(list_header)
-
-        # Todo: Update documentation, the demand model will now be defined in the EPANET file
-        #if self.data['simulator'] == 'pdd':
-        #    self.wn.options.hydraulic.demand_model = 'PDD'
 
         # Set initial physical conditions
         self.set_initial_values()
@@ -138,6 +132,8 @@ class PhysicalPlant:
 
         self.pump_list = self.get_link_list_by_type(self.link_list, 'Pump')
         self.valve_list = self.get_link_list_by_type(self.link_list, 'Valve')
+
+        self.scada_junction_list = self.get_scada_junction_list(self.data['plcs'])
 
         dummy_condition = controls.ValueCondition(self.wn.get_node(self.tank_list[0]), 'level',
                                                   '>=', -1)
@@ -182,6 +178,8 @@ class PhysicalPlant:
         self.junction_list = list(self.wn.junctions.keys())
         self.pump_list = list(self.wn.pumps.keys())
         self.valve_list = list(self.wn.valves.keys())
+
+        self.scada_junction_list = self.get_scada_junction_list(self.data['plcs'])
 
         # epynet
         self.actuator_list = None
@@ -299,7 +297,7 @@ class PhysicalPlant:
         self.extend_pumps(results)
 
         # epynet current's version includes valves status in pumps
-        if self.simulator != 'epynet':
+        if self.simulator == 'wntr':
             self.extend_valves()
 
         self.extend_attacks()
@@ -676,7 +674,7 @@ class PhysicalPlant:
                 tank_name = tank
             elif self.simulator == 'wntr':
                 level = self.wn.get_node(tank).level
-                tank_name = '\'' + tank + '\''
+                tank_name = tank
             else:
                 return
             self.set_to_db(tank_name, level)
@@ -705,7 +703,7 @@ class PhysicalPlant:
                 valve_name = valve + 'F'
             elif self.simulator == 'wntr':
                 flow = self.wn.get_link(valve).flow
-                valve_name = '\'' + valve + 'F' + '\''
+                valve_name = valve + 'F'
             else:
                 return
             self.set_to_db(valve_name, flow)
@@ -719,7 +717,7 @@ class PhysicalPlant:
                 junction_name = junction
             elif self.simulator == 'wntr':
                 level = self.wn.get_node(junction).head - self.wn.get_node(junction).elevation
-                junction_name = '\'' + junction + '\''
+                junction_name = junction
             else:
                 return
             self.set_to_db(junction_name, level)
