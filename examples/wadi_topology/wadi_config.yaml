@@ -2,8 +2,8 @@
 # General simulation parameters
 inp_file: wadi_map.inp
 network_topology_type: complex
-iterations: 10
-log_level: debug
+iterations: 500
+log_level: info
 mininet_cli: false
 
 plcs: !include wadi_plcs.yaml

@@ -208,7 +208,7 @@ noise_scale
 ------------------------
 *This is an optional value with default*: :code:`0`
 
-This parameter affects the scale of the Gaussian noise added to the sensor readings that are sent by the PLCs. In case the parameter is not set, it will default to 0. This will have the effect that no noise is added to the sensor readings.
+This parameter affects the scale of the Gaussian noise added to the sensor values that are sent by the PLCs. In case the parameter is not set, it will default to 0. This will have the effect that no noise is added to the sensor values.
 
 batch_simulations
 ------------------------
