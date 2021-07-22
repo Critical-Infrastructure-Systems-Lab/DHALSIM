@@ -291,7 +291,7 @@ class SchemaParser:
                 str,
                 Use(str.lower),
                 Or('pdd', 'dd'), error="'simulator' should be one of the following: 'pdd' or 'dd'."),
-            Optional('noise_scale', default=0): And(
+            Optional('noise_scale', default=0.0): And(
                 float,
                 Schema(lambda i: i >= 0, error="'noise_scale' must be positive.")),
             Optional('attacks'): {

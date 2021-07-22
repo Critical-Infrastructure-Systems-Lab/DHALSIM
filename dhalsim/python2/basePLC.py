@@ -2,7 +2,7 @@ import signal
 import sys
 import time
 import thread
-
+import numpy as np
 from minicps.devices import PLC
 
 
@@ -20,6 +20,8 @@ class BasePLC(PLC):
                         self.logger.error("Exception trying to get the tag.")
                         time.sleep(0.05)
                         continue
+            for i in range(len(values)):
+                values[i] += np.random.normal(0, self.data['noise_scale'])
             self.send_multiple(self.tags, values, self.send_adddress)
             time.sleep(0.05)
 
