@@ -291,6 +291,9 @@ class SchemaParser:
                 str,
                 Use(str.lower),
                 Or('pdd', 'dd'), error="'simulator' should be one of the following: 'pdd' or 'dd'."),
+            Optional('noise_scale', default=0.0): And(
+                float,
+                Schema(lambda i: i >= 0, error="'noise_scale' must be positive.")),
             Optional('attacks'): {
                 Optional('device_attacks'): [SchemaParser.device_attacks],
                 Optional('network_attacks'): [SchemaParser.network_attacks],
@@ -534,6 +537,9 @@ class ConfigParser:
         # Write intermittent saving interval to intermediate yaml
         if 'saving_interval' in self.data:
             yaml_data['saving_interval'] = self.data['saving_interval']
+        # Write gaussian noise scale value to intermediate yaml
+        if 'noise_scale' in self.data:
+            yaml_data['noise_scale'] = self.data['noise_scale']
 
         # Simulator
         yaml_data['simulator'] = self.data['simulator']
