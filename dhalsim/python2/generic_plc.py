@@ -241,10 +241,10 @@ class GenericPLC(BasePLC):
 
         lock = threading.Lock()
 
-        sensors.extend(actuators)
+        noise_scale = self.intermediate_yaml["noise_scale"]
 
-        BasePLC.set_parameters(self, sensors, values, reader, lock,
-                               self.intermediate_plc['local_ip'])
+        BasePLC.set_parameters(self, sensors, actuators, values, reader, lock,
+                               self.intermediate_plc['local_ip'], noise_scale)
         self.startup()
 
         time.sleep(sleep)

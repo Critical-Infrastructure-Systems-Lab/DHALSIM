@@ -537,6 +537,9 @@ class ConfigParser:
         # Write intermittent saving interval to intermediate yaml
         if 'saving_interval' in self.data:
             yaml_data['saving_interval'] = self.data['saving_interval']
+        # Write gaussian noise scale value to intermediate yaml
+        if 'noise_scale' in self.data:
+            yaml_data['noise_scale'] = self.data['noise_scale']
 
         # Simulator
         yaml_data['simulator'] = self.data['simulator']

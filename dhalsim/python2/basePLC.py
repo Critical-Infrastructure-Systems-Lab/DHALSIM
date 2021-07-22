@@ -11,7 +11,19 @@ class BasePLC(PLC):
     def send_system_state(self, a, b):
         while self.reader:
             values = []
-            for tag in self.tags:
+            # Send sensor values (may have gaussian noise)
+            for tag in self.sensors:
+                with self.lock:
+                    # noinspection PyBroadException
+                    try:
+                        # Gaussian noise added with respect to noise_scale
+                        values.append(float(self.get(tag)) + np.random.normal(0, self.noise_scale))
+                    except Exception:
+                        self.logger.error("Exception trying to get the tag.")
+                        time.sleep(0.05)
+                        continue
+            # Send actuator values (unaffected by noise)
+            for tag in self.actuators:
                 with self.lock:
                     # noinspection PyBroadException
                     try:
@@ -20,17 +32,18 @@ class BasePLC(PLC):
                         self.logger.error("Exception trying to get the tag.")
                         time.sleep(0.05)
                         continue
-            for i in range(len(values)):
-                values[i] += np.random.normal(0, self.data['noise_scale'])
             self.send_multiple(self.tags, values, self.send_adddress)
             time.sleep(0.05)
 
-    def set_parameters(self, tags, values, reader, lock, send_address, week_index=0):
-        self.tags = tags
+    def set_parameters(self, sensors, actuators, values, reader, lock, send_address, noise_scale, week_index=0):
+        self.sensors = sensors
+        self.actuators = actuators
+        self.tags = self.sensors + self.actuators
         self.values = values
         self.reader = reader
         self.lock = lock
         self.send_adddress = send_address
+        self.noise_scale = noise_scale
         self.week_index = week_index
 
     def sigint_handler(self, sig, frame):
