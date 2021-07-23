@@ -21,6 +21,7 @@ def test_dict():
         "mininet_cli": False,
         "log_level": "info",
         "simulator": "pdd",
+        "noise_scale": 0.1,
         "batch_simulations": 3,
         "saving_interval": 3,
         "initial_tank_data": Path(),
@@ -157,7 +158,9 @@ def test_required_config(required_key, test_dict):
     ('saving_interval', 0),
     ('saving_interval', -2),
     ('saving_interval', 2.5),
-    ('saving_interval', '3')
+    ('saving_interval', '3'),
+    ('noise_scale', -1.0),
+    ('noise_scale', '1'),
 ])
 def test_invalid_config(key, invalid_value, test_dict):
     test_dict[key] = invalid_value
@@ -189,6 +192,7 @@ def test_invalid_config(key, invalid_value, test_dict):
     ('simulator', 'DD', 'dd'),
     ('batch_simulations', 100, 100),
     ('saving_interval', 2, 2),
+    ('noise_scale', 0.0, 0.0),
 ])
 def test_valid_config(key, input_value, expected_value, test_dict):
     test_dict[key] = input_value

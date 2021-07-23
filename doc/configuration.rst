@@ -31,6 +31,7 @@ Example with all options:
     mininet_cli: False
     log_level: info
     simulator: pdd
+    noise_scale: 0.1
     batch_simulations: 20
     saving_interval: 2
     initial_tank_data: initial_tank.csv
@@ -202,6 +203,12 @@ simulator
 The simulator option in the config file represents the demand model used by the WNTR simulation.
 The valid options are :code:`PDD` and :code:`DD`. This value is then passed to the
 `WNTR hydraulic demand model option <https://wntr.readthedocs.io/en/latest/hydraulics.html>`_.
+
+noise_scale
+------------------------
+*This is an optional value with default*: :code:`0`
+
+This parameter affects the scale of the Gaussian noise added to the sensor values that are sent by the PLCs. In case the parameter is not set, it will default to 0. This will have the effect that no noise is added to the sensor values.
 
 batch_simulations
 ------------------------
