@@ -30,7 +30,8 @@ Example with all options:
     iterations: 500
     mininet_cli: False
     log_level: info
-    simulator: pdd
+    demand: pdd
+    simulator: wntr
     batch_simulations: 20
     saving_interval: 2
     initial_tank_data: initial_tank.csv
@@ -195,13 +196,19 @@ DHALSIM uses Python's built-in :code:`logging` module to log events. Using the `
 * :code:`critical`
     * Critical errors are errors that make DHALSIM crash. This will always be logged to the console.
 
-simulator
+demand
 ------------------------
 *This is an optional value with default*: :code:`PDD`
 
-The simulator option in the config file represents the demand model used by the WNTR simulation.
+The demand option in the config file represents the demand model used by the WNTR simulation.
 The valid options are :code:`PDD` and :code:`DD`. This value is then passed to the
 `WNTR hydraulic demand model option <https://wntr.readthedocs.io/en/latest/hydraulics.html>`_.
+
+simulator
+------------------------
+*This is an optional value with default*: :code:`wntr`
+
+The simulator option in the config file represents the simulator to run the water distribution system simulations. The valid options are: :code:`wntr` and :code:`epynet`. :code:`wntr` represents the `EPANET WNTR simulator <https://wntr.readthedocs.io/en/latest/>`_. :code:`epynet` represents the `EPANET Python wrapper simulator <https://github.com/Daveonwave/DHALSIM-epynet>`_
 
 batch_simulations
 ------------------------
