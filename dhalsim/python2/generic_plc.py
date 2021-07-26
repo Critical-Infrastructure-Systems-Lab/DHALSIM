@@ -50,7 +50,6 @@ class GenericPLC(BasePLC):
     PLC_CACHE_UPDATE_TIME = 0.5
     """ Time in seconds the SCADA server updates its cache"""
 
-
     def __init__(self, intermediate_yaml_path, yaml_index):
         self.yaml_index = yaml_index
 
@@ -453,9 +452,9 @@ class GenericPLC(BasePLC):
 
             # Wait until we acquire the first sync before polling the PLCs
             if not self.plcs_ready:
+                self.logger.debug("PLC starting update cache thread")
                 self.plcs_ready = True
                 self.update_cache_flag = True
-                self.logger.debug("PLC starting update cache thread")
                 update_cache_lock = threading.Lock()
                 thread.start_new_thread(self.update_cache, (update_cache_lock, self.PLC_CACHE_UPDATE_TIME))
 

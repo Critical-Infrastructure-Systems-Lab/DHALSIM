@@ -157,7 +157,7 @@ class PhysicalPlant:
         self.simulation_step = self.wn.options.time.hydraulic_timestep
 
     def prepare_epynet_simulator(self):
-        self.logger.info("Preparing eoynet simulation")
+        self.logger.info("Preparing epynet simulation")
         original_inp_filename = self.data['inp_file'].rsplit('.', 1)[0]
         processed_inp_filename = original_inp_filename + '_processed.inp'
         try:
@@ -666,6 +666,15 @@ class PhysicalPlant:
             self.update_valves()
             self.update_junctions()
 
+            # Write results of this iteration if needed
+            if 'saving_interval' in self.data and self.master_time != 0 and \
+                    self.master_time % self.data['saving_interval'] == 0:
+                self.write_results(self.results_list)
+
+            # Set sync flags for nodes
+            c.execute("UPDATE sync SET flag=0")
+            conn.commit()
+
     def update_tanks(self, network_state=None):
         """Update tanks in database."""
 
@@ -697,7 +706,7 @@ class PhysicalPlant:
             conn = sqlite3.connect(self.data["db_path"])
             c = conn.cursor()
             for pump in self.pump_list:
-                flow = self.wn.get_link(pump).flow
+                flow = Decimal(self.wn.get_link(pump).flow)
                 c.execute(self.db_update_string, (str(flow), pump + "F",))
                 conn.commit()
         else:
@@ -715,7 +724,7 @@ class PhysicalPlant:
             conn = sqlite3.connect(self.data["db_path"])
             c = conn.cursor()
             for valve in self.valve_list:
-                flow = self.wn.get_link(valve).flow
+                flow = Decimal(self.wn.get_link(valve).flow)
                 c.execute(self.db_update_string, (str(flow), valve + "F",))
                 conn.commit()
         else:
@@ -732,7 +741,7 @@ class PhysicalPlant:
             conn = sqlite3.connect(self.data["db_path"])
             c = conn.cursor()
             for junction in self.scada_junction_list:
-                level = self.wn.get_node(junction).head - self.wn.get_node(junction).elevation
+                level = Decimal(self.wn.get_node(junction).head - self.wn.get_node(junction).elevation)
                 c.execute(self.db_update_string, (str(level), junction,))
                 conn.commit()
         else:
