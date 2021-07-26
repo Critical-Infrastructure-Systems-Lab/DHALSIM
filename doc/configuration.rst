@@ -30,7 +30,8 @@ Example with all options:
     iterations: 500
     mininet_cli: False
     log_level: info
-    simulator: pdd
+    demand: pdd
+    simulator: wntr
     noise_scale: 0.1
     batch_simulations: 20
     saving_interval: 2
@@ -195,6 +196,14 @@ DHALSIM uses Python's built-in :code:`logging` module to log events. Using the `
 * :code:`error`
 * :code:`critical`
     * Critical errors are errors that make DHALSIM crash. This will always be logged to the console.
+
+demand
+------------------------
+*This is an optional value with default*: :code:`PDD`
+
+The demand option in the config file represents the demand model used by the WNTR simulation.
+The valid options are :code:`PDD` and :code:`DD`. This value is then passed to the
+`WNTR hydraulic demand model option <https://wntr.readthedocs.io/en/latest/hydraulics.html>`_.
 
 simulator
 ------------------------

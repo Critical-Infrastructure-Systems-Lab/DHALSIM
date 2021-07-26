@@ -1,15 +1,19 @@
 inp_file: ctown_map.inp
-iterations: 672
+iterations: 288
 network_topology_type: complex
 plcs: !include ctown_plcs.yaml
 
-attacks:
-  network_attacks:
-    - name: plc9attack
-      offset: 1.0
-      target: PLC9
-      trigger:
-        sensor: T7
-        type: below
-        value: 2.6
-      type: naive_mitm
+#log_level: debug
+simulator: wntr
+demand: pdd
+#mininet_cli: True
+#attacks:
+#  network_attacks:
+#    - name: plc9attack
+#      offset: 1.0
+#      target: PLC9
+#      trigger:
+#        sensor: T7
+#        type: below
+#        value: 2.6
+#      type: naive_mitm

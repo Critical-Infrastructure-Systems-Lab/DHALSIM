@@ -33,7 +33,7 @@ def test_init(water_network_model):
                                         / 'intermediate.yaml', Path('../readme.md'),
                                         datetime(year=2021, month=6, day=1, second=1),
                                         datetime(year=2021, month=6, day=1, second=2),
-                                        water_network_model, 5)
+                                        water_network_model, 5, 300)
     assert batch_rm_gen.readme_path == Path('../readme.md')
     assert batch_rm_gen.start_time == datetime(year=2021, month=6, day=1, second=1)
     assert batch_rm_gen.end_time == datetime(year=2021, month=6, day=1, second=2)

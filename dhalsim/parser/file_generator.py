@@ -18,11 +18,12 @@ class BatchReadmeGenerator:
     :param end_time: is the end time of batch
     :param wn: is WNTR instance
     :param master_time: is current iteration
+    :param step: hydraulic timestep of simulation
     """
 
     def __init__(self, intermediate_yaml_path: Path, readme_path: Path,
                  start_time: datetime.datetime, end_time: datetime.datetime,
-                 wn: WaterNetworkModel, master_time: int):
+                 wn: WaterNetworkModel, master_time: int, step):
 
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
@@ -32,6 +33,7 @@ class BatchReadmeGenerator:
         self.end_time = end_time
         self.wn = wn
         self.master_time = master_time
+        self.hydraulic_timestep = step
 
     def write_batch(self):
         """Creates a small readme for each batch."""
@@ -85,9 +87,15 @@ class BatchReadmeGenerator:
     def get_time_information(self) -> str:
         """Gets information w.r.t. time of this batch."""
         ret_str = "\n\n## Information about this batch"
+        #ret_str += "\n\nRan for {x} out of {y} iterations with hydraulic timestep {step}." \
+        #    .format(x=str(self.master_time), y=str(self.intermediate_yaml['iterations']),
+        #            step=str(self.wn.options.time.hydraulic_timestep))
+
         ret_str += "\n\nRan for {x} out of {y} iterations with hydraulic timestep {step}." \
             .format(x=str(self.master_time), y=str(self.intermediate_yaml['iterations']),
-                    step=str(self.wn.options.time.hydraulic_timestep))
+                    step=str(self.hydraulic_timestep))
+
+
         ret_str += ("\n\nStarted at {start} and finished at {end}."
                     .format(start=str(self.start_time.strftime(time_format)),
                             end=str(self.end_time.strftime(time_format))))
@@ -165,10 +173,11 @@ class GeneralReadmeGenerator:
     :param master_time: current master time
     :param wn: instance of WaterNetworkModel
     :param forced_path: optional specifier of Path to force usage
+    :param step: hydraulic timestep of the simulation
     """
 
     def __init__(self, intermediate_yaml_path: Path, start_time: datetime.datetime,
-                 end_time: datetime.datetime, batch: bool, master_time: int, wn: WaterNetworkModel):
+                 end_time: datetime.datetime, batch: bool, master_time: int, wn: WaterNetworkModel, step):
 
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
@@ -180,6 +189,7 @@ class GeneralReadmeGenerator:
         self.wn = wn
         self.readme_path = self.get_readme_path()
         self.version = pkg_resources.require('dhalsim')[0].version
+        self.hydraulic_timestep = step
 
     def get_value(self, parameter: str) -> str:
         """
@@ -273,6 +283,7 @@ class GeneralReadmeGenerator:
         ret_str += self.get_value('network_topology_type')
         ret_str += self.get_value('mininet_cli')
         ret_str += self.get_value('log_level')
+        ret_str += self.get_value('demand')
         ret_str += self.get_value('simulator')
         return ret_str + self.get_optional('batch_simulations')
     
@@ -317,10 +328,16 @@ class GeneralReadmeGenerator:
         ret_str = ""
 
         if not self.batch:
+            #ret_str += ("\n\nRan for {x} out of {y} iterations with hydraulic timestep {step}."
+            #            .format(x=str(self.master_time),
+            #                    y=str(self.intermediate_yaml['iterations']),
+            #                    step=str(self.wn.options.time.hydraulic_timestep)))
+
             ret_str += ("\n\nRan for {x} out of {y} iterations with hydraulic timestep {step}."
                         .format(x=str(self.master_time),
                                 y=str(self.intermediate_yaml['iterations']),
-                                step=str(self.wn.options.time.hydraulic_timestep)))
+                                step=str(self.hydraulic_timestep)))
+
 
         return ret_str
 

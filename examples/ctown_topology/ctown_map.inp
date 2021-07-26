@@ -1120,10 +1120,10 @@ LINK          PU8 CLOSED IF NODE          T5            ABOVE          4.5
 
 ; ----------- T7 ---
 LINK          PU10 OPEN IF  NODE          T7            BELOW          2.5
-LINK          PU10 CLOSED IF              NODE          T7            ABOVE          4.8
+LINK          PU10 CLOSED IF NODE         T7            ABOVE          4.8
 
 LINK          PU11 OPEN IF  NODE          T7            BELOW          1
-LINK          PU11 CLOSED IF              NODE          T7            ABOVE          3
+LINK          PU11 CLOSED IF NODE         T7            ABOVE          3
 
 
 [RULES]
@@ -1185,11 +1185,11 @@ LINK          PU11 CLOSED IF              NODE          T7            ABOVE     
 
 [TIMES]
  Duration           	24
- Hydraulic Timestep 	0:15
- Quality Timestep   	0:15
+ Hydraulic Timestep 	0:05
+ Quality Timestep   	0:05
  Pattern Timestep   	1:00
  Pattern Start      	0:00
- Report Timestep    	0:15
+ Report Timestep    	0:05
  Report Start       	0:00
  Start ClockTime    	0:00:00
  Statistic          	NONE

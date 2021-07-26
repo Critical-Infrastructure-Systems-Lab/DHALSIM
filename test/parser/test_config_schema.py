@@ -16,11 +16,12 @@ def test_dict():
     return {
         "inp_file": Path(),
         "network_topology_type": "simple",
+        "simulator":"wntr",
         "output_path": Path(),
         "iterations": 10,
         "mininet_cli": False,
         "log_level": "info",
-        "simulator": "pdd",
+        "demand": "pdd",
         "noise_scale": 0.1,
         "batch_simulations": 3,
         "saving_interval": 3,
@@ -101,7 +102,8 @@ def test_valid_dict(test_dict):
     ('network_topology_type', 'simple'),
     ('mininet_cli', False),
     ('log_level', 'info'),
-    ('simulator', 'pdd')
+    ('simulator', 'pdd'),
+    ('demand', 'pdd')
 ])
 def test_default_config(key, default_value, test_dict):
     del test_dict[key]
@@ -148,6 +150,9 @@ def test_required_config(required_key, test_dict):
     ('log_level', 1),
     ('log_level', "invalid"),
     ('log_level', ""),
+    ('demand', 1),
+    ('demand', "invalid"),
+    ('demand', ""),
     ('simulator', 1),
     ('simulator', "invalid"),
     ('simulator', ""),
@@ -186,10 +191,14 @@ def test_invalid_config(key, invalid_value, test_dict):
     ('log_level', 'ERROR', 'error'),
     ('log_level', 'critical', 'critical'),
     ('log_level', 'CRITICAL', 'critical'),
-    ('simulator', 'pdd', 'pdd'),
-    ('simulator', 'PDD', 'pdd'),
-    ('simulator', 'dd', 'dd'),
-    ('simulator', 'DD', 'dd'),
+    ('demand', 'pdd', 'pdd'),
+    ('demand', 'PDD', 'pdd'),
+    ('demand', 'dd', 'dd'),
+    ('demand', 'DD', 'dd'),
+    ('simulator', 'wntr', 'wntr'),
+    ('simulator', 'WNTR', 'wntr'),
+    ('simulator', 'epynet', 'epynet'),
+    ('simulator', 'EPYNET', 'epynet'),
     ('batch_simulations', 100, 100),
     ('saving_interval', 2, 2),
     ('noise_scale', 0.0, 0.0),
