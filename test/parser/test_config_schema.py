@@ -16,17 +16,13 @@ def test_dict():
     return {
         "inp_file": Path(),
         "network_topology_type": "simple",
-        "simulator": "wntr",
+        "simulator":"wntr",
         "output_path": Path(),
         "iterations": 10,
         "mininet_cli": False,
         "log_level": "info",
-<<<<<<< HEAD
         "demand": "pdd",
-=======
-        "simulator": "pdd",
         "noise_scale": 0.1,
->>>>>>> origin/master
         "batch_simulations": 3,
         "saving_interval": 3,
         "initial_tank_data": Path(),
@@ -106,7 +102,7 @@ def test_valid_dict(test_dict):
     ('network_topology_type', 'simple'),
     ('mininet_cli', False),
     ('log_level', 'info'),
-    ('simulator', 'wntr'),
+    ('simulator', 'pdd'),
     ('demand', 'pdd')
 ])
 def test_default_config(key, default_value, test_dict):
