@@ -1,0 +1,115 @@
+log_level: info
+save_results: True
+save_results_as: 'asus_nov3_attacks1'
+
+agent:
+    name: dqn
+
+    load_model: False
+    model_to_load: "asus_earlystop1.msh"
+    model_path: "examples/anytown_topology/output/saved_models"
+
+    save_model: False
+    save_model_as: 'mininet'
+    save_model_every: 4
+
+    batch_size: 64
+    target_update_frequency: 10
+    initial_replay_memory: 500
+    max_replay_size: 10000
+    epsilon: 1
+
+env:
+    state_vars:
+        - 'day'
+        - 'time'
+        - 'T41'
+        - 'T42'
+        - 'J20'
+    action_vars:
+        - 'P78'
+        - 'P79'
+
+    db_state_vars:
+        - 'sim_step'
+        - 'T41'
+        - 'T42'
+        - 'J20'
+    update_every: null
+    bounds:
+        day:
+            min: 1
+            max: 7
+        time:
+            min: 0
+            max: 86400
+        T41:
+            min: 3.048
+            max: 10.668
+        T42:
+            min: 3.048
+            max: 10.668
+        J20:
+            min: 10
+            max: 100
+
+obj_func:
+    supplies:
+        - 'J1D'
+        - 'J2D'
+        - 'J3D'
+        - 'J4D'
+        - 'J5D'
+        - 'J6D'
+        - 'J7D'
+        - 'J8D'
+        - 'J9D'
+        - 'J10D'
+        - 'J11D'
+        - 'J12D'
+        - 'J13D'
+        - 'J14D'
+        - 'J15D'
+        - 'J16D'
+        - 'J17D'
+        - 'J18D'
+        - 'J19D'
+        - 'J20D'
+        - 'J21D'
+        - 'J22D'
+    basedemands:
+        - 'J1B'
+        - 'J2B'
+        - 'J3B'
+        - 'J4B'
+        - 'J5B'
+        - 'J6B'
+        - 'J7B'
+        - 'J8B'
+        - 'J9B'
+        - 'J10B'
+        - 'J11B'
+        - 'J12B'
+        - 'J13B'
+        - 'J14B'
+        - 'J15B'
+        - 'J16B'
+        - 'J17B'
+        - 'J18B'
+        - 'J19B'
+        - 'J20B'
+        - 'J21B'
+        - 'J22B'
+
+nn:
+    hidden_size: 8
+
+optimizer:
+    lr: .00025
+
+learning:
+    epochs: 5
+    train_episodes: 5
+    train_frequency: 4
+    collect_data: True
+    collect_qs: True

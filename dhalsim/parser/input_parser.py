@@ -72,10 +72,10 @@ class InputParser:
         """
         Writes all needed inp file sections into the intermediate_yaml.
         """
-        # Generate PLC controls
-        self.generate_controls()
         # Generate list of actuators + initial values
         self.generate_actuators_list()
+        # Generate PLC controls
+        self.generate_controls()
         # Generate list of times
         self.generate_times()
         # Generate initial values if batch mode is true
@@ -104,35 +104,62 @@ class InputParser:
         Generates list of controls with their types, values, actuators, and
         potentially dependant; then adds that to self.data to be written to the yaml.
         """
-        input_file = FileStream(self.inp_file_path)
-        tree = controlsParser(CommonTokenStream(controlsLexer(input_file))).controls()
 
-        controls = []
-        for i in range(0, tree.getChildCount()):
-            child = tree.getChild(i)
-            # Get all common control values from the control
-            actuator = str(child.getChild(1))
-            action = str(child.getChild(2))
-            if child.getChildCount() == 8:
-                # This is an AT NODE control
-                dependant = str(child.getChild(5))
-                value = float(str(child.getChild(7)))
-                controls.append({
-                    "type": str(child.getChild(6)).lower(),
-                    "dependant": dependant,
-                    "value": value,
-                    "actuator": actuator,
-                    "action": action.lower()
-                })
-            if child.getChildCount() == 6:
-                # This is a TIME control
-                value = float(str(child.getChild(5)))
-                controls.append({
-                    "type": "time",
-                    "value": int(value),
-                    "actuator": actuator,
-                    "action": action.lower()
-                })
+        if self.data['use_control_agent']:
+            controls = []
+
+            for plc in self.data['plcs']:
+                plc['controls'] = []
+                actuators = plc['actuators']
+
+                for actuator in actuators:
+                    actuator_index = 0
+
+                    #todo: Is there a better way to do this? We need to get the initial status of the actuator
+                    for i in range(len(self.data['actuators'])):
+                        if self.data['actuators'][i] == actuator:
+                            actuator_index = 0
+                            break
+
+                    a_control = {
+                        "type": 'SCADA',
+                        "value": 1,
+                        "actuator": actuator,
+                        "action": self.data['actuators'][actuator_index]['initial_state']
+                    }
+
+                    controls.append(a_control)
+                    plc['controls'].append(a_control)
+        else:
+            input_file = FileStream(self.inp_file_path)
+            tree = controlsParser(CommonTokenStream(controlsLexer(input_file))).controls()
+
+            controls = []
+            for i in range(0, tree.getChildCount()):
+                child = tree.getChild(i)
+                # Get all common control values from the control
+                actuator = str(child.getChild(1))
+                action = str(child.getChild(2))
+                if child.getChildCount() == 8:
+                    # This is an AT NODE control
+                    dependant = str(child.getChild(5))
+                    value = float(str(child.getChild(7)))
+                    controls.append({
+                        "type": str(child.getChild(6)).lower(),
+                        "dependant": dependant,
+                        "value": value,
+                        "actuator": actuator,
+                        "action": action.lower()
+                    })
+                if child.getChildCount() == 6:
+                    # This is a TIME control
+                    value = float(str(child.getChild(5)))
+                    controls.append({
+                        "type": "time",
+                        "value": int(value),
+                        "actuator": actuator,
+                        "action": action.lower()
+                    })
 
         for plc in self.data['plcs']:
             plc['controls'] = []
@@ -146,19 +173,18 @@ class InputParser:
         Generates duration and hydraulic timestep and adds to the
         data to be written to the yaml file.
         """
-
         # TODO Decide on the timestep (minutes or seconds?)
         if self.simulator == 'epynet':
-            times = [
-                {'duration': epynetUtils.get_time_parameter(self.wn, epynetUtils.get_time_param_code('EN_DURATION'))},
-                {'hydraulic_timestep': epynetUtils.get_time_parameter(
-                    self.wn, epynetUtils.get_time_param_code('EN_HYDSTEP'))}
-            ]
+            times = {
+                'duration': epynetUtils.get_time_parameter(self.wn, epynetUtils.get_time_param_code('EN_DURATION')),
+                'hydraulic_timestep': epynetUtils.get_time_parameter(
+                    self.wn, epynetUtils.get_time_param_code('EN_HYDSTEP'))
+            }
         else:
-            times = [
-                {"duration": self.wn.options.time.duration},
-                {"hydraulic_timestep": self.wn.options.time.hydraulic_timestep}
-            ]
+            times = {
+                "duration": self.wn.options.time.duration,
+                "hydraulic_timestep": self.wn.options.time.hydraulic_timestep
+            }
         self.data['time'] = times
 
     def generate_actuators_list(self):

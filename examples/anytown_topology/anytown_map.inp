@@ -162,8 +162,8 @@ LINK P79  CLOSED  IF NODE T42                ABOVE  8
 
 [TIMES]
  Duration           	0:00:00
- Hydraulic Timestep 	0:05:00
- Quality Timestep   	0:05:00
+ Hydraulic Timestep 	0:10:00
+ Quality Timestep   	0:01:00
  Pattern Timestep   	1:00:00
  Pattern Start      	0:00:00
  Report Timestep    	0:05:00

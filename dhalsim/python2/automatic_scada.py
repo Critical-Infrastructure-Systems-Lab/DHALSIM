@@ -84,6 +84,8 @@ class ScadaControl(NodeControl):
         else:
             err_put = open(empty_loc, 'w')
             out_put = open(empty_loc, 'w')
+            #err_put = sys.stderr
+            #out_put = sys.stdout
         cmd = ["python2", str(generic_scada_path), str(self.intermediate_yaml)]
         scada_process = subprocess.Popen(cmd, shell=False, stderr=err_put, stdout=out_put)
         return scada_process

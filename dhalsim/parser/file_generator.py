@@ -124,7 +124,6 @@ class InputFilesCopier:
         else:
             self.configuration_folder = Path(self.intermediate_yaml['output_path']) / 'configuration'
 
-
     def copy_input_files(self):
         """Copies all input files, mandatory and optional ones included."""
         os.makedirs(str(self.configuration_folder), exist_ok=True)
@@ -153,7 +152,12 @@ class InputFilesCopier:
 
     def copy_demand_patterns(self):
         if 'demand_patterns' in self.config:
-            if 'batch_simulations' in self.config:
+            if self.config['control_agent']['enabled']:
+                os.makedirs(self.configuration_folder / 'demand_patterns', exist_ok=True)
+                for batch in range(self.intermediate_yaml['batch_simulations']):
+                    copy(self.config_file.parent / self.config['demand_patterns'] / (str(batch) + ".csv"),
+                         self.configuration_folder / 'demand_patterns' / (str(batch) + ".csv"))
+            elif 'batch_simulations' in self.config:
                 os.makedirs(self.configuration_folder / 'demand_patterns', exist_ok=True)
                 for batch in range(self.config['batch_simulations']):
                     copy(self.config_file.parent / self.config['demand_patterns'] / (str(batch) + ".csv"),
@@ -285,6 +289,7 @@ class GeneralReadmeGenerator:
         ret_str += self.get_value('log_level')
         ret_str += self.get_value('demand')
         ret_str += self.get_value('simulator')
+        ret_str += self.get_value('DQN_Control')
         return ret_str + self.get_optional('batch_simulations')
     
     def get_optional_data_parameters(self) -> str:

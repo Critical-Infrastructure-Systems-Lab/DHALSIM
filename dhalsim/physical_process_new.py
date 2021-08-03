@@ -60,6 +60,11 @@ class PhysicalPlant:
         self.ground_truth_path = Path(self.data["output_path"]) / "ground_truth.csv"
         self.ground_truth_path.touch(exist_ok=True)
 
+        # connection to the database
+        self.db_path = self.data["db_path"]
+        self.conn = sqlite3.connect(self.db_path)
+        self.cur = self.conn.cursor()
+
         # Use of prepared statements
         self._name = 'plant'
         self._path = self.data["db_path"]
@@ -73,11 +78,6 @@ class PhysicalPlant:
         else:
             self._init_get_query()
             self._init_set_query()
-
-        # connection to the database
-        self.db_path = self.data["db_path"]
-        self.conn = sqlite3.connect(self.db_path)
-        self.cur = self.conn.cursor()
 
         # get simulator: WNTR or epynet. This will impact how the controls, actuator status, and results are handled
         self.simulator = self.data["simulator"]
@@ -243,7 +243,6 @@ class PhysicalPlant:
             # TODO: check this later
             if self.data['simulator'] == 'epynet':
                 if node in self.junction_list:
-                    result.append(node + '_SUPPLY')
                     result.append(node + '_DEMAND')
         return result
 
@@ -272,7 +271,6 @@ class PhysicalPlant:
         if "network_attacks" in self.data:
             for network_attack in self.data["network_attacks"]:
                 result.append(network_attack['name'])
-
         return result
 
     def build_initial_actuator_dict(self):
@@ -393,35 +391,33 @@ class PhysicalPlant:
         """Save a ordered tuple of pk field names in self._what."""
         query = "PRAGMA table_info(%s)" % self._name
 
-        with sqlite3.connect(self._path) as conn:
-            try:
-                cursor = conn.cursor()
-                cursor.execute(query)
-                table_info = cursor.fetchall()
+        try:
+            self.cur.execute(query)
+            table_info = self.cur.fetchall()
 
-                # last tuple element
-                pks = []
-                for field in table_info:
-                    if field[-1] > 0:
-                        pks.append(field)
+            # last tuple element
+            pks = []
+            for field in table_info:
+                if field[-1] > 0:
+                    pks.append(field)
 
-                if not pks:
-                    self.logger.error('Please provide at least 1 primary key. Has sqlite DB been initialized?.'
-                                      ' Aborting')
-                    sys.exit(1)
-                else:
-                    # sort by pk order
-                    pks.sort(key=lambda x: x[5])
-
-                    what_list = []
-                    for pk in pks:
-                        what_list.append(pk[1])
-
-                    self._what = tuple(what_list)
-
-            except sqlite3.Error as e:
-                self.logger.error('Error initializing the sqlite DB. Exiting. Error: ' + str(e))
+            if not pks:
+                self.logger.error('Please provide at least 1 primary key. Has sqlite DB been initialized?.'
+                                  ' Aborting')
                 sys.exit(1)
+            else:
+                # sort by pk order
+                pks.sort(key=lambda x: x[5])
+
+                what_list = []
+                for pk in pks:
+                    what_list.append(pk[1])
+
+                self._what = tuple(what_list)
+
+        except sqlite3.Error as e:
+            self.logger.error('Error initializing the sqlite DB. Exiting. Error: ' + str(e))
+            sys.exit(1)
 
     def _init_set_query(self):
         """Use prepared statements."""
@@ -495,13 +491,9 @@ class PhysicalPlant:
         Checks whether all PLCs have finished their loop.
         :return: boolean whether all PLCs have finished
         """
-        #todo: Prepare query statements for this
-        with sqlite3.connect(self.data["db_path"]) as conn:
-            c = conn.cursor()
-            c.execute("""SELECT count(*)
-                            FROM sync
-                            WHERE flag <= 0""")
-            flag = int(c.fetchone()[0]) == 0
+        # TODO: Prepare query statements for this
+        self.db_query("SELECT count(*) FROM sync WHERE flag <= 0;")
+        flag = int(self.cur.fetchone()[0]) == 0
         return flag
 
     def get_attack_flag(self, name):
@@ -510,14 +502,11 @@ class PhysicalPlant:
 
         :return: False if attack not running, true otherwise
         """
+        self.db_query(query="REPLACE INTO master_time (id, time) VALUES(1, ?)", parameters=(str(self.master_time),))
+        self.conn.commit()
 
-        conn = sqlite3.connect(self.data["db_path"])
-        c = conn.cursor()
-        c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(self.master_time),))
-        conn.commit()
-
-        c.execute("SELECT flag FROM attack WHERE name IS ?", (name,))
-        flag = int(c.fetchone()[0])
+        self.db_query(query="SELECT flag FROM attack WHERE name IS ?", parameters=(name,))
+        flag = int(self.cur.fetchone()[0])
         return flag
 
     def get_actuator_status(self, actuator):
@@ -544,39 +533,16 @@ class PhysicalPlant:
             what_list.append(pk)
         what = tuple(what_list)
 
-        for i in range(self.DB_TRIES):
-            with sqlite3.connect(self._path) as conn:
-                try:
-                    cursor = conn.cursor()
-                    cursor.execute(self._set_query, what)
-                    conn.commit()
-                    return value
-
-                except sqlite3.OperationalError as e:
-                    self.logger.info('Failed writing to DB')
-                    time.sleep(self.DB_SLEEP_TIME)
-        self.logger.error(
-            "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
-        raise DatabaseError("Failed to get master clock from database")
+        self.db_query(query=self._set_query, parameters=what)
+        self.conn.commit()
 
     def get_from_db(self, what):
         """Returns the first element of the result tuple."""
         what_tuple = self.convert_to_tuple(what)
 
-        for i in range(self.DB_TRIES):
-            with sqlite3.connect(self.db_path) as conn:
-                try:
-                    cursor = conn.cursor()
-                    cursor.execute(self._get_query, what_tuple)
-                    record = cursor.fetchone()
-                    return record[0]
-
-                except sqlite3.OperationalError as e:
-                    self.logger.info('Failed reading to DB')
-                    time.sleep(self.DB_SLEEP_TIME)
-        self.logger.error(
-            "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
-        raise DatabaseError("Failed to get master clock from database")
+        self.db_query(query=self._get_query, parameters=what_tuple)
+        record = self.cur.fetchone()
+        return record[0]
 
     def main(self):
         """Runs the simulation for x iterations."""
@@ -621,15 +587,13 @@ class PhysicalPlant:
         step_results = None
 
         while internal_epynet_step:
-            with sqlite3.connect(self.data["db_path"]) as conn:
-                c = conn.cursor()
-                c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(self.master_time),))
-                conn.commit()
-                #conn.close()
+            self.db_query(query="REPLACE INTO master_time (id, time) VALUES(1, ?)", parameters=(str(self.master_time),))
+            self.conn.commit()
 
             while not self.get_plcs_ready():
                 time.sleep(0.01)
 
+            # PHY = 0
             self.update_actuators()
 
             if p_bar:
@@ -653,32 +617,25 @@ class PhysicalPlant:
                               (x=str(self.master_time),
                                y=str(iteration_limit), z=str(internal_epynet_step)))
 
-            # epynet - we skip intermediate timesteps
-            if internal_epynet_step == self.simulation_step:
-                self.master_time += 1
-                self.register_results(step_results)
-                self.results_list.append(self.values_list)
+            self.register_results(step_results)
+            self.results_list.append(self.values_list)
 
-                self.update_tanks(step_results)
-                self.update_pumps(step_results)
-                self.update_valves(step_results)
-                self.update_junctions(step_results)
+            self.update_tanks(step_results)
+            self.update_pumps(step_results)
+            self.update_valves(step_results)
+            self.update_junctions(step_results)
 
             # Write results of this iteration if needed
             if 'saving_interval' in self.data and self.master_time != 0 and \
                     self.master_time % self.data['saving_interval'] == 0:
                 self.write_results(self.results_list)
 
-            # Set sync flags for nodes
-            with sqlite3.connect(self.data["db_path"]) as conn:
-                c = conn.cursor()
+            if internal_epynet_step == 0 and self.data['use_control_agent']:
+                self.db_query(query="UPDATE done_simulation SET flag=1 WHERE name='plant'")
 
-                if internal_epynet_step == 0 and self.data['use_control_agent']:
-                    c.execute("UPDATE done_simulation SET flag=1 WHERE name='plant'")
-
-                c.execute("UPDATE sync SET flag=0")
-                conn.commit()
-                #conn.close()
+            # self.db_query(query="UPDATE sync SET flag=0")
+            # PHY = 1
+            self.conn.commit()
 
             simulation_time = simulation_time + internal_epynet_step
 
@@ -697,11 +654,8 @@ class PhysicalPlant:
         step_results = None
 
         while internal_epynet_step:
-            with sqlite3.connect(self.data["db_path"]) as conn:
-                c = conn.cursor()
-                c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(self.master_time),))
-                conn.commit()
-                #conn.close()
+            self.db_query(query="REPLACE INTO master_time (id, time) VALUES(1, ?)", parameters=(str(self.master_time),))
+            self.conn.commit()
 
             if not skip_step:
                 while not self.get_plcs_ready():
@@ -746,27 +700,18 @@ class PhysicalPlant:
                         self.master_time % self.data['saving_interval'] == 0:
                     self.write_results(self.results_list)
 
-                # Set sync flags for nodes
-                with sqlite3.connect(self.data["db_path"]) as conn:
-                    c = conn.cursor()
+                if internal_epynet_step == 0 and self.data['use_control_agent']:
+                    self.db_query(query="UPDATE done_simulation SET flag=1 WHERE name='plant'")
 
-                    if internal_epynet_step == 0 and self.data['use_control_agent']:
-                        c.execute("UPDATE done_simulation SET flag=1 WHERE name='plant'")
-
-                    c.execute("UPDATE sync SET flag=0")
-                    conn.commit()
-                    #conn.close()
+                self.db_query(query="UPDATE sync SET flag=0")
+                self.conn.commit()
             else:
                 # self.logger.info("STEP SKIPPED")
                 if internal_epynet_step == 0 and self.data['use_control_agent']:
                     # Set sync flags for nodes
-                    with sqlite3.connect(self.data["db_path"]) as conn:
-                        c = conn.cursor()
-                        c.execute("UPDATE done_simulation SET flag=1 WHERE name='plant'")
-                        c.execute("UPDATE sync SET flag=0")
-                        conn.commit()
-                        #conn.close()
-
+                    self.db_query(query="UPDATE done_simulation SET flag=1 WHERE name='plant'")
+                    self.db_query(query="UPDATE sync SET flag=0")
+                    self.conn.commit()
             simulation_time = simulation_time + internal_epynet_step
 
     def simulate_with_wntr(self, iteration_limit, p_bar):
@@ -903,10 +848,8 @@ class PhysicalPlant:
         """
         Method used before the termination to wait that SCADA sends last information to control agent
         """
-        conn = sqlite3.connect(self.data["db_path"])
-        c = conn.cursor()
-        c.execute("SELECT flag FROM done_simulation WHERE name='scada';")
-        flag = c.fetchone()[0]
+        self.db_query(query="SELECT flag FROM done_simulation WHERE name='scada';")
+        flag = self.cur.fetchone()[0]
         return flag
 
     def interrupt(self, sig, frame):
@@ -923,6 +866,8 @@ class PhysicalPlant:
 
         self.write_results(self.results_list)
         end_time = datetime.now()
+
+        self.conn.close()
 
         if 'batch_simulations' in self.data:
             readme_path = Path(self.data['config_path']).parent / self.data['output_path']\
@@ -963,6 +908,7 @@ class PhysicalPlant:
                 # self.logger.info(demand_pattern)
                 # self.logger.info(len(demand_pattern))
                 self.wn.set_demand_pattern('custom_pattern', demand_pattern, self.wn.junctions)
+
             else:
                 # Demand patterns for batch
                 demands = pd.read_csv(self.data["demand_patterns_data"])

@@ -74,6 +74,7 @@ class GeneralCPS(MiniCPS):
 
         self.plc_processes = None
         self.scada_process = None
+        self.scada_switch_process = None
         self.plant_process = None
         self.attacker_processes = None
 
@@ -167,6 +168,8 @@ class GeneralCPS(MiniCPS):
         processes.extend(self.plc_processes)
         processes.extend(self.attacker_processes)
         processes.append(self.scada_process)
+        if self.scada_switch_process:
+            processes.append(self.scada_switch_process)
         processes.append(self.plant_process)
         # We wait until the simulation ends
         while True:
@@ -205,6 +208,13 @@ class GeneralCPS(MiniCPS):
                 self.end_process(self.scada_process)
             except Exception as msg:
                 self.logger.error("Exception shutting down SCADA: " + str(msg))
+
+        if self.scada_switch_process:
+            if self.scada_switch_process.poll() is None:
+                try:
+                    self.end_process(self.scada_switch_process)
+                except Exception as msg:
+                    self.logger.error("Exception shutting down SCADA switch: " + str(msg))
 
         for plc_process in self.plc_processes:
             if plc_process.poll() is None:

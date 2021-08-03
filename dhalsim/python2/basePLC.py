@@ -17,7 +17,10 @@ class BasePLC(PLC):
                     # noinspection PyBroadException
                     try:
                         # Gaussian noise added with respect to noise_scale
-                        values.append(float(self.get(tag)) + np.random.normal(0, self.noise_scale))
+                        if self.noise_scale != 0:
+                            values.append(float(self.get(tag)) + np.random.normal(0, self.noise_scale))
+                        else:
+                            values.append(float(self.get(tag)))
                     except Exception:
                         self.logger.error("Exception trying to get the tag.")
                         time.sleep(0.05)
@@ -32,7 +35,7 @@ class BasePLC(PLC):
                         self.logger.error("Exception trying to get the tag.")
                         time.sleep(0.05)
                         continue
-            self.send_multiple(self.tags, values, self.send_adddress)
+            self.send_multiple(self.tags, values, self.send_address)
             time.sleep(0.05)
 
     def set_parameters(self, sensors, actuators, values, reader, lock, send_address, noise_scale, week_index=0):
@@ -42,7 +45,7 @@ class BasePLC(PLC):
         self.values = values
         self.reader = reader
         self.lock = lock
-        self.send_adddress = send_address
+        self.send_address = send_address
         self.noise_scale = noise_scale
         self.week_index = week_index
 

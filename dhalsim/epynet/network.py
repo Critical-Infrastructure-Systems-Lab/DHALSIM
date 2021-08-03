@@ -148,7 +148,7 @@ class WaterDistributionNetwork(Network):
         # update the status of actuators after the first step
         # TODO: DHALSIM works with the status update here
         if actuators_status and self.interactive and timestep != 0:
-                self.update_actuators_status(actuators_status)
+            self.update_actuators_status(actuators_status)
 
         return timestep, self.get_network_state()
 

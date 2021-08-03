@@ -1,10 +1,12 @@
 import os
+import random
 import sys
 import tempfile
 from datetime import datetime
 
 from pathlib import Path
 
+import pandas as pd
 import yaml
 from yamlinclude import YamlIncludeConstructor
 from schema import Schema, Or, And, Use, Optional, SchemaError, Regex
@@ -316,6 +318,24 @@ class SchemaParser:
                         Schema(lambda l: Path.is_file, error="'network_delay_data' could not be found."),
                         Schema(lambda f: f.suffix == '.csv',
                                error="Suffix of network_delay_data should be .csv")),
+                    Optional('agent_config_file'): And(
+                        Use(Path),
+                        Use(lambda p: config_path.absolute().parent.parent.parent / 'dhalsim' / 'control_agent' / p),
+                        Schema(lambda l: Path.is_file, error="'agent_config_file' could not be found."),
+                        Schema(lambda f: f.suffix == '.yaml',
+                               error="Suffix of agent_config_file should be .yaml")),
+                    Optional('demand_patterns_train'): And(
+                        Use(Path),
+                        Use(lambda p: config_path.absolute().parent / 'demand_patterns' / p),
+                        Schema(lambda l: Path.is_file, error="'demand_patterns_train' could not be found."),
+                        Schema(lambda f: f.suffix == '.csv',
+                               error="Suffix of demand_patterns_train should be .csv")),
+                    Optional('demand_patterns_test'): And(
+                        Use(Path),
+                        Use(lambda p: config_path.absolute().parent / 'demand_patterns' / p),
+                        Schema(lambda l: Path.is_file, error="'demand_patterns_test' could not be found."),
+                        Schema(lambda f: f.suffix == '.csv',
+                               error="Suffix of demand_patterns_test should be .csv")),
                     str: object
                 }
             )
@@ -324,7 +344,7 @@ class SchemaParser:
     @staticmethod
     def validate_schema(data: dict) -> dict:
         """
-        Apply a schema to the data. This schema make sure that every reuired parameter is given.
+        Apply a schema to the data. This schema make sure that every required parameter is given.
         It also fills in default values for missing parameters.
         It will test for types of parameters as well.
         Besides that, it converts some strings to lower case, like those of :code:'log_level'.
@@ -332,7 +352,7 @@ class SchemaParser:
         :param data: data from the config file
         :type data: dict
 
-        :return: A verified version of the data of the config file
+        :return: A verified version of the data of the config file.
         :rtype: dict
         """
         plc_schema = Schema([{
@@ -399,6 +419,12 @@ class SchemaParser:
                 str,
                 Use(str.lower),
                 Or('wntr', 'epynet')),
+            'control_agent': dict,
+            # Optional('agent_config_file'): Path,
+            # Optional('agent_test_every'): int,
+            # Optional('demand_patterns_train'): Path,
+            # Optional('demand_patterns_test'): Path,
+            # Optional('control_schedule'): list,
         })
 
         return config_schema.validate(data)
@@ -416,6 +442,7 @@ class ConfigParser:
         self.batch_index = None
         self.yaml_path = None
         self.db_path = None
+        self.control_problem_directory = None
 
         self.config_path = config_path.absolute()
 
@@ -431,6 +458,26 @@ class ConfigParser:
             self.do_checks(self.data)
         except Error as exc:
             sys.exit(exc)
+
+        # In case of control agent the batch simulation option is reused in another way
+        if self.data['control_agent']['enabled']:
+            self.control_problem_directory = self.control_problem_path
+
+            # TODO: check control schedule format
+            #self.check_schedule_format()
+            # Used to count which is the current seed in a batch of test simulations
+            self.n_tests = 0
+
+            # Creates the full schedule list with simulation type
+            self.schedule_types = []
+            self.schedule_index = 0
+            for sim in self.data['control_agent']['schedule']:
+                for i in range(sim['count']):
+                    self.schedule_types.append(sim['type'])
+
+            self.batch_mode = True
+            self.batch_simulations = len(self.schedule_types)
+            return
 
         self.batch_mode = 'batch_simulations' in self.data
         if self.batch_mode:
@@ -515,12 +562,23 @@ class ConfigParser:
         return path
 
     @property
+    def control_problem_path(self):
+        """
+        Generates the temporary directory for the control agent database
+        """
+        # Create temp directory and intermediate yaml files in /tmp/
+        temp_directory = tempfile.mkdtemp(prefix='dhalsimRL_')
+        # Change read permissions in tempdir
+        os.chmod(temp_directory, 0o775)
+        return temp_directory
+
+    @property
     def demand_patterns(self):
         """
         Function that returns path to demand pattern csv
 
         :return: absolute path to the demand pattern csv
-        :rtype: Path
+        :rtype: Paths
         """
         path = self.data.get('demand_patterns')
 
@@ -612,11 +670,51 @@ class ConfigParser:
     def generate_temporary_dirs(self):
         """Generates the temporary directory and yaml/db paths"""
         # Create temp directory and intermediate yaml files in /tmp/
-        temp_directory = tempfile.mkdtemp(prefix='dhalsim_')
+        if self.data['control_agent']['enabled']:
+            temp_directory = tempfile.mkdtemp(prefix='dhalsim_', dir=Path(self.control_problem_directory))
+        else:
+            temp_directory = tempfile.mkdtemp(prefix='dhalsim_')
         # Change read permissions in tempdir
         os.chmod(temp_directory, 0o775)
+        print("temp_folder: ", temp_directory)
+
         self.yaml_path = Path(temp_directory + '/intermediate.yaml')
         self.db_path = temp_directory + '/dhalsim.sqlite'
+
+    def get_demand_pattern_with_control_problem(self):
+        """
+        This method allows to get the demand pattern for the current simulation ONLY in the case we are facing the
+        control problem.
+        To set demand patterns during a normal simulation use demand_patterns() property method.
+
+        return: - path of the new csv with the demand patterns for the current simulation
+                - index of the column chosen from the csv file
+        """
+        path = self.data.get('demand_patterns')
+        sim = self.data['control_agent']['schedule'][self.schedule_index]
+        # print(sim)
+
+        if self.schedule_types[self.batch_index] == 'test':
+            patterns = pd.read_csv(path / self.data['control_agent']['test_csv'])
+
+            if len(sim['seeds']) >= (self.n_tests + 1):
+                # print("USE SEED")
+                col = str(sim['seeds'][self.n_tests])
+            else:
+                # print("SEED NOT USED")
+                col = random.choice(patterns.columns)
+
+            self.n_tests += 1
+        else:
+            patterns = pd.read_csv(path / self.data['control_agent']['train_csv'])
+            col = random.choice(patterns.columns)
+            self.n_tests = 0
+
+        demand_pattern = patterns[col]
+        path /= str(self.batch_index) + '.csv'
+        demand_pattern.to_csv(path, index=False)
+
+        return str(path), col
 
     def generate_intermediate_yaml(self):
         """Writes the intermediate.yaml file to include all options specified in the config, the plc's and their
@@ -627,7 +725,7 @@ class ConfigParser:
         """
         self.generate_temporary_dirs()
 
-        yaml_data = {}
+        yaml_data = dict()
         yaml_data['config_path'] = str(self.config_path)
 
         # Begin with PLC data specified in plcs section
@@ -640,15 +738,27 @@ class ConfigParser:
 
         # Simulator to be used, it can be EPANET WNTR or EPANET epynet
         yaml_data['simulator'] = self.data['simulator']
+        yaml_data['use_control_agent'] = self.data['control_agent']['enabled']
+
+        # Case in which we want to face the control problem
+        if self.data['control_agent']['enabled']:
+            yaml_data['db_control_path'] = self.control_problem_directory + '/db_control.sqlite'
+            yaml_data['simulation_type'] = self.schedule_types[self.batch_index]
+
+            # Increase the schedule index to select the next batch group
+            if self.batch_index >= sum([self.data['control_agent']['schedule'][i]['count'] for i in
+                                        range(self.schedule_index + 1)]):
+                self.schedule_index += 1
+            yaml_data['demand_patterns_data'], yaml_data['pattern_seed'] = self.get_demand_pattern_with_control_problem()
 
         # Add batch mode parameters
         if self.batch_mode:
             yaml_data['batch_index'] = self.batch_index
-            yaml_data['batch_simulations'] = self.data['batch_simulations']
+            yaml_data['batch_simulations'] = self.batch_simulations
         # Initial physical values
         if 'initial_tank_data' in self.data:
             yaml_data['initial_tank_data'] = str(self.data['initial_tank_data'])
-        if 'demand_patterns' in self.data:
+        if 'demand_patterns' in self.data and not self.data['control_agent']['enabled']:
             yaml_data['demand_patterns_data'] = str(self.demand_patterns)
         # Add network loss parameters
         if 'network_loss_data' in self.data:
