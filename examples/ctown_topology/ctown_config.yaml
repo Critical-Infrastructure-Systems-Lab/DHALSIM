@@ -4,7 +4,7 @@ network_topology_type: complex
 plcs: !include ctown_plcs.yaml
 
 #log_level: debug
-simulator: wntr
+simulator: epynet
 demand: pdd
 #mininet_cli: True
 #attacks:

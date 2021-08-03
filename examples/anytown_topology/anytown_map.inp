@@ -1,0 +1,243 @@
+[TITLE]
+Anytown master file for rl-wds
+
+[JUNCTIONS]
+;ID              	Elev        	Demand      	Pattern         
+ J1              	6.0960      	113.565002  	PAT1            	;
+ J2              	15.2400     	45.425999   	PAT1            	;
+ J3              	15.2400     	45.425999   	PAT1            	;
+ J4              	15.2400     	136.278000  	PAT1            	;
+ J5              	24.3840     	136.278000  	PAT1            	;
+ J6              	24.3840     	136.278000  	PAT1            	;
+ J7              	24.3840     	136.278000  	PAT1            	;
+ J8              	24.3840     	90.851997   	PAT1            	;
+ J9              	36.5760     	90.851997   	PAT1            	;
+ J10             	36.5760     	90.851997   	PAT1            	;
+ J11             	36.5760     	90.851997   	PAT1            	;
+ J12             	15.2400     	113.565002  	PAT1            	;
+ J13             	15.2400     	113.565002  	PAT1            	;
+ J14             	15.2400     	113.565002  	PAT1            	;
+ J15             	15.2400     	113.565002  	PAT1            	;
+ J16             	36.5760     	90.851997   	PAT1            	;
+ J17             	36.5760     	227.130005  	PAT1            	;
+ J18             	15.2400     	113.565002  	PAT1            	;
+ J19             	15.2400     	227.130005  	PAT1            	;
+ J20             	6.0960      	0.000000    	PAT1            	;
+ J21             	15.2400     	0.000000    	PAT1            	;
+ J22             	36.5760     	0.000000    	PAT1            	;
+
+[RESERVOIRS]
+;ID              	Head        	Pattern         
+ R40             	3.048       	                	;
+
+[TANKS]
+;ID              	Elevation   	InitLevel   	MinLevel    	MaxLevel    	Diameter    	MinVol      	VolCurve
+ T41             	66.535      	3.051       	3.048       	10.668      	9.9532      	237.08      	                	;
+ T42             	66.535      	3.051       	3.048       	10.668      	9.9532      	237.08      	                	;
+
+[PIPES]
+;ID              	Node1           	Node2           	Length      	Diameter    	Roughness   	MinorLoss   	Status
+ PIPE1           	J1              	J2              	3657.6001   	304.8       	120.0000    	0.0000      	Open  	;Res
+ PIPE2           	J1              	J12             	3657.6001   	304.8       	70.0000     	0.0000      	Open  	;city
+ PIPE3           	J1              	J13             	3657.6001   	406.4       	70.0000     	0.0000      	Open  	;city
+ PIPE4           	J1              	J20             	30.4800     	762.0       	130.0000    	0.0000      	Open  	;city
+ PIPE5           	J2              	J3              	1828.8000   	254.0       	120.0000    	0.0000      	Open  	;Res
+ PIPE6           	J2              	J4              	2743.2000   	254.0       	120.0000    	0.0000      	Open  	;Res
+ PIPE7           	J2              	J13             	2743.2000   	304.8       	70.0000     	0.0000      	Open  	;Res
+ PIPE8           	J2              	J14             	1828.8000   	254.0       	120.0000    	0.0000      	Open  	;Res
+ PIPE9           	J3              	J4              	1828.8000   	254.0       	120.0000    	0.0000      	Open  	;Res
+ PIPE11          	J4              	J8              	3657.6001   	203.2       	120.0000    	0.0000      	Open  	;Res
+ PIPE12          	J4              	J15             	1828.8000   	254.0       	120.0000    	0.0000      	Open  	;Res
+ PIPE17          	J8              	J9              	3657.6001   	203.2       	120.0000    	0.0000      	Open  	;Res
+ PIPE18          	J8              	J15             	1828.8000   	254.0       	120.0000    	0.0000      	Open  	;Res
+ PIPE19          	J8              	J16             	1828.8000   	203.2       	120.0000    	0.0000      	Open  	;Res
+ PIPE20          	J8              	J17             	1828.8000   	203.2       	120.0000    	0.0000      	Open  	;Res
+ PIPE21          	J9              	J10             	1828.8000   	203.2       	120.0000    	0.0000      	Open  	;Res
+ PIPE22          	J10             	J11             	1828.8000   	203.2       	120.0000    	0.0000      	Open  	;Res
+ PIPE23          	J10             	J17             	1828.8000   	254.0       	120.0000    	0.0000      	Open  	;Res
+ PIPE24          	J11             	J12             	1828.8000   	203.2       	120.0000    	0.0000      	Open  	;Res
+ PIPE26          	J12             	J17             	1828.8000   	254.0       	120.0000    	0.0000      	Open  	;Res
+ PIPE27          	J12             	J18             	1828.8000   	203.2       	70.0000     	0.0000      	Open  	;city
+ PIPE28          	J13             	J14             	1828.8000   	304.8       	70.0000     	0.0000      	Open  	;city
+ PIPE29          	J13             	J18             	1828.8000   	304.8       	70.0000     	0.0000      	Open  	;city
+ PIPE30          	J13             	J19             	1828.8000   	254.0       	70.0000     	0.0000      	Open  	;city
+ PIPE31          	J14             	J15             	1828.8000   	304.8       	70.0000     	0.0000      	Open  	;city
+ PIPE32          	J14             	J19             	1828.8000   	254.0       	70.0000     	0.0000      	Open  	;city
+ PIPE33          	J14             	J21             	30.4800     	304.8       	120.0000    	0.0000      	Open  	;city
+ PIPE34          	J15             	J16             	1828.8000   	254.0       	70.0000     	0.0000      	Open  	;city
+ PIPE35          	J15             	J19             	1828.8000   	254.0       	70.0000     	0.0000      	Open  	;city
+ PIPE36          	J16             	J17             	1828.8000   	203.2       	120.0000    	0.0000      	Open  	;Res
+ PIPE37          	J16             	J18             	1828.8000   	304.8       	70.0000     	0.0000      	Open  	;city
+ PIPE38          	J16             	J19             	1828.8000   	254.0       	70.0000     	0.0000      	Open  	;city
+ PIPE39          	J17             	J18             	1828.8000   	203.2       	120.0000    	0.0000      	Open  	;Res
+ PIPE40          	J17             	J22             	30.4800     	304.8       	120.0000    	0.0000      	Open  	;Res
+ PIPE41          	J18             	J19             	1828.8000   	254.0       	70.0000     	0.0000      	Open  	;city
+ PIPE142         	J21             	T41             	0.3048      	304.8       	120.0000    	0.0000      	Open  	;city
+ PIPE143         	J22             	T42             	0.3048      	304.8       	120.0000    	0.0000      	Open  	;Res
+ PIPE110         	J4              	J5              	1828.8000   	203.2       	130.0000    	0.0000      	Open  	;New, original value: 0.0001
+ PIPE113         	J5              	J6              	1828.8000   	203.2       	130.0000    	0.0000      	Open  	;New, original value: 0.0001
+ PIPE114         	J6              	J7              	1828.8000   	203.2       	130.0000    	0.0000      	Open  	;New, original value: 0.0001
+ PIPE115         	J6              	J8              	1828.8000   	203.2       	130.0000    	0.0000      	Open  	;New, original value: 0.0001
+ PIPE116         	J7              	J8              	1828.8000   	203.2       	130.0000    	0.0000      	Open  	;New, original value: 0.0001
+ PIPE125         	J11             	J17             	2743.2000   	203.2       	130.0000    	0.0000      	Open  	;New, original value: 0.0001
+
+[PUMPS]
+;ID              	Node1           	Node2           	Parameters
+ P78             	R40             	J20             	HEAD H1	;
+ P79             	R40             	J20             	HEAD H1	;
+
+[VALVES]
+;ID              	Node1           	Node2           	Diameter    	Type	Setting     	MinorLoss   
+
+[TAGS]
+
+[DEMANDS]
+;Junction        	Demand      	Pattern         	Category
+
+[STATUS]
+;ID              	Status/Setting
+
+[PATTERNS]
+;ID              	Multipliers
+;
+ PAT1            	1.0000      	1.0000      	1.0000      	1.0000      	1.0000      	1.0000      
+;
+ PAT4            	0.0000      	0.0000      	0.0000      	0.0000      	0.0000      	0.0000      
+
+[CURVES]
+;ID              	X-Value     	Y-Value
+;PUMP: PUMP: 
+ H1              	0.0000      	91.440      
+ H1              	454.26000   	89.000      
+ H1              	908.52000   	82.296      
+ H1              	1362.7800   	70.104      
+ H1              	1817.0400   	55.169      
+ H1              	2900.0000   	0.          
+;PUMP: PUMP: 
+ E1              	0.0000      	0.          
+ E1              	454.26000   	.50         
+ E1              	908.52000   	.65         
+ E1              	1362.7800   	.55         
+ E1              	1817.0400   	.40         
+ E1              	2900.0000   	0.          
+
+[CONTROLS]
+LINK P78  OPEN    IF NODE T41                BELOW  5
+LINK P78  CLOSED  IF NODE T41                ABOVE  8
+LINK P79  OPEN    IF NODE T42                BELOW  5
+LINK P79  CLOSED  IF NODE T42                ABOVE  8
+
+
+[RULES]
+
+
+
+[ENERGY]
+ Global Efficiency  	75.0000
+ Global Price       	0
+ Demand Charge      	0.0000
+
+[EMITTERS]
+;Junction        	Coefficient
+
+[QUALITY]
+;Node            	InitQual
+
+[SOURCES]
+;Node            	Type        	Quality     	Pattern
+
+[REACTIONS]
+;Type     	Pipe/Tank       	Coefficient
+
+
+[REACTIONS]
+ Order Bulk            	1.00
+ Order Tank            	1.00
+ Order Wall            	1
+ Global Bulk           	0.000000
+ Global Wall           	0.000000
+ Limiting Potential    	0
+ Roughness Correlation 	0
+
+[MIXING]
+;Tank            	Model
+
+[TIMES]
+ Duration           	0:00 
+ Hydraulic Timestep 	0:01 
+ Quality Timestep   	0:01 
+ Pattern Timestep   	1:00 
+ Pattern Start      	0:00 
+ Report Timestep    	1:00 
+ Report Start       	0:00 
+ Start ClockTime    	00:00:00
+ Statistic          	NONE
+
+[REPORT]
+ Status             	No
+ Summary            	No
+ Page               	0
+
+[OPTIONS]
+ Units              	CMH
+ Headloss           	H-W
+ Specific Gravity   	1.000000
+ Viscosity          	1.000000
+ Trials             	200
+ Accuracy           	0.00100000
+ CHECKFREQ          	2
+ MAXCHECK           	10
+ DAMPLIMIT          	0.00000000
+ Unbalanced         	STOP
+ Pattern            	PAT1
+ Demand Multiplier  	PDA
+ Emitter Exponent   	0.5000
+ Quality            	NONE mg/L
+ Diffusivity        	1.000000
+ Tolerance          	0.01000000
+ DEMAND MODEL           PDA
+ MINIMUM PRESSURE       0
+ REQUIRED PRESSURE      20
+ PRESSURE EXPONENT      0.5
+
+[COORDINATES]
+;Node            	X-Coord         	Y-Coord
+ J1              	7682.33         	3371.15         
+ J2              	7633.71         	5737.44         
+ J3              	7520.26         	7293.35         
+ J4              	6175.04         	7568.88         
+ J5              	5591.57         	8460.29         
+ J6              	4100.49         	8071.31         
+ J7              	3192.87         	7763.37         
+ J8              	3321.19         	6696.55         
+ J9              	1305.62         	4850.97         
+ J10             	2317.45         	3588.20         
+ J11             	3701.63         	2892.06         
+ J12             	4846.03         	3354.94         
+ J13             	6450.57         	4424.64         
+ J14             	6466.77         	5769.85         
+ J15             	5094.45         	6482.09         
+ J16             	4017.86         	5615.96         
+ J17             	3005.49         	4292.43         
+ J18             	4846.03         	4440.84         
+ J19             	5332.25         	5332.25         
+ J20             	8544.18         	3371.15         
+ J21             	6094.00         	6499.19         
+ J22             	2422.68         	4519.09         
+ R40             	8700.60         	3371.15         
+ T41             	6094.00         	6600.19         
+ T42             	2422.68         	4700.09         
+
+[VERTICES]
+;Link            	X-Coord         	Y-Coord
+
+[LABELS]
+;X-Coord           Y-Coord          Label & Anchor Node
+
+[BACKDROP]
+ DIMENSIONS     	935.87          	2613.65         	9070.35         	8738.70         
+ UNITS          	None
+ FILE           	
+ OFFSET         	0.00            	0.00            
+
+[END]
