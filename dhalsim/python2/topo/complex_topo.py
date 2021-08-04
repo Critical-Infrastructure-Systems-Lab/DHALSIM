@@ -106,7 +106,7 @@ class ComplexTopo(Topo):
         scada['gateway_name'] = "r" + str(index)
         scada['switch_name'] = "s" + str(index)
         scada['gateway_inbound_mac'] = 'AA:BB:CC:DD:03:' + "{:02x}".format(index)
-        scada['gateway_outbound_mac'] = 'AA:BB:CC:DD:04:' + "{:02x}".format(index)
+        scada['gateway_outboun  d_mac'] = 'AA:BB:CC:DD:04:' + "{:02x}".format(index)
         scada['gateway_ip'] = self.local_router_ips
 
         index += 1
