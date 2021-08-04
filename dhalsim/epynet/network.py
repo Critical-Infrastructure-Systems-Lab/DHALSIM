@@ -3,8 +3,8 @@ import pandas as pd
 import datetime
 #from tqdm import tqdm
 from time import sleep
-from epynet import epynetUtils
-from epynet.epynet import Network
+from . import epynetUtils
+from .epynet import Network
 
 # TODO: remove global variables
 actuators_update_dict = {}
