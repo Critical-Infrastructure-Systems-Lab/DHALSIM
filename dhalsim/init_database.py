@@ -18,7 +18,6 @@ class DatabaseInitializer:
         self.db_path.touch(exist_ok=True)
         self.logger.info("Initializing database.")
 
-
     def write(self):
         with sqlite3.connect(self.db_path) as conn:
             cur = conn.cursor()
