@@ -93,6 +93,15 @@ def attack_dict_4():
             }
 
 
+@pytest.fixture
+def attack_dict_5():
+    return {'name': 'test1',
+            'type': 'simple_stale',
+            'trigger': {'sensor': "T2", 'value': -1, 'type': 'above'},
+            'duration': -1
+            }
+
+
 def test_valid_dict(test_dict):
     SchemaParser.validate_schema(test_dict)
     assert True

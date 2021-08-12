@@ -7,7 +7,17 @@ plcs: !include ctown_plcs.yaml
 simulator: epynet
 demand: pdd
 #mininet_cli: True
-#attacks:
+attacks:
+  network_attacks:
+    - name: plc3attack
+      target: PLC3
+      trigger:
+        type: time
+        start:  125
+        end: 180
+      type: simple_stale
+      duration: 10
+
 #  network_attacks:
 #    - name: plc9attack
 #      offset: 1.0
