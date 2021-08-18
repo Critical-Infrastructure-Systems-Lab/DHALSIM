@@ -48,10 +48,6 @@ class TooManyNodes(Error):
     """Raised when there will be too many nodes in the network"""
 
 
-class DurationLongerThanSimulation(Error):
-    """ Raised when an attack duration is longer thatn the simulation"""
-
-
 class SchemaParser:
     """
     Class which handles all schema logic.
@@ -195,11 +191,7 @@ class SchemaParser:
                 'target': And(
                     str,
                     string_pattern
-                ),
-                'duration': And(
-                    int,
-                    Schema(lambda i: i >= 0, error="'duration' must be positive."),
-                ),
+                )
             }
         )
     )
@@ -514,11 +506,6 @@ class ConfigParser:
                     if not set(tags).issubset(set(target_plc['actuators'] + target_plc['sensors'])):
                         raise NoSuchTag(
                             f"PLC {target_plc['name']} does not have all the tags specified.")
-
-                if network_attack['type'] == 'simple_stale':
-                    # Check if duration of the attack is less than the simulation
-                    if network_attack['duration'] > self.data['iterations']:
-                        raise DurationLongerThanSimulation("Attack duration is longer than simulation duration")
 
             return network_attacks
         return []

@@ -1,5 +1,5 @@
 inp_file: ctown_map.inp
-iterations: 288
+iterations: 110
 network_topology_type: complex
 plcs: !include ctown_plcs.yaml
 
@@ -9,14 +9,13 @@ demand: pdd
 #mininet_cli: True
 attacks:
   network_attacks:
-    - name: plc3attack
-      target: PLC3
+    - name: plc4attack
+      target: PLC4
       trigger:
         type: time
-        start:  125
-        end: 180
+        start: 10
+        end: 100
       type: simple_stale
-      duration: 10
 
 #  network_attacks:
 #    - name: plc9attack

@@ -97,8 +97,7 @@ def attack_dict_4():
 def attack_dict_5():
     return {'name': 'test1',
             'type': 'simple_stale',
-            'trigger': {'sensor': "T2", 'value': -1, 'type': 'above'},
-            'duration': -1
+            'trigger': {'sensor': "T2", 'value': -1, 'type': 'above'}
             }
 
 
