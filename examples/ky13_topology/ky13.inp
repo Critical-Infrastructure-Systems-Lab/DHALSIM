@@ -1851,6 +1851,10 @@ LINK XPump_1  CLOSED  IF NODE T_1         ABOVE  78.3
  Quality            	AGE mg/L
  Diffusivity        	0.05
  Tolerance          	0.01
+ DEMAND MODEL           PDA
+ MINIMUM PRESSURE       0
+ REQUIRED PRESSURE      20
+ PRESSURE EXPONENT      0.5
 
 [COORDINATES]
 ;Node            	X-Coord         	Y-Coord

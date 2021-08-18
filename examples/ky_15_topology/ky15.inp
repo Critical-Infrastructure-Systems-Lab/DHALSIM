@@ -1500,6 +1500,10 @@ LINK XPump_9  CLOSED  IF NODE T_6         ABOVE  36.689
  Quality            	Chemical mg/L
  Diffusivity        	0.05
  Tolerance          	0.0001
+ DEMAND MODEL           PDA
+ MINIMUM PRESSURE       0
+ REQUIRED PRESSURE      20
+ PRESSURE EXPONENT      0.5
 
 [COORDINATES]
 ;Node            	X_Coord         	Y_Coord
