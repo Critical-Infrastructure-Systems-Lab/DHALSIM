@@ -7,7 +7,7 @@
   sensors:
     - T_2
   actuators:
-    -XPump_7
+    - XPump_7
 - name: PLC3
   sensors:
     - T_3
