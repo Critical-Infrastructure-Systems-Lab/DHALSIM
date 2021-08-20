@@ -85,6 +85,25 @@ class DatabaseInitializer:
                     cur.execute("INSERT INTO attack (name, flag) VALUES (?, 0);",
                                 (network_attack["name"],))
 
+            # Event DB entries
+            # network event sync registers
+            if 'network_events' in self.data:
+                for event in self.data['network_events']:
+                    cur.execute("INSERT INTO sync (name, flag) VALUES (?, 1);",
+                                (event["name"],))
+
+            # Creates event table
+            cur.execute("""CREATE TABLE event (
+                name TEXT NOT NULL,
+                flag INT NOT NULL,
+                PRIMARY KEY (name)
+            );""")
+
+            if "network_events" in self.data:
+                for network_event in self.data["network_events"]:
+                    cur.execute("INSERT INTO event (name, flag) VALUES (?, 0);",
+                                (network_event["name"],))
+
             conn.commit()
 
     def drop(self):
@@ -94,6 +113,7 @@ class DatabaseInitializer:
             cur.execute("DROP TABLE IF EXISTS master_time;")
             cur.execute("DROP TABLE IF EXISTS sync;")
             cur.execute("DROP TABLE IF EXISTS attack;")
+            cur.execute("DROP TABLE IF EXISTS event;")
             conn.commit()
 
     def print(self):
@@ -102,6 +122,7 @@ class DatabaseInitializer:
             self.logger.debug(pd.read_sql_query("SELECT * FROM master_time;", conn))
             self.logger.debug(pd.read_sql_query("SELECT * FROM sync;", conn))
             self.logger.debug(pd.read_sql_query("SELECT * FROM attack;", conn))
+            self.logger.debug(pd.read_sql_query("SELECT * FROM event;", conn))
 
 
 def is_valid_file(file_parser, arg):

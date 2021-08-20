@@ -112,11 +112,36 @@ class GeneralCPS(MiniCPS):
         if "network_attacks" in self.data:
             automatic_attacker_path = Path(__file__).parent.absolute() / "automatic_attacker.py"
             for i, attacker in enumerate(self.data["network_attacks"]):
-                node = self.net.get(attacker["name"])
+                node = self.net.get(attacker["name"][0:9])
                 cmd = ["python2", str(automatic_attacker_path), str(self.intermediate_yaml), str(i)]
                 self.attacker_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
 
         self.logger.debug("Launched the attackers processes.")
+
+        self.network_event_processes = []
+        if 'network_events' in self.data:
+            automatic_event = Path(__file__).parent.absolute() / "automatic_event.py"
+            node_name = None
+            for i, event in enumerate(self.data['network_events']):
+                target_node = event['target']
+                if target_node == 'scada':
+                    self.logger.debug('Network event in SCADA link')
+                    node_name = self.data['scada']['switch_name']
+                else:
+                    for plc in self.data['plcs']:
+                        if target_node == plc['name']:
+                            self.logger.debug('Network event in link to ' + str(plc['name']))
+                            node_name = plc['switch_name']
+
+                node = self.net.get(node_name)
+                # Network events have effect on network interfaces;
+                # in addition to the node, we also need the network interface
+                event_interface_name = self.get_network_event_interface_name(target_node, node_name)
+
+                cmd = ["python2", str(automatic_event), str(self.intermediate_yaml), str(i), event_interface_name]
+                self.network_event_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
+
+        self.logger.info("Launched the event processes.")
 
         automatic_plant_path = Path(__file__).parent.absolute() / "automatic_plant.py"
 
@@ -124,6 +149,17 @@ class GeneralCPS(MiniCPS):
         self.plant_process = subprocess.Popen(cmd, stderr=sys.stderr, stdout=sys.stdout)
 
         self.logger.debug("Launched the plant processes.")
+
+    def get_network_event_interface_name(self, target, source):
+        for link in self.net.links:
+            # example: PLC1-eth0<->s2-eth2
+            link_source = str(link).split('-')[0]
+
+            if link_source == target:
+                switch_name = str(link).split('-')[2].split('>')[-1]
+                interface_name = str(link).split('-')[-1]
+                # todo: We are only supporting cases where a PLC has only 1 interface. ALL our cases so far, but still
+                return str(switch_name + '-' + interface_name)
 
     def poll_processes(self):
         """Polls for all processes and finishes if one closes"""
@@ -183,6 +219,13 @@ class GeneralCPS(MiniCPS):
                     self.end_process(attacker)
                 except Exception as msg:
                     self.logger.error("Exception shutting down attacker: " + str(msg))
+
+        for event in self.network_event_processes:
+            if event.poll() is None:
+                try:
+                    self.end_process(event)
+                except Exception as msg:
+                    self.logger.error("Exception shutting down event: " + str(msg))
 
         if self.plant_process.poll() is None:
             try:

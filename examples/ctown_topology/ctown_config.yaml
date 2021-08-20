@@ -3,11 +3,20 @@ iterations: 288
 network_topology_type: complex
 plcs: !include ctown_plcs.yaml
 
-#log_level: debug
+log_level: debug
 simulator: epynet
 demand: pdd
-#mininet_cli: True
-#attacks:
+attacks:
+    network_attacks:
+    - name: plc4attack
+      target: PLC4
+      trigger:
+        type: time
+        start: 100
+        end: 288
+      type: simple_dos
+      direction: source
+
 #  network_attacks:
 #    - name: plc9attack
 #      offset: 1.0

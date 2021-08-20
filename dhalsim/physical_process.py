@@ -599,21 +599,20 @@ class PhysicalPlant:
                 self.logger.error(f"Error in Epynet simulation: {exp}")
                 self.finish()
 
-            # epynet - we skip intermediate timesteps
-            if internal_epynet_step == self.simulation_step:
-                self.master_time += 1
-
-            self.logger.debug("Iteration {x} out of {y}. Internal timestep {z}".format
+            self.logger.info("Iteration {x} out of {y}. Internal timestep {z}".format
                               (x=str(self.master_time),
                                y=str(iteration_limit), z=str(internal_epynet_step)))
 
-            self.register_results(step_results)
-            self.results_list.append(self.values_list)
+            # epynet - we skip intermediate timesteps
+            if internal_epynet_step == self.simulation_step:
+                self.master_time += 1
+                self.register_results(step_results)
+                self.results_list.append(self.values_list)
 
-            self.update_tanks(step_results)
-            self.update_pumps(step_results)
-            self.update_valves(step_results)
-            self.update_junctions(step_results)
+                self.update_tanks(step_results)
+                self.update_pumps(step_results)
+                self.update_valves(step_results)
+                self.update_junctions(step_results)
 
             # Write results of this iteration if needed
             if 'saving_interval' in self.data and self.master_time != 0 and \
