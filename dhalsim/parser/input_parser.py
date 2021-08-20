@@ -79,8 +79,12 @@ class InputParser:
         # Generate list of times
         self.generate_times()
         # Generate initial values if batch mode is true
+        # This being true means the user configured initial tank levels
+        # If this is false, we need to initialize the tank values with the ones configured in the EPANET file
         if 'initial_tank_data' in self.data:
             self.generate_initial_tank_values()
+        else:
+            self.read_initial_tank_values_from_inp()
         # Generate network loss values if network loss is true
         if 'network_loss_data' in self.data:
             self.generate_network_losses()
@@ -196,8 +200,26 @@ class InputParser:
         pumps.extend(valves)
         self.data['actuators'] = pumps
 
+    def read_initial_tank_values_from_inp(self):
+        """ Reads the tank values from the EPANET inp file"""
+        show = False
+        tank_tuples = []
+        with open(self.inp_file_path) as infile:
+            for line in infile:
+                if show and line.startswith('['):
+                    show = False
+                if show == True:
+                    split_line = line.split()
+                    if len(split_line) > 1:
+                        tank_tuples.append((split_line[0], split_line[2]))
+                if line.startswith('[TANKS]'):
+                    show = True
+                    continue
+        del tank_tuples[0]
+        self.data['initial_tank_values'] = dict(tank_tuples)
+
     def generate_initial_tank_values(self):
-        """Generates all tanks with their initial values if running in batch mode"""
+        """Generates all tanks with their initial values if the user configured them in the yaml file"""
 
         initial_values = {}
         initial_tank_levels = pd.read_csv(self.data['initial_tank_data'])

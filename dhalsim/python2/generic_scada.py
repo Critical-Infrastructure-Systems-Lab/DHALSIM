@@ -46,9 +46,6 @@ class GenericScada(BasePLC):
     DB_TRIES = 10
     """Amount of times a db query will retry on a exception"""
 
-    DB_SLEEP_TIME = random.uniform(0.01, 0.1)
-    """Amount of time a db query will wait before retrying"""
-
     SCADA_CACHE_UPDATE_TIME = 2
     """ Time in seconds the SCADA server updates its cache"""
 
@@ -57,8 +54,6 @@ class GenericScada(BasePLC):
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
         self.logger = get_logger(self.intermediate_yaml['log_level'])
-        # Initialize connection to the database
-        self.initialize_db()
 
         self.output_path = Path(self.intermediate_yaml["output_path"]) / "scada_values.csv"
 
@@ -111,14 +106,6 @@ class GenericScada(BasePLC):
         """
         super(GenericScada, self).__init__(name='scada', state=state, protocol=scada_protocol)
 
-    def initialize_db(self):
-        """
-        Function that initializes PLC connection to the database
-        Introduced to better facilitate testing
-        """
-        self.conn = sqlite3.connect(self.intermediate_yaml["db_path"])
-        self.cur = self.conn.cursor()
-
     @staticmethod
     def generate_real_tags(plcs):
         """
@@ -168,6 +155,15 @@ class GenericScada(BasePLC):
         """
         self.logger.debug('SCADA enters pre_loop')
 
+        if 'random_seed' in self.intermediate_yaml:
+            self.logger.debug("Random seed is: " + str(self.intermediate_yaml['random_seed']))
+            random.seed(self.intermediate_yaml['random_seed'])
+            self.db_sleep_time = random.uniform(0.01, 0.1)
+        else:
+            self.logger.debug("No Random seed configured is: " + str(self.intermediate_yaml['random_seed']))
+            self.db_sleep_time = random.uniform(0.01, 0.1)
+
+
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
 
@@ -176,7 +172,7 @@ class GenericScada(BasePLC):
 
         time.sleep(sleep)
 
-    def db_query(self, query, parameters=None):
+    def db_query(self, query, write=False, parameters=None):
         """
         Execute a query on the database
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
@@ -186,6 +182,8 @@ class GenericScada(BasePLC):
         :param query: The SQL query to execute in the db
         :type query: str
 
+        :param write: Boolean flag to indicate if this query will write into the database
+
         :param parameters: The parameters to put in the query. This must be a tuple.
 
         :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
@@ -193,23 +191,30 @@ class GenericScada(BasePLC):
         """
         for i in range(self.DB_TRIES):
             try:
-                if parameters:
-                    self.cur.execute(query, parameters)
-                else:
-                    self.cur.execute(query)
-                return
+                with sqlite3.connect(self.intermediate_yaml["db_path"]) as conn:
+                    cur = conn.cursor()
+                    if parameters:
+                        cur.execute(query, parameters)
+                    else:
+                        cur.execute(query)
+                    conn.commit()
+
+                    if not write:
+                        return cur.fetchone()[0]
+                    else:
+                        return
             except sqlite3.OperationalError as exc:
                 self.logger.info(
                     "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
                         exc=exc, i=self.DB_TRIES - i - 1))
-                time.sleep(self.DB_SLEEP_TIME)
-        self.logger.error(
-            "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
+                time.sleep(self.db_sleep_time)
+
+        self.logger.error("Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
         raise DatabaseError("Failed to get master clock from database")
 
-    def get_sync(self):
+    def get_sync(self, flag):
         """
-        Get the sync flag of the scada.
+        Get the sync flag of this plc.
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
         Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
 
@@ -218,14 +223,13 @@ class GenericScada(BasePLC):
         :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
            :code:`DB_TRIES` tries.
         """
-        self.db_query("SELECT flag FROM sync WHERE name IS 'scada'")
-        flag = bool(self.cur.fetchone()[0])
-        return flag
+        res = self.db_query("SELECT flag FROM sync WHERE name IS ?", False, ('scada',))
+        return res == flag
 
     def set_sync(self, flag):
         """
-        Set the scada's sync flag in the sync table. When this is 1, the physical process
-        knows that the scada finished the requested iteration.
+        Set this plcs sync flag in the sync table. When this is 1, the physical process
+        knows this plc finished the requested iteration.
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
         Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
 
@@ -235,9 +239,7 @@ class GenericScada(BasePLC):
         :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
            :code:`DB_TRIES` tries.
         """
-        self.db_query("UPDATE sync SET flag=? WHERE name IS 'scada'",
-                         (int(flag),))
-        self.conn.commit()
+        self.db_query("UPDATE sync SET flag=? WHERE name IS ?", True, (int(flag), 'scada',))
 
     def stop_cache_update(self):
         self.update_cache_flag = False
@@ -294,8 +296,7 @@ class GenericScada(BasePLC):
         :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
            :code:`DB_TRIES` tries.
         """
-        self.db_query("SELECT time FROM master_time WHERE id IS 1")
-        master_time = self.cur.fetchone()[0]
+        master_time = self.db_query("SELECT time FROM master_time WHERE id IS 1", False, None)
         return master_time
 
     def update_cache(self, lock, cache_update_time):
@@ -310,8 +311,6 @@ class GenericScada(BasePLC):
                     values = self.receive_multiple(self.plc_data[plc_ip], plc_ip)
                     with lock:
                         self.cache[plc_ip] = values
-                    self.logger.debug("PLC values received by SCADA from IP: " + str(plc_ip)
-                                      + " is " + str(values) + ".")
                 except Exception as e:
                     self.logger.error(
                         "PLC receive_multiple with tags {tags} from {ip} failed with exception '{e}'".format(
@@ -332,8 +331,13 @@ class GenericScada(BasePLC):
         lock = None
 
         while True:
-            while self.get_sync():
-                time.sleep(self.DB_SLEEP_TIME)
+            while not self.get_sync(0):
+                time.sleep(self.db_sleep_time)
+
+            self.set_sync(1)
+
+            while not self.get_sync(2):
+                pass
 
             # Wait until we acquire the first sync before polling the PLCs
             if not self.plcs_ready:
@@ -344,7 +348,6 @@ class GenericScada(BasePLC):
                 thread.start_new_thread(self.update_cache, (lock, self.SCADA_CACHE_UPDATE_TIME))
 
             master_time = self.get_master_clock()
-            #self.update_cache()
             results = [master_time, datetime.now()]
             with lock:
                 for plc_ip in self.plc_data:
@@ -356,7 +359,7 @@ class GenericScada(BasePLC):
                     master_time % self.intermediate_yaml['saving_interval'] == 0:
                 self.write_output()
 
-            self.set_sync(1)
+            self.set_sync(3)
 
             if test_break:
                 break

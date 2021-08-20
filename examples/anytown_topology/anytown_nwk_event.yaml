@@ -1,0 +1,9 @@
+network_events:
+  - name: link_loss
+    type: network_delay
+    target: PLC1
+    trigger:
+        type: time
+        start: 5
+        end: 15
+    value: 0.1

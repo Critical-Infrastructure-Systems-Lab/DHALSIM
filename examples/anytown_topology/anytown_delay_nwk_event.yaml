@@ -1,0 +1,9 @@
+network_events:
+  - name: link_delay
+    type: network_delay
+    target: PLC1
+    trigger:
+        type: time
+        start: 648
+        end: 792
+    value: 4000
