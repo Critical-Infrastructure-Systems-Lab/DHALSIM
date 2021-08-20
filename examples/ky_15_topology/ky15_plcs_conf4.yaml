@@ -1,0 +1,35 @@
+- name: PLC1
+  sensors:
+    - T_1
+  actuators:
+    - XPump_3
+- name: PLC2
+  sensors:
+    - T_2
+  actuators:
+    - XPump_7
+- name: PLC3
+  sensors:
+    - T_3
+  actuators:
+    - XPump_8
+- name: PLC4
+  sensors:
+    - T_4
+  actuators:
+    - XPump_1
+- name: PLC5
+  sensors:
+    - T_5
+  actuators:
+    - XPump_2
+- name: PLC6
+  sensors:
+    - T_6
+  actuators:
+    - XPump_9
+- name: PLC7
+  sensors:
+    - T7
+  actuators:
+    - XPump_6

@@ -1,0 +1,6 @@
+inp_file: ky15.inp
+output_path: output
+iterations: 288
+network_topology_type: complex
+plcs: !include ky15_plcs_conf1.yaml
+simulator: epynet

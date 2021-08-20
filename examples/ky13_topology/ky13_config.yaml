@@ -1,0 +1,6 @@
+inp_file: ky13.inp
+output_path: output
+iterations: 288
+network_topology_type: complex
+plcs: !include ky13_plcs.yaml
+simulator: epynet
