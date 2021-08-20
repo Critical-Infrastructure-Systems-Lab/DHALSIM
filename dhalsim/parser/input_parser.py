@@ -4,6 +4,8 @@ import pandas as pd
 import wntr
 from antlr4 import *
 
+from ..epynet import epynetUtils
+from ..epynet.network import WaterDistributionNetwork
 from dhalsim.parser.antlr.controlsLexer import controlsLexer
 from dhalsim.parser.antlr.controlsParser import controlsParser
 
@@ -57,7 +59,12 @@ class InputParser:
         else:
             raise NoInpFileGiven()
         # Read the inp file with WNTR
-        self.wn = wntr.network.WaterNetworkModel(self.inp_file_path)
+        self.simulator = self.data["simulator"]
+
+        if self.simulator == 'epynet':
+            self.wn = WaterDistributionNetwork(self.inp_file_path)
+        else:
+            self.wn = wntr.network.WaterNetworkModel(self.inp_file_path)
 
         self.batch_mode = 'batch_simulations' in self.data
 
@@ -141,10 +148,17 @@ class InputParser:
         """
 
         # TODO Decide on the timestep (minutes or seconds?)
-        times = [
-            {"duration": self.wn.options.time.duration},
-            {"hydraulic_timestep": self.wn.options.time.hydraulic_timestep}
-        ]
+        if self.simulator == 'epynet':
+            times = [
+                {'duration': epynetUtils.get_time_parameter(self.wn, epynetUtils.get_time_param_code('EN_DURATION'))},
+                {'hydraulic_timestep': epynetUtils.get_time_parameter(
+                    self.wn, epynetUtils.get_time_param_code('EN_HYDSTEP'))}
+            ]
+        else:
+            times = [
+                {"duration": self.wn.options.time.duration},
+                {"hydraulic_timestep": self.wn.options.time.hydraulic_timestep}
+            ]
         self.data['time'] = times
 
     def generate_actuators_list(self):
@@ -154,17 +168,30 @@ class InputParser:
         """
 
         pumps = []
-        for pump in self.wn.pumps():
-            pumps.append({
-                "name": pump[0],
-                "initial_state": value_to_status(pump[1].status.value)
-            })
         valves = []
-        for valve in self.wn.valves():
-            valves.append({
-                "name": valve[0],
-                "initial_state": value_to_status(valve[1].status.value)
-            })
+
+        if self.simulator == 'epynet':
+            for pump in self.wn.pumps:
+                pumps.append({
+                    'name': pump.uid,
+                    'initial_state': 'open' if pump.initstatus else 'closed'
+                })
+            for valve in self.wn.valves:
+                valves.append({
+                    'name': valve.uid,
+                    'initial_state': 'open' if valve.initstatus else 'closed'
+                })
+        else:
+            for pump in self.wn.pumps():
+                pumps.append({
+                    "name": pump[0],
+                    "initial_state": value_to_status(pump[1].status.value)
+                })
+            for valve in self.wn.valves():
+                valves.append({
+                    "name": valve[0],
+                    "initial_state": value_to_status(valve[1].status.value)
+                })
         # Append valves to pumps
         pumps.extend(valves)
         self.data['actuators'] = pumps

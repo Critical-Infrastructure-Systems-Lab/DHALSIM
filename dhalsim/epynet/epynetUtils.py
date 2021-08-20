@@ -1,6 +1,5 @@
-#import epynet as en
-from epynet.epynet import Network
-from epynet.epynet import epanet2
+from .epynet import Network
+from .epynet import epanet2
 
 time_params = {
     '0': 'EN_DURATION',
