@@ -787,13 +787,18 @@ class PhysicalPlant:
         if "demand_patterns_data" in self.data:
             # Demand patterns for batch
             demands = pd.read_csv(self.data["demand_patterns_data"])
-            for name, pat in self.wn.patterns():
-                if name in demands:
-                    self.logger.debug("Setting demands for " + name +
-                                      " to demands defined at: " + self.data["demand_patterns_data"])
-                    pat.multipliers = demands[name].values.tolist()
-                else:
-                    self.logger.debug("Consumer " + name + " has no demands defined, using default...")
+
+            if self.data["simulator"] == 'epynet':
+                for pattern in self.wn.patterns.uid:
+                    self.wn.set_demand_pattern(pattern, demands[pattern].tolist())
+            else:
+                for name, pat in self.wn.patterns():
+                    if name in demands:
+                        self.logger.debug("Setting demands for " + name +
+                                          " to demands defined at: " + self.data["demand_patterns_data"])
+                        pat.multipliers = demands[name].values.tolist()
+                    else:
+                        self.logger.debug("Consumer " + name + " has no demands defined, using default...")
 
 
 def is_valid_file(test_parser, arg):
