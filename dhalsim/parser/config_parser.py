@@ -174,6 +174,24 @@ class SchemaParser:
                     Or('value', 'offset', only_one=True,
                        error="'tags' should have either a 'value' or 'offset' attribute."): Or(float, And(int, Use(float))),
                 }]
+            },
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
+                    'simple_stale',
+                ),
+                'name': And(
+                    str,
+                    string_pattern,
+                    Schema(lambda name: 1 <= len(name) <= 20,
+                           error="Length of name must be between 1 and 20, '{}' has invalid length")
+                ),
+                'trigger': trigger,
+                'target': And(
+                    str,
+                    string_pattern
+                )
             }
         )
     )

@@ -1,5 +1,5 @@
 inp_file: ctown_map.inp
-iterations: 288
+iterations: 110
 network_topology_type: complex
 plcs: !include ctown_plcs.yaml
 
@@ -7,7 +7,16 @@ plcs: !include ctown_plcs.yaml
 simulator: epynet
 demand: pdd
 #mininet_cli: True
-#attacks:
+attacks:
+  network_attacks:
+    - name: plc4attack
+      target: PLC4
+      trigger:
+        type: time
+        start: 10
+        end: 100
+      type: simple_stale
+
 #  network_attacks:
 #    - name: plc9attack
 #      offset: 1.0
