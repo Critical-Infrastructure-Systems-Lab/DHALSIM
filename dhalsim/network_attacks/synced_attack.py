@@ -270,7 +270,6 @@ class SyncedAttack(metaclass=ABCMeta):
         """
         while True:
             while self.get_sync():
-                # print(pd.read_sql_query("SELECT * FROM sync;", self.conn))
                 time.sleep(0.01)
 
             run = self.check_trigger()

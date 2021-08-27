@@ -599,7 +599,7 @@ class PhysicalPlant:
                 self.logger.error(f"Error in Epynet simulation: {exp}")
                 self.finish()
 
-            self.logger.debug("Iteration {x} out of {y}. Internal timestep {z}".format
+            self.logger.info("Iteration {x} out of {y}. Internal timestep {z}".format
                               (x=str(self.master_time),
                                y=str(iteration_limit), z=str(internal_epynet_step)))
 
