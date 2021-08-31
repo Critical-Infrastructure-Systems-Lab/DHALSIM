@@ -32,8 +32,8 @@ Anytown master file for rl-wds
 
 [TANKS]
 ;ID              	Elevation   	InitLevel   	MinLevel    	MaxLevel    	Diameter    	MinVol      	VolCurve
- T41             	66.535      	3.051       	3.048       	10.668      	9.9532      	237.08      	                	;
- T42             	66.535      	3.051       	3.048       	10.668      	9.9532      	237.08      	                	;
+ T41             	66.535      	3.051       	0              	10.668      	9.9532      	0             	                	;
+ T42             	66.535      	3.051       	0              	10.668      	9.9532      	0             	                	;
 
 [PIPES]
 ;ID              	Node1           	Node2           	Length      	Diameter    	Roughness   	MinorLoss   	Status

@@ -6,8 +6,8 @@ plcs: !include anytown_plcs.yaml
 
 simulator: epynet
 demand: pdd
-demand_patterns: demands_anytown.csv
-#log_level: debug
+demand_patterns: demands_anytown_small.csv
+log_level: debug
 
 attacks:
   network_attacks:
@@ -15,6 +15,6 @@ attacks:
       target: PLC1
       trigger:
         type: time
-        start: 10
-        end: 100
+        start: 648
+        end: 792
       type: simple_dos
