@@ -54,7 +54,7 @@ class PacketAttack(SyncedAttack):
         Finally, it launches the thread that will examine all captured packets.
         """
         os.system(
-            f'iptables -t mangle -A FORWARD -p tcp --sport 44818 -s {self.target_plc_ip} -j NFQUEUE --queue-num 1')
+            f'iptables -t mangle -A FORWARD -p tcp --sport 44818 -d {self.target_plc_ip} -j NFQUEUE --queue-num 1')
         os.system('iptables -A FORWARD -p icmp -j DROP')
         os.system('iptables -A INPUT -p icmp -j DROP')
         os.system('iptables -A OUTPUT -p icmp -j DROP')
@@ -141,7 +141,7 @@ class PacketAttack(SyncedAttack):
                           f"{self.intermediate_attack['gateway_ip']}")
 
         os.system(
-            f'iptables -t mangle -D FORWARD -p tcp --sport 44818 -s {self.target_plc_ip} -j NFQUEUE --queue-num 1')
+            f'iptables -t mangle -D FORWARD -p tcp --sport 44818 -d {self.target_plc_ip} -j NFQUEUE --queue-num 1')
         os.system('iptables -D FORWARD -p icmp -j DROP')
         os.system('iptables -D INPUT -p icmp -j DROP')
         os.system('iptables -D OUTPUT -p icmp -j DROP')

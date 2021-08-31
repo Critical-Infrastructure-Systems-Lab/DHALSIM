@@ -1,0 +1,8 @@
+network_attacks:
+    - name: plc1attack
+      target: PLC1
+      trigger:
+        type: time
+        start: 648
+        end: 936
+      type: simple_dos
