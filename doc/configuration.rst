@@ -428,3 +428,4 @@ And the :code:`attacks.yaml` would look like:
          upper_value: 0.16
        value: 0.5
        target: PLC1
+       direction: source
