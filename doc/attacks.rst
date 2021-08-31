@@ -260,6 +260,7 @@ This is an example of a :code:`naive_mitm` attack definition:
        end: 10
      value: 0.2
      target: PLC1
+     direction: destination
 
 The following sections will explain the configuration parameters.
 
@@ -315,3 +316,10 @@ target
 *This option is required*
 
 This will define the target of the network attack. For a MITM attack, this is the PLC at which the attacker will sit.
+
+direction
+^^^^^^^^^^^^^^^^^^^^^^^^^
+*This an optional parameter*
+
+This will define the direction of the communication that we are launching the MiTM attack. Messages can be intercepted if the target is the "source" or "destination" of the messages. The valid values for this parameter are "source" and "destionation", the default value is "source"
+
