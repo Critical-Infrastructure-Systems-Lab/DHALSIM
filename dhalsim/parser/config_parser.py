@@ -147,6 +147,13 @@ class SchemaParser:
                 'target': And(
                     str,
                     string_pattern
+                ),
+
+                Optional('direction', default='source'): And(
+                    str,
+                    Use(str.lower),
+                    Or('source', 'destination'), error="'direction' should be one of the following:"
+                                                       " 'source' or 'destination'."
                 )
             },
             {
@@ -192,7 +199,32 @@ class SchemaParser:
                     str,
                     string_pattern
                 )
+            },
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
+                    'simple_dos',
+                ),
+                'name': And(
+                    str,
+                    string_pattern,
+                    Schema(lambda name: 1 <= len(name) <= 20,
+                           error="Length of name must be between 1 and 20, '{}' has invalid length")
+                ),
+                'trigger': trigger,
+                'target': And(
+                    str,
+                    string_pattern
+                ),
+                Optional('direction', default='source'): And(
+                    str,
+                    Use(str.lower),
+                    Or('source', 'destination'), error="'direction' should be one of the following:"
+                                                       " 'source' or 'destination'."
+                )
             }
+
         )
     )
 

@@ -68,6 +68,12 @@ class SyncedAttack(metaclass=ABCMeta):
         self.attacker_ip = self.intermediate_attack['local_ip']
         self.target_plc_ip = self.intermediate_plc['local_ip']
 
+        # Direction is an optional parameter, present in naive_mitm and simple_dos
+        if 'direction' in self.intermediate_attack:
+            self.direction = self.intermediate_attack['direction']
+        else:
+            self.direction = 'None'
+
         self.state = 0
 
         # Initialize database connection
@@ -270,7 +276,6 @@ class SyncedAttack(metaclass=ABCMeta):
         """
         while True:
             while self.get_sync():
-                # print(pd.read_sql_query("SELECT * FROM sync;", self.conn))
                 time.sleep(0.01)
 
             run = self.check_trigger()
