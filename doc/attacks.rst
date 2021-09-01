@@ -323,3 +323,69 @@ direction
 
 This will define the direction of the communication that we are launching the MiTM attack. Messages can be intercepted if the target is the "source" or "destination" of the messages. The valid values for this parameter are "source" and "destionation", the default value is "source"
 
+
+Simple Denial of Service Attack
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This attack interrupts the flow of CIP messages containing data between PLCs. This attack first performs an ARP Spoofing attack into the target and then stops forwarding the CIP messages. This will cause the PLCs to be unable to update their cache with new system state information. Possibly taking wrong control action decisions.
+
+This is an example of a :code:`simple_dos` attack definition:
+
+.. code-block:: yaml
+
+    network_attacks:
+        - name: plc1attack
+          target: PLC2
+          trigger:
+            type: time
+            start: 648
+            end: 936
+          type: simple_dos
+          direction: source
+   
+The following sections will explain the configuration parameters.
+
+name
+^^^^^^^^^^^^^^^^^^^^^^^^^
+*This option is required*
+
+This defines the name of the attack. It is also used as the name of the attacker node on the mininet network.
+The name can only contain the the characters :code:`a-z`, :code:`A-Z`, :code:`0-9` and :code:`_`. And
+must have a length between 1 and 10 characters.
+
+trigger
+^^^^^^^^^^^^^^^^^^^^^^^^^
+*This option is required*
+
+This parameter defines when the attack is triggered. There are 4 different types of triggers:
+
+* Timed attacks
+    * :code:`time` - This is a timed attack. This means that the attack will start at a given iteration and stop at a given iteration
+* Sensor attacks: These are attacks that will be triggered when a certain sensor in the water network meets a certain condition.
+    * :code:`below` - This will make the attack trigger while a certain tag is below or equal to a given value
+    * :code:`above` - This will make the attack execute while a certain tag is above or equal to a given value
+    * :code:`between` - This will ensure that the attack is executed when a certain tag is between or equal to two given values
+
+These are the required parameters per type of trigger:
+
+* For :code:`time` attacks:
+    * :code:`start` - The start time of the attack (in iterations).
+    * :code:`end` - The end time of the attack (in iterations).
+* For :code:`below` and :code:`above` attacks:
+    * :code:`sensor` - The sensor of which the value will be used as the trigger.
+    * :code:`value` - The value which has to be reached in order to trigger the attack.
+* For :code:`between` attacks:
+    * :code:`sensor` - The sensor of which the value will be used as the trigger.
+    * :code:`lower_value` - The lower bound.
+    * :code:`upper_value` - The upper bound.
+
+target
+^^^^^^^^^^^^^^^^^^^^^^^^^
+*This option is required*
+
+This will define the target of the network attack. For a MITM attack, this is the PLC at which the attacker will sit.
+
+direction
+^^^^^^^^^^^^^^^^^^^^^^^^^
+*This an optional parameter*
+
+This will define the direction of the communication that we are launching the MiTM attack. Messages can be intercepted if the target is the "source" or "destination" of the messages. The valid values for this parameter are "source" and "destionation", the default value is "source"
