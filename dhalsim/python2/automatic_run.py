@@ -112,7 +112,7 @@ class GeneralCPS(MiniCPS):
         if "network_attacks" in self.data:
             automatic_attacker_path = Path(__file__).parent.absolute() / "automatic_attacker.py"
             for i, attacker in enumerate(self.data["network_attacks"]):
-                node = self.net.get(attacker["name"])
+                node = self.net.get(attacker["name"][0:9])
                 cmd = ["python2", str(automatic_attacker_path), str(self.intermediate_yaml), str(i)]
                 self.attacker_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
 

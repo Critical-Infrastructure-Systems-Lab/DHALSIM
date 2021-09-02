@@ -1,0 +1,9 @@
+network_attacks:
+    - name: concealment
+      target: PLC2
+      trigger:
+        type: time
+        start: 648
+        end: 936
+      type: simple_dos
+      direction: source

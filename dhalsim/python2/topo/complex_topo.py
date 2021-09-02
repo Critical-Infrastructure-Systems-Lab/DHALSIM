@@ -139,7 +139,7 @@ class ComplexTopo(Topo):
                 attack['public_ip'] = target['public_ip']
                 attack['provider_ip'] = target['provider_ip']
                 attack['mac'] = 'AA:BB:CC:DD:05:' + "{:02x}".format(index)
-                attack['interface'] = attack['name'] + "-eth0"
+                attack['interface'] = attack['name'][0:9] + "-eth0"
                 attack['provider_interface'] = target['provider_interface']
                 attack['provider_mac'] = target['provider_mac']
                 attack['gateway_name'] = target['gateway_name']
@@ -173,7 +173,7 @@ class ComplexTopo(Topo):
             # Add attackers to the mininet network
             for attack in self.data['network_attacks']:
                 attacker = self.addHost(
-                    attack['name'],
+                    attack['name'][0:9],
                     mac=attack['mac'],
                     ip=attack['local_ip'] + "/24",
                     defaultRoute='via ' + attack['gateway_ip'] + '/24')
@@ -251,7 +251,7 @@ class ComplexTopo(Topo):
         # Set default gateway for the attackers
         if 'network_attacks' in self.data.keys():
             for attack in self.data['network_attacks']:
-                node = net.get(attack['name'])
+                node = net.get(attack['name'][0:9])
                 node.cmd('route add default gw {ip}'.format(ip=attack['gateway_ip']))
 
     def setup_network_for_node(self, net, node_data, provider_router):

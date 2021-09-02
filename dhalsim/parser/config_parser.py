@@ -138,8 +138,8 @@ class SchemaParser:
                 'name': And(
                     str,
                     string_pattern,
-                    Schema(lambda name: 1 <= len(name) <= 10,
-                           error="Length of name must be between 1 and 10, '{}' has invalid length")
+                    Schema(lambda name: 1 <= len(name) <= 20,
+                           error="Length of name must be between 1 and 20, '{}' has invalid length")
                 ),
                 'trigger': trigger,
                 Or('value', 'offset', only_one=True,
@@ -165,8 +165,8 @@ class SchemaParser:
                 'name': And(
                     str,
                     string_pattern,
-                    Schema(lambda name: 1 <= len(name) <= 10,
-                           error="Length of name must be between 1 and 10, '{}' has invalid length")
+                    Schema(lambda name: 1 <= len(name) <= 20,
+                           error="Length of name must be between 1 and 20, '{}' has invalid length")
                 ),
                 'trigger': trigger,
                 'target': And(
@@ -522,6 +522,11 @@ class ConfigParser:
             for network_attack in network_attacks:
                 # Check existence and validity of target PLC
                 target = network_attack['target']
+
+                # Network attacks to SCADA do not need a target plc
+                if target == 'scada':
+                    continue
+
                 target_plc = None
                 for plc in self.data.get("plcs"):
                     if plc['name'] == target:

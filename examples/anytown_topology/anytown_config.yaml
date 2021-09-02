@@ -7,7 +7,8 @@ plcs: !include anytown_plcs.yaml
 simulator: epynet
 demand: pdd
 demand_patterns: demands_anytown_small.csv
-#log_level: debug
+log_level: debug
 
 #attacks: !include anytown_mitm.yaml
-attacks: !include anytown_dos.yaml
+#attacks: !include anytown_dos.yaml
+attacks: !include anytown_mitm_csv.yaml
