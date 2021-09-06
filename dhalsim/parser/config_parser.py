@@ -36,6 +36,10 @@ class NoSuchPlc(Error):
     """Raised when an attack targets a PLC that does not exist"""
 
 
+class NoSuchNode(Error):
+    """Raised when an attack targets a niode that does not exist"""
+
+
 class NoSuchTag(Error):
     """Raised when an attack targets a tag the target PLC does not have"""
 
@@ -58,6 +62,10 @@ class SchemaParser:
     attack_pattern = Regex(r'^[a-zA-Z0-9_<>+-.]+$',
                            error="Error in attack name: '{}', "
                                  "Can only have a-z, A-Z, 0-9, and symbols: _ < > + - . (no whitespaces)")
+
+    event_pattern = Regex(r'^[a-zA-Z0-9_<>+-.]+$',
+                          error="Error in event name: '{}', "
+                                "Can only have a-z, A-Z, 0-9, and symbols: _ < > + - . (no whitespaces)")
 
     trigger = Schema(
         Or(
@@ -228,6 +236,32 @@ class SchemaParser:
         )
     )
 
+    network_events = Schema(
+        Or(
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
+                    'packet_loss',
+                ),
+                'name': And(
+                    str,
+                    string_pattern,
+                    Schema(lambda name: 1 <= len(name) <= 20,
+                           error="Length of name must be between 1 and 20, '{}' has invalid length")
+                ),
+                'trigger': trigger,
+                'target': And(
+                    str,
+                    string_pattern
+                ),
+                'value': And(
+                    Or(float, And(int, Use(float)))
+                )
+            }
+        )
+    )
+
     @staticmethod
     def path_schema(data: dict, config_path: Path) -> dict:
         """
@@ -347,6 +381,9 @@ class SchemaParser:
             Optional('attacks'): {
                 Optional('device_attacks'): [SchemaParser.device_attacks],
                 Optional('network_attacks'): [SchemaParser.network_attacks],
+            },
+            Optional('events'): {
+                Optional('network_events'): [SchemaParser.network_events],
             },
             Optional('batch_simulations'): And(
                 int,
@@ -547,6 +584,31 @@ class ConfigParser:
             return network_attacks
         return []
 
+    def generate_network_events(self):
+        """
+        This function will add network events in the intermediate yaml
+        """
+
+        if 'events' in self.data and 'network_events' in self.data['events']:
+            network_events = self.data['events']['network_events']
+            for network_event in network_events:
+                # Check the existence and validity of target node
+                target = network_event['target']
+
+                if target == 'scada':
+                    continue
+
+                target_node = None
+                for node in self.data.get('plcs'):
+                    if node['name'] == target:
+                        target_node = target
+                        break
+                if not target_node:
+                    raise NoSuchNode("Node {node} does not exists".format(node=target))
+
+            return network_events
+        return []
+
     def generate_temporary_dirs(self):
         """Generates the temporary directory and yaml/db paths"""
         # Create temp directory and intermediate yaml files in /tmp/
@@ -620,6 +682,9 @@ class ConfigParser:
         # Parse the device attacks from the config file
         yaml_data = self.generate_device_attacks(yaml_data)
         yaml_data["network_attacks"] = self.generate_network_attacks()
+
+        # Parse network events from the config file
+        yaml_data["network_events"] = self.generate_network_events()
 
         # Write data to yaml file
         with self.yaml_path.open(mode='w') as intermediate_yaml:

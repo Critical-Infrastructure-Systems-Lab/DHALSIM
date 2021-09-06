@@ -294,6 +294,7 @@ class GeneralReadmeGenerator:
         ret_str += self.checkbox('demand_patterns')
         ret_str += self.checkbox('network_loss_data')
         ret_str += self.checkbox('network_delay_data')
+        ret_str += self.checkbox('network_events')
         return ret_str + self.checkbox('network_attacks')
 
     def get_standalone_parameter_information(self) -> str:

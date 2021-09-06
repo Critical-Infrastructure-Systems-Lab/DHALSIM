@@ -118,6 +118,27 @@ class GeneralCPS(MiniCPS):
 
         self.logger.debug("Launched the attackers processes.")
 
+        self.network_event_processes = []
+        if 'network_events' in self.data:
+            automatic_event = Path(__file__).parent.absolute() / "automatic_event.py"
+            node = None
+            for i, event in enumerate(self.data['network_events']):
+                target_node = event['target']
+                if target_node == 'scada':
+                    self.logger.debug('Network event in SCADA link')
+                    node = self.net.get(self.data['scada']['switch_name'])
+
+                else:
+                    for plc in self.data['plcs']:
+                        if target_node == plc['name']:
+                            self.logger.debug('Network event in link to ' + str(plc['name']))
+                            node = self.net.get(plc['switch_name'])
+
+                cmd = ["python2", str(automatic_event), str(self.intermediate_yaml), str(i)]
+                self.network_event_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
+
+        self.logger.debug("Launched the event processes.")
+
         automatic_plant_path = Path(__file__).parent.absolute() / "automatic_plant.py"
 
         cmd = ["python2", str(automatic_plant_path), str(self.intermediate_yaml)]
@@ -183,6 +204,13 @@ class GeneralCPS(MiniCPS):
                     self.end_process(attacker)
                 except Exception as msg:
                     self.logger.error("Exception shutting down attacker: " + str(msg))
+
+        for event in self.network_event_processes:
+            if event.poll() is None:
+                try:
+                    self.end_process(event)
+                except Exception as msg:
+                    self.logger.error("Exception shutting down event: " + str(msg))
 
         if self.plant_process.poll() is None:
             try:

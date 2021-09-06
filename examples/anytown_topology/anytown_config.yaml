@@ -1,6 +1,6 @@
 inp_file: anytown_map.inp
 output_path: output
-iterations: 2016
+iterations: 20
 network_topology_type: complex
 plcs: !include anytown_plcs.yaml
 
@@ -11,4 +11,5 @@ log_level: debug
 
 #attacks: !include anytown_mitm.yaml
 #attacks: !include anytown_dos.yaml
-attacks: !include anytown_mitm_csv.yaml
+#attacks: !include anytown_mitm_csv.yaml
+events: !include anytown_nwk_event.yaml

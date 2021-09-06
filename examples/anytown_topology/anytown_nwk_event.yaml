@@ -1,0 +1,9 @@
+network_events:
+  - name: link_loss
+    type: packet_loss
+    target: PLC1
+    trigger:
+        type: time
+        start: 10
+        end: 15
+    value: 20
