@@ -20,15 +20,17 @@ class NoSuchEvent(Error):
 class EventControl(NodeControl):
     """This class is started for an event. It starts a network event."""
 
-    def __init__(self, intermediate_yaml, event_index):
+    def __init__(self, intermediate_yaml, event_index, interface):
         super(EventControl, self).__init__(intermediate_yaml)
         self.event_index = event_index
+        self.interface_name = interface
         self.output_path = Path(self.data["output_path"])
         self.tcp_dump_process = None
         self.attacker_process = None
         self.this_event_data = self.data["network_events"][self.event_index]
         self.logger = py2_logger.get_logger(self.data['log_level'])
         self.logger.debug('Network event index: ' + str(event_index))
+        self.logger.debug('Interface name: ' + str(self.interface_name))
 
     def terminate(self):
         """This function stops the event process."""
@@ -59,7 +61,7 @@ class EventControl(NodeControl):
         else:
             raise NoSuchEvent("Event {event} does not exists.".format(event=self.this_event_data['type']))
 
-        cmd = ["python3", str(generic_event), str(self.intermediate_yaml), str(self.event_index)]
+        cmd = ["python3", str(generic_event), str(self.intermediate_yaml), str(self.event_index), self.interface_name]
 
         # Network events are run at switches
         switch_process = subprocess.Popen(cmd, shell=False, stderr=sys.stderr, stdout=sys.stdout)
@@ -81,7 +83,8 @@ if __name__ == "__main__":
                         type=lambda x: is_valid_file(parser, x))
     parser.add_argument(dest="index", help="Index of PLC in intermediate yaml", type=int,
                         metavar="N")
+    parser.add_argument(dest="interface", help="Interface name of the network event")
 
     args = parser.parse_args()
-    event_control = EventControl(Path(args.intermediate_yaml), args.index)
+    event_control = EventControl(Path(args.intermediate_yaml), args.index, args.interface)
     event_control.main()
