@@ -5,5 +5,5 @@ network_events:
     trigger:
         type: time
         start: 648
-        end: 936
-    value: 100
+        end: 792
+    value: 25
