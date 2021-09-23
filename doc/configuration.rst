@@ -207,11 +207,10 @@ The valid options are :code:`PDD` and :code:`DD`. This value is then passed to t
 
 simulator
 ------------------------
-*This is an optional value with default*: :code:`PDD`
+*This is an optional value with default*: :code:`wntr`
 
-The simulator option in the config file represents the demand model used by the WNTR simulation.
-The valid options are :code:`PDD` and :code:`DD`. This value is then passed to the
-`WNTR hydraulic demand model option <https://wntr.readthedocs.io/en/latest/hydraulics.html>`_.
+The simulator option in the config file represents the EPANET wrapper used by the physical simulation.
+The valid options are :code:`wntr` and :code:`epynet`. WNTR is a Python wrapper developed by U.S. Environmental Protection Agency, the same team that developed EPANET. WNTR documentation is available in the `WNTR website <https://wntr.readthedocs.io/en/latest>`_. Epynet is a Python wrapper developed by Vitens and modified by  `Davide Salaorni <https://github.com/Daveonwave/DHALSIM-epynet>`_. The main characteristic of epynet is the way step-by-step simulations are implemented, having a better performance compared to WNTR. 
 
 noise_scale
 ------------------------
