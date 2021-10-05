@@ -74,7 +74,7 @@ then
 fi
 
 # Install netfilterqueue for Simple DoS attacks
-sudo apt install python3-pip git libnfnetlink-dev libnetfilter-queue-dev
+sudo apt install -y python3-pip git libnfnetlink-dev libnetfilter-queue-dev
 sudo python3 -m pip install -U git+https://github.com/kti/python-netfilterqueue
 
 # Install DHALSIM
