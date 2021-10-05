@@ -19,7 +19,7 @@ setuptools.setup(
         'pyyaml-include',
         'antlr4-python3-runtime==4.7.2',
         'progressbar2',
-        'wntr',
+        'wntr==0.3.1',
         'pandas',
         'schema',
         'scapy',
