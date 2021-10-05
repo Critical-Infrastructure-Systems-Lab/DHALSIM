@@ -73,6 +73,10 @@ then
   sudo pip2 install pytest-mock==3.6.*
 fi
 
+# Install netfilterqueue for Simple DoS attacks
+sudo apt install python3-pip git libnfnetlink-dev libnetfilter-queue-dev
+sudo python3 -m pip install -U git+https://github.com/kti/python-netfilterqueue
+
 # Install DHALSIM
 cd "${cwd}" || { printf "Failure: Could not find DHALSIM directory\n"; exit 1; }
 
