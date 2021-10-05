@@ -1,6 +1,6 @@
 inp_file: anytown_map.inp
 output_path: output
-iterations: 2880
+iterations: 150
 network_topology_type: complex
 plcs: !include anytown_plcs.yaml
 
@@ -12,4 +12,5 @@ demand_patterns: demands_anytown_small.csv
 #attacks: !include anytown_mitm.yaml
 #attacks: !include anytown_dos.yaml
 #attacks: !include anytown_mitm_csv.yaml
-events: !include anytown_nwk_event.yaml
+#events: !include anytown_nwk_event.yaml
+attacks: !include anytown_scada_mitm.yaml

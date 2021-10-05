@@ -344,7 +344,6 @@ class GenericScada(BasePLC):
                 thread.start_new_thread(self.update_cache, (lock, self.SCADA_CACHE_UPDATE_TIME))
 
             master_time = self.get_master_clock()
-            #self.update_cache()
             results = [master_time, datetime.now()]
             with lock:
                 for plc_ip in self.plc_data:
