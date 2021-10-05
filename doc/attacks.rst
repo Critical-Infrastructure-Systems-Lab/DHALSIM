@@ -140,18 +140,18 @@ This is an example of a :code:`mitm` attack definition:
 .. code-block:: yaml
 
    network_attacks:
-     name: attack1
-     type: mitm
-     trigger:
-       type: time
-       start: 5
-       end: 10
-     tags:
-       - tag: T0
-         value: 0.1
-       - tag: T2
-         value: 0.2
-     target: PLC1
+     - name: attack1
+       type: mitm
+       trigger:
+         type: time
+         start: 5
+         end: 10
+       tags:
+         - tag: T0
+           value: 0.1
+         - tag: T2
+           value: 0.2
+       target: PLC1
 
 The following sections will explain the configuration parameters.
 
