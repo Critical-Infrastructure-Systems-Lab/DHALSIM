@@ -428,3 +428,38 @@ And the :code:`attacks.yaml` would look like:
        value: 0.5
        target: PLC1
        direction: source
+       
+events
+------------------------
+*This is an optional value*
+Events are situations started by a trigger that do not necessarily are attacks. In addition, events do not require launching additional mininet nodes or having additional mininet nodes interacting with the simulation. Currently, only network events are supported. The network events logic is implemented by the switches or routers in a topology. The network events follow the same design principle with network attacks. 
+
+The network event supported now is "packet_loss", it uses Linux tc tool to emulate a network link lossing a percentage of the packets being sent on that link. If this option is left out or commented out, the simulation will run without events.
+
+If you want to put the attacks in a separate file, see the section :ref:`Events in a separate file`.
+
+Events in a separate file
+----------------------------
+
+If you would like to have your :code:`events` stored in a separate yaml file, that is possible by including
+it by using :code:`!include`.
+
+This would be in the config file:
+
+.. code-block:: yaml
+
+    events: !include events.yaml
+
+And the :code:`events.yaml` would look like:
+
+.. code-block:: yaml
+
+network_events:
+  - name: link_loss
+    type: packet_loss
+    target: PLC1
+    trigger:
+        type: time
+        start: 648
+        end: 792
+    value: 25
