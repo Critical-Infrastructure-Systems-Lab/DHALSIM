@@ -454,12 +454,12 @@ And the :code:`events.yaml` would look like:
 
 .. code-block:: yaml
 
-network_events:
-  - name: link_loss
-    type: packet_loss
-    target: PLC1
-    trigger:
-        type: time
-        start: 648
-        end: 792
-    value: 25
+    network_events:
+      - name: link_loss
+        type: packet_loss
+        target: PLC1
+        trigger:
+            type: time
+            start: 648
+            end: 792
+        value: 25
