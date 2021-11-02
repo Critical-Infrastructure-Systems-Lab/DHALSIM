@@ -218,7 +218,7 @@ class SyncedAttack(metaclass=ABCMeta):
                     self.cur.execute(query)
                 return
             except sqlite3.OperationalError as exc:
-                self.logger.debug(
+                self.logger.info(
                     "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
                         exc=exc, i=self.DB_TRIES - i - 1))
                 time.sleep(self.DB_SLEEP_TIME)
@@ -243,8 +243,7 @@ class SyncedAttack(metaclass=ABCMeta):
 
         :return: False if physical process wants the attack to do a iteration, True if not.
         """
-        self.db_query("SELECT flag FROM sync WHERE name IS ?",
-                         (self.intermediate_attack["name"],))
+        self.db_query("SELECT flag FROM sync WHERE name IS ?", (self.intermediate_attack["name"],))
         flag = bool(self.cur.fetchone()[0])
         return flag
 
@@ -255,8 +254,7 @@ class SyncedAttack(metaclass=ABCMeta):
 
         :param flag: True for sync to 1, false for sync to 0
         """
-        self.db_query("UPDATE sync SET flag=? WHERE name IS ?",
-                         (int(flag), self.intermediate_attack["name"],))
+        self.db_query("UPDATE sync SET flag=? WHERE name IS ?", (int(flag), self.intermediate_attack["name"],))
         self.conn.commit()
 
     def set_attack_flag(self, flag):
@@ -276,7 +274,7 @@ class SyncedAttack(metaclass=ABCMeta):
         """
         while True:
             while self.get_sync():
-                time.sleep(0.01)
+                time.sleep(self.DB_SLEEP_TIME)
 
             run = self.check_trigger()
             self.set_attack_flag(run)
@@ -289,7 +287,6 @@ class SyncedAttack(metaclass=ABCMeta):
                 self.teardown()
 
             self.attack_step()
-
             self.set_sync(1)
 
     @abstractmethod

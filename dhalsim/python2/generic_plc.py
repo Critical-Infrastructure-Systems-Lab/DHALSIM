@@ -411,8 +411,7 @@ class GenericPLC(BasePLC):
         :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
            :code:`DB_TRIES` tries.
         """
-        self.db_query("UPDATE sync SET flag=? WHERE name IS ?",
-                      (int(flag), self.intermediate_plc["name"],))
+        self.db_query("UPDATE sync SET flag=? WHERE name IS ?",  (int(flag), self.intermediate_plc["name"],))
         self.conn.commit()
 
     def set_attack_flag(self, flag, attack_name):

@@ -460,6 +460,8 @@ class PhysicalPlant:
         #todo: Prepare query statements for this
         conn = sqlite3.connect(self.data["db_path"])
         c = conn.cursor()
+
+        # With all PLCs flag in 1, count should be 0
         c.execute("""SELECT count(*)
                         FROM sync
                         WHERE flag <= 0""")

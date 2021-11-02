@@ -1,5 +1,5 @@
 inp_file: ctown_map.inp
-iterations: 288
+iterations: 2880
 network_topology_type: complex
 plcs: !include ctown_plcs.yaml
 
@@ -12,8 +12,8 @@ attacks:
       target: PLC4
       trigger:
         type: time
-        start: 100
-        end: 288
+        start: 648
+        end: 936
       type: simple_dos
       direction: source
 
