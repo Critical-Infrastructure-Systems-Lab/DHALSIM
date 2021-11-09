@@ -169,6 +169,10 @@ class MitmAttack(SyncedAttack):
             try:
                 client = subprocess.Popen(cmd, shell=False)
                 client.wait()
+
+            except AssertionError as error:
+                self.logger.error(f"Asserion error, aborting...: {error}")
+                break
             except Exception as error:
                 self.logger.error(f"ERROR in cpppo_thread - MITM Attack client ENIP send_multiple: {error}")
             if interrupt_test:
@@ -216,7 +220,7 @@ class MitmAttack(SyncedAttack):
         self.run_thread = False
         if self.thread:
             self.thread.join(self.CPPPO_THREAD_JOIN_TIMEOUT)
-            if self.thread.is_alive():
+            if self.thread and self.thread.is_alive():
                 self.logger.info("Warning, the CPPPO MiTM Server thread timed out before joining. ENIP session"
                                  "might have ended abruptely")
 
