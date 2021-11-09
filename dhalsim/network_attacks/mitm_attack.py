@@ -203,13 +203,6 @@ class MitmAttack(SyncedAttack):
         self.logger.debug(f"MITM Attack ARP Restore between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
 
-        # Delete iptables rules
-        os.system('iptables -t nat -D PREROUTING -p tcp -d ' + self.target_plc_ip +
-                  ' --dport 44818 -j DNAT --to-destination ' + self.attacker_ip + ':44818')
-        os.system('iptables -D FORWARD -p icmp -j DROP')
-        os.system('iptables -D INPUT -p icmp -j DROP')
-        os.system('iptables -D OUTPUT -p icmp -j DROP')
-
         self.server.send_signal(signal.SIGINT)
         self.server.wait()
         if self.server.poll() is None:
@@ -223,6 +216,13 @@ class MitmAttack(SyncedAttack):
             if self.thread and self.thread.is_alive():
                 self.logger.info("Warning, the CPPPO MiTM Server thread timed out before joining. ENIP session"
                                  "might have ended abruptely")
+
+        # Delete iptables rules
+        os.system('iptables -t nat -D PREROUTING -p tcp -d ' + self.target_plc_ip +
+                  ' --dport 44818 -j DNAT --to-destination ' + self.attacker_ip + ':44818')
+        os.system('iptables -D FORWARD -p icmp -j DROP')
+        os.system('iptables -D INPUT -p icmp -j DROP')
+        os.system('iptables -D OUTPUT -p icmp -j DROP')
 
     def attack_step(self):
         """When the attack is running, it will update the tags dict with the most recent values."""
