@@ -56,6 +56,9 @@ class GenericScada(BasePLC):
     SCADA_CACHE_UPDATE_TIME = 2
     """ Time in seconds the SCADA server updates its cache"""
 
+    PLC_CACHE_UPDATE_TIME = 0.5
+    """ Time in seconds the PLC server updates its cache"""
+
     def __init__(self, intermediate_yaml_path):
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
@@ -378,26 +381,37 @@ class GenericScada(BasePLC):
         Update the cache of the scada by receiving all the required tags.
         When something cannot be received, the previous values are used.
         """
+
+        # The default cache update time is tuned for a SCADA server that does not takes control decisions
+        # With the control agent, the SCADA should have the same cache_update_time as a PLC
+        if self.intermediate_yaml['use_control_agents']:
+            cache_update_time = self.PLC_CACHE_UPDATE_TIME
+
         while self.update_cache_flag:
             for plc_ip in self.cache:
-                try:
-                    values = self.receive_multiple(self.plc_data[plc_ip], plc_ip)
-                    with lock:
-                        self.cache[plc_ip] = values
 
-                except ConnectionResetError as reset_e:
-                    self.logger.error(
-                        "Connection reset by peer '{e}'".format(tags=self.plc_data[plc_ip], ip=plc_ip, e=str(reset_e)))
-                    time.sleep(cache_update_time)
-                    continue
+                for i in range(self.UPDATE_RETRIES):
+                    try:
+                        values = self.receive_multiple(self.plc_data[plc_ip], plc_ip)
+                        with lock:
+                            self.cache[plc_ip] = values
 
-                except Exception as e:
-                    self.logger.error(
-                        "PLC receive_multiple with tags {tags} from {ip} failed with exception '{e}'".format(
-                            tags=self.plc_data[plc_ip],
-                            ip=plc_ip, e=str(e)))
-                    time.sleep(cache_update_time)
-                    continue
+                        break
+                        # Cache update successfull, move to the next PLC
+
+                    except ConnectionResetError as reset_e:
+                        self.logger.error(
+                            "Connection reset by peer '{e}'".format(tags=self.plc_data[plc_ip], ip=plc_ip, e=str(reset_e)))
+                        # No point in retryings
+                        break
+
+                    except Exception as e:
+                        self.logger.error(
+                            "PLC receive_multiple with tags {tags} from {ip} failed with exception '{e}'".format(
+                                tags=self.plc_data[plc_ip],
+                                ip=plc_ip, e=str(e)))
+                        time.sleep(self.SCADA_CACHE_UPDATE_TIME)
+                        continue
             time.sleep(cache_update_time)
 
     def init_actuator_values(self):
@@ -536,8 +550,11 @@ class GenericScada(BasePLC):
 
         for i, var in enumerate(self.saved_values[0]):
             if var in self.state_vars:
-
-                self.write_control_db(node_id=var, value=float(self.saved_values[-1][i]))
+                try:
+                    self.write_control_db(node_id=var, value=float(self.saved_values[-1][i]))
+                except IndexError as index_error:
+                    self.logger.error('State space is empty! Skipping update ' + str(var))
+                    continue
 
         # Send also the simulation step (cannot be retrieved by intermediate yaml)
         self.write_control_db(node_id='sim_step', value=self.master_time)

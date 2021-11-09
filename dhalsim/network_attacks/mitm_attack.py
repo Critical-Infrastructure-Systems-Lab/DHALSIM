@@ -186,7 +186,10 @@ class MitmAttack(SyncedAttack):
                 client.wait()
 
             except AssertionError as error:
-                self.logger.error(f"Asserion error, aborting...: {error}")
+                self.logger.error(f"Assertion error, aborting...: {error}")
+                break
+            except ConnectionResetError as reset_error:
+                self.logger.error(f"Connection reset by peer, aborting...: {reset_error}")
                 break
             except Exception as error:
                 self.logger.error(f"ERROR in cpppo_thread - MITM Attack client ENIP send_multiple: {error}")

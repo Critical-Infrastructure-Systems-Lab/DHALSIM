@@ -48,7 +48,7 @@ class GenericPLC(BasePLC):
     """Amount of time a db query will wait before retrying"""
 
     PLC_CACHE_UPDATE_TIME = 0.5
-    """ Time in seconds the SCADA server updates its cache"""
+    """ Time in seconds the PLC server updates its cache"""
 
     def __init__(self, intermediate_yaml_path, yaml_index):
         self.yaml_index = yaml_index
