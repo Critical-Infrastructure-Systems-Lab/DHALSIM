@@ -204,7 +204,8 @@ class MitmAttack(SyncedAttack):
 
         self.server.terminate()
         self.run_thread = False
-        self.thread.join()
+        if self.thread:
+            self.thread.join()
 
     def attack_step(self):
         """When the attack is running, it will update the tags dict with the most recent values."""
