@@ -384,7 +384,13 @@ class GenericScada(BasePLC):
                     values = self.receive_multiple(self.plc_data[plc_ip], plc_ip)
                     with lock:
                         self.cache[plc_ip] = values
-                    #self.logger.debug("PLC values received by SCADA from IP: " + str(plc_ip) + " is " + str(values) + ".")
+
+                except ConnectionResetError as reset_e:
+                    self.logger.error(
+                        "Connection reset by peer '{e}'".format(tags=self.plc_data[plc_ip], ip=plc_ip, e=str(reset_e)))
+                    time.sleep(cache_update_time)
+                    continue
+
                 except Exception as e:
                     self.logger.error(
                         "PLC receive_multiple with tags {tags} from {ip} failed with exception '{e}'".format(
@@ -524,8 +530,13 @@ class GenericScada(BasePLC):
         with plcs.
         """
         # List of tuples in the following format: (var_name, new_value)
+        self.logger.info('State space saved_values[0] length: ' + str(len(self.saved_values[0])))
+        self.logger.info('State vars length: ' + str(len(self.state_vars)))
+        self.logger.info('State vars: ' + str(self.state_vars))
+
         for i, var in enumerate(self.saved_values[0]):
             if var in self.state_vars:
+
                 self.write_control_db(node_id=var, value=float(self.saved_values[-1][i]))
 
         # Send also the simulation step (cannot be retrieved by intermediate yaml)

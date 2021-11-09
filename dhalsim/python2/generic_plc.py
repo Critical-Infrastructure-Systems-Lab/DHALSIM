@@ -308,6 +308,11 @@ class GenericPLC(BasePLC):
                             received = Decimal(self.receive((cached_tag, 1), plc_data["public_ip"]))
                             with lock:
                                 self.cache[cached_tag] = received
+                        except ConnectionResetError as reset_e:
+                            self.logger.error(
+                                "Connection reset by peer".format(tags=self.intermediate_plc["name"], ip=plc_data["public_ip"], e=str(reset_e)))
+                            time.sleep(cache_update_time)
+                            continue
                         except Exception as e:
                             self.logger.info(
                                 "{plc} receive {tag} from {ip} failed with exception '{e}'".format(
