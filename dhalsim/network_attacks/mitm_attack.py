@@ -3,6 +3,7 @@ import os
 import subprocess
 import threading
 import time
+import signal
 from pathlib import Path
 from typing import List
 
@@ -25,6 +26,9 @@ class MitmAttack(SyncedAttack):
     :param intermediate_yaml_path: The path to the intermediate YAML file
     :param yaml_index: The index of the attack in the intermediate YAML
     """
+
+    CPPPO_THREAD_JOIN_TIMEOUT = 10
+    """Amount of times the server cpppo thread will wait until timing out and finishing"""
 
     def __init__(self, intermediate_yaml_path: Path, yaml_index: int):
         super().__init__(intermediate_yaml_path, yaml_index)
@@ -166,7 +170,7 @@ class MitmAttack(SyncedAttack):
                 client = subprocess.Popen(cmd, shell=False)
                 client.wait()
             except Exception as error:
-                self.logger.error(f"ERROR MITM Attack client ENIP send_multiple: {error}")
+                self.logger.error(f"ERROR in cpppo_thread - MITM Attack client ENIP send_multiple: {error}")
             if interrupt_test:
                 break
             time.sleep(0.05)
@@ -202,10 +206,19 @@ class MitmAttack(SyncedAttack):
         os.system('iptables -D INPUT -p icmp -j DROP')
         os.system('iptables -D OUTPUT -p icmp -j DROP')
 
-        self.server.terminate()
+        self.server.send_signal(signal.SIGINT)
+        self.server.wait()
+        if self.server.poll() is None:
+            self.server.terminate()
+        if self.server.poll() is None:
+            self.server.kill()
+
         self.run_thread = False
         if self.thread:
-            self.thread.join()
+            self.thread.join(self.CPPPO_THREAD_JOIN_TIMEOUT)
+            if self.thread.is_alive():
+                self.logger.info("Warning, the CPPPO MiTM Server thread timed out before joining. ENIP session"
+                                 "might have ended abruptely")
 
     def attack_step(self):
         """When the attack is running, it will update the tags dict with the most recent values."""
