@@ -10,7 +10,7 @@ agent:
     model_path: "examples/anytown_topology/output/saved_models"
 
     save_model: True
-    save_model_as: 'mininet'
+    save_model_as: 'andres'
     save_model_every: 4
 
     batch_size: 64

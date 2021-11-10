@@ -20,7 +20,7 @@ control_agent:
         - type: 'buffer'
           count: 1
         - type: 'train'
-          count: 4
+          count: 40
         #- type: 'test'
         #  count: 4
         #  seeds: [0, 1, 2, 3]

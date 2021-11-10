@@ -422,6 +422,7 @@ class GenericScada(BasePLC):
                                 ip=plc_ip, e=str(e)))
                         time.sleep(self.SCADA_CACHE_UPDATE_TIME)
                         continue
+
             self.plcs_cache_updated = True
             while self.plcs_cache_updated:
                 #self.logger.info("Update cache waiting")
