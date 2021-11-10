@@ -398,14 +398,14 @@ class GenericScada(BasePLC):
             #self.logger.info(self.cache)
 
             for plc_ip in self.cache:
-                self.logger.info("LOOP of IP:  " + str(plc_ip))
+                #self.logger.info("LOOP of IP:  " + str(plc_ip))
 
                 for i in range(self.UPDATE_RETRIES):
                     try:
                         values = self.receive_multiple(self.plc_data[plc_ip], plc_ip)
-                        self.logger.info("TRIAL NUMBER " + str(i))
+                        #self.logger.info("TRIAL NUMBER " + str(i))
                         #self.logger.info("PLC_IP " + str(plc_ip))
-                        self.logger.info(values)
+                        #self.logger.info(values)
                         with lock:
                             self.cache[plc_ip] = values
 
@@ -428,7 +428,7 @@ class GenericScada(BasePLC):
 
             self.plcs_cache_updated = True
             while self.plcs_cache_updated:
-                self.logger.info("Update cache waiting")
+                #self.logger.info("Update cache waiting")
                 time.sleep(0.01)
 
 
@@ -676,7 +676,7 @@ class GenericScada(BasePLC):
                 # self.logger.info(self.done)
 
             while not self.plcs_cache_updated:
-                self.logger.info("PLCs not updated yet")
+                #self.logger.info("PLCs not updated yet")
                 time.sleep(0.5)
 
             with lock:
