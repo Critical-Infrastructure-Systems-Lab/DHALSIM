@@ -56,6 +56,9 @@ class GenericScada(BasePLC):
     DB_SLEEP_TIME = random.uniform(0.01, 0.1)
     """Amount of time a db query will wait before retrying"""
 
+    RETRY_SLEEP_TIME = random.uniform(0.001, 0.01)
+    """Amount of time a db query will wait before retrying"""
+
     SCADA_CACHE_UPDATE_TIME = 2
     """ Time in seconds the SCADA server updates its cache"""
 
@@ -395,14 +398,14 @@ class GenericScada(BasePLC):
             #self.logger.info(self.cache)
 
             for plc_ip in self.cache:
-                #self.logger.info("LOOP of IP:  " + str(plc_ip))
+                self.logger.info("LOOP of IP:  " + str(plc_ip))
 
                 for i in range(self.UPDATE_RETRIES):
                     try:
                         values = self.receive_multiple(self.plc_data[plc_ip], plc_ip)
-                        #self.logger.info("TRIAL NUMBER " + str(i))
+                        self.logger.info("TRIAL NUMBER " + str(i))
                         #self.logger.info("PLC_IP " + str(plc_ip))
-                        #self.logger.info(values)
+                        self.logger.info(values)
                         with lock:
                             self.cache[plc_ip] = values
 
@@ -420,12 +423,13 @@ class GenericScada(BasePLC):
                             "PLC receive_multiple with tags {tags} from {ip} failed with exception '{e}'".format(
                                 tags=self.plc_data[plc_ip],
                                 ip=plc_ip, e=str(e)))
-                        time.sleep(self.SCADA_CACHE_UPDATE_TIME)
+                        time.sleep(self.RETRY_SLEEP_TIME)
                         continue
             self.plcs_cache_updated = True
             while self.plcs_cache_updated:
-                #self.logger.info("Update cache waiting")
+                self.logger.info("Update cache waiting")
                 time.sleep(0.01)
+
 
     def init_actuator_values(self):
         """
@@ -671,7 +675,7 @@ class GenericScada(BasePLC):
                 # self.logger.info(self.done)
 
             while not self.plcs_cache_updated:
-                #self.logger.info("PLCs not updated yet")
+                self.logger.info("PLCs not updated yet")
                 time.sleep(0.5)
 
             with lock:
