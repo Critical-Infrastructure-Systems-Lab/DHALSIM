@@ -594,6 +594,9 @@ class PhysicalPlant:
             if p_bar:
                 p_bar.update(self.master_time)
 
+
+
+
             # Check for simulation error, print output on exception
             try:
                 internal_epynet_step, step_results = self.wn.simulate_step(simulation_time, self.actuator_list)
@@ -606,8 +609,18 @@ class PhysicalPlant:
                                y=str(iteration_limit), z=str(internal_epynet_step)))
 
             # epynet - we skip intermediate timesteps
-            if internal_epynet_step == self.simulation_step:
+            if (internal_epynet_step + simulation_time) // self.simulation_step > self.master_time:
                 self.master_time += 1
+                skip_step = False
+            else:
+                skip_step = True
+
+            if not skip_step:
+                # self.logger.info("STEP NOT SKIPPED")
+                self.logger.debug("Iteration {x} out of {y}. Internal timestep {z}".format
+                                  (x=str(self.master_time),
+                                   y=str(iteration_limit), z=str(internal_epynet_step)))
+
                 self.register_results(step_results)
                 self.results_list.append(self.values_list)
 
@@ -616,16 +629,16 @@ class PhysicalPlant:
                 self.update_valves(step_results)
                 self.update_junctions(step_results)
 
-            # Write results of this iteration if needed
-            if 'saving_interval' in self.data and self.master_time != 0 and \
-                    self.master_time % self.data['saving_interval'] == 0:
-                self.write_results(self.results_list)
+                # Write results of this iteration if needed
+                if 'saving_interval' in self.data and self.master_time != 0 and \
+                        self.master_time % self.data['saving_interval'] == 0:
+                    self.write_results(self.results_list)
 
-            # Set sync flags for nodes
-            conn = sqlite3.connect(self.data["db_path"])
-            c = conn.cursor()
-            c.execute("UPDATE sync SET flag=0")
-            conn.commit()
+                # Set sync flags for nodes
+                with sqlite3.connect(self.data["db_path"]) as conn:
+                    c = conn.cursor()
+                    c.execute("UPDATE sync SET flag=0")
+                    conn.commit()
 
             simulation_time = simulation_time + internal_epynet_step
 

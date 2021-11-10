@@ -6,4 +6,4 @@ network_events:
         type: time
         start: 648
         end: 792
-    value: 25
+    value: 100

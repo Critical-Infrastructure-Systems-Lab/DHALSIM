@@ -1,6 +1,6 @@
 network_attacks:
     - name: plc1attack
-      target: PLC2
+      target: PLC1
       trigger:
         type: time
         start: 648
