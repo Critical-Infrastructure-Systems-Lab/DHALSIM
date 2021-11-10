@@ -511,13 +511,13 @@ class PhysicalPlant:
         :return: False if attack not running, true otherwise
         """
 
-        conn = sqlite3.connect(self.data["db_path"])
-        c = conn.cursor()
-        c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(self.master_time),))
-        conn.commit()
+        with sqlite3.connect(self.data["db_path"]) as conn:
+            c = conn.cursor()
+            c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(self.master_time),))
+            conn.commit()
 
-        c.execute("SELECT flag FROM attack WHERE name IS ?", (name,))
-        flag = int(c.fetchone()[0])
+            c.execute("SELECT flag FROM attack WHERE name IS ?", (name,))
+            flag = int(c.fetchone()[0])
         return flag
 
     def get_actuator_status(self, actuator):
@@ -958,7 +958,7 @@ class PhysicalPlant:
 
         if "demand_patterns_data" in self.data:
             # This hardcoded condition works only with epynet demands.csv format and with towns with no DMAs
-            if self.simulator == 'epynet':
+            if self.simulator == 'epynet' and self.data['use_control_agent']:
                 demand_pattern = pd.read_csv(self.data['demand_patterns_data']).iloc[:, 0].tolist()
                 # self.logger.info(demand_pattern)
                 # self.logger.info(len(demand_pattern))

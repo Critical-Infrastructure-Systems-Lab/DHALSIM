@@ -903,7 +903,7 @@ class PhysicalPlant:
 
         if "demand_patterns_data" in self.data:
             # This hardcoded condition works only with epynet demands.csv format and with towns with no DMAs
-            if self.simulator == 'epynet':
+            if self.simulator == 'epynet' and self.data['use_control_agent']:
                 demand_pattern = pd.read_csv(self.data['demand_patterns_data']).iloc[:, 0].tolist()
                 # self.logger.info(demand_pattern)
                 # self.logger.info(len(demand_pattern))

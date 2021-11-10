@@ -1,10 +1,21 @@
 network_attacks:
+  - name: attack0
+    type: mitm
+    trigger:
+      type: time
+      start: 4
+      end: 10
+    tags:
+      - tag: T41
+        value: 0.1
+    target: PLC2
+
   - name: attack1
     type: mitm
     trigger:
       type: time
-      start: 204
-      end: 276
+      start: 15
+      end: 22
     tags:
       - tag: T41
         value: 0.1
@@ -14,12 +25,13 @@ network_attacks:
     type: mitm
     trigger:
       type: time
-      start: 540
-      end: 612
+      start: 25
+      end: 32
     tags:
       - tag: T42
         value: 10
     target: PLC3
+
 
   #- name: attack4
   #  type: mitm

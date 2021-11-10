@@ -1,0 +1,34 @@
+inp_file: anytown_map.inp
+output_path: output
+iterations: 1008
+network_topology_type: complex
+plcs: !include anytown_plcs.yaml
+#attacks: !include anytown_scada_mitm.yaml
+
+simulator: epynet
+demand: pdd
+
+# To use control agent we need to use also demand patterns path
+demand_patterns: demand_patterns
+
+control_agent:
+    enabled: True
+    config_file: agent_config.yaml
+    train_csv: demand_patterns_train_combined.csv
+    test_csv: demand_patterns_test_mixed.csv
+    schedule:
+        - type: 'buffer'
+          count: 1
+        - type: 'train'
+          count: 4
+        #- type: 'test'
+        #  count: 4
+        #  seeds: [0, 1, 2, 3]
+
+
+#batch_simulations: 5
+
+# log_level: debug
+
+# mininet_cli: True
+

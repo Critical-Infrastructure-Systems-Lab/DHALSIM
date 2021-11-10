@@ -1,6 +1,6 @@
 log_level: info
-save_results: True
-save_results_as: 'asus_nov3_attacks1'
+save_results: False
+save_results_as: "asus_nov3_attacks1_trial"
 
 agent:
     name: dqn
@@ -9,7 +9,7 @@ agent:
     model_to_load: "asus_earlystop1.msh"
     model_path: "examples/anytown_topology/output/saved_models"
 
-    save_model: False
+    save_model: True
     save_model_as: 'mininet'
     save_model_every: 4
 

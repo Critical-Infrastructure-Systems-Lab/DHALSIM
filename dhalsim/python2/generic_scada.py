@@ -50,6 +50,9 @@ class GenericScada(BasePLC):
     DB_TRIES = 10
     """Amount of times a db query will retry on a exception"""
 
+    UPDATE_RETRIES = 10
+    """Amount of times a update cache method will retry on a exception"""
+
     DB_SLEEP_TIME = random.uniform(0.01, 0.1)
     """Amount of time a db query will wait before retrying"""
 
@@ -135,6 +138,7 @@ class GenericScada(BasePLC):
 
         self.update_cache_flag = False
         self.plcs_ready = False
+        self.plcs_cache_updated = False
 
         self.cache = {}
         for ip in self.plc_data:
@@ -384,20 +388,26 @@ class GenericScada(BasePLC):
 
         # The default cache update time is tuned for a SCADA server that does not takes control decisions
         # With the control agent, the SCADA should have the same cache_update_time as a PLC
-        if self.intermediate_yaml['use_control_agents']:
+        if self.intermediate_yaml['use_control_agent']:
             cache_update_time = self.PLC_CACHE_UPDATE_TIME
 
         while self.update_cache_flag:
+            #self.logger.info(self.cache)
+
             for plc_ip in self.cache:
+                #self.logger.info("LOOP of IP:  " + str(plc_ip))
 
                 for i in range(self.UPDATE_RETRIES):
                     try:
                         values = self.receive_multiple(self.plc_data[plc_ip], plc_ip)
+                        #self.logger.info("TRIAL NUMBER " + str(i))
+                        #self.logger.info("PLC_IP " + str(plc_ip))
+                        #self.logger.info(values)
                         with lock:
                             self.cache[plc_ip] = values
 
                         break
-                        # Cache update successfull, move to the next PLC
+                        # Cache update successfully, move to the next PLC
 
                     except ConnectionResetError as reset_e:
                         self.logger.error(
@@ -412,7 +422,10 @@ class GenericScada(BasePLC):
                                 ip=plc_ip, e=str(e)))
                         time.sleep(self.SCADA_CACHE_UPDATE_TIME)
                         continue
-            time.sleep(cache_update_time)
+            self.plcs_cache_updated = True
+            while self.plcs_cache_updated:
+                #self.logger.info("Update cache waiting")
+                time.sleep(0.01)
 
     def init_actuator_values(self):
         """
@@ -544,9 +557,9 @@ class GenericScada(BasePLC):
         with plcs.
         """
         # List of tuples in the following format: (var_name, new_value)
-        self.logger.info('State space saved_values[0] length: ' + str(len(self.saved_values[0])))
-        self.logger.info('State vars length: ' + str(len(self.state_vars)))
-        self.logger.info('State vars: ' + str(self.state_vars))
+        #self.logger.info('State space saved_values[0] length: ' + str(len(self.saved_values[0])))
+        #self.logger.info('State vars length: ' + str(len(self.state_vars)))
+        #self.logger.info('State vars: ' + str(self.state_vars))
 
         for i, var in enumerate(self.saved_values[0]):
             if var in self.state_vars:
@@ -644,7 +657,6 @@ class GenericScada(BasePLC):
                 self.logger.debug("SCADA starting update cache thread")
                 lock = threading.Lock()
                 thread.start_new_thread(self.update_cache, (lock, self.SCADA_CACHE_UPDATE_TIME))
-
             # Self.plc_data has all the tag names and the index is plc_ip
             # Self.cache has all the values of tag and the index is plc_ip
             # Better to use a copy and not directly access self.cache values since it has a lock
@@ -658,12 +670,17 @@ class GenericScada(BasePLC):
                 self.done = bool(self.cur.fetchone()[0])
                 # self.logger.info(self.done)
 
+            while not self.plcs_cache_updated:
+                #self.logger.info("PLCs not updated yet")
+                time.sleep(0.5)
+
             with lock:
                 for plc_ip in self.plc_data:
                     results.extend(self.cache[plc_ip])
                     #self.logger.info("plc_data values: " + str(self.plc_data[plc_ip]))
                     #self.logger.info("cache values: " + str(self.cache[plc_ip]))
             self.saved_values.append(results)
+            self.plcs_cache_updated = False
 
             # Save scada_values.csv when needed
             if 'saving_interval' in self.intermediate_yaml and self.master_time != 0 and \
