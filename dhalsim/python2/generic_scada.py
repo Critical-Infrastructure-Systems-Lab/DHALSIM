@@ -633,7 +633,7 @@ class GenericScada(BasePLC):
             # We possible need to do (tag,1) here.
             self.send_multiple(self.sendable_tags, self.actuator_status_cache.values(),
                                self.intermediate_yaml['scada']['local_ip'],)
-            time.sleep(0.05)
+            time.sleep(0.1)
 
     def main_loop(self, sleep=0.5, test_break=False):
         """

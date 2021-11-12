@@ -1,12 +1,12 @@
 log_level: info
 save_results: False
-save_results_as: "asus_nov3_attacks1_trial"
+save_results_as: "asus_nov3_attacks4"
 
 agent:
     name: dqn
 
     load_model: False
-    model_to_load: "asus_earlystop1.msh"
+    model_to_load: "asus_earlystop4.msh"
     model_path: "examples/anytown_topology/output/saved_models"
 
     save_model: True

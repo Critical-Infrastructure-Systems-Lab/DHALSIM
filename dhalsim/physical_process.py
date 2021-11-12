@@ -241,7 +241,7 @@ class PhysicalPlant:
         for node in a_list:
             result.append(node + "_LEVEL")
             # TODO: check this later
-            if self.data['simulator'] == 'epynet':
+            if self.data['simulator'] == 'epynet' and self.data['use_control_agent']:
                 if node in self.junction_list:
                     result.append(node + '_SUPPLY')
                     result.append(node + '_DEMAND')

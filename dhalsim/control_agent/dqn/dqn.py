@@ -224,7 +224,10 @@ class DQNAgent:
             file_name = self.config_agent['agent']['save_model_as'] + '_earlystop' + str(index) + ".msh"
         else:
             file_name = self.config_agent['agent']['save_model_as'] + ".msh"
-        where = Path.cwd().absolute() / self.config_agent['agent']['model_path'] / file_name
 
+        folder = Path.cwd().absolute() / self.config_agent['agent']['model_path']
+        Path(folder).mkdir(parents=True, exist_ok=True)
+
+        where = folder / file_name
         self.agent.save(path=where, full_save=True)
         print(">>> Model saved: ", file_name)

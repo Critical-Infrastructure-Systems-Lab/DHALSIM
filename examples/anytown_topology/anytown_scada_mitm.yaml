@@ -7,7 +7,7 @@ network_attacks:
       end: 276
     tags:
       - tag: T41
-        value: 0.1
+        value: 3.048
     target: PLC2
 
   - name: attack2
@@ -21,13 +21,24 @@ network_attacks:
         value: 10
     target: PLC3
 
-  #- name: attack4
-  #  type: mitm
-  #  trigger:
-  #    type: time
-  #    start: 784
-  #    end: 814
-  #  tags:
-  #     - tag: T42
-  #      offset: -4
-  #  target: PLC3
+  - name: attack3
+    type: mitm
+    trigger:
+      type: time
+      start: 732
+      end: 804
+    tags:
+       - tag: T41
+         offset: -1
+    target: PLC2
+
+  - name: attack4
+    type: mitm
+    trigger:
+      type: time
+      start: 732
+      end: 804
+    tags:
+       - tag: T42
+         offset: -1
+    target: PLC3
