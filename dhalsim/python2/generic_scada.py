@@ -562,7 +562,7 @@ class GenericScada(BasePLC):
         with plcs.
         """
         # List of tuples in the following format: (var_name, new_value)
-        #self.logger.info('State space saved_values[0] length: ' + str(len(self.saved_values[0])))
+        #self.logger.info('SCADA values: ' + str(self.saved_values[-1]))
         #self.logger.info('State vars length: ' + str(len(self.state_vars)))
         #self.logger.info('State vars: ' + str(self.state_vars))
 
@@ -611,6 +611,7 @@ class GenericScada(BasePLC):
         self.send_state_space()
 
         while not self.check_control_agent_ready():
+            #self.logger.info("waiting control agent..")
             time.sleep(0.01)
 
         # Retrieve new action space variables from control db

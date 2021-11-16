@@ -68,6 +68,7 @@ class DQNAgent:
         else:
             # Set parameters of neural network taken by the torch approximator
             nn_params = dict(hidden_size=self.config_agent['nn']['hidden_size'])
+                             #n_layers=self.config_agent['nn']['n_layers'])
 
             # Create the approximator from the neural network we have implemented
             approximator = TorchApproximator

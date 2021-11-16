@@ -6,6 +6,9 @@ import time
 import sqlite3
 import sys
 import yaml
+import logging
+
+from dhalsim import py3_logger
 from mushroom_rl.core.environment import Environment, MDPInfo
 from mushroom_rl.utils.spaces import Discrete, Box
 
@@ -49,10 +52,13 @@ class WaterNetworkEnvironment(Environment):
         self.intermediate_yaml = None
         self.hyd_step = None
         self.set_intermediate_yaml(intermediate_yaml_path)
+        self.demand_pattern = None
+        self.demand_moving_average = None
+        self.logger = py3_logger.get_logger('info')
 
         self.state_vars = self.config_data['env']['state_vars']
         self.action_vars = self.config_data['env']['action_vars']
-        self.bounds = self.config_data['env']['bounds']
+        # self.bounds = self.config_data['env']['bounds']
 
         # Used to update the pump status every a certain amount of time (e.g. every 4 hours)
         self.update_every = self.config_data['env']['update_every']
@@ -91,11 +97,15 @@ class WaterNetworkEnvironment(Environment):
         action_space = Discrete(2 ** len(self.action_vars))
 
         # Bounds for observation space
-        lows = np.array([self.bounds[key]['min'] for key in self.bounds.keys()])
-        highs = np.array([self.bounds[key]['max'] for key in self.bounds.keys()])
+        lows = np.array([self.state_vars[key]['bounds']['min'] for key in self.state_vars.keys()])
+        highs = np.array([self.state_vars[key]['bounds']['max'] for key in self.state_vars.keys()])
 
         # Observation space
         observation_space = Box(low=lows, high=highs, shape=(len(self.state_vars),))
+
+        print(lows)
+        print(highs)
+        print(observation_space)
 
         # TODO: what is horizon?
         mdp_info = MDPInfo(observation_space, action_space, gamma=0.99, horizon=1000000)
@@ -113,7 +123,7 @@ class WaterNetworkEnvironment(Environment):
             self.intermediate_yaml = yaml.safe_load(fin)
 
         # Set the hydraulic timestep, useful to get the elapsed time
-            self.hyd_step = self.intermediate_yaml['time']['hydraulic_timestep'][1]
+        self.hyd_step = self.intermediate_yaml['time']['hydraulic_timestep'][1]
 
     def _init_what(self):
         """
@@ -309,16 +319,21 @@ class WaterNetworkEnvironment(Environment):
         elapsed_time = self.state_dict_from_db['sim_step'] * self.hyd_step
         seconds_per_day = 3600 * 24
         days_per_week = 7
-        # print("elapsed time: ", elapsed_time)
+        current_hour = elapsed_time // 3600
+
+        #self.logger.info("state_dict: " + str(self.state_dict_from_db))
 
         # Build the state as requested by the neural network
-        for var in self.state_vars:
+        for var in self.state_vars.keys():
             if var in self.state_dict_from_db.keys():
                 state.append(self.state_dict_from_db[var])
             if var == 'time':
                 state.append(elapsed_time % seconds_per_day)
             if var == 'day':
                 state.append(((elapsed_time // seconds_per_day) % days_per_week) + 1)
+            if var == 'demand_SMA':
+                # print(self.demand_moving_average.iloc[current_hour, 0])
+                state.append(self.demand_moving_average.iloc[current_hour, 0])
 
         return [np.float32(i) for i in state]
 
@@ -345,6 +360,13 @@ class WaterNetworkEnvironment(Environment):
         self.total_supplies = []
         self.total_updates = 0
         self.old_status_dict = None
+
+        # Set demand pattern taken in the intermediate_yaml and computes the moving average
+        self.demand_pattern = pd.read_csv(self.intermediate_yaml['demand_patterns_data'])
+        #print(self.demand_pattern)
+        self.demand_moving_average = self.demand_pattern.rolling(window=self.state_vars['demand_SMA']['window'],
+                                                                 min_periods=1).mean()
+        #print(self.demand_moving_average)
         self._state = self.build_current_state()
         return self._state
 
@@ -409,10 +431,10 @@ class WaterNetworkEnvironment(Environment):
 
         for key in self.state_dict_from_db:
             if key[0] == 'T':
-                if self.state_dict_from_db[key] >= self.bounds[key]['max']:
-                    out_bound = self.state_dict_from_db[key] - (self.bounds[key]['max'] * risk_percentage)
+                if self.state_dict_from_db[key] >= self.state_vars[key]['bounds']['max']:
+                    out_bound = self.state_dict_from_db[key] - (self.state_vars[key]['bounds']['max'] * risk_percentage)
                     # Normalization of the out_bound pressure
-                    multiplier = out_bound / ((1 - risk_percentage) * self.bounds[key]['max'])
+                    multiplier = out_bound / ((1 - risk_percentage) * self.state_vars[key]['bounds']['max'])
                     return penalty * multiplier
         return 0
 

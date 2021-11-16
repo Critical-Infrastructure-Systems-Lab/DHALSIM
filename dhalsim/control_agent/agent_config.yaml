@@ -1,35 +1,63 @@
 log_level: info
-save_results: False
-save_results_as: "asus_nov3_attacks4"
+save_results: True
+save_results_as: "moving_average_andres"
 
 agent:
     name: dqn
 
     load_model: False
-    model_to_load: "asus_earlystop4.msh"
+    model_to_load: "andres_earlystop9.msh"
     model_path: "examples/anytown_topology/output/saved_models"
 
-    save_model: True
-    save_model_as: 'andres'
-    save_model_every: 4
+    save_model: False
+    save_model_as: 'moving_average'
+    save_model_every: 5
 
     batch_size: 64
-    target_update_frequency: 10
+    target_update_frequency: 50
     initial_replay_memory: 500
-    max_replay_size: 10000
+    max_replay_size: 40000
     epsilon: 1
 
 env:
     state_vars:
-        - 'day'
-        - 'time'
-        - 'T41'
-        - 'T42'
-        - 'J20'
+        day:
+            bounds:
+                min: 1
+                max: 7
+
+        time:
+            bounds:
+                min: 0
+                max: 86400
+        T41:
+            bounds:
+                min: 3.048
+                max: 10.668
+        T42:
+            bounds:
+                min: 3.048
+                max: 10.668
+        J20:
+            bounds:
+                min: 0
+                max: 100
+        demand_SMA:
+            bounds:
+                min: 0
+                max: 1
+            window: 6
+
+#    state_vars:
+#        - 'day'
+#        - 'time'
+#        - 'T41'
+#        - 'T42'
+#        - 'J20'
+#        - 'sma_demand_6h'
     action_vars:
         - 'P78'
         - 'P79'
-
     db_state_vars:
         - 'sim_step'
         - 'T41'
@@ -52,6 +80,9 @@ env:
         J20:
             min: 10
             max: 100
+        sma_demand_6h:
+            min: 0
+            max: 1
 
 obj_func:
     supplies:
@@ -103,6 +134,7 @@ obj_func:
 
 nn:
     hidden_size: 8
+    n_layers: 2
 
 optimizer:
     lr: .00025
