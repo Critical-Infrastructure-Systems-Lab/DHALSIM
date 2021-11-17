@@ -103,10 +103,6 @@ class WaterNetworkEnvironment(Environment):
         # Observation space
         observation_space = Box(low=lows, high=highs, shape=(len(self.state_vars),))
 
-        print(lows)
-        print(highs)
-        print(observation_space)
-
         # TODO: what is horizon?
         mdp_info = MDPInfo(observation_space, action_space, gamma=0.99, horizon=1000000)
         super().__init__(mdp_info)
@@ -319,7 +315,7 @@ class WaterNetworkEnvironment(Environment):
         elapsed_time = self.state_dict_from_db['sim_step'] * self.hyd_step
         seconds_per_day = 3600 * 24
         days_per_week = 7
-        current_hour = elapsed_time // 3600
+        current_hour = (elapsed_time % (seconds_per_day * days_per_week)) // 3600
 
         #self.logger.info("state_dict: " + str(self.state_dict_from_db))
 
