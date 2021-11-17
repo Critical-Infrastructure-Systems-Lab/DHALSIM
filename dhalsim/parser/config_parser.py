@@ -258,8 +258,29 @@ class SchemaParser:
                 'value': And(
                     Or(float, And(int, Use(float)))
                 )
+            },
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
+                    'network_delay',
+                ),
+                'name': And(
+                    str,
+                    string_pattern,
+                    Schema(lambda name: 1 <= len(name) <= 20,
+                           error="Length of name must be between 1 and 20, '{}' has invalid length")
+                ),
+                'trigger': trigger,
+                'target': And(
+                    str,
+                    string_pattern
+                ),
+                'value': And(
+                    Or(float, And(int, Use(float)))
+                )
             }
-        )
+    )
     )
 
     @staticmethod
