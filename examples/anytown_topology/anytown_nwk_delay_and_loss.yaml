@@ -1,9 +1,10 @@
 network_events:
-  - name: link_loss
-    type: network_delay
+  - name: combined_nwk
+    type: network_delay_loss
     target: PLC1
     trigger:
         type: time
         start: 648
         end: 792
-    value: 0.1
+    loss_value: 10
+    delay_value: 1000

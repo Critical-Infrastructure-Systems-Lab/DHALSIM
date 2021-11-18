@@ -7,10 +7,10 @@ import argparse
 from pathlib import Path
 
 
-class PacketLoss(SyncedEvent):
+class NetworkDelay(SyncedEvent):
     """
-    This is a packet loss network event. This event will use Linux-tc at a switch link that causes the indicated
-    percentage of packets to be lost at the link.
+    This is a delay network event. This event will use Linux-tc at a switch link that causes the indicated
+    delay in ms in all communications using that network link.
 
     :param intermediate_yaml_path: The path to the intermediate YAML file
     :param yaml_index: The index of the event in the intermediate YAML
@@ -20,16 +20,16 @@ class PacketLoss(SyncedEvent):
     def __init__(self, intermediate_yaml_path: Path, yaml_index: int, interface_name: str):
         super().__init__(intermediate_yaml_path, yaml_index)
         self.interface_name = interface_name
-        self.loss_value = float(self.intermediate_event['value'])
+        self.delay_value = float(self.intermediate_event['value'])
 
     def setup(self):
-        self.logger.debug("Starting packet loss queue at interface " + str(self.interface_name)
-                         + " with value " + str(self.loss_value))
+        self.logger.debug("Starting network delay queue at interface " + str(self.interface_name)
+                         + " with value " + str(self.delay_value))
 
         cmd = 'tc qdisc del dev ' + str(self.interface_name) + ' root'
         os.system(cmd)
 
-        cmd = 'tc qdisc add dev ' + str(self.interface_name) + ' root netem loss ' + str(self.loss_value) + '%'
+        cmd = 'tc qdisc add dev ' + str(self.interface_name) + ' root netem delay ' + str(self.delay_value) + 'ms'
         self.logger.debug('trying command: ' + str(cmd))
         os.system(cmd)
 
@@ -72,6 +72,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    event = PacketLoss(intermediate_yaml_path=Path(args.intermediate_yaml), yaml_index=args.index,
+    event = NetworkDelay(intermediate_yaml_path=Path(args.intermediate_yaml), yaml_index=args.index,
                        interface_name=args.interface_name)
     event.main_loop()

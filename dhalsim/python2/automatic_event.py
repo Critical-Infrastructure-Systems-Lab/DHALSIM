@@ -58,6 +58,10 @@ class EventControl(NodeControl):
         generic_event = None
         if self.this_event_data['type'] == 'packet_loss':
             generic_event = Path(__file__).parent.parent.absolute() / "network_events" / "packet_loss.py"
+        elif self.this_event_data['type'] == 'network_delay':
+            generic_event = Path(__file__).parent.parent.absolute() / "network_events" / "network_delay.py"
+        elif self.this_event_data['type'] == 'network_delay_loss':
+            generic_event = Path(__file__).parent.parent.absolute() / "network_events" / "delay_and_loss.py"
         else:
             raise NoSuchEvent("Event {event} does not exists.".format(event=self.this_event_data['type']))
 

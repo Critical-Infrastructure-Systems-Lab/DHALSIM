@@ -7,7 +7,7 @@ import argparse
 from pathlib import Path
 
 
-class PacketLoss(SyncedEvent):
+class DelayPacketLoss(SyncedEvent):
     """
     This is a packet loss network event. This event will use Linux-tc at a switch link that causes the indicated
     percentage of packets to be lost at the link.
@@ -20,17 +20,19 @@ class PacketLoss(SyncedEvent):
     def __init__(self, intermediate_yaml_path: Path, yaml_index: int, interface_name: str):
         super().__init__(intermediate_yaml_path, yaml_index)
         self.interface_name = interface_name
-        self.loss_value = float(self.intermediate_event['value'])
+        self.loss_value = float(self.intermediate_event['loss_value'])
+        self.delay_value = float(self.intermediate_event['delay_value'])
 
     def setup(self):
-        self.logger.debug("Starting packet loss queue at interface " + str(self.interface_name)
-                         + " with value " + str(self.loss_value))
+        self.logger.info("Starting network event queue at interface " + str(self.interface_name)
+                         + " with loss value " + str(self.loss_value) + " and network delay " + str(self.delay_value))
 
         cmd = 'tc qdisc del dev ' + str(self.interface_name) + ' root'
         os.system(cmd)
 
-        cmd = 'tc qdisc add dev ' + str(self.interface_name) + ' root netem loss ' + str(self.loss_value) + '%'
-        self.logger.debug('trying command: ' + str(cmd))
+        cmd = 'tc qdisc add dev ' + str(self.interface_name) + ' root netem loss ' + str(self.loss_value) + '% delay '\
+              + str(self.delay_value) + 'ms'
+        self.logger.info('trying command: ' + str(cmd))
         os.system(cmd)
 
     def teardown(self):
@@ -72,6 +74,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    event = PacketLoss(intermediate_yaml_path=Path(args.intermediate_yaml), yaml_index=args.index,
+    event = DelayPacketLoss(intermediate_yaml_path=Path(args.intermediate_yaml), yaml_index=args.index,
                        interface_name=args.interface_name)
     event.main_loop()

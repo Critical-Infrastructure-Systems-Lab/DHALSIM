@@ -608,6 +608,12 @@ class PhysicalPlant:
                               (x=str(self.master_time),
                                y=str(iteration_limit), z=str(internal_epynet_step)))
 
+            # According to multiple experiments, we have agreed to update the actuators always
+            self.update_tanks(step_results)
+            self.update_pumps(step_results)
+            self.update_valves(step_results)
+            self.update_junctions(step_results)
+
             # epynet - we skip intermediate timesteps
             if (internal_epynet_step + simulation_time) // self.simulation_step > self.master_time:
                 self.master_time += 1
@@ -624,10 +630,6 @@ class PhysicalPlant:
                 self.register_results(step_results)
                 self.results_list.append(self.values_list)
 
-                self.update_tanks(step_results)
-                self.update_pumps(step_results)
-                self.update_valves(step_results)
-                self.update_junctions(step_results)
 
                 # Write results of this iteration if needed
                 if 'saving_interval' in self.data and self.master_time != 0 and \
