@@ -135,14 +135,15 @@ class DQNAgent:
 
         elif self.intermediate_yaml_data['simulation_type'] == 'train':
             self.train()
-            res = {'seed': self.intermediate_yaml_data['pattern_seed'], 'dsr': self.env.dsr, 'updates': self.env.total_updates}
+            res = {'seed': self.intermediate_yaml_data['pattern_seed'], 'dsr': self.env.dsr,
+                   'updates': self.env.total_updates, 'attacks': self.intermediate_yaml_data['network_attacks']}
             self.results['train'].append(res)
             self.train_counter += 1
 
         elif self.intermediate_yaml_data['simulation_type'] == 'test':
             dataset, qs = self.evaluate()
             res = {'seed': self.intermediate_yaml_data['pattern_seed'], 'dsr': self.env.dsr,
-                   'updates': self.env.total_updates}
+                   'updates': self.env.total_updates, 'attacks': self.intermediate_yaml_data['network_attacks']}
             if self.config_agent['save_results']:
                 res['dataset'] = dataset
                 res['q_values'] = qs

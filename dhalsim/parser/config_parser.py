@@ -667,6 +667,72 @@ class ConfigParser:
             return network_events
         return []
 
+    def generate_random_mitm_attacks(self, sim_type):
+        """
+        Methods used in scenarios with control agent, when is required to insert an attack flag between the state
+        variables.
+        :param sim_type: current simulation type
+        :return: network attacks
+        """
+        if sim_type == 'test':
+            return self.generate_network_attacks()
+        else:
+            if self.data['control_agent']['train_with_attacks']:
+                # Here we generate crafted attacks. We don't want to generate attacks for each simulation, but we still
+                # want to have simulation without attacks, to train in both situation.
+                # Balance between attacks and no attacks =  1:5
+                attack_chance = random.uniform(0, 1)
+                if attack_chance > self.data['control_agent']['threshold_attack_presence']:
+                    return []
+                else:
+                    attacks_in_a_week = random.randint(1, self.data['control_agent']['max_n_attacks'])
+                    # print('amount: ', attacks_in_a_week)
+                    return self.craft_mitm_for_control_agent(amount=attacks_in_a_week)
+            else:
+                return []
+
+    def craft_mitm_for_control_agent(self, amount):
+        """
+        Craft random schema of mitm for control problem. The attacked connections are between PLC2 or PLC3 and SCADA.
+        We keep the interval at 12 hours and we change start and end values.
+        Tags are T41 or T42 with value option.
+        """
+        network_attacks = []
+        # 12 hours of interval with hydraulic step of 600 sec -> 72 iterations
+        attack_interval = self.data['control_agent']['attack_interval']
+        week_duration = self.data['iterations']
+
+        for i in range(amount):
+            attack_dict = dict()
+            attack_dict['name'] = 'attack' + str(i)
+            attack_dict['type'] = 'mitm'
+
+            # Randomly choose the interval of the attack
+            lower_bound = (week_duration // amount) * i
+            upper_bound = (week_duration // amount) * i + (week_duration // amount)
+            start_time = random.randint(lower_bound, upper_bound - attack_interval - 1)
+            end_time = start_time + attack_interval
+
+            # Choose tag, thus PLC
+            possible_tags = ['T41', 'T42']
+            possible_plcs = ['PLC2', 'PLC3']
+            coin_flip = random.randint(0, 1)
+            tag = possible_tags[coin_flip]
+            target = possible_plcs[coin_flip]
+
+            # Choose value to set the tag between two groups
+            possible_values = [random.uniform(0.1, 2), random.uniform(9, 10.5)]
+            coin_flip = random.randint(0, 1)
+            value = round(possible_values[coin_flip], 1)
+
+            attack_dict['trigger'] = {'type': 'time', 'start': start_time, 'end': end_time}
+            attack_dict['tags'] = [{'tag': tag, 'value': value}]
+            attack_dict['target'] = target
+            network_attacks.append(attack_dict)
+
+        print(network_attacks)
+        return network_attacks
+
     def generate_temporary_dirs(self):
         """Generates the temporary directory and yaml/db paths"""
         # Create temp directory and intermediate yaml files in /tmp/
@@ -791,7 +857,12 @@ class ConfigParser:
 
         # Parse the device attacks from the config file
         yaml_data = self.generate_device_attacks(yaml_data)
-        yaml_data["network_attacks"] = self.generate_network_attacks()
+
+        # Add attacks to train if control agent flag enabled
+        if self.data['control_agent']['enabled']:
+            yaml_data["network_attacks"] = self.generate_random_mitm_attacks(yaml_data['simulation_type'])
+        else:
+            yaml_data["network_attacks"] = self.generate_network_attacks()
 
         # Parse network events from the config file
         yaml_data["network_events"] = self.generate_network_events()

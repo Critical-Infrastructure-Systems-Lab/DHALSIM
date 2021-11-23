@@ -4,32 +4,32 @@ network_attacks:
     trigger:
       type: time
       start: 4
-      end: 10
+      end: 35
     tags:
       - tag: T41
-        value: 0.1
+        value: 3.048
     target: PLC2
 
   - name: attack1
     type: mitm
     trigger:
       type: time
-      start: 15
-      end: 22
+      start: 50
+      end: 80
     tags:
       - tag: T41
-        value: 0.1
+        value: 10.668
     target: PLC2
 
   - name: attack2
     type: mitm
     trigger:
       type: time
-      start: 25
-      end: 32
+      start: 90
+      end: 110
     tags:
       - tag: T42
-        value: 10
+        value: 3.048
     target: PLC3
 
 

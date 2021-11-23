@@ -1,6 +1,6 @@
 log_level: info
 save_results: True
-save_results_as: "moving_average_andres"
+save_results_as: "andres_attack_flag"
 
 agent:
     name: dqn
@@ -9,11 +9,11 @@ agent:
     model_to_load: "andres_earlystop9.msh"
     model_path: "examples/anytown_topology/output/saved_models"
 
-    save_model: False
-    save_model_as: 'moving_average'
-    save_model_every: 5
+    save_model: True
+    save_model_as: 'andres_attack_flag'
+    save_model_every: 3
 
-    batch_size: 64
+    batch_size: 32
     target_update_frequency: 50
     initial_replay_memory: 500
     max_replay_size: 40000
@@ -25,7 +25,6 @@ env:
             bounds:
                 min: 1
                 max: 7
-
         time:
             bounds:
                 min: 0
@@ -47,6 +46,11 @@ env:
                 min: 0
                 max: 1
             window: 6
+        under_attack:
+            bounds:
+                min: 0
+                max: 1
+            enable: True
 
 #    state_vars:
 #        - 'day'
@@ -140,8 +144,6 @@ optimizer:
     lr: .00025
 
 learning:
-    epochs: 5
-    train_episodes: 5
     train_frequency: 4
     collect_data: True
     collect_qs: True

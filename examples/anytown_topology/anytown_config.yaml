@@ -3,7 +3,7 @@ output_path: output
 iterations: 1008
 network_topology_type: complex
 plcs: !include anytown_plcs.yaml
-#attacks: !include anytown_scada_mitm.yaml
+attacks: !include anytown_scada_mitm.yaml
 
 simulator: epynet
 demand: pdd
@@ -16,6 +16,7 @@ control_agent:
     config_file: agent_config.yaml
     train_csv: demand_patterns_train_combined.csv
     test_csv: demand_patterns_test_mixed.csv
+
     schedule:
         - type: 'buffer'
           count: 1
@@ -24,6 +25,15 @@ control_agent:
         - type: 'test'
           count: 4
           seeds: [0, 1, 2, 3]
+
+    # enable attacks in training, attacks in test still depend on previous attack file
+    train_with_attacks: True
+    # threshold to have an attack. If chance <= threshold the attack is present, otherwise not.
+    threshold_attack_presence: 0.4
+    # duration of a single attack, measured in iterations (12h = 72it [with 10min hyd_step])
+    attack_interval: 72
+    # max amount of attacks sampled in an experiment (lower_bound = 1)
+    max_n_attacks: 5
 
 
 #batch_simulations: 5

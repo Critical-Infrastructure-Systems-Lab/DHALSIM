@@ -8,6 +8,8 @@ from pathlib import Path
 
 from automatic_node import NodeControl
 
+empty_loc = '/dev/null'
+
 
 class Error(Exception):
     """Base class for exceptions in this module."""
@@ -82,7 +84,16 @@ class AttackerControl(NodeControl):
 
         cmd = ["python3", str(generic_plc_path), str(self.intermediate_yaml), str(self.attacker_index)]
 
-        plc_process = subprocess.Popen(cmd, shell=False, stderr=sys.stderr, stdout=sys.stdout)
+        if self.data['log_level'] == 'debug':
+            err_put = sys.stderr
+            out_put = sys.stdout
+        else:
+            err_put = open(empty_loc, 'w')
+            out_put = open(empty_loc, 'w')
+            #err_put = sys.stderr
+            #out_put = sys.stdout
+
+        plc_process = subprocess.Popen(cmd, shell=False, stderr=err_put, stdout=out_put)
         return plc_process
 
 

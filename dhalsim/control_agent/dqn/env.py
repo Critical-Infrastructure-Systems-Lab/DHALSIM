@@ -54,11 +54,16 @@ class WaterNetworkEnvironment(Environment):
         self.set_intermediate_yaml(intermediate_yaml_path)
         self.demand_pattern = None
         self.demand_moving_average = None
+        self.attacks_intervals = None
         self.logger = py3_logger.get_logger('info')
 
         self.state_vars = self.config_data['env']['state_vars']
         self.action_vars = self.config_data['env']['action_vars']
         # self.bounds = self.config_data['env']['bounds']
+
+        # For training without detection of attacks
+        if not self.config_data['env']['state_vars']['under_attack']['enable']:
+            self.state_vars.pop("under_attack")
 
         # Used to update the pump status every a certain amount of time (e.g. every 4 hours)
         self.update_every = self.config_data['env']['update_every']
@@ -328,8 +333,10 @@ class WaterNetworkEnvironment(Environment):
             if var == 'day':
                 state.append(((elapsed_time // seconds_per_day) % days_per_week) + 1)
             if var == 'demand_SMA':
-                # print(self.demand_moving_average.iloc[current_hour, 0])
+                #print(self.demand_moving_average.iloc[current_hour, 0])
                 state.append(self.demand_moving_average.iloc[current_hour, 0])
+            if var == 'under_attack':
+                state.append(self.detect_current_attacks())
 
         return [np.float32(i) for i in state]
 
@@ -363,6 +370,14 @@ class WaterNetworkEnvironment(Environment):
         self.demand_moving_average = self.demand_pattern.rolling(window=self.state_vars['demand_SMA']['window'],
                                                                  min_periods=1).mean()
         #print(self.demand_moving_average)
+
+        if 'under_attack' in self.state_vars.keys():
+            self.attacks_intervals = []
+            for attack in self.intermediate_yaml['network_attacks']:
+                self.attacks_intervals.append([attack['trigger']['start'], attack['trigger']['end']])
+
+        print(self.attacks_intervals)
+
         self._state = self.build_current_state()
         return self._state
 
@@ -401,6 +416,7 @@ class WaterNetworkEnvironment(Environment):
 
         # Get new state space
         self._state = self.build_current_state()
+        #print(self._state)
 
         reward = self.compute_reward(n_updates)
         info = None
@@ -416,13 +432,28 @@ class WaterNetworkEnvironment(Environment):
     def render(self):
         pass
 
+    def detect_current_attacks(self):
+        """
+        Check if there are ongoing attacks simulating a perfect detection algorithm.
+        Information about attacks are taken from the intermediate yaml file.
+
+        :return : 1 if there is an ongoing attack, 0 otherwise
+        """
+        attack_flag = 0
+
+        for interval in self.attacks_intervals:
+            if interval[0] <= self.state_dict_from_db['sim_step'] < interval[1]:
+                attack_flag = 1
+                break
+        return attack_flag
+
     def check_overflow(self):
         """
         Check if the we have an overflow problem in the tanks. We have an overflow if after one hour we the tank is
         still at the maximum level.
         :return: penalty value
         """
-        penalty = 1.1
+        penalty = 1
         risk_percentage = 0.9
 
         for key in self.state_dict_from_db:
@@ -456,7 +487,7 @@ class WaterNetworkEnvironment(Environment):
         #print("basedemands: " + str(current_demands))
         #print("supplies: " + str(current_supplies))
 
-        updates_penalty = n_updates / 2
+        updates_penalty = n_updates/2
         overflow_penalty = self.check_overflow()
         dsr_ratio = step_supply_demand_ratio(supplies=current_supplies, base_demands=current_demands)
 
