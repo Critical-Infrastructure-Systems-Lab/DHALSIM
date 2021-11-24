@@ -47,8 +47,6 @@ class SyncedEvent(metaclass=ABCMeta):
     DB_TRIES = 10
     """Amount of times a db query will retry on a exception"""
 
-    DB_SLEEP_TIME = random.uniform(0.01, 0.1)
-    """Amount of time a db query will wait before retrying"""
 
     def __init__(self, intermediate_yaml_path: Path, yaml_index: int):
         signal.signal(signal.SIGINT, self.sigint_handler)
@@ -66,16 +64,25 @@ class SyncedEvent(metaclass=ABCMeta):
 
         self.state = 0
 
-        # Initialize database connection
-        self.initialize_db()
+        if 'random_seed' in self.intermediate_yaml:
+            self.logger.debug("Random seed is: " + str(self.intermediate_yaml['random_seed']))
+            random.seed(self.intermediate_yaml['random_seed'])
+            self.db_sleep_time = random.uniform(0.01, 0.1)
+        else:
+            self.logger.debug("No Random seed configured is: " + str(self.intermediate_yaml['random_seed']))
+            self.db_sleep_time = random.uniform(0.01, 0.1)
+
 
     def main_loop(self):
         """
         The main loop of an event.
         """
         while True:
-            while self.get_sync():
-                time.sleep(0.01)
+            self.logger.debug("Waiting for sync in 0")
+
+            # flag = 0 means a physical process finished a new iteration
+            while not self.get_sync(0):
+                pass
 
             run = self.check_trigger()
             self.set_event_flag(run)
@@ -87,9 +94,16 @@ class SyncedEvent(metaclass=ABCMeta):
                 self.state = 0
                 self.teardown()
 
+            # We have to keep the same state machine as PLCs
+            self.set_sync(1)
+
             self.event_step()
 
-            self.set_sync(1)
+            while not self.get_sync(2):
+                pass
+
+            self.set_sync(3)
+            self.logger.debug("Setting sync in 3")
 
     def sigint_handler(self, sig, frame):
         """Interrupt handler for event being stoped"""
@@ -97,14 +111,7 @@ class SyncedEvent(metaclass=ABCMeta):
         self.interrupt()
         sys.exit(0)
 
-    def initialize_db(self):
-        """
-        Function that initializes event connection to the database
-        """
-        self.conn = sqlite3.connect(self.intermediate_yaml["db_path"])
-        self.cur = self.conn.cursor()
-
-    def db_query(self, query, parameters=None):
+    def db_query(self, query, write=False, parameters=None):
         """
         Execute a query on the database
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
@@ -114,6 +121,8 @@ class SyncedEvent(metaclass=ABCMeta):
         :param query: The SQL query to execute in the db
         :type query: str
 
+        :param write: Boolean flag to indicate if this query will write into the database
+
         :param parameters: The parameters to put in the query. This must be a tuple.
 
         :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
@@ -121,29 +130,39 @@ class SyncedEvent(metaclass=ABCMeta):
         """
         for i in range(self.DB_TRIES):
             try:
-                if parameters:
-                    self.cur.execute(query, parameters)
-                else:
-                    self.cur.execute(query)
-                return
+                with sqlite3.connect(self.intermediate_yaml["db_path"]) as conn:
+                    cur = conn.cursor()
+                    if parameters:
+                        cur.execute(query, parameters)
+                    else:
+                        cur.execute(query)
+                    conn.commit()
+
+                    if not write:
+                        return cur.fetchone()[0]
+                    else:
+                        return
             except sqlite3.OperationalError as exc:
-                self.logger.debug(
+                self.logger.info(
                     "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
                         exc=exc, i=self.DB_TRIES - i - 1))
-                time.sleep(self.DB_SLEEP_TIME)
+                time.sleep(self.db_sleep_time)
         self.logger.error(
             "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
         raise DatabaseError("Failed to get master clock from database")
 
-    def get_master_clock(self) -> int:
+    def get_master_clock(self):
         """
         Get the value of the master clock of the physical process through the database.
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
 
-        :return: Iteration in the physical process
+        :return: Iteration in the physical process.
+
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
         """
-        # Fetch master_time
-        self.db_query("SELECT time FROM master_time WHERE id IS 1")
-        master_time = self.cur.fetchone()[0]
+        master_time = self.db_query("SELECT time FROM master_time WHERE id IS 1", False, None)
         return master_time
 
     def check_trigger(self) -> bool:
@@ -172,25 +191,34 @@ class SyncedEvent(metaclass=ABCMeta):
         else:
             raise UnsupportedTrigger("Network events only support time type trigger")
 
-    def get_sync(self) -> bool:
+    def get_sync(self, flag):
         """
-        Get the sync flag of this event.
+        Get the sync flag of this plc.
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
 
-        :return: False if physical process wants the event to do a iteration, True if not.
+        :return: False if physical process wants the plc to do a iteration, True if not.
+
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
         """
-        self.db_query("SELECT flag FROM sync WHERE name IS ?", (self.intermediate_event["name"],))
-        flag = bool(self.cur.fetchone()[0])
-        return flag
+        res = self.db_query("SELECT flag FROM sync WHERE name IS ?", False,  (self.intermediate_event["name"],))
+        return res == flag
 
     def set_sync(self, flag):
         """
-        Set this events sync flag in the sync table. When this is 1, the physical process
-        knows this event finished the requested iteration.
+        Set this plcs sync flag in the sync table. When this is 1, the physical process
+        knows this plc finished the requested iteration.
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
 
-        :param flag: True for sync to 1, false for sync to 0
+        :param flag: True for sync to 1, False for sync to 0
+        :type flag: bool
+
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
         """
-        self.db_query("UPDATE sync SET flag=? WHERE name IS ?", (int(flag), self.intermediate_event["name"],))
-        self.conn.commit()
+        self.db_query("UPDATE sync SET flag=? WHERE name IS ?", True, (int(flag), self.intermediate_event["name"],))
 
     def set_event_flag(self, flag):
         """
@@ -199,8 +227,7 @@ class SyncedEvent(metaclass=ABCMeta):
 
         :param flag: True for running to 1, false for running to 0
         """
-        self.db_query("UPDATE event SET flag=? WHERE name IS ?", (int(flag), self.intermediate_event['name']))
-        self.conn.commit()
+        self.db_query("UPDATE attack SET flag=? WHERE name IS ?", True, (int(flag), self.intermediate_event['name']))
 
     @abstractmethod
     def event_step(self):

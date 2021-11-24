@@ -336,7 +336,7 @@ class Network(object):
         self.reset()
         self.ep.ENsettimeparam(4, simtime)
         self.ep.ENopenH()
-        self.ep.ENinitH(0)
+        self.ep.ENinitH(11)
         self.ep.ENrunH()
         self.ep.ENcloseH()
         self.solved = True
@@ -347,7 +347,7 @@ class Network(object):
         self.time = []
         # open network
         self.ep.ENopenH()
-        self.ep.ENinitH(0)
+        self.ep.ENinitH(11)
 
         simtime = 0
         timestep = 1

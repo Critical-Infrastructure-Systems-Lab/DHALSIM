@@ -4,6 +4,6 @@ network_events:
     target: PLC1
     trigger:
         type: time
-        start: 648
-        end: 792
+        start: 5
+        end: 15
     value: 0.1

@@ -30,16 +30,23 @@ class DatabaseInitializer:
                     PRIMARY KEY (name, pid)
                 );""")
 
+
+            # Initialize actuators state in DB
             if "actuators" in self.data:
                 for actuator in self.data["actuators"]:
                     initial_state = "0" if actuator["initial_state"].lower() == "closed" else "1"
                     cur.execute("INSERT INTO plant VALUES (?, 1, ?);",
                                 (actuator["name"], initial_state,))
 
+            # Initialize sensors in DB, we should read EPANET file
             if "plcs" in self.data:
                 for plc in self.data["plcs"]:
                     for sensor in plc["sensors"]:
-                        cur.execute("INSERT INTO plant VALUES (?, 1, 0);", (sensor,))
+                        if sensor in self.data["initial_tank_values"]:
+                            # We only initialize tank levels into the SQlite3 DB
+                            cur.execute("INSERT INTO plant VALUES (?, 1, ?);", (sensor,self.data["initial_tank_values"][sensor]))
+                        else:
+                            cur.execute("INSERT INTO plant VALUES (?, 1, 0);", (sensor,))
 
             # Creates master_time table if it does not yet exist
             cur.execute("CREATE TABLE master_time (id INTEGER PRIMARY KEY, time INTEGER)")
@@ -56,14 +63,14 @@ class DatabaseInitializer:
 
             if "plcs" in self.data:
                 for plc in self.data["plcs"]:
-                    cur.execute("INSERT INTO sync (name, flag) VALUES (?, 1);",
+                    cur.execute("INSERT INTO sync (name, flag) VALUES (?, 0);",
                                 (plc["name"],))
 
-            cur.execute("INSERT INTO sync (name, flag) VALUES ('scada', 1);")
+            cur.execute("INSERT INTO sync (name, flag) VALUES ('scada', 0);")
 
             if "network_attacks" in self.data:
                 for attacker in self.data["network_attacks"]:
-                    cur.execute("INSERT INTO sync (name, flag) VALUES (?, 1);",
+                    cur.execute("INSERT INTO sync (name, flag) VALUES (?, 0);",
                                 (attacker["name"],))
 
             # Creates attack table
@@ -89,7 +96,7 @@ class DatabaseInitializer:
             # network event sync registers
             if 'network_events' in self.data:
                 for event in self.data['network_events']:
-                    cur.execute("INSERT INTO sync (name, flag) VALUES (?, 1);",
+                    cur.execute("INSERT INTO sync (name, flag) VALUES (?, 0);",
                                 (event["name"],))
 
             # Creates event table

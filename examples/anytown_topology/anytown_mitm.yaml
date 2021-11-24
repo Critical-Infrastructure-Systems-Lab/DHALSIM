@@ -5,5 +5,5 @@ network_attacks:
     offset: 5.0
     trigger:
       type: time
-      start: 648
-      end: 792
+      start: 200
+      end: 250

