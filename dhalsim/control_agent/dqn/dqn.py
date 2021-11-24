@@ -227,7 +227,7 @@ class DQNAgent:
         else:
             file_name = self.config_agent['agent']['save_model_as'] + ".msh"
 
-        folder = Path.cwd().absolute() / self.config_agent['agent']['model_path']
+        folder = Path(__file__).parents[3].absolute() / self.config_agent['agent']['model_path']
         Path(folder).mkdir(parents=True, exist_ok=True)
 
         where = folder / file_name
