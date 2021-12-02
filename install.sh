@@ -55,6 +55,8 @@ sudo python2 -m pip install .
 sudo pip install pathlib==1.0.*
 sudo pip install pyyaml==5.3.*
 sudo pip install numpy==1.16.*
+sudo python3 -m pip install pandas==1.3.4
+sudo python3 -m pip install matplotlib==3.5.0
 
 # Mininet from source
 cd ~
