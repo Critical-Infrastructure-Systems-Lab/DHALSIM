@@ -15,12 +15,13 @@ setuptools.setup(
     license='MIT',
     packages=['dhalsim'],
     install_requires=[
-        'PyYAML',
+       'PyYAML',
         'pyyaml-include',
         'antlr4-python3-runtime==4.7.2',
         'progressbar2',
         'wntr',
-        'pandas',
+        'pandas==1.3.4',
+        'matplotlib==3.5.0',
         'schema',
         'scapy',
         'fnfqueue'
