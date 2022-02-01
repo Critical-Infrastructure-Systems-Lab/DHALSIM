@@ -55,6 +55,9 @@ sudo python2 -m pip install .
 sudo pip install pathlib==1.0.*
 sudo pip install pyyaml==5.3.*
 sudo pip install numpy==1.16.*
+sudo python3 -m pip install pandas==1.3.4
+sudo python3 -m pip install matplotlib==3.5.0
+sudo python3 -m pip install testresources
 
 # Mininet from source
 cd ~
@@ -72,6 +75,10 @@ then
   sudo pip2 install pytest-cov==2.12.*
   sudo pip2 install pytest-mock==3.6.*
 fi
+
+# Install netfilterqueue for Simple DoS attacks
+sudo apt install -y python3-pip git libnfnetlink-dev libnetfilter-queue-dev
+sudo python3 -m pip install -U git+https://github.com/kti/python-netfilterqueue
 
 # Install DHALSIM
 cd "${cwd}" || { printf "Failure: Could not find DHALSIM directory\n"; exit 1; }
