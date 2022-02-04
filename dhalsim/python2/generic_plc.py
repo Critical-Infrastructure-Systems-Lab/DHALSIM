@@ -112,8 +112,6 @@ class GenericPLC(BasePLC):
         self.plcs_ready = False
 
         for tag in set(dependant_sensors) - set(plc_sensors):
-
-            #todo: We should query the DB for this
             self.cache[tag] = Decimal(0)
             self.tag_fresh[tag] = False
 

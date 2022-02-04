@@ -150,8 +150,6 @@ class InputParser:
         Generates duration and hydraulic timestep and adds to the
         data to be written to the yaml file.
         """
-
-        # TODO Decide on the timestep (minutes or seconds?)
         if self.simulator == 'epynet':
             times = [
                 {'duration': epynetUtils.get_time_parameter(self.wn, epynetUtils.get_time_param_code('EN_DURATION'))},

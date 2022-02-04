@@ -2,7 +2,7 @@ network_attacks:
   - name: plc1attack
     type: naive_mitm
     target: PLC1
-    offset: 5.0
+    offset: 7.0
     trigger:
       type: time
       start: 200

@@ -180,7 +180,6 @@ class SyncedEvent(metaclass=ABCMeta):
         :return: Boolean indicating whether or not to run the event
         """
 
-        # todo: Add a validation, the only trigger valid wit this event is time
         if self.intermediate_event['trigger']['type'] == "time":
             start = self.intermediate_event['trigger']['start']
             end = self.intermediate_event['trigger']['end']

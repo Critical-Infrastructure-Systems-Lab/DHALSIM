@@ -125,8 +125,6 @@ class CIP_ReqGetAttributeList(scapy_all.Packet):
 
 class CIP_ReqReadOtherTag(scapy_all.Packet):
     """Optional information to be sent with a Read_Tag_Service
-
-    FIXME: this packet has been built from experiments, not from official doc
     """
     fields_desc = [
         scapy_all.LEShortField("start", 0),
@@ -512,7 +510,7 @@ class CIP_MultipleServicePacket(scapy_all.Packet):
         LEShortLenField("count", None, count_of="packets"),
         scapy_all.FieldListField("offsets", [], scapy_all.LEShortField("", 0),
                                  count_from=lambda pkt: pkt.count),
-        # Assume the offsets are increasing, and no padding. FIXME: remove this assumption
+        # Assume the offsets are increasing, and no padding.
         _CIPMSPPacketList("packets", [], CIP)
     ]
 
@@ -540,7 +538,7 @@ class CIP_ReqConnectionManager(scapy_all.Packet):
                                  length_from=lambda pkt: pkt.message_size),
         scapy_all.StrLenField("message_padding", None,
                               length_from=lambda pkt: pkt.message_size % 2),
-        scapy_all.ByteField("route_path_size", 1),  # TODO: size in words
+        scapy_all.ByteField("route_path_size", 1),
         scapy_all.ByteField("reserved2", 0),
         scapy_all.ByteField("route_path_size_port", 1),
         scapy_all.ByteField("route_path_size_addr", 0),
@@ -566,7 +564,6 @@ scapy_all.bind_layers(CIP, CIP_ReqReadOtherTag, direction=0, service=0x4f)
 scapy_all.bind_layers(CIP, CIP_ReqForwardOpen, direction=0, service=0x54)
 scapy_all.bind_layers(CIP, CIP_RespForwardOpen, direction=1, service=0x54)
 
-# TODO: this is much imprecise :(
 # Need class in path to be 6 (Connection Manager)
 scapy_all.bind_layers(CIP, CIP_ReqConnectionManager, direction=0, service=0x52)
 

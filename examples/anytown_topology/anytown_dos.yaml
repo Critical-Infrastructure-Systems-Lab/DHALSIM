@@ -6,4 +6,4 @@ network_attacks:
         start: 648
         end: 792
       type: simple_dos
-      direction: source
+      direction: destination
