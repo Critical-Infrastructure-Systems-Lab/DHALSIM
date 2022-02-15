@@ -1,22 +1,22 @@
 inp_file: ctown_map.inp
-iterations: 288
+iterations: 8
 network_topology_type: complex
 plcs: !include ctown_plcs.yaml
 
 log_level: debug
-simulator: wntr
+simulator: epynet
 demand: pdd
 
-#attacks:
-#    network_attacks:
-#    - name: plc4attack
-#      target: PLC4
-#      trigger:
-#        type: time
-#        start: 648
-#        end: 936
-#      type: simple_dos
-#      direction: source
+attacks:
+    network_attacks:
+    - name: plc4attack
+      target: PLC4
+      offset: 1.0
+      trigger:
+        type: time
+        start: 2
+        end: 5
+      type: concealment_mitm
 
 #  network_attacks:
 #    - name: plc9attack

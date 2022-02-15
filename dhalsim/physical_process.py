@@ -121,14 +121,7 @@ class PhysicalPlant:
 
         self.db_update_string = "UPDATE plant SET value = ? WHERE name = ?"
 
-        if 'random_seed' in self.data:
-            self.logger.info("Random seed is: " + str(self.data['random_seed']))
-            random.seed(self.data['random_seed'])
-            self.db_sleep_time = random.uniform(0.01, 0.1)
-        else:
-            self.logger.info("No Random seed configured is: " + str(self.data['random_seed']))
-            self.db_sleep_time = random.uniform(0.01, 0.1)
-
+        self.db_sleep_time = random.uniform(0.01, 0.1)
         self.logger.info("DB Sleep time: " + str(self.db_sleep_time))
 
 
@@ -323,14 +316,20 @@ class PhysicalPlant:
 
         if self.simulator == 'epynet':
             # Get pumps flows and status
+            self.logger.debug('Registering initial results of pumps: ' + str(self.pump_list))
             for pump in self.pump_list:
-                self.values_list.extend([self.wn.pumps[pump].flow, self.wn.pumps[pump].status])
+
+                if pump in self.wn.pumps:
+                    self.values_list.extend([self.wn.pumps[pump].flow, self.wn.pumps[pump].status])
+                elif pump in self.wn.valves:
+                    self.values_list.extend([self.wn.valves[pump].flow, self.wn.valves[pump].status])
+                else:
+                    self.logger.error("Error. Actuator " + str(pump)  + " not found in EPANET file")
 
         elif self.simulator == 'wntr':
 
             for pump in self.pump_list:
                 self.values_list.extend([self.wn.get_link(pump).flow])
-
                 if type(self.wn.get_link(pump).status) is int:
                     self.values_list.extend([self.wn.get_link(pump).status])
                 else:
