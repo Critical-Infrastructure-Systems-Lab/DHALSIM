@@ -311,8 +311,8 @@ class PhysicalPlant:
                     [self.wn.junctions[junction].pressure])
         elif self.simulator == 'wntr':
             for junction in self.junction_list:
-                self.values_list.extend(
-                    [self.wn.get_node(junction).head - self.wn.get_node(junction).elevation])
+                # toDo: Check in wntr 0.4.2 a new way of getting the initial junction pressure
+                self.values_list.extend([0])
 
         if self.simulator == 'epynet':
             # Get pumps flows and status

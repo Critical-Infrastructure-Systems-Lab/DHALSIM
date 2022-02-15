@@ -1,10 +1,10 @@
 inp_file: anytown_map.inp
 output_path: output
-iterations: 288
+iterations: 2880
 network_topology_type: complex
 plcs: !include anytown_plcs.yaml
 
-simulator: epynet
+simulator: wntr
 demand: pdd
 demand_patterns: demands_anytown_small.csv
 #demand_patterns: demands_anytown_very_small.csv
@@ -14,6 +14,6 @@ log_level: debug
 #initial_tank_data: anytown_tanks.csv
 
 #attacks: !include anytown_mitm.yaml
-#attacks: !include anytown_dos.yaml
+attacks: !include anytown_dos.yaml
 #events: !include anytown_nwk_event.yaml
 #events: !include anytown_nwk_delay_and_loss.yaml

@@ -203,12 +203,16 @@ class SchemaParser:
                            error="Length of name must be between 1 and 20, '{}' has invalid length")
                 ),
                 'trigger': trigger,
+                'tag': And(
+                    str,
+                    string_pattern,
+                ),
                 Or('value', 'offset', only_one=True,
                    error="'tags' should have either a 'value' or 'offset' attribute."): Or(float, And(int, Use(float))),
                 'target': And(
                     str,
                     string_pattern
-                ),
+                )
             },
             {
                 'type': And(
@@ -730,6 +734,8 @@ class ConfigParser:
         # Write gaussian noise scale value to intermediate yaml
         if 'noise_scale' in self.data:
             yaml_data['noise_scale'] = self.data['noise_scale']
+        else:
+            yaml_data['noise_scale'] = 0
 
         # Demand
         yaml_data['demand'] = self.data['demand']
