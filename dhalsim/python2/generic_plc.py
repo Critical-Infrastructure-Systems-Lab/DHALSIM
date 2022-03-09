@@ -18,7 +18,6 @@ import threading
 import thread
 
 
-
 class Error(Exception):
     """Base class for exceptions in this module."""
 
@@ -112,8 +111,6 @@ class GenericPLC(BasePLC):
         self.plcs_ready = False
 
         for tag in set(dependant_sensors) - set(plc_sensors):
-
-            #todo: We should query the DB for this
             self.cache[tag] = Decimal(0)
             self.tag_fresh[tag] = False
 
@@ -132,7 +129,6 @@ class GenericPLC(BasePLC):
         """
         Generates real tags with all sensors, dependants, and actuators
         attached to the plc.
-
         :param sensors: list of sensors attached to the plc
         :param dependants: list of dependant sensors (from other plcs)
         :param actuators: list of actuators controlled by the plc
@@ -155,7 +151,6 @@ class GenericPLC(BasePLC):
     def generate_tags(taggable):
         """
         Generates tags from a list of taggable entities (sensor or actuator)
-
         :param taggable: a list of strings containing names of things like tanks, pumps, and valves
         """
         tags = []
@@ -171,7 +166,6 @@ class GenericPLC(BasePLC):
     def create_controls(controls_list):
         """
         Generates list of control objects for a plc
-
         :param controls_list: a list of the control dicts to be converted to Control objects
         """
         ret = []
@@ -195,7 +189,6 @@ class GenericPLC(BasePLC):
     @staticmethod
     def create_attacks(attack_list):
         """This function will create an array of DeviceAttacks
-
         :param attack_list: A list of attack dicts that need to be converted to DeviceAttacks
         """
         attacks = []
@@ -226,7 +219,6 @@ class GenericPLC(BasePLC):
         """
         The pre loop of a PLC. In everything is setup. Like starting the sending thread through
         the :class:`~dhalsim.python2.basePLC` class.
-
         :param sleep:  (Default value = 0.5) The time to sleep after setting everything up
         """
         self.logger.debug(self.intermediate_plc['name'] + ' enters pre_loop')
@@ -259,7 +251,6 @@ class GenericPLC(BasePLC):
     def get_tag(self, tag):
         """
         Get the value of a tag that is connected to this PLC or over the network.
-
         :param tag: The tag to get
         :type tag: str
         :return: value of that tag
@@ -317,7 +308,7 @@ class GenericPLC(BasePLC):
                         res = self.get_tag_for_cache(cached_tag, plc_data["public_ip"], cache_update_time)
                         if self.get_master_clock() == start_iteration:
                             self.tag_fresh[cached_tag] = res
-                            
+
                         if not self.tag_fresh[cached_tag]:
                             self.logger.info("Warning: Cache for tag " + str(cached_tag) + " could not be updated")
                             self.tag_fresh[cached_tag] = True
@@ -325,7 +316,6 @@ class GenericPLC(BasePLC):
     def set_tag(self, tag, value):
         """
         Set a tag that is connected to this PLC to a value.
-
         :param tag: Which tag to set
         :type tag: str
         :param value: value to set the Tag to
@@ -349,14 +339,10 @@ class GenericPLC(BasePLC):
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
         Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
         This is necessary because of the limited concurrency in SQLite.
-
         :param query: The SQL query to execute in the db
         :type query: str
-
         :param write: Boolean flag to indicate if this query will write into the database
-
         :param parameters: The parameters to put in the query. This must be a tuple.
-
         :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
            :code:`DB_TRIES` tries.
         """
@@ -389,9 +375,7 @@ class GenericPLC(BasePLC):
         Get the value of the master clock of the physical process through the database.
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
         Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
-
         :return: Iteration in the physical process.
-
         :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
            :code:`DB_TRIES` tries.
         """
@@ -403,9 +387,7 @@ class GenericPLC(BasePLC):
         Get the sync flag of this plc.
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
         Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
-
         :return: False if physical process wants the plc to do a iteration, True if not.
-
         :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
            :code:`DB_TRIES` tries.
         """
@@ -418,10 +400,8 @@ class GenericPLC(BasePLC):
         knows this plc finished the requested iteration.
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
         Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
-
         :param flag: True for sync to 1, False for sync to 0
         :type flag: bool
-
         :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
            :code:`DB_TRIES` tries.
         """
@@ -433,13 +413,10 @@ class GenericPLC(BasePLC):
         provided name is currently running. When it is 0, it is not.
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
         Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
-
         :param flag: True for running to 1, False for running to 0
         :type flag: bool
-
         :param attack_name: The name of the attack
         :type attack_name: str
-
         :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
            :code:`DB_TRIES` tries.
         """
@@ -451,7 +428,6 @@ class GenericPLC(BasePLC):
     def main_loop(self, sleep=0.5, test_break=False):
         """
         The main loop of a PLC. In here all the controls will be applied.
-
         :param sleep:  (Default value = 0.5) Not used
         :param test_break:  (Default value = False) used for unit testing, breaks the loop after one iteration
         """
@@ -497,6 +473,7 @@ class GenericPLC(BasePLC):
 
             if test_break:
                 break
+
 
 def is_valid_file(parser_instance, arg):
     if not os.path.exists(arg):
