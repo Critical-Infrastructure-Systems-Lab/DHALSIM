@@ -120,14 +120,7 @@ class PhysicalPlant:
             self.master_time = -1
 
         self.db_update_string = "UPDATE plant SET value = ? WHERE name = ?"
-
-        if 'random_seed' in self.data:
-            self.logger.info("Random seed is: " + str(self.data['random_seed']))
-            random.seed(self.data['random_seed'])
-            self.db_sleep_time = random.uniform(0.01, 0.1)
-        else:
-            self.logger.info("No Random seed configured is: " + str(self.data['random_seed']))
-            self.db_sleep_time = random.uniform(0.01, 0.1)
+        self.db_sleep_time = random.uniform(0.01, 0.1)
 
         self.logger.info("DB Sleep time: " + str(self.db_sleep_time))
 

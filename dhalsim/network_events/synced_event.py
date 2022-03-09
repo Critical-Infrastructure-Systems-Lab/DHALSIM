@@ -63,14 +63,7 @@ class SyncedEvent(metaclass=ABCMeta):
         self.intermediate_event = self.intermediate_yaml["network_events"][self.yaml_index]
 
         self.state = 0
-
-        if 'random_seed' in self.intermediate_yaml:
-            self.logger.debug("Random seed is: " + str(self.intermediate_yaml['random_seed']))
-            random.seed(self.intermediate_yaml['random_seed'])
-            self.db_sleep_time = random.uniform(0.01, 0.1)
-        else:
-            self.logger.debug("No Random seed configured is: " + str(self.intermediate_yaml['random_seed']))
-            self.db_sleep_time = random.uniform(0.01, 0.1)
+        self.db_sleep_time = random.uniform(0.01, 0.1)
 
 
     def main_loop(self):

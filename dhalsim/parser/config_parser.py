@@ -423,10 +423,6 @@ class SchemaParser:
             Optional('noise_scale', default=0.0): And(
                 float,
                 Schema(lambda i: i >= 0, error="'noise_scale' must be positive.")),
-            Optional('random_seed'): Or(
-                float,
-                int
-            ),
             Optional('attacks'): {
                 Optional('device_attacks'): [SchemaParser.device_attacks],
                 Optional('network_attacks'): [SchemaParser.network_attacks],
@@ -714,9 +710,6 @@ class ConfigParser:
         # Write gaussian noise scale value to intermediate yaml
         if 'noise_scale' in self.data:
             yaml_data['noise_scale'] = self.data['noise_scale']
-        if 'random_seed' in self.data:
-            yaml_data['random_seed'] = self.data['random_seed']
-
 
         # Demand
         yaml_data['demand'] = self.data['demand']
