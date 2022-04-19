@@ -323,10 +323,6 @@ direction
 
 This will define the direction of the communication that we are launching the MiTM attack. Messages can be intercepted if the target is the "source" or "destination" of the messages. The valid values for this parameter are "source" and "destionation", the default value is "source"
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 9c89a04 (Update attacks.rst)
 Simple Denial of Service Attack
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 This attack interrupts the flow of CIP messages containing data between PLCs. This attack first performs an ARP Spoofing attack into the target and then stops forwarding the CIP messages. This will cause the PLCs to be unable to update their cache with new system state information. Possibly taking wrong control action decisions.
