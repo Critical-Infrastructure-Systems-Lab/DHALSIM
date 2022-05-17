@@ -78,7 +78,8 @@ class AttackerControl(NodeControl):
         elif self.this_attacker_data['type'] == 'simple_dos':
             generic_plc_path = Path(__file__).parent.parent.absolute() / "network_attacks" / "simple_dos_attack.py"
         elif self.this_attacker_data['type'] == 'concealment_mitm':
-            generic_plc_path = Path(__file__).parent.parent.absolute() / "network_attacks" / "concealment_mitm.py"
+            #generic_plc_path = Path(__file__).parent.parent.absolute() / "network_attacks" / "concealment_mitm.py"
+            raise NoSuchAttack("Attack {attack} does not exists.".format(attack=self.this_attacker_data['type']))
         else:
             raise NoSuchAttack("Attack {attack} does not exists.".format(attack=self.this_attacker_data['type']))
 
