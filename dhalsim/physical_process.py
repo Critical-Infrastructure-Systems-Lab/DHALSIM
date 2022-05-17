@@ -121,14 +121,7 @@ class PhysicalPlant:
 
         self.db_update_string = "UPDATE plant SET value = ? WHERE name = ?"
 
-        if 'random_seed' in self.data:
-            self.logger.info("Random seed is: " + str(self.data['random_seed']))
-            random.seed(self.data['random_seed'])
-            self.db_sleep_time = random.uniform(0.01, 0.1)
-        else:
-            self.logger.info("No Random seed configured is: " + str(self.data['random_seed']))
-            self.db_sleep_time = random.uniform(0.01, 0.1)
-
+        self.db_sleep_time = random.uniform(0.01, 0.1)
         self.logger.info("DB Sleep time: " + str(self.db_sleep_time))
 
 
@@ -318,19 +311,24 @@ class PhysicalPlant:
                     [self.wn.junctions[junction].pressure])
         elif self.simulator == 'wntr':
             for junction in self.junction_list:
-                self.values_list.extend(
-                    [self.wn.get_node(junction).head - self.wn.get_node(junction).elevation])
+                # toDo: Check in wntr 0.4.2 a new way of getting the initial junction pressure
+                self.values_list.extend([0])
 
         if self.simulator == 'epynet':
             # Get pumps flows and status
+            self.logger.debug('Registering initial results of pumps: ' + str(self.pump_list))
             for pump in self.pump_list:
-                self.values_list.extend([self.wn.pumps[pump].flow, self.wn.pumps[pump].status])
 
+                if pump in self.wn.pumps:
+                    self.values_list.extend([self.wn.pumps[pump].flow, self.wn.pumps[pump].status])
+                elif pump in self.wn.valves:
+                    self.values_list.extend([self.wn.valves[pump].flow, self.wn.valves[pump].status])
+                else:
+                    self.logger.error("Error. Actuator " + str(pump)  + " not found in EPANET file")
         elif self.simulator == 'wntr':
 
             for pump in self.pump_list:
                 self.values_list.extend([self.wn.get_link(pump).flow])
-
                 if type(self.wn.get_link(pump).status) is int:
                     self.values_list.extend([self.wn.get_link(pump).status])
                 else:
@@ -700,7 +698,6 @@ class PhysicalPlant:
                 conn.commit()
 
             simulation_time = simulation_time + internal_epynet_step
-
             conn = sqlite3.connect(self.data["db_path"])
             c = conn.cursor()
             c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(self.master_time),))
@@ -708,42 +705,55 @@ class PhysicalPlant:
             #time.sleep(0.3)
 
     def simulate_with_wntr(self, iteration_limit, p_bar):
-        self.logger.info("Starting wntr simulation")
+        self.logger.info("Starting WNTR simulation")
         self.wn.options.time.duration = self.wn.options.time.hydraulic_timestep
 
+        self.register_initial_results()
+        self.results_list.append(self.values_list)
+
         while self.master_time < iteration_limit:
-            conn = sqlite3.connect(self.data["db_path"])
-            c = conn.cursor()
-            c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(self.master_time),))
-            conn.commit()
 
-            self.master_time = self.master_time + 1
+            # We check that all PLCs updated their local caches and local CPPPO
+            while not self.get_plcs_ready(1):
+                time.sleep(self.WAIT_FOR_FLAG)
 
-            while not self.get_plcs_ready():
-                time.sleep(0.01)
+            # Notify the PLCs they can start receiving remote values
+            with sqlite3.connect(self.data["db_path"]) as conn:
+                c = conn.cursor()
+                c.execute("UPDATE sync SET flag=2")
+                conn.commit()
+
+            # Wait for the PLCs to apply control logic
+            while not self.get_plcs_ready(3):
+                time.sleep(self.WAIT_FOR_FLAG)
 
             self.update_controls()
 
-            self.logger.debug("Iteration {x} out of {y}.".format(x=str(self.master_time),
-                                                                 y=str(iteration_limit)))
+            self.logger.debug("Iteration {x} out of {y}.".format(x=str(self.master_time), y=str(iteration_limit)))
 
-            if p_bar:
-                p_bar.update(self.master_time)
-
-            # Check for simulation error, print output on exception
             try:
                 self.sim.run_sim(convergence_error=True)
             except Exception as exp:
                 self.logger.error(f"Error in WNTR simulation: {exp}")
                 self.finish()
 
-            self.register_results()
-            self.results_list.append(self.values_list)
-
+            # Updates the SQLite DB
             self.update_tanks()
             self.update_pumps()
             self.update_valves()
             self.update_junctions()
+
+            self.master_time = self.master_time + 1
+            conn = sqlite3.connect(self.data["db_path"])
+            c = conn.cursor()
+            c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(self.master_time),))
+            conn.commit()
+
+            if p_bar:
+                p_bar.update(self.master_time)
+
+            self.register_results()
+            self.results_list.append(self.values_list)
 
             # Write results of this iteration if needed
             if 'saving_interval' in self.data and self.master_time != 0 and \
@@ -751,8 +761,10 @@ class PhysicalPlant:
                 self.write_results(self.results_list)
 
             # Set sync flags for nodes
-            c.execute("UPDATE sync SET flag=0")
-            conn.commit()
+            with sqlite3.connect(self.data["db_path"]) as conn:
+                c = conn.cursor()
+                c.execute("UPDATE sync SET flag=0")
+                conn.commit()
 
     def update_tanks(self, network_state=None):
         """Update tanks in database."""

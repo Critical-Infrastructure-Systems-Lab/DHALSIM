@@ -37,21 +37,6 @@ class PacketLoss(SyncedEvent):
         cmd = 'tc qdisc del dev ' + str(self.interface_name) + ' root '
         os.system(cmd)
 
-    def setup(self):
-        self.logger.debug("Starting packet loss queue at interface " + str(self.interface_name)
-                         + " with value " + str(self.loss_value))
-
-        cmd = 'tc qdisc del dev ' + str(self.interface_name) + ' root'
-        os.system(cmd)
-
-        cmd = 'tc qdisc add dev ' + str(self.interface_name) + ' root netem loss ' + str(self.loss_value) + '%'
-        self.logger.debug('trying command: ' + str(cmd))
-        os.system(cmd)
-
-    def teardown(self):
-        cmd = 'tc qdisc del dev ' + str(self.interface_name) + ' root '
-        os.system(cmd)
-
         self.logger.info("Tear down network event")
 
     def interrupt(self):

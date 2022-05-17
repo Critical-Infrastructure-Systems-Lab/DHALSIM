@@ -44,7 +44,7 @@ class GenericPLC(BasePLC):
     DB_TRIES = 10
     """Amount of times a db query will retry on a exception"""
 
-    UPDATE_RETRIES = 3
+    UPDATE_RETRIES = 1
     """Amount of times a PLC will try to update its cache"""
 
     PLC_CACHE_UPDATE_TIME = 0.05
@@ -230,6 +230,7 @@ class GenericPLC(BasePLC):
         :param sleep:  (Default value = 0.5) The time to sleep after setting everything up
         """
         self.logger.debug(self.intermediate_plc['name'] + ' enters pre_loop')
+        self.db_sleep_time = random.uniform(0.01, 0.1)
 
         if 'random_seed' in self.intermediate_yaml:
             self.logger.debug("Random seed is: " + str(self.intermediate_yaml['random_seed']))

@@ -154,6 +154,7 @@ class GenericScada(BasePLC):
         :param sleep:  (Default value = 0.5) The time to sleep after setting everything up
         """
         self.logger.debug('SCADA enters pre_loop')
+        self.db_sleep_time = random.uniform(0.01, 0.1)
 
         if 'random_seed' in self.intermediate_yaml:
             self.logger.debug("Random seed is: " + str(self.intermediate_yaml['random_seed']))

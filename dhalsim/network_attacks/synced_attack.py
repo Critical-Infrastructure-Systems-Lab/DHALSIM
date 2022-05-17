@@ -47,6 +47,7 @@ class SyncedAttack(metaclass=ABCMeta):
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
 
+        self.intermediate_yaml_path = intermediate_yaml_path
         self.yaml_index = yaml_index
 
         with intermediate_yaml_path.open() as yaml_file:
@@ -72,14 +73,7 @@ class SyncedAttack(metaclass=ABCMeta):
             self.direction = 'None'
 
         self.state = 0
-
-        if 'random_seed' in self.intermediate_yaml:
-            self.logger.debug("Random seed is: " + str(self.intermediate_yaml['random_seed']))
-            random.seed(self.intermediate_yaml['random_seed'])
-            self.db_sleep_time = random.uniform(0.01, 0.1)
-        else:
-            self.logger.debug("No Random seed configured is: " + str(self.intermediate_yaml['random_seed']))
-            self.db_sleep_time = random.uniform(0.01, 0.1)
+        self.db_sleep_time = random.uniform(0.01, 0.1)
 
 
     def sigint_handler(self, sig, frame):

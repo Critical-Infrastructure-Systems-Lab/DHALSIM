@@ -125,8 +125,11 @@ class CIP_ReqGetAttributeList(scapy_all.Packet):
 
 class CIP_ReqReadOtherTag(scapy_all.Packet):
     """Optional information to be sent with a Read_Tag_Service
+<<<<<<< HEAD
 
     FIXME: this packet has been built from experiments, not from official doc
+=======
+>>>>>>> dev-concealment
     """
     fields_desc = [
         scapy_all.LEShortField("start", 0),
@@ -512,7 +515,6 @@ class CIP_MultipleServicePacket(scapy_all.Packet):
         LEShortLenField("count", None, count_of="packets"),
         scapy_all.FieldListField("offsets", [], scapy_all.LEShortField("", 0),
                                  count_from=lambda pkt: pkt.count),
-        # Assume the offsets are increasing, and no padding. FIXME: remove this assumption
         _CIPMSPPacketList("packets", [], CIP)
     ]
 
@@ -566,7 +568,6 @@ scapy_all.bind_layers(CIP, CIP_ReqReadOtherTag, direction=0, service=0x4f)
 scapy_all.bind_layers(CIP, CIP_ReqForwardOpen, direction=0, service=0x54)
 scapy_all.bind_layers(CIP, CIP_RespForwardOpen, direction=1, service=0x54)
 
-# TODO: this is much imprecise :(
 # Need class in path to be 6 (Connection Manager)
 scapy_all.bind_layers(CIP, CIP_ReqConnectionManager, direction=0, service=0x52)
 

@@ -17,7 +17,9 @@ class BasePLC(PLC):
             try:
                 # Gaussian noise added with respect to noise_scale
                 if self.noise_scale != 0:
-                    values.append(float(self.get(tag)) + np.random.normal(0, self.noise_scale))
+                    sensor_value = float(self.get(tag))
+                    noise_value = np.random.normal(0, self.noise_scale*sensor_value)
+                    values.append(sensor_value + noise_value)
                 else:
                     values.append(float(self.get(tag)))
             except Exception:

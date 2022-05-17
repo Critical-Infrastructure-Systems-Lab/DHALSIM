@@ -194,6 +194,30 @@ class SchemaParser:
                 'type': And(
                     str,
                     Use(str.lower),
+                    'concealment_mitm',
+                ),
+                'name': And(
+                    str,
+                    string_pattern,
+                    Schema(lambda name: 1 <= len(name) <= 20,
+                           error="Length of name must be between 1 and 20, '{}' has invalid length")
+                ),
+                'trigger': trigger,
+                'tag': And(
+                    str,
+                    string_pattern,
+                ),
+                Or('value', 'offset', only_one=True,
+                   error="'tags' should have either a 'value' or 'offset' attribute."): Or(float, And(int, Use(float))),
+                'target': And(
+                    str,
+                    string_pattern
+                )
+            },
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
                     'simple_stale',
                 ),
                 'name': And(
@@ -714,9 +738,8 @@ class ConfigParser:
         # Write gaussian noise scale value to intermediate yaml
         if 'noise_scale' in self.data:
             yaml_data['noise_scale'] = self.data['noise_scale']
-        if 'random_seed' in self.data:
-            yaml_data['random_seed'] = self.data['random_seed']
-
+        else:
+            yaml_data['noise_scale'] = 0
 
         # Demand
         yaml_data['demand'] = self.data['demand']
