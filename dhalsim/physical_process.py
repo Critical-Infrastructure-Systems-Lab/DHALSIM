@@ -317,7 +317,6 @@ class PhysicalPlant:
             # Get pumps flows and status
             self.logger.debug('Registering initial results of pumps: ' + str(self.pump_list))
             for pump in self.pump_list:
-
                 if pump in self.wn.pumps:
                     self.values_list.extend([self.wn.pumps[pump].flow, self.wn.pumps[pump].status])
                 elif pump in self.wn.valves:
@@ -325,6 +324,12 @@ class PhysicalPlant:
                 else:
                     self.logger.error("Error. Actuator " + str(pump)  + " not found in EPANET file")
 
+                if pump in self.wn.pumps:
+                    self.values_list.extend([self.wn.pumps[pump].flow, self.wn.pumps[pump].status])
+                elif pump in self.wn.valves:
+                    self.values_list.extend([self.wn.valves[pump].flow, self.wn.valves[pump].status])
+                else:
+                    self.logger.error("Error. Actuator " + str(pump)  + " not found in EPANET file")
         elif self.simulator == 'wntr':
 
             for pump in self.pump_list:
@@ -697,7 +702,6 @@ class PhysicalPlant:
                 conn.commit()
 
             simulation_time = simulation_time + internal_epynet_step
-
             conn = sqlite3.connect(self.data["db_path"])
             c = conn.cursor()
             c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(self.master_time),))

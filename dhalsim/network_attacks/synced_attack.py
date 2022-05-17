@@ -47,6 +47,7 @@ class SyncedAttack(metaclass=ABCMeta):
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
 
+        self.intermediate_yaml_path = intermediate_yaml_path
         self.yaml_index = yaml_index
 
         with intermediate_yaml_path.open() as yaml_file:

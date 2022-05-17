@@ -1,0 +1,9 @@
+network_attacks:
+- name: plc4attack
+  type: naive_mitm
+  target: PLC4
+  value: 7.0
+  trigger:
+    start: 648
+    end: 936
+    type: time

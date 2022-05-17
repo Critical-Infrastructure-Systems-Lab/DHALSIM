@@ -101,22 +101,11 @@ class WaterDistributionNetwork(Network):
         curr_time = 0
         timestep = 1
 
-        #progress_bar = tqdm(total=self.ep.ENgettimeparam(0))
-        # timestep becomes 0 the last hydraulic step
         while timestep > 0:
             timestep, state = self.simulate_step(curr_time=curr_time, actuators_status=actuators_update_dict)
             curr_time += timestep
-
-            # in DHALSIM here there should be:
-            # update_state(state)
-
-            # TODO: remember to comment in DHALSIM
-            # if timestep != 0 and self.interactive:
-            #    self.update_actuators_status()
             sleep(0.01)
-            #progress_bar.update(timestep)
 
-        #progress_bar.close()
         self.ep.ENcloseH()
         self.solved = True
         self.create_df_reports()
@@ -138,9 +127,6 @@ class WaterDistributionNetwork(Network):
         :param curr_time: current simulation time
         :return: time until the next event, if 0 the simulation is going to end
         """
-
-        # update the status of actuators after the first step
-        # TODO: DHALSIM works with the status update here
         if actuators_status and self.interactive:
                 self.update_actuators_status(actuators_status)
 

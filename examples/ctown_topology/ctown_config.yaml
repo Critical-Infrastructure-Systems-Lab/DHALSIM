@@ -6,23 +6,4 @@ plcs: !include ctown_plcs.yaml
 log_level: debug
 simulator: epynet
 demand: pdd
-attacks:
-    network_attacks:
-    - name: plc4attack
-      target: PLC4
-      trigger:
-        type: time
-        start: 648
-        end: 936
-      type: simple_dos
-      direction: source
-
-#  network_attacks:
-#    - name: plc9attack
-#      offset: 1.0
-#      target: PLC9
-#      trigger:
-#        sensor: T7
-#        type: below
-#        value: 2.6
-#      type: naive_mitm
+#attacks: !include ctown_mitm.yaml

@@ -122,7 +122,6 @@ class GeneralCPS(MiniCPS):
         if 'network_events' in self.data:
             automatic_event = Path(__file__).parent.absolute() / "automatic_event.py"
             node_name = None
-
             for i, event in enumerate(self.data['network_events']):
                 target_node = event['target']
                 if target_node == 'scada':

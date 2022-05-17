@@ -65,7 +65,6 @@ class SyncedEvent(metaclass=ABCMeta):
         self.state = 0
         self.db_sleep_time = random.uniform(0.01, 0.1)
 
-
     def main_loop(self):
         """
         The main loop of an event.
@@ -172,8 +171,6 @@ class SyncedEvent(metaclass=ABCMeta):
 
         :return: Boolean indicating whether or not to run the event
         """
-
-        # todo: Add a validation, the only trigger valid wit this event is time
         if self.intermediate_event['trigger']['type'] == "time":
             start = self.intermediate_event['trigger']['start']
             end = self.intermediate_event['trigger']['end']

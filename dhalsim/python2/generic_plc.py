@@ -43,7 +43,7 @@ class GenericPLC(BasePLC):
     DB_TRIES = 10
     """Amount of times a db query will retry on a exception"""
 
-    UPDATE_RETRIES = 3
+    UPDATE_RETRIES = 1
     """Amount of times a PLC will try to update its cache"""
 
     PLC_CACHE_UPDATE_TIME = 0.05
