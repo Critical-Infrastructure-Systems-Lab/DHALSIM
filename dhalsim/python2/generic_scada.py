@@ -110,7 +110,6 @@ class GenericScada(BasePLC):
     def generate_real_tags(plcs):
         """
         Generates real tags with all sensors and actuators attached to plcs in the network.
-
         :param plcs: list of plcs
         """
         real_tags = []
@@ -135,7 +134,6 @@ class GenericScada(BasePLC):
     def generate_tags(taggable):
         """
         Generates tags from a list of taggable entities (sensor or actuator)
-
         :param taggable: a list of strings containing names of things like tanks, pumps, and valves
         """
         tags = []
@@ -150,20 +148,10 @@ class GenericScada(BasePLC):
     def pre_loop(self, sleep=0.5):
         """
         The pre loop of a SCADA. In which setup actions are started.
-
         :param sleep:  (Default value = 0.5) The time to sleep after setting everything up
         """
         self.logger.debug('SCADA enters pre_loop')
         self.db_sleep_time = random.uniform(0.01, 0.1)
-
-        if 'random_seed' in self.intermediate_yaml:
-            self.logger.debug("Random seed is: " + str(self.intermediate_yaml['random_seed']))
-            random.seed(self.intermediate_yaml['random_seed'])
-            self.db_sleep_time = random.uniform(0.01, 0.1)
-        else:
-            self.logger.debug("No Random seed configured is: " + str(self.intermediate_yaml['random_seed']))
-            self.db_sleep_time = random.uniform(0.01, 0.1)
-
 
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
@@ -179,14 +167,10 @@ class GenericScada(BasePLC):
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
         Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
         This is necessary because of the limited concurrency in SQLite.
-
         :param query: The SQL query to execute in the db
         :type query: str
-
         :param write: Boolean flag to indicate if this query will write into the database
-
         :param parameters: The parameters to put in the query. This must be a tuple.
-
         :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
            :code:`DB_TRIES` tries.
         """
@@ -218,9 +202,7 @@ class GenericScada(BasePLC):
         Get the sync flag of this plc.
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
         Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
-
         :return: False if physical process wants the plc to do a iteration, True if not.
-
         :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
            :code:`DB_TRIES` tries.
         """
@@ -233,10 +215,8 @@ class GenericScada(BasePLC):
         knows this plc finished the requested iteration.
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
         Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
-
         :param flag: True for sync to 1, False for sync to 0
         :type flag: bool
-
         :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
            :code:`DB_TRIES` tries.
         """
@@ -291,9 +271,7 @@ class GenericScada(BasePLC):
         Get the value of the master clock of the physical process through the database.
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
         Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
-
         :return: Iteration in the physical process.
-
         :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
            :code:`DB_TRIES` tries.
         """
@@ -324,7 +302,6 @@ class GenericScada(BasePLC):
     def main_loop(self, sleep=0.5, test_break=False):
         """
         The main loop of a PLC. In here all the controls will be applied.
-
         :param sleep:  (Default value = 0.5) Not used
         :param test_break:  (Default value = False) used for unit testing, breaks the loop after one iteration
         """
@@ -368,7 +345,6 @@ class GenericScada(BasePLC):
 def is_valid_file(parser_instance, arg):
     """
     Verifies whether the intermediate yaml path is valid.
-
     :param parser_instance: instance of argparser
     :param arg: the path to check
     """

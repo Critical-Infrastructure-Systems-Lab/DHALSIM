@@ -68,8 +68,6 @@ class SimpleDoSAttack(SyncedAttack):
         nfqueue.run(block=False)
         self.logger.info(f"NFqueue Bound periodic ARP Poison between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
-
-
         self.launch_mitm(get_macs=True)
         self.logger.info(f"Configured ARP Poison between {self.target_plc_ip} and "
                          f"{self.intermediate_attack['gateway_ip']}")
@@ -112,7 +110,6 @@ class SimpleDoSAttack(SyncedAttack):
         packet.drop()
 
     def teardown(self):
-        self.run_thread = False
         restore_arp(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
         if self.intermediate_yaml['network_topology_type'] == "simple":
             for plc in self.intermediate_yaml['plcs']:

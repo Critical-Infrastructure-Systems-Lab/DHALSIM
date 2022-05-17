@@ -260,7 +260,6 @@ class PhysicalPlant:
     def create_attack_header(self):
         """
         Function that creates csv list headers for device and network attacks
-
         :return: list of attack names starting with device and ending with network
         """
         result = []
@@ -318,6 +317,12 @@ class PhysicalPlant:
             # Get pumps flows and status
             self.logger.debug('Registering initial results of pumps: ' + str(self.pump_list))
             for pump in self.pump_list:
+                if pump in self.wn.pumps:
+                    self.values_list.extend([self.wn.pumps[pump].flow, self.wn.pumps[pump].status])
+                elif pump in self.wn.valves:
+                    self.values_list.extend([self.wn.valves[pump].flow, self.wn.valves[pump].status])
+                else:
+                    self.logger.error("Error. Actuator " + str(pump)  + " not found in EPANET file")
 
                 if pump in self.wn.pumps:
                     self.values_list.extend([self.wn.pumps[pump].flow, self.wn.pumps[pump].status])
@@ -523,7 +528,6 @@ class PhysicalPlant:
     def get_attack_flag(self, name):
         """
         Get the attack flag of this attack.
-
         :return: False if attack not running, true otherwise
         """
 

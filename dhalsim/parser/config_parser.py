@@ -447,10 +447,6 @@ class SchemaParser:
             Optional('noise_scale', default=0.0): And(
                 float,
                 Schema(lambda i: i >= 0, error="'noise_scale' must be positive.")),
-            Optional('random_seed'): Or(
-                float,
-                int
-            ),
             Optional('attacks'): {
                 Optional('device_attacks'): [SchemaParser.device_attacks],
                 Optional('network_attacks'): [SchemaParser.network_attacks],
