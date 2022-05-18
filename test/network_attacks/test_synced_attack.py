@@ -4,7 +4,7 @@ import pytest
 from mock import call
 
 from dhalsim.network_attacks.synced_attack import SyncedAttack, DatabaseError
-from dhalsim.network_attacks.mitm_attack import MitmAttack
+from dhalsim.network_attacks.cppo_server_mitm_attack import MitmAttack
 
 
 @pytest.fixture
