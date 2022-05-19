@@ -1,9 +1,10 @@
 inp_file: anytown_map.inp
 output_path: output
-iterations: 2880
+iterations: 30
 network_topology_type: complex
 plcs: !include anytown_plcs.yaml
 
 simulator: wntr
 demand: pdd
 demand_patterns: demands_anytown_small.csv
+attacks !include anytown_mitm.yaml

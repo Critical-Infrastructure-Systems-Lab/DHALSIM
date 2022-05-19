@@ -32,7 +32,6 @@ class MiTMAttack(SyncedAttack):
 
         # Process object to handle nfqueue
         self.nfqueue_process = None
-        self.attacked_tag = self.intermediate_attack['tag']
 
     def setup(self):
         """
@@ -61,6 +60,12 @@ class MiTMAttack(SyncedAttack):
         os.system('iptables -A INPUT -p icmp -j DROP')
         os.system('iptables -A OUTPUT -p icmp -j DROP')
 
+        queue_number = 1
+        nfqueue_path = Path(__file__).parent.absolute() / "mitm_netfilter_queue.py"
+        cmd = ["python3", str(nfqueue_path), str(self.intermediate_yaml_path), str(self.yaml_index), str(queue_number)]
+
+        self.nfqueue_process = subprocess.Popen(cmd, shell=False, stderr=sys.stderr, stdout=sys.stdout)
+
         # Launch the ARP poison by sending the required ARP network packets
         launch_arp_poison(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
         if self.intermediate_yaml['network_topology_type'] == "simple":
@@ -70,12 +75,6 @@ class MiTMAttack(SyncedAttack):
 
         self.logger.debug(f"Naive MITM Attack ARP Poison between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
-
-        queue_number = 1
-        nfqueue_path = Path(__file__).parent.absolute() / "mitm_netfilter_queue.py"
-        cmd = ["python3", str(nfqueue_path), str(self.intermediate_yaml_path), str(self.yaml_index), str(queue_number)]
-
-        self.nfqueue_process = subprocess.Popen(cmd, shell=False, stderr=sys.stderr, stdout=sys.stdout)
 
     def interrupt(self):
         """

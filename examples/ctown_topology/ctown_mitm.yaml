@@ -1,9 +1,11 @@
 network_attacks:
-- name: plc4attack
-  type: naive_mitm
-  target: PLC4
-  value: 7.0
+- name: plc1attack
+  type: mitm
+  target: PLC1
+  value: 42.0
+  tag: PU1F
+  direction: source
   trigger:
-    start: 648
-    end: 936
+    start: 5
+    end: 15
     type: time
