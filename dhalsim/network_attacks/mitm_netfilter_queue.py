@@ -1,6 +1,5 @@
 from dhalsim.network_attacks.enip_cip_parser.cip import *
-from scapy.layers.inet import IP
-from scapy.all import Ether
+from scapy.all import *
 from dhalsim.network_attacks.mitm_netfilter_queue_subprocess import PacketQueue
 import argparse
 from pathlib import Path
@@ -8,8 +7,8 @@ from pathlib import Path
 import os
 import sys
 
-from scapy.layers.inet import IP, TCP
-from scapy.packet import Raw
+#from scapy.layers.inet import IP, TCP
+#from scapy.packet import Raw
 
 from dhalsim.network_attacks.utilities import translate_payload_to_float, translate_float_to_payload
 
@@ -32,8 +31,8 @@ class MiTMNetfilterQueue(PacketQueue):
         self.logger.debug('capture method')
         try:
             p = IP(pkt.get_payload())
-            self.logger.debug('packet')
-            self.logger.debug(p.show())
+            #self.logger.debug('packet')
+            #self.logger.debug(p.show())
             if 'ENIP_TCP' in p:
                 if 'ENIP_SendRRData' in p:
                     if 'CIP_ReqConnectionManager' in p:
@@ -65,7 +64,6 @@ class MiTMNetfilterQueue(PacketQueue):
                                 ('New payload tag value is: ' + str(translate_payload_to_float(p[Raw].load)))
 
                             del p[TCP].chksum
-                            del p[IP].chksum
 
                             pkt.set_payload(bytes(p))
                             self.logger.debug(f"Value of network packet for {p[IP].dst} overwritten.")

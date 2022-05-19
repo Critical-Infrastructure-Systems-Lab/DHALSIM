@@ -6,12 +6,8 @@ from netfilterqueue import NetfilterQueue
 import yaml
 from dhalsim.py3_logger import get_logger
 
-from scapy.layers.inet import IP, TCP
-from scapy.packet import Raw
-
 from abc import ABCMeta, abstractmethod
 
-from dhalsim.network_attacks.utilities import translate_payload_to_float, translate_float_to_payload
 
 class PacketQueue(metaclass=ABCMeta):
     """
@@ -37,6 +33,7 @@ class PacketQueue(metaclass=ABCMeta):
         self.intermediate_attack = self.intermediate_yaml["network_attacks"][self.yaml_index]
 
     def main_loop(self):
+        self.logger.debug('Parent NF Class launched')
         self.nfqueue = NetfilterQueue()
         self.nfqueue.bind(self.queue_number, self.capture)
         try:
