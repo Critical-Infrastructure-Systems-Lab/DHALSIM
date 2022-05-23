@@ -1,10 +1,10 @@
 network_attacks:
-- name: plc3attack
+- name: plc4attack
   type: mitm
-  target: PLC3
+  target: PLC4
   value: 42.0
   tag: T3
-  direction: destination
+  direction: source
   trigger:
     start: 5
     end: 10

