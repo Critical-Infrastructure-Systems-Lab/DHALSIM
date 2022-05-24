@@ -31,7 +31,7 @@ import struct
 import sys
 
 from scapy import all as scapy_all
-from  dhalsim.network_attacks.enip_cip_parser.enip_tcp import ENIP_ConnectionPacket, ENIP_SendUnitData_Item
+from dhalsim.network_attacks.enip_cip_parser.enip_tcp import ENIP_ConnectionPacket, ENIP_SendUnitData_Item
 from dhalsim.network_attacks.enip_cip_parser.utils import LEShortLenField, hexdump, XBitEnumField
 
 
@@ -575,19 +575,20 @@ if __name__ == '__main__':
     # Test building/dissecting packets
     # Build a CIP Get Attribute All request
     path = CIP_Path.make(class_id=1, instance_id=1)
+    print(path)
     #assert str(path) == b"\x03\x20\x01\x25\x00\x01\x00"
     assert path == b"\x03\x20\x01\x25\x00\x01\x00"
     pkt = CIP(service=1, path=path)
-    #pkt = CIP(str(pkt))
-    pkt = CIP(bytes(pkt))
+    pkt = CIP(str(pkt))
+    #pkt = CIP(bytes(pkt))
     pkt.show()
     assert pkt[CIP].direction == 0
     assert pkt[CIP].path[0] == path
 
     # Build a CIP Get_Attribute_List response
     pkt = CIP() / CIP_RespAttributesList(count=1, content="test")
-    #pkt = CIP(str(pkt))
-    pkt = CIP(bytes(pkt))
+    pkt = CIP(str(pkt))
+    #pkt = CIP(bytes(pkt))
     pkt.show()
     assert pkt[CIP].direction == 1
     assert pkt[CIP].service == 0x03
@@ -605,8 +606,8 @@ if __name__ == '__main__':
         CIP(path=CIP_Path.make(class_id=0x70, instance_id=1)) / CIP_ReqGetAttributeList(attrs=[1, 2]),
         CIP(service=0x0e, path=CIP_Path.make(class_id=0x8e, instance_id=1, attribute_id=0x1b)),
     ])
-    #pkt = CIP(str(pkt))
-    pkt = CIP(bytes(pkt))
+    pkt = CIP(str(pkt))
+    #pkt = CIP(bytes(pkt))
     pkt.show()
     assert pkt[CIP].direction == 0
     assert pkt[CIP].service == 0x0a

