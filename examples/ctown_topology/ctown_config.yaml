@@ -1,5 +1,5 @@
 inp_file: ctown_map.inp
-iterations: 11
+iterations: 25
 network_topology_type: complex
 plcs: !include ctown_plcs.yaml
 

