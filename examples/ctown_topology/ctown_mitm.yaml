@@ -6,6 +6,6 @@ network_attacks:
   tag: T3
   direction: destination
   trigger:
-    start: 5
-    end: 20
+    start: 648
+    end: 936
     type: time

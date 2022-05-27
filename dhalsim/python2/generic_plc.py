@@ -280,7 +280,7 @@ class GenericPLC(BasePLC):
             try:
                 received = Decimal(self.receive((tag, 1), plc_ip))
                 self.cache[tag] = received
-                self.logger.debug('Received value {value}, from IP {ip}'.format(value=received, ip=plc_ip))
+                #self.logger.debug('Received value {value}, from IP {ip}'.format(value=received, ip=plc_ip))
                 return True
             except Exception as e:
                 self.logger.info(

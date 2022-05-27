@@ -181,12 +181,6 @@ class SchemaParser:
                     str,
                     string_pattern
                 ),
-                Optional('direction', default='source'): And(
-                    str,
-                    Use(str.lower),
-                    Or('source', 'destination'), error="'direction' should be one of the following:"
-                                                       " 'source' or 'destination'."
-                ),
                 'tag': And(
                     str,
                     string_pattern,

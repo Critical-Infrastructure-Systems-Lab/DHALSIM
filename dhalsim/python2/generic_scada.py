@@ -297,10 +297,10 @@ class GenericScada(BasePLC):
                             ip=plc_ip, e=str(e)))
                     time.sleep(cache_update_time)
                     continue
-                self.logger.debug(
-                    "SCADA cache updated for {tags}, with value {values}, from {ip}".format(tags=self.plc_data[plc_ip],
-                                                                                             values=values,
-                                                                                             ip=plc_ip))
+                #self.logger.debug(
+                #    "SCADA cache updated for {tags}, with value {values}, from {ip}".format(tags=self.plc_data[plc_ip],
+                #                                                                             values=values,
+                #                                                                             ip=plc_ip))
 
             time.sleep(cache_update_time)
 

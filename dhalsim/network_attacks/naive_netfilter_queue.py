@@ -27,7 +27,6 @@ class NaiveNetfilterQueue(PacketQueue):
         self.logger.debug('capture method')
         try:
             p = IP(pkt.get_payload())
-            #self.logger.debug('packet')
             if len(p) == 102:
                 self.logger.debug('modifying')
                 if 'value' in self.intermediate_attack.keys():
