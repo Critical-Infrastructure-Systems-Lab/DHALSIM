@@ -228,15 +228,19 @@ class SchemaParser:
                            error="Length of name must be between 1 and 20, '{}' has invalid length")
                 ),
                 'trigger': trigger,
+                'target': And(
+                    str,
+                    string_pattern
+                ),
                 'tag': And(
                     str,
                     string_pattern,
                 ),
-                Or('value', 'offset', only_one=True,
-                   error="'tags' should have either a 'value' or 'offset' attribute."): Or(float, And(int, Use(float))),
-                'target': And(
-                    str,
-                    string_pattern
+                'value': And(
+                    Or(float, And(int, Use(float)))
+                ),
+                'concealment_value': And(
+                    Or(float, And(int, Use(float)))
                 )
             },
             {

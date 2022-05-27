@@ -10,7 +10,6 @@ from scapy.packet import Raw
 
 from dhalsim.network_attacks.utilities import translate_payload_to_float, translate_float_to_payload
 
-import struct
 
 class MiTMNetfilterQueue(PacketQueue):
 
