@@ -29,9 +29,10 @@ https://code.wireshark.org/review/gitweb?p=wireshark.git;a=blob;f=epan/dissector
 """
 import struct
 import sys
+
 from scapy import all as scapy_all
-from dhalsim.network_attacks.enip_cip_parser.enip_tcp import *
-from dhalsim.network_attacks.enip_cip_parser.utils import *
+from dhalsim.network_attacks.enip_cip_parser.enip_tcp import ENIP_ConnectionPacket, ENIP_SendUnitData_Item
+from dhalsim.network_attacks.enip_cip_parser.utils import LEShortLenField, hexdump, XBitEnumField
 
 
 class CIP_RespSingleAttribute(scapy_all.Packet):
@@ -125,11 +126,8 @@ class CIP_ReqGetAttributeList(scapy_all.Packet):
 
 class CIP_ReqReadOtherTag(scapy_all.Packet):
     """Optional information to be sent with a Read_Tag_Service
-<<<<<<< HEAD
 
     FIXME: this packet has been built from experiments, not from official doc
-=======
->>>>>>> dev-concealment
     """
     fields_desc = [
         scapy_all.LEShortField("start", 0),
@@ -515,6 +513,7 @@ class CIP_MultipleServicePacket(scapy_all.Packet):
         LEShortLenField("count", None, count_of="packets"),
         scapy_all.FieldListField("offsets", [], scapy_all.LEShortField("", 0),
                                  count_from=lambda pkt: pkt.count),
+        # Assume the offsets are increasing, and no padding. FIXME: remove this assumption
         _CIPMSPPacketList("packets", [], CIP)
     ]
 
@@ -568,6 +567,7 @@ scapy_all.bind_layers(CIP, CIP_ReqReadOtherTag, direction=0, service=0x4f)
 scapy_all.bind_layers(CIP, CIP_ReqForwardOpen, direction=0, service=0x54)
 scapy_all.bind_layers(CIP, CIP_RespForwardOpen, direction=1, service=0x54)
 
+# TODO: this is much imprecise :(
 # Need class in path to be 6 (Connection Manager)
 scapy_all.bind_layers(CIP, CIP_ReqConnectionManager, direction=0, service=0x52)
 
@@ -575,9 +575,12 @@ if __name__ == '__main__':
     # Test building/dissecting packets
     # Build a CIP Get Attribute All request
     path = CIP_Path.make(class_id=1, instance_id=1)
-    assert str(path) == b"\x03\x20\x01\x25\x00\x01\x00"
+    print(path)
+    #assert str(path) == b"\x03\x20\x01\x25\x00\x01\x00"
+    assert path == b"\x03\x20\x01\x25\x00\x01\x00"
     pkt = CIP(service=1, path=path)
     pkt = CIP(str(pkt))
+    #pkt = CIP(bytes(pkt))
     pkt.show()
     assert pkt[CIP].direction == 0
     assert pkt[CIP].path[0] == path
@@ -585,6 +588,7 @@ if __name__ == '__main__':
     # Build a CIP Get_Attribute_List response
     pkt = CIP() / CIP_RespAttributesList(count=1, content="test")
     pkt = CIP(str(pkt))
+    #pkt = CIP(bytes(pkt))
     pkt.show()
     assert pkt[CIP].direction == 1
     assert pkt[CIP].service == 0x03
@@ -603,6 +607,7 @@ if __name__ == '__main__':
         CIP(service=0x0e, path=CIP_Path.make(class_id=0x8e, instance_id=1, attribute_id=0x1b)),
     ])
     pkt = CIP(str(pkt))
+    #pkt = CIP(bytes(pkt))
     pkt.show()
     assert pkt[CIP].direction == 0
     assert pkt[CIP].service == 0x0a

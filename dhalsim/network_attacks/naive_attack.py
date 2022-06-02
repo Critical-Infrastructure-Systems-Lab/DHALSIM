@@ -1,6 +1,5 @@
 import argparse
 import os
-import time
 from pathlib import Path
 
 from dhalsim.network_attacks.utilities import launch_arp_poison, restore_arp
@@ -81,7 +80,7 @@ class PacketAttack(SyncedAttack):
                           f"{self.intermediate_attack['gateway_ip']}")
 
         queue_number = 1
-        nfqueue_path = Path(__file__).parent.absolute() / "mitm_netfilter_queue_subprocess.py"
+        nfqueue_path = Path(__file__).parent.absolute() / "naive_netfilter_queue.py"
         cmd = ["python3", str(nfqueue_path), str(self.intermediate_yaml_path), str(self.yaml_index), str(queue_number)]
 
         self.nfqueue_process = subprocess.Popen(cmd, shell=False, stderr=sys.stderr, stdout=sys.stdout)

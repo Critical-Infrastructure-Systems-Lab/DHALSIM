@@ -181,6 +181,31 @@ class SchemaParser:
                     str,
                     string_pattern
                 ),
+                'tag': And(
+                    str,
+                    string_pattern,
+                ),
+                Or('value', 'offset', only_one=True,
+                   error="'tags' should have either a 'value' or 'offset' attribute."): Or(float,
+                                                                                           And(int, Use(float))),
+            },
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
+                    'server_mitm',
+                ),
+                'name': And(
+                    str,
+                    string_pattern,
+                    Schema(lambda name: 1 <= len(name) <= 20,
+                           error="Length of name must be between 1 and 20, '{}' has invalid length")
+                ),
+                'trigger': trigger,
+                'target': And(
+                    str,
+                    string_pattern
+                ),
                 'tags': [{
                     'tag': And(
                         str,
@@ -203,33 +228,19 @@ class SchemaParser:
                            error="Length of name must be between 1 and 20, '{}' has invalid length")
                 ),
                 'trigger': trigger,
+                'target': And(
+                    str,
+                    string_pattern
+                ),
                 'tag': And(
                     str,
                     string_pattern,
                 ),
-                Or('value', 'offset', only_one=True,
-                   error="'tags' should have either a 'value' or 'offset' attribute."): Or(float, And(int, Use(float))),
-                'target': And(
-                    str,
-                    string_pattern
-                )
-            },
-            {
-                'type': And(
-                    str,
-                    Use(str.lower),
-                    'simple_stale',
+                'value': And(
+                    Or(float, And(int, Use(float)))
                 ),
-                'name': And(
-                    str,
-                    string_pattern,
-                    Schema(lambda name: 1 <= len(name) <= 20,
-                           error="Length of name must be between 1 and 20, '{}' has invalid length")
-                ),
-                'trigger': trigger,
-                'target': And(
-                    str,
-                    string_pattern
+                'concealment_value': And(
+                    Or(float, And(int, Use(float)))
                 )
             },
             {
@@ -641,7 +652,7 @@ class ConfigParser:
                 if not target_plc:
                     raise NoSuchPlc("PLC {plc} does not exists".format(plc=target))
 
-                if network_attack['type'] == 'mitm':
+                if network_attack['type'] == 'server_mitm':
                     # Check existence of tags on target PLC
                     tags = []
                     for tag in network_attack['tags']:
