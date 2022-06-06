@@ -4,7 +4,7 @@ network_attacks:
   tag: T3
   target: PLC4
   value: 42.0
-  concealment_value: 84
+  concealment_data: concealment_test.csv
   trigger:
     start: 5
     end: 15
