@@ -181,6 +181,31 @@ class SchemaParser:
                     str,
                     string_pattern
                 ),
+                'tag': And(
+                    str,
+                    string_pattern,
+                ),
+                Or('value', 'offset', only_one=True,
+                   error="'tags' should have either a 'value' or 'offset' attribute."): Or(float,
+                                                                                           And(int, Use(float))),
+            },
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
+                    'server_mitm',
+                ),
+                'name': And(
+                    str,
+                    string_pattern,
+                    Schema(lambda name: 1 <= len(name) <= 20,
+                           error="Length of name must be between 1 and 20, '{}' has invalid length")
+                ),
+                'trigger': trigger,
+                'target': And(
+                    str,
+                    string_pattern
+                ),
                 'tags': [{
                     'tag': And(
                         str,
@@ -203,34 +228,25 @@ class SchemaParser:
                            error="Length of name must be between 1 and 20, '{}' has invalid length")
                 ),
                 'trigger': trigger,
+                'target': And(
+                    str,
+                    string_pattern
+                ),
                 'tag': And(
                     str,
                     string_pattern,
                 ),
-                Or('value', 'offset', only_one=True,
-                   error="'tags' should have either a 'value' or 'offset' attribute."): Or(float, And(int, Use(float))),
-                'target': And(
-                    str,
-                    string_pattern
-                )
-            },
-            {
-                'type': And(
-                    str,
-                    Use(str.lower),
-                    'simple_stale',
+                'value': And(
+                    Or(float, And(int, Use(float)))
                 ),
-                'name': And(
+                'concealment_data': And(
                     str,
-                    string_pattern,
-                    Schema(lambda name: 1 <= len(name) <= 20,
-                           error="Length of name must be between 1 and 20, '{}' has invalid length")
+                    Use(Path),
+                    Use(lambda p: p.absolute().parent / p),
+                    Schema(lambda l: Path.is_file, error="'inp_file' could not be found."),
+                    Schema(lambda f: f.suffix == '.csv',
+                           error="Suffix of 'inp_file' should be .inp.")
                 ),
-                'trigger': trigger,
-                'target': And(
-                    str,
-                    string_pattern
-                )
             },
             {
                 'type': And(
@@ -619,7 +635,7 @@ class ConfigParser:
 
     def generate_network_attacks(self):
         """
-        This function will add device attacks to the appropriate PLCs in the intermediate yaml
+        This function will add network attacks to the appropriate PLCs in the intermediate yaml
 
         :param network_attacks: The YAML data of the network attacks
         """
@@ -641,7 +657,7 @@ class ConfigParser:
                 if not target_plc:
                     raise NoSuchPlc("PLC {plc} does not exists".format(plc=target))
 
-                if network_attack['type'] == 'mitm':
+                if network_attack['type'] == 'server_mitm':
                     # Check existence of tags on target PLC
                     tags = []
                     for tag in network_attack['tags']:
@@ -649,6 +665,9 @@ class ConfigParser:
                     if not set(tags).issubset(set(target_plc['actuators'] + target_plc['sensors'])):
                         raise NoSuchTag(
                             f"PLC {target_plc['name']} does not have all the tags specified.")
+
+                if network_attack['type'] == 'concealment_mitm':
+                    network_attack['concealment_data'] = str(network_attack['concealment_data'])
 
             return network_attacks
         return []
@@ -754,6 +773,7 @@ class ConfigParser:
         # Parse the device attacks from the config file
         yaml_data = self.generate_device_attacks(yaml_data)
         yaml_data["network_attacks"] = self.generate_network_attacks()
+
 
         # Parse network events from the config file
         yaml_data["network_events"] = self.generate_network_events()

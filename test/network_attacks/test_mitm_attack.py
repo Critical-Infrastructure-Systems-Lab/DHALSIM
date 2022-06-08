@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from dhalsim.network_attacks.mitm_attack import SyncedAttack, MitmAttack
+from dhalsim.network_attacks.cppo_server_mitm_attack import SyncedAttack, MitmAttack
 
 
 @pytest.fixture

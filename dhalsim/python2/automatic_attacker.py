@@ -71,15 +71,14 @@ class AttackerControl(NodeControl):
         generic_plc_path = None
         if self.this_attacker_data['type'] == 'mitm':
             generic_plc_path = Path(__file__).parent.parent.absolute() / "network_attacks" / "mitm_attack.py"
+        elif self.this_attacker_data['type'] == 'server_mitm':
+            generic_plc_path = Path(__file__).parent.parent.absolute() / "network_attacks" / "cppo_server_mitm_attack.py"
         elif self.this_attacker_data['type'] == 'naive_mitm':
             generic_plc_path = Path(__file__).parent.parent.absolute() / "network_attacks" / "naive_attack.py"
-        elif self.this_attacker_data['type'] == 'simple_stale':
-            generic_plc_path = Path(__file__).parent.parent.absolute() / "network_attacks" / "simple_stale_attack.py"
         elif self.this_attacker_data['type'] == 'simple_dos':
             generic_plc_path = Path(__file__).parent.parent.absolute() / "network_attacks" / "simple_dos_attack.py"
         elif self.this_attacker_data['type'] == 'concealment_mitm':
-            #generic_plc_path = Path(__file__).parent.parent.absolute() / "network_attacks" / "concealment_mitm.py"
-            raise NoSuchAttack("Attack {attack} does not exists.".format(attack=self.this_attacker_data['type']))
+            generic_plc_path = Path(__file__).parent.parent.absolute() / "network_attacks" / "concealment_mitm.py"
         else:
             raise NoSuchAttack("Attack {attack} does not exists.".format(attack=self.this_attacker_data['type']))
 

@@ -21,8 +21,13 @@
 # THE SOFTWARE.
 """Ethernet/IP over TCP scapy dissector"""
 import struct
+
 from scapy import all as scapy_all
-from dhalsim.network_attacks.enip_cip_parser.utils import *
+from scapy.layers.inet import IP, TCP, Ether
+
+#from utils import LEShortLenField, hexdump, XBitEnumField
+from dhalsim.network_attacks.enip_cip_parser.utils import LEShortLenField, hexdump, XBitEnumField
+
 
 
 class ENIP_ConnectionAddress(scapy_all.Packet):
@@ -113,8 +118,8 @@ class ENIP_TCP(scapy_all.Packet):
         return p + pay
 
 
-scapy_all.bind_layers(scapy_all.TCP, ENIP_TCP, dport=44818)
-scapy_all.bind_layers(scapy_all.TCP, ENIP_TCP, sport=44818)
+scapy_all.bind_layers(TCP, ENIP_TCP, dport=44818)
+scapy_all.bind_layers(TCP, ENIP_TCP, sport=44818)
 
 scapy_all.bind_layers(ENIP_TCP, ENIP_RegisterSession, command_id=0x0065)
 scapy_all.bind_layers(ENIP_TCP, ENIP_SendRRData, command_id=0x006f)
@@ -125,9 +130,9 @@ scapy_all.bind_layers(ENIP_SendUnitData_Item, ENIP_ConnectionPacket, type_id=0x0
 if __name__ == '__main__':
     # Test building/dissecting packets
     # Build a raw packet over ENIP
-    pkt = scapy_all.Ether(src='01:23:45:67:89:ab', dst='ba:98:76:54:32:10')
-    pkt /= scapy_all.IP(src='192.168.1.1', dst='192.168.1.42')
-    pkt /= scapy_all.TCP(sport=10000, dport=44818)
+    pkt = Ether(src='01:23:45:67:89:ab', dst='ba:98:76:54:32:10')
+    pkt /= IP(src='192.168.1.1', dst='192.168.1.42')
+    pkt /= TCP(sport=10000, dport=44818)
     pkt /= ENIP_TCP()
     pkt /= ENIP_SendUnitData(items=[
         ENIP_SendUnitData_Item() / ENIP_ConnectionAddress(connection_id=1337),
@@ -135,8 +140,9 @@ if __name__ == '__main__':
     ])
 
     # Build!
-    data = str(pkt)
-    pkt = scapy_all.Ether(data)
+    #data = str(pkt)
+    data = bytes(pkt)
+    pkt = Ether(data)
     pkt.show()
 
     # Test the value of some fields
