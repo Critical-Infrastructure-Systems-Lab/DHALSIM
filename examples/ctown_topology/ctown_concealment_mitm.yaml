@@ -3,9 +3,9 @@ network_attacks:
   type: concealment_mitm
   tag: T3
   target: PLC4
-  value: 42.0
+  value: 8.0
   concealment_data: concealment_test.csv
   trigger:
-    start: 5
-    end: 15
+    start: 648
+    end: 936
     type: time

