@@ -541,7 +541,13 @@ class PhysicalPlant:
         return flag
 
     def get_actuator_status(self, actuator):
-        return int(self.get_from_db(actuator))
+        if isinstance(self.get_from_db(actuator), int):
+            # Actuator is either OPEN/CLOSED
+            return int(self.get_from_db(actuator))
+        else:
+            # Pump speed setting
+            self.logger.debug('Pump setting value found: ' + str(self.get_from_db(actuator)))
+            return float(self.get_from_db(actuator))
 
     def update_actuators(self):
         for actuator in self.actuator_list:

@@ -121,21 +121,29 @@ class InputParser:
                 # This is an AT NODE control
                 dependant = str(child.getChild(5))
                 value = float(str(child.getChild(7)))
+                action_aux = action
+                if isinstance(action, str):
+                    action_aux: action.lower()
+
                 controls.append({
                     "type": str(child.getChild(6)).lower(),
                     "dependant": dependant,
                     "value": value,
                     "actuator": actuator,
-                    "action": action.lower()
+                    "action": action_aux
                 })
             if child.getChildCount() == 6:
                 # This is a TIME control
                 value = float(str(child.getChild(5)))
+                action_aux: action
+                if isinstance(action, str):
+                    action_aux: action.lower()
+
                 controls.append({
                     "type": "time",
                     "value": int(value),
                     "actuator": actuator,
-                    "action": action.lower()
+                    "action": action_aux,
                 })
 
         for plc in self.data['plcs']:
