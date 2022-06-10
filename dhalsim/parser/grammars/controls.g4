@@ -5,9 +5,10 @@ grammar controls;
 SPACES              :   ' ' -> skip;
 
 /** States */
-STATE               :   (OPEN | CLOSED) ;
+STATE               :   (OPEN | CLOSED | VALUE) ;
 OPEN                :   'OPEN';
 CLOSED              :   'CLOSED';
+//PUMP_SETTING        :   [0-9]*'.'?[0-9]+;           // Pump settings can only be positive
 
 /** Conditions */
 CONDITION           :   (BELOW | ABOVE) ;

@@ -111,6 +111,7 @@ class controlsLexer(Lexer):
     COMMENT = 19
     NEWLINES = 20
     WS = 21
+    #PUMP_SETTING = 22
 
     channelNames = [ u"DEFAULT_TOKEN_CHANNEL", u"HIDDEN" ]
 
