@@ -2,6 +2,9 @@ from mininet.topo import Topo
 from mininet.node import Node
 from mininet.net import Mininet
 import yaml
+from pathlib import Path
+import sys
+import signal
 
 
 class Error(Exception):
@@ -26,6 +29,31 @@ class LinuxRouter(Node):
 
     def terminate(self):
         self.cmd('sysctl net.ipv4.ip_forward=0')
+
+        for router_process in self.router_processes:
+            if router_process.poll() is None:
+                try:
+                    self.end_process(router_process)
+                except Exception as msg:
+                    self.logger.error("Exception shutting down router: " + str(msg))
+
+
+    @staticmethod
+    def end_process(process):
+        """
+        End a process.
+
+        :param process: the process to end
+        """
+        process.terminate()
+
+        if process.poll() is None:
+            process.send_signal(signal.SIGINT)
+            process.wait()
+        if process.poll() is None:
+            process.terminate()
+        if process.poll() is None:
+            process.kill()
 
 
 class ComplexTopo(Topo):
@@ -63,6 +91,8 @@ class ComplexTopo(Topo):
 
         # Initialize mininet topology
         Topo.__init__(self)
+
+        self.router_processes = []
 
     @staticmethod
     def check_amount_of_nodes(data):
@@ -280,13 +310,6 @@ class ComplexTopo(Topo):
         # Add provider router as default gateway to the plcs gateway router
         gateway.cmd('route add default gw {ip}'.format(ip=node_data['provider_ip']))
 
-        # TODO what do these do? they are not necessary yet
-        # gateway.cmd(
-        #     'iptables -A FORWARD -o {name}-eth1 -i {name}-eth0 -s {ip} -m conntrack --ctstate NEW -j ACCEPT'.format(
-        #         name=node_data['gateway_name'], ip=node_data['local_ip']))
-        # gateway.cmd(
-        #     'iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT')
-
         # Masquerade the from ip when forwarding a request from a plc to the provider
         gateway.cmd('iptables -t nat -F POSTROUTING')
         gateway.cmd('iptables -t nat -A POSTROUTING -o {name}-eth0  -j MASQUERADE'.format(
@@ -298,3 +321,7 @@ class ComplexTopo(Topo):
                 ip=node_data['local_ip']))
         gateway.cmd('iptables -A FORWARD -p tcp -d {ip} --dport {port} -j ACCEPT'.format(
             ip=node_data['local_ip'], port=self.cpppo_port))
+
+        automatic_router_path = Path(__file__).parent.absolute() / "automatic_router.py"
+        cmd = ["python2", str(automatic_router_path), str(self.intermediate_yaml), node_data['gateway_name']]
+        self.router_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
