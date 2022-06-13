@@ -1,0 +1,13 @@
+network_attacks:
+- name: plc3attack
+  type: concealment_mitm
+  tag: T41
+  target: PLC2
+  value: 8.0
+  concealment_data:
+    type: value
+    value: 42.0
+  trigger:
+    start: 5
+    end: 10
+    type: time

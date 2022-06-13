@@ -67,6 +67,40 @@ class SchemaParser:
                           error="Error in event name: '{}', "
                                 "Can only have a-z, A-Z, 0-9, and symbols: _ < > + - . (no whitespaces)")
 
+    concealment_path = Schema(
+        str,
+        Use(Path),
+        Use(lambda p: p.absolute().parent / p),
+        Schema(lambda l: Path.is_file, error="'inp_file' could not be found."),
+        Schema(lambda f: f.suffix == '.csv',
+               error="Suffix of 'inp_file' should be .inp.")
+    )
+
+    concealment_data = Schema(
+        Or(
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
+                    'path'
+                ),
+
+                'path': concealment_path
+            },
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
+                    'value'
+                ),
+
+                'value': And(
+                    Or(float, And(int, Use(float))),
+                )
+            }
+        )
+    )
+
     trigger = Schema(
         Or(
             {
@@ -239,14 +273,7 @@ class SchemaParser:
                 'value': And(
                     Or(float, And(int, Use(float)))
                 ),
-                'concealment_data': And(
-                    str,
-                    Use(Path),
-                    Use(lambda p: p.absolute().parent / p),
-                    Schema(lambda l: Path.is_file, error="'inp_file' could not be found."),
-                    Schema(lambda f: f.suffix == '.csv',
-                           error="Suffix of 'inp_file' should be .inp.")
-                ),
+                'concealment_data': concealment_data,
             },
             {
                 'type': And(
