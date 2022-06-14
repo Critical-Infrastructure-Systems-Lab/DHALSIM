@@ -84,7 +84,6 @@ class SchemaParser:
                     Use(str.lower),
                     'path'
                 ),
-
                 'path': concealment_path
             },
             {
@@ -93,8 +92,7 @@ class SchemaParser:
                     Use(str.lower),
                     'value'
                 ),
-
-                'value': And(
+                'concealment_value': And(
                     Or(float, And(int, Use(float))),
                 )
             },
@@ -143,9 +141,8 @@ class SchemaParser:
                     int,
                     Schema(lambda i: i >= 0, error="'replay_end' must be positive."),
                 ),
-            }
-
-    )
+            },
+        )
     )
 
     trigger = Schema(
@@ -320,7 +317,7 @@ class SchemaParser:
                 'value': And(
                     Or(float, And(int, Use(float)))
                 ),
-                'concealment_data': concealment_data,
+                'concealment_data': concealment_data
             },
             {
                 'type': And(
@@ -739,9 +736,6 @@ class ConfigParser:
                     if not set(tags).issubset(set(target_plc['actuators'] + target_plc['sensors'])):
                         raise NoSuchTag(
                             f"PLC {target_plc['name']} does not have all the tags specified.")
-
-                if network_attack['type'] == 'concealment_mitm':
-                    network_attack['concealment_data'] = str(network_attack['concealment_data'])
 
             return network_attacks
         return []

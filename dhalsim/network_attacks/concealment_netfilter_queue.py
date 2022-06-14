@@ -20,8 +20,14 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
         self.attacked_tag = self.intermediate_attack['tag']
         self.scada_session_ids = []
         self.attack_session_ids = []
+        self.concealment_type = None
 
-        self.concealment_data_pd = pd.read_csv(self.intermediate_attack['concealment_data'])
+        if 'concealment_data' in self.intermediate_attack.keys():
+            if self.intermediate_attack['concealment_data']['type'] == 'path':
+                self.concealment_type = 'path'
+                self.concealment_data_pd = pd.read_csv(self.intermediate_attack['concealment_data'])
+            elif self.intermediate_attack['concealment_data']['type'] == 'value':
+                self.concealment_type = 'value'
 
     def capture(self, packet):
         """
@@ -68,14 +74,14 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
                     elif this_session in self.scada_session_ids:
                         self.logger.debug('Concealing to SCADA: ' + str(this_session))
 
-                        if self.intermediate_attack['concealment_data']['type'] == 'path':
+                        if self.concealment_type == 'path':
 
                             exp = (self.concealment_data_pd['iteration'] == self.get_master_clock())
                             concealment_value = float(self.concealment_data_pd.loc[exp][self.attacked_tag].values[-1])
                             self.logger.debug('Concealing with value: ' + str(concealment_value))
                             p[Raw].load = translate_float_to_payload(concealment_value, p[Raw].load)
-                        elif self.intermediate_attack['concealment_data']['type'] == 'value':
-                            concealment_value = float(self.intermediate_attack['concealment_data']['value'])
+                        elif self.concealment_type == 'value':
+                            concealment_value = float(self.intermediate_attack['concealment_data']['concealment_value'])
                             p[Raw].load = translate_float_to_payload(concealment_value, p[Raw].load)
 
                         del p[IP].chksum
