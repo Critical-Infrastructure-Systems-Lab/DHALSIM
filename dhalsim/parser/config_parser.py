@@ -67,6 +67,87 @@ class SchemaParser:
                           error="Error in event name: '{}', "
                                 "Can only have a-z, A-Z, 0-9, and symbols: _ < > + - . (no whitespaces)")
 
+    concealment_path = Schema(
+        str,
+        Use(Path),
+        Use(lambda p: p.absolute().parent / p),
+        Schema(lambda l: Path.is_file, error="'inp_file' could not be found."),
+        Schema(lambda f: f.suffix == '.csv',
+               error="Suffix of 'inp_file' should be .inp.")
+    )
+
+    concealment_data = Schema(
+        Or(
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
+                    'path'
+                ),
+
+                'path': concealment_path
+            },
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
+                    'value'
+                ),
+
+                'value': And(
+                    Or(float, And(int, Use(float))),
+                )
+            },
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
+                    'payload_replay'
+                ),
+                'capture_start': And(
+                    int,
+                    Schema(lambda i: i >= 0, error="'capture_start' must be positive."),
+                ),
+                'capture_end': And(
+                    int,
+                    Schema(lambda i: i >= 0, error="'capture_end' must be positive."),
+                ),
+                'replay_start': And(
+                    int,
+                    Schema(lambda i: i >= 0, error="'replay_start' must be positive."),
+                ),
+                'replay_end': And(
+                    int,
+                    Schema(lambda i: i >= 0, error="'replay_end' must be positive."),
+                ),
+            },
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
+                    'network_replay'
+                ),
+                'capture_start': And(
+                    int,
+                    Schema(lambda i: i >= 0, error="'capture_start' must be positive."),
+                ),
+                'capture_end': And(
+                    int,
+                    Schema(lambda i: i >= 0, error="'capture_end' must be positive."),
+                ),
+                'replay_start': And(
+                    int,
+                    Schema(lambda i: i >= 0, error="'replay_start' must be positive."),
+                ),
+                'replay_end': And(
+                    int,
+                    Schema(lambda i: i >= 0, error="'replay_end' must be positive."),
+                ),
+            }
+
+    )
+    )
+
     trigger = Schema(
         Or(
             {
@@ -239,9 +320,7 @@ class SchemaParser:
                 'value': And(
                     Or(float, And(int, Use(float)))
                 ),
-                'concealment_value': And(
-                    Or(float, And(int, Use(float)))
-                )
+                'concealment_data': concealment_data,
             },
             {
                 'type': And(
@@ -630,7 +709,7 @@ class ConfigParser:
 
     def generate_network_attacks(self):
         """
-        This function will add device attacks to the appropriate PLCs in the intermediate yaml
+        This function will add network attacks to the appropriate PLCs in the intermediate yaml
 
         :param network_attacks: The YAML data of the network attacks
         """
@@ -660,6 +739,9 @@ class ConfigParser:
                     if not set(tags).issubset(set(target_plc['actuators'] + target_plc['sensors'])):
                         raise NoSuchTag(
                             f"PLC {target_plc['name']} does not have all the tags specified.")
+
+                if network_attack['type'] == 'concealment_mitm':
+                    network_attack['concealment_data'] = str(network_attack['concealment_data'])
 
             return network_attacks
         return []
@@ -765,6 +847,7 @@ class ConfigParser:
         # Parse the device attacks from the config file
         yaml_data = self.generate_device_attacks(yaml_data)
         yaml_data["network_attacks"] = self.generate_network_attacks()
+
 
         # Parse network events from the config file
         yaml_data["network_events"] = self.generate_network_events()

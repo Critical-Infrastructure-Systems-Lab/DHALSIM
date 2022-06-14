@@ -2,6 +2,9 @@ from mininet.topo import Topo
 from mininet.node import Node
 from mininet.net import Mininet
 import yaml
+from pathlib import Path
+import sys
+import signal
 
 
 class Error(Exception):
@@ -24,8 +27,26 @@ class LinuxRouter(Node):
         # Enable forwarding on the router
         self.cmd('sysctl net.ipv4.ip_forward=1')
 
+
     def terminate(self):
         self.cmd('sysctl net.ipv4.ip_forward=0')
+
+    @staticmethod
+    def end_process(process):
+        """
+        End a process.
+
+        :param process: the process to end
+        """
+        process.terminate()
+
+        if process.poll() is None:
+            process.send_signal(signal.SIGINT)
+            process.wait()
+        if process.poll() is None:
+            process.terminate()
+        if process.poll() is None:
+            process.kill()
 
 
 class ComplexTopo(Topo):
@@ -63,6 +84,8 @@ class ComplexTopo(Topo):
 
         # Initialize mininet topology
         Topo.__init__(self)
+
+        self.router_processes = []
 
     @staticmethod
     def check_amount_of_nodes(data):
@@ -279,13 +302,6 @@ class ComplexTopo(Topo):
         gateway.cmd('sysctl net.ipv4.ip_forward=1')
         # Add provider router as default gateway to the plcs gateway router
         gateway.cmd('route add default gw {ip}'.format(ip=node_data['provider_ip']))
-
-        # TODO what do these do? they are not necessary yet
-        # gateway.cmd(
-        #     'iptables -A FORWARD -o {name}-eth1 -i {name}-eth0 -s {ip} -m conntrack --ctstate NEW -j ACCEPT'.format(
-        #         name=node_data['gateway_name'], ip=node_data['local_ip']))
-        # gateway.cmd(
-        #     'iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT')
 
         # Masquerade the from ip when forwarding a request from a plc to the provider
         gateway.cmd('iptables -t nat -F POSTROUTING')
