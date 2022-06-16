@@ -37,6 +37,6 @@ COMMENT             :   ';'.*?NEWLINES -> skip;
 NEWLINES            :   [\n]+ -> skip ;
 WS                  :   [ \t\r\n]+ -> skip ;
 
-nodeControl         :   'LINK' ANY_SPACE ID ANY_SPACE STATE ANY_SPACE 'IF' ANY_SPACE 'NODE' ANY_SPACE ID ANY_SPACE CONDITION ANY_SPACE VALUE ANY_SPACE;
-timeControl         :   'LINK' ANY_SPACE ID ANY_SPACE STATE ANY_SPACE'AT' ANY_SPACE 'TIME' ANY_SPACE VALUE ANY_SPACE;
+nodeControl         :   'LINK' ANY_SPACE ID ANY_SPACE STATE ANY_SPACE 'IF' ANY_SPACE 'NODE' ANY_SPACE ID ANY_SPACE CONDITION ANY_SPACE VALUE;
+timeControl         :   'LINK' ANY_SPACE ID ANY_SPACE STATE ANY_SPACE 'AT' ANY_SPACE 'TIME' ANY_SPACE VALUE;
 controls            :   (nodeControl | timeControl)*;

@@ -121,16 +121,16 @@ Anytown master file for rl-wds
 
 [CONTROLS]
 ;LINK   P78  OPEN    IF NODE T41                BELOW  5.0
-LINK    P78  0.8    IF NODE T41                BELOW  5.0
+LINK  P78  0.8     IF NODE T41                BELOW  5.0
 
 ;LINK   P78  CLOSED  IF NODE T41                ABOVE  8.0
-LINK    P78  0.5     IF NODE T41                ABOVE  8.0
+LINK  P78  0.5     IF NODE T41                ABOVE  8.0
 
-LINK    P78  0.8    IF NODE T41                BELOW  5.0
-;LINK    P79  OPEN    IF NODE T42                BELOW  5.0
+LINK  P78  0.8     IF NODE T41                BELOW  5.0
+;LINK   P79   OPEN    IF NODE T42                BELOW  5.0
 
 ;LINK   P79  CLOSED  IF NODE T42                ABOVE  8.0
-LINK    P79  0.5     IF NODE T42                ABOVE  8.0
+LINK  P79  0.5     IF NODE T42                ABOVE  8.0
 
 
 [RULES]

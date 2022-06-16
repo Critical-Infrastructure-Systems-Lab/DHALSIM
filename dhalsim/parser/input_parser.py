@@ -125,7 +125,7 @@ class InputParser:
             else:
                 action_aux = float(action)
 
-            if child.getChildCount() == 15:
+            if str(child.getChild(8)) == 'NODE':
                 # This is an AT NODE control
                 dependant = str(child.getChild(10))
                 value = float(str(child.getChild(14)))
@@ -140,7 +140,7 @@ class InputParser:
 
                 self.logger.debug('control:\n' + str(controls[-1]))
 
-            if child.getChildCount() == 11:
+            if str(child.getChild(8)) == 'TIME':
                 # This is a TIME control
                 value = float(str(child.getChild(10)))
                 controls.append({
