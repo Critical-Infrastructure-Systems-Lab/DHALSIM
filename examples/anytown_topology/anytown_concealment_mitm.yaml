@@ -1,5 +1,5 @@
 network_attacks:
-- name: plc3attack
+- name: plc2attack
   type: concealment_mitm
   tag: T41
   target: PLC2
@@ -10,6 +10,6 @@ network_attacks:
     #type: path
     #path: concealment_test.csv
   trigger:
-    start: 5
-    end: 10
+    start: 10
+    end: 100
     type: time

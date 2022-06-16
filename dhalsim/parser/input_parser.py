@@ -112,7 +112,7 @@ class InputParser:
         """
         input_file = FileStream(self.inp_file_path)
         tree = controlsParser(CommonTokenStream(controlsLexer(input_file))).controls()
-        self.logger.debug('Controls tree')
+        #self.logger.debug('Controls tree')
         controls = []
         for i in range(0, tree.getChildCount()):
             child = tree.getChild(i)
@@ -138,7 +138,7 @@ class InputParser:
                     "action": action_aux
                 })
 
-                self.logger.debug('control:\n' + str(controls[-1]))
+                #self.logger.debug('control:\n' + str(controls[-1]))
 
             if str(child.getChild(8)) == 'TIME':
                 # This is a TIME control
