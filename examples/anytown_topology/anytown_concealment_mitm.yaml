@@ -5,10 +5,10 @@ network_attacks:
   target: PLC2
   value: 8.0
   concealment_data:
-    #type: value
-    #concealment_value: 42.0
-    type: path
-    path: concealment_test.csv
+    type: value
+    concealment_value: 42.0
+    #type: path
+    #path: concealment_test.csv
   trigger:
     start: 5
     end: 10

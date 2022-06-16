@@ -8,7 +8,7 @@ from ..epynet import epynetUtils
 from ..epynet.network import WaterDistributionNetwork
 from dhalsim.parser.antlr.controlsLexer import controlsLexer
 from dhalsim.parser.antlr.controlsParser import controlsParser
-
+from dhalsim.py3_logger import get_logger
 
 class Error(Exception):
     """Base class for exceptions in this module."""
@@ -45,6 +45,8 @@ class InputParser:
     def __init__(self, intermediate_yaml):
         """Constructor method"""
         self.data = intermediate_yaml
+
+        self.logger = get_logger(self.data['log_level'])
 
         for plc in self.data['plcs']:
             if 'sensors' not in plc:
@@ -110,35 +112,37 @@ class InputParser:
         """
         input_file = FileStream(self.inp_file_path)
         tree = controlsParser(CommonTokenStream(controlsLexer(input_file))).controls()
-
+        self.logger.debug('Controls tree')
         controls = []
         for i in range(0, tree.getChildCount()):
             child = tree.getChild(i)
             # Get all common control values from the control
-            actuator = str(child.getChild(1))
-            action = str(child.getChild(2))
-            if child.getChildCount() == 8:
+            actuator = str(child.getChild(2))
+            action = str(child.getChild(4))
+
+            if action == 'OPEN' or action == 'CLOSED':
+                action_aux = action.lower()
+            else:
+                action_aux = float(action)
+
+            if child.getChildCount() == 15:
                 # This is an AT NODE control
-                dependant = str(child.getChild(5))
-                value = float(str(child.getChild(7)))
-                action_aux = action
-                if isinstance(action, str):
-                    action_aux: action.lower()
+                dependant = str(child.getChild(10))
+                value = float(str(child.getChild(14)))
 
                 controls.append({
-                    "type": str(child.getChild(6)).lower(),
+                    "type": str(child.getChild(12)).lower(),
                     "dependant": dependant,
                     "value": value,
                     "actuator": actuator,
                     "action": action_aux
                 })
-            if child.getChildCount() == 6:
-                # This is a TIME control
-                value = float(str(child.getChild(5)))
-                action_aux: action
-                if isinstance(action, str):
-                    action_aux: action.lower()
 
+                self.logger.debug('control:\n' + str(controls[-1]))
+
+            if child.getChildCount() == 11:
+                # This is a TIME control
+                value = float(str(child.getChild(10)))
                 controls.append({
                     "type": "time",
                     "value": int(value),

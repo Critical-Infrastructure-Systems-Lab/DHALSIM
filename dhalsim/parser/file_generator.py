@@ -87,9 +87,6 @@ class BatchReadmeGenerator:
     def get_time_information(self) -> str:
         """Gets information w.r.t. time of this batch."""
         ret_str = "\n\n## Information about this batch"
-        #ret_str += "\n\nRan for {x} out of {y} iterations with hydraulic timestep {step}." \
-        #    .format(x=str(self.master_time), y=str(self.intermediate_yaml['iterations']),
-        #            step=str(self.wn.options.time.hydraulic_timestep))
 
         ret_str += "\n\nRan for {x} out of {y} iterations with hydraulic timestep {step}." \
             .format(x=str(self.master_time), y=str(self.intermediate_yaml['iterations']),
@@ -329,11 +326,6 @@ class GeneralReadmeGenerator:
         ret_str = ""
 
         if not self.batch:
-            #ret_str += ("\n\nRan for {x} out of {y} iterations with hydraulic timestep {step}."
-            #            .format(x=str(self.master_time),
-            #                    y=str(self.intermediate_yaml['iterations']),
-            #                    step=str(self.wn.options.time.hydraulic_timestep)))
-
             ret_str += ("\n\nRan for {x} out of {y} iterations with hydraulic timestep {step}."
                         .format(x=str(self.master_time),
                                 y=str(self.intermediate_yaml['iterations']),
