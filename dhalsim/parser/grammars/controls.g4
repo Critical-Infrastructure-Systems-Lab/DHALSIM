@@ -2,13 +2,14 @@
 grammar controls;
 
 /** Skip spaces */
-SPACES              :   ' ' -> skip;
+//SPACES              :   ' ' -> skip;
+ANY_SPACE           :   ' '+;
 
 /** States */
 STATE               :   (OPEN | CLOSED | VALUE) ;
 OPEN                :   'OPEN';
 CLOSED              :   'CLOSED';
-//PUMP_SETTING        :   [0-9]*'.'?[0-9]+;           // Pump settings can only be positive
+
 
 /** Conditions */
 CONDITION           :   (BELOW | ABOVE) ;
@@ -16,7 +17,8 @@ BELOW               :   'BELOW';
 ABOVE               :   'ABOVE';
 
 /** Values */
-VALUE               :   [0-9]*'.'*[0-9]+ ;
+VALUE               : [0-9]*'.'*[0-9]+;               
+
 ID                  :   [a-zA-Z0-9_]+ ;
 CAPITALS            :   [A-Z].*? ;
 
@@ -34,6 +36,6 @@ COMMENT             :   ';'.*?NEWLINES -> skip;
 NEWLINES            :   [\n]+ -> skip ;
 WS                  :   [ \t\r\n]+ -> skip ;
 
-nodeControl         :   'LINK' ID STATE 'IF' 'NODE' ID CONDITION VALUE ;
-timeControl         :   'LINK' ID STATE 'AT' 'TIME' VALUE ;
+nodeControl         :   'LINK' ANY_SPACE ID ANY_SPACE STATE ANY_SPACE 'IF' ANY_SPACE 'NODE' ANY_SPACE ID ANY_SPACE CONDITION ANY_SPACE STATE;
+timeControl         :   'LINK' ANY_SPACE ID ANY_SPACE STATE ANY_SPACE 'AT' ANY_SPACE 'TIME' ANY_SPACE STATE;
 controls            :   (nodeControl | timeControl)*;

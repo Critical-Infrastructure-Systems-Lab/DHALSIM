@@ -1,0 +1,15 @@
+network_attacks:
+- name: plc2attack
+  type: concealment_mitm
+  tag: T41
+  target: PLC2
+  value: 8.0
+  concealment_data:
+    type: value
+    concealment_value: 42.0
+    #type: path
+    #path: concealment_test.csv
+  trigger:
+    start: 10
+    end: 100
+    type: time

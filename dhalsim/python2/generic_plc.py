@@ -327,7 +327,10 @@ class GenericPLC(BasePLC):
         elif isinstance(value, basestring) and value.lower() == "open":
             value = 1
         else:
-            raise InvalidControlValue(value)
+            self.logger.debug('Pump speed:' + str(value))
+            if self.intermediate_yaml['simulator'] == 'wntr':
+                self.logger.error('Pump speed is only supported by epynet and not WNTR simulator')
+                raise InvalidControlValue(value)
 
         if tag in self.intermediate_plc["sensors"] or tag in self.intermediate_plc["actuators"]:
             self.set((tag, 1), value)

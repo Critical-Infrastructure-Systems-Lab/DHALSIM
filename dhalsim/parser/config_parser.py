@@ -67,6 +67,84 @@ class SchemaParser:
                           error="Error in event name: '{}', "
                                 "Can only have a-z, A-Z, 0-9, and symbols: _ < > + - . (no whitespaces)")
 
+    concealment_path = Schema(
+        str,
+        Use(Path),
+        Use(lambda p: p.absolute().parent / p),
+        Schema(lambda l: Path.is_file, error="'inp_file' could not be found."),
+        Schema(lambda f: f.suffix == '.csv',
+               error="Suffix of 'inp_file' should be .inp.")
+    )
+
+    concealment_data = Schema(
+        Or(
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
+                    'path'
+                ),
+                'path': concealment_path
+            },
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
+                    'value'
+                ),
+                'concealment_value': And(
+                    Or(float, And(int, Use(float))),
+                )
+            },
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
+                    'payload_replay'
+                ),
+                'capture_start': And(
+                    int,
+                    Schema(lambda i: i >= 0, error="'capture_start' must be positive."),
+                ),
+                'capture_end': And(
+                    int,
+                    Schema(lambda i: i >= 0, error="'capture_end' must be positive."),
+                ),
+                'replay_start': And(
+                    int,
+                    Schema(lambda i: i >= 0, error="'replay_start' must be positive."),
+                ),
+                'replay_end': And(
+                    int,
+                    Schema(lambda i: i >= 0, error="'replay_end' must be positive."),
+                ),
+            },
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
+                    'network_replay'
+                ),
+                'capture_start': And(
+                    int,
+                    Schema(lambda i: i >= 0, error="'capture_start' must be positive."),
+                ),
+                'capture_end': And(
+                    int,
+                    Schema(lambda i: i >= 0, error="'capture_end' must be positive."),
+                ),
+                'replay_start': And(
+                    int,
+                    Schema(lambda i: i >= 0, error="'replay_start' must be positive."),
+                ),
+                'replay_end': And(
+                    int,
+                    Schema(lambda i: i >= 0, error="'replay_end' must be positive."),
+                ),
+            },
+        )
+    )
+
     trigger = Schema(
         Or(
             {
@@ -239,14 +317,7 @@ class SchemaParser:
                 'value': And(
                     Or(float, And(int, Use(float)))
                 ),
-                'concealment_data': And(
-                    str,
-                    Use(Path),
-                    Use(lambda p: p.absolute().parent / p),
-                    Schema(lambda l: Path.is_file, error="'inp_file' could not be found."),
-                    Schema(lambda f: f.suffix == '.csv',
-                           error="Suffix of 'inp_file' should be .inp.")
-                ),
+                'concealment_data': concealment_data
             },
             {
                 'type': And(
@@ -666,9 +737,6 @@ class ConfigParser:
                         raise NoSuchTag(
                             f"PLC {target_plc['name']} does not have all the tags specified.")
 
-                if network_attack['type'] == 'concealment_mitm':
-                    network_attack['concealment_data'] = str(network_attack['concealment_data'])
-
             return network_attacks
         return []
 
@@ -767,7 +835,7 @@ class ConfigParser:
         yaml_data['log_level'] = self.data['log_level']
 
         yaml_data['start_time'] = datetime.now()
-        # Write values from IMP file into yaml file (controls, tanks/valves/initial values, etc.)
+        # Write values from INP file into yaml file (controls, tanks/valves/initial values, etc.)
         yaml_data = InputParser(yaml_data).write()
 
         # Parse the device attacks from the config file
