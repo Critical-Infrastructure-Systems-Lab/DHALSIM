@@ -324,12 +324,6 @@ class PhysicalPlant:
                 else:
                     self.logger.error("Error. Actuator " + str(pump)  + " not found in EPANET file")
 
-                if pump in self.wn.pumps:
-                    self.values_list.extend([self.wn.pumps[pump].flow, self.wn.pumps[pump].status])
-                elif pump in self.wn.valves:
-                    self.values_list.extend([self.wn.valves[pump].flow, self.wn.valves[pump].status])
-                else:
-                    self.logger.error("Error. Actuator " + str(pump)  + " not found in EPANET file")
         elif self.simulator == 'wntr':
 
             for pump in self.pump_list:
