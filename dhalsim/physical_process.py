@@ -290,7 +290,7 @@ class PhysicalPlant:
                 self.logger.error('Invalid actuator!')
 
         self.actuator_list = dict(zip(actuator_names, actuator_status))
-
+        
     def register_initial_results(self):
         self.values_list = [self.master_time, datetime.now()]
 
@@ -337,6 +337,7 @@ class PhysicalPlant:
             self.extend_valves()
 
         self.extend_attacks()
+
 
     def register_results(self, results=None):
 
@@ -534,7 +535,6 @@ class PhysicalPlant:
         return flag
 
     def get_actuator_status(self, actuator):
-        #self.logger.debug('Pump value: '+ str(self.get_from_db(actuator)))
         if isinstance(self.get_from_db(actuator), int):
             # Actuator is either OPEN/CLOSED
             return int(self.get_from_db(actuator))
