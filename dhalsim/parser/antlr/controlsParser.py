@@ -9,20 +9,19 @@ import sys
 def serializedATN():
     with StringIO() as buf:
         buf.write("\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\32")
-        buf.write(".\4\2\t\2\4\3\t\3\4\4\t\4\3\2\3\2\3\2\3\2\3\2\3\2\3\2")
-        buf.write("\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\3\3\3\3\3\3")
-        buf.write("\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\4\3\4\7\4)\n")
-        buf.write("\4\f\4\16\4,\13\4\3\4\2\2\5\2\4\6\2\2\2,\2\b\3\2\2\2\4")
-        buf.write("\31\3\2\2\2\6*\3\2\2\2\b\t\7\3\2\2\t\n\7\b\2\2\n\13\7")
-        buf.write("\23\2\2\13\f\7\b\2\2\f\r\7\t\2\2\r\16\7\b\2\2\16\17\7")
-        buf.write("\4\2\2\17\20\7\b\2\2\20\21\7\5\2\2\21\22\7\b\2\2\22\23")
-        buf.write("\7\23\2\2\23\24\7\b\2\2\24\25\7\r\2\2\25\26\7\b\2\2\26")
-        buf.write("\27\7\20\2\2\27\30\7\b\2\2\30\3\3\2\2\2\31\32\7\3\2\2")
-        buf.write("\32\33\7\b\2\2\33\34\7\23\2\2\34\35\7\b\2\2\35\36\7\t")
-        buf.write("\2\2\36\37\7\b\2\2\37 \7\6\2\2 !\7\b\2\2!\"\7\7\2\2\"")
-        buf.write("#\7\b\2\2#$\7\20\2\2$%\7\b\2\2%\5\3\2\2\2&)\5\2\2\2\'")
-        buf.write(")\5\4\3\2(&\3\2\2\2(\'\3\2\2\2),\3\2\2\2*(\3\2\2\2*+\3")
-        buf.write("\2\2\2+\7\3\2\2\2,*\3\2\2\2\4(*")
+        buf.write(",\4\2\t\2\4\3\t\3\4\4\t\4\3\2\3\2\3\2\3\2\3\2\3\2\3\2")
+        buf.write("\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\3\3\3\3\3\3\3\3")
+        buf.write("\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\4\3\4\7\4\'\n\4\f\4\16")
+        buf.write("\4*\13\4\3\4\2\2\5\2\4\6\2\2\2*\2\b\3\2\2\2\4\30\3\2\2")
+        buf.write("\2\6(\3\2\2\2\b\t\7\3\2\2\t\n\7\b\2\2\n\13\7\23\2\2\13")
+        buf.write("\f\7\b\2\2\f\r\7\t\2\2\r\16\7\b\2\2\16\17\7\4\2\2\17\20")
+        buf.write("\7\b\2\2\20\21\7\5\2\2\21\22\7\b\2\2\22\23\7\23\2\2\23")
+        buf.write("\24\7\b\2\2\24\25\7\r\2\2\25\26\7\b\2\2\26\27\7\20\2\2")
+        buf.write("\27\3\3\2\2\2\30\31\7\3\2\2\31\32\7\b\2\2\32\33\7\23\2")
+        buf.write("\2\33\34\7\b\2\2\34\35\7\t\2\2\35\36\7\b\2\2\36\37\7\6")
+        buf.write("\2\2\37 \7\b\2\2 !\7\7\2\2!\"\7\b\2\2\"#\7\20\2\2#\5\3")
+        buf.write("\2\2\2$\'\5\2\2\2%\'\5\4\3\2&$\3\2\2\2&%\3\2\2\2\'*\3")
+        buf.write("\2\2\2(&\3\2\2\2()\3\2\2\2)\7\3\2\2\2*(\3\2\2\2\4&(")
         return buf.getvalue()
 
 
@@ -127,6 +126,12 @@ class controlsParser ( Parser ):
             if hasattr( listener, "exitNodeControl" ):
                 listener.exitNodeControl(self)
 
+        def accept(self, visitor:ParseTreeVisitor):
+            if hasattr( visitor, "visitNodeControl" ):
+                return visitor.visitNodeControl(self)
+            else:
+                return visitor.visitChildren(self)
+
 
 
 
@@ -166,8 +171,6 @@ class controlsParser ( Parser ):
             self.match(controlsParser.ANY_SPACE)
             self.state = 20
             self.match(controlsParser.VALUE)
-            self.state = 21
-            self.match(controlsParser.ANY_SPACE)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -209,6 +212,12 @@ class controlsParser ( Parser ):
             if hasattr( listener, "exitTimeControl" ):
                 listener.exitTimeControl(self)
 
+        def accept(self, visitor:ParseTreeVisitor):
+            if hasattr( visitor, "visitTimeControl" ):
+                return visitor.visitTimeControl(self)
+            else:
+                return visitor.visitChildren(self)
+
 
 
 
@@ -218,30 +227,28 @@ class controlsParser ( Parser ):
         self.enterRule(localctx, 2, self.RULE_timeControl)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 23
+            self.state = 22
             self.match(controlsParser.T__0)
+            self.state = 23
+            self.match(controlsParser.ANY_SPACE)
             self.state = 24
-            self.match(controlsParser.ANY_SPACE)
-            self.state = 25
             self.match(controlsParser.ID)
+            self.state = 25
+            self.match(controlsParser.ANY_SPACE)
             self.state = 26
-            self.match(controlsParser.ANY_SPACE)
-            self.state = 27
             self.match(controlsParser.STATE)
+            self.state = 27
+            self.match(controlsParser.ANY_SPACE)
             self.state = 28
-            self.match(controlsParser.ANY_SPACE)
-            self.state = 29
             self.match(controlsParser.T__3)
+            self.state = 29
+            self.match(controlsParser.ANY_SPACE)
             self.state = 30
-            self.match(controlsParser.ANY_SPACE)
-            self.state = 31
             self.match(controlsParser.T__4)
+            self.state = 31
+            self.match(controlsParser.ANY_SPACE)
             self.state = 32
-            self.match(controlsParser.ANY_SPACE)
-            self.state = 33
             self.match(controlsParser.VALUE)
-            self.state = 34
-            self.match(controlsParser.ANY_SPACE)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -282,6 +289,12 @@ class controlsParser ( Parser ):
             if hasattr( listener, "exitControls" ):
                 listener.exitControls(self)
 
+        def accept(self, visitor:ParseTreeVisitor):
+            if hasattr( visitor, "visitControls" ):
+                return visitor.visitControls(self)
+            else:
+                return visitor.visitChildren(self)
+
 
 
 
@@ -292,25 +305,25 @@ class controlsParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 40
+            self.state = 38
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while _la==controlsParser.T__0:
-                self.state = 38
+                self.state = 36
                 self._errHandler.sync(self)
                 la_ = self._interp.adaptivePredict(self._input,0,self._ctx)
                 if la_ == 1:
-                    self.state = 36
+                    self.state = 34
                     self.nodeControl()
                     pass
 
                 elif la_ == 2:
-                    self.state = 37
+                    self.state = 35
                     self.timeControl()
                     pass
 
 
-                self.state = 42
+                self.state = 40
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 

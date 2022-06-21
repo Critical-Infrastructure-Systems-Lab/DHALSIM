@@ -17,9 +17,7 @@ BELOW               :   'BELOW';
 ABOVE               :   'ABOVE';
 
 /** Values */
-VALUE               :   (INT_VALUE | FLOAT_VALUE);
-INT_VALUE           :   [0-9]+ ;
-FLOAT_VALUE         :   [0-9]*'.'[0-9]+ ;
+VALUE               :   [0-9]*'.'*[0-9]+ ;
 ID                  :   [a-zA-Z0-9_]+ ;
 CAPITALS            :   [A-Z].*? ;
 

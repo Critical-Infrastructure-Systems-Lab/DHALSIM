@@ -835,7 +835,7 @@ class ConfigParser:
         yaml_data['log_level'] = self.data['log_level']
 
         yaml_data['start_time'] = datetime.now()
-        # Write values from IMP file into yaml file (controls, tanks/valves/initial values, etc.)
+        # Write values from INP file into yaml file (controls, tanks/valves/initial values, etc.)
         yaml_data = InputParser(yaml_data).write()
 
         # Parse the device attacks from the config file
