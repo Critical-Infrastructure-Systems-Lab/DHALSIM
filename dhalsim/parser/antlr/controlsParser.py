@@ -8,18 +8,18 @@ import sys
 
 def serializedATN():
     with StringIO() as buf:
-        buf.write("\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\32")
+        buf.write("\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\27")
         buf.write(",\4\2\t\2\4\3\t\3\4\4\t\4\3\2\3\2\3\2\3\2\3\2\3\2\3\2")
         buf.write("\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\3\3\3\3\3\3\3\3")
         buf.write("\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\4\3\4\7\4\'\n\4\f\4\16")
         buf.write("\4*\13\4\3\4\2\2\5\2\4\6\2\2\2*\2\b\3\2\2\2\4\30\3\2\2")
-        buf.write("\2\6(\3\2\2\2\b\t\7\3\2\2\t\n\7\b\2\2\n\13\7\23\2\2\13")
+        buf.write("\2\6(\3\2\2\2\b\t\7\3\2\2\t\n\7\b\2\2\n\13\7\20\2\2\13")
         buf.write("\f\7\b\2\2\f\r\7\t\2\2\r\16\7\b\2\2\16\17\7\4\2\2\17\20")
-        buf.write("\7\b\2\2\20\21\7\5\2\2\21\22\7\b\2\2\22\23\7\23\2\2\23")
-        buf.write("\24\7\b\2\2\24\25\7\r\2\2\25\26\7\b\2\2\26\27\7\20\2\2")
-        buf.write("\27\3\3\2\2\2\30\31\7\3\2\2\31\32\7\b\2\2\32\33\7\23\2")
+        buf.write("\7\b\2\2\20\21\7\5\2\2\21\22\7\b\2\2\22\23\7\20\2\2\23")
+        buf.write("\24\7\b\2\2\24\25\7\f\2\2\25\26\7\b\2\2\26\27\7\t\2\2")
+        buf.write("\27\3\3\2\2\2\30\31\7\3\2\2\31\32\7\b\2\2\32\33\7\20\2")
         buf.write("\2\33\34\7\b\2\2\34\35\7\t\2\2\35\36\7\b\2\2\36\37\7\6")
-        buf.write("\2\2\37 \7\b\2\2 !\7\7\2\2!\"\7\b\2\2\"#\7\20\2\2#\5\3")
+        buf.write("\2\2\37 \7\b\2\2 !\7\7\2\2!\"\7\b\2\2\"#\7\t\2\2#\5\3")
         buf.write("\2\2\2$\'\5\2\2\2%\'\5\4\3\2&$\3\2\2\2&%\3\2\2\2\'*\3")
         buf.write("\2\2\2(&\3\2\2\2()\3\2\2\2)\7\3\2\2\2*(\3\2\2\2\4&(")
         return buf.getvalue()
@@ -37,15 +37,14 @@ class controlsParser ( Parser ):
 
     literalNames = [ "<INVALID>", "'LINK'", "'IF'", "'NODE'", "'AT'", "'TIME'", 
                      "<INVALID>", "<INVALID>", "'OPEN'", "'CLOSED'", "<INVALID>", 
-                     "<INVALID>", "'BELOW'", "'ABOVE'", "<INVALID>", "<INVALID>", 
-                     "<INVALID>", "<INVALID>", "<INVALID>", "'[CONTROLS]'" ]
+                     "'BELOW'", "'ABOVE'", "<INVALID>", "<INVALID>", "<INVALID>", 
+                     "'[CONTROLS]'" ]
 
     symbolicNames = [ "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                       "<INVALID>", "<INVALID>", "ANY_SPACE", "STATE", "OPEN", 
-                      "CLOSED", "PUMP_SETTING", "CONDITION", "BELOW", "ABOVE", 
-                      "VALUE", "INT_VALUE", "FLOAT_VALUE", "ID", "CAPITALS", 
-                      "CONTROLS_HEADER", "PRECONTORLS", "POSTCONTROLS", 
-                      "COMMENT", "NEWLINES", "WS" ]
+                      "CLOSED", "CONDITION", "BELOW", "ABOVE", "VALUE", 
+                      "ID", "CAPITALS", "CONTROLS_HEADER", "PRECONTORLS", 
+                      "POSTCONTROLS", "COMMENT", "NEWLINES", "WS" ]
 
     RULE_nodeControl = 0
     RULE_timeControl = 1
@@ -63,21 +62,18 @@ class controlsParser ( Parser ):
     STATE=7
     OPEN=8
     CLOSED=9
-    PUMP_SETTING=10
-    CONDITION=11
-    BELOW=12
-    ABOVE=13
-    VALUE=14
-    INT_VALUE=15
-    FLOAT_VALUE=16
-    ID=17
-    CAPITALS=18
-    CONTROLS_HEADER=19
-    PRECONTORLS=20
-    POSTCONTROLS=21
-    COMMENT=22
-    NEWLINES=23
-    WS=24
+    CONDITION=10
+    BELOW=11
+    ABOVE=12
+    VALUE=13
+    ID=14
+    CAPITALS=15
+    CONTROLS_HEADER=16
+    PRECONTORLS=17
+    POSTCONTROLS=18
+    COMMENT=19
+    NEWLINES=20
+    WS=21
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
@@ -106,14 +102,14 @@ class controlsParser ( Parser ):
             else:
                 return self.getToken(controlsParser.ID, i)
 
-        def STATE(self):
-            return self.getToken(controlsParser.STATE, 0)
+        def STATE(self, i:int=None):
+            if i is None:
+                return self.getTokens(controlsParser.STATE)
+            else:
+                return self.getToken(controlsParser.STATE, i)
 
         def CONDITION(self):
             return self.getToken(controlsParser.CONDITION, 0)
-
-        def VALUE(self):
-            return self.getToken(controlsParser.VALUE, 0)
 
         def getRuleIndex(self):
             return controlsParser.RULE_nodeControl
@@ -170,7 +166,7 @@ class controlsParser ( Parser ):
             self.state = 19
             self.match(controlsParser.ANY_SPACE)
             self.state = 20
-            self.match(controlsParser.VALUE)
+            self.match(controlsParser.STATE)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -195,11 +191,11 @@ class controlsParser ( Parser ):
         def ID(self):
             return self.getToken(controlsParser.ID, 0)
 
-        def STATE(self):
-            return self.getToken(controlsParser.STATE, 0)
-
-        def VALUE(self):
-            return self.getToken(controlsParser.VALUE, 0)
+        def STATE(self, i:int=None):
+            if i is None:
+                return self.getTokens(controlsParser.STATE)
+            else:
+                return self.getToken(controlsParser.STATE, i)
 
         def getRuleIndex(self):
             return controlsParser.RULE_timeControl
@@ -248,7 +244,7 @@ class controlsParser ( Parser ):
             self.state = 31
             self.match(controlsParser.ANY_SPACE)
             self.state = 32
-            self.match(controlsParser.VALUE)
+            self.match(controlsParser.STATE)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)

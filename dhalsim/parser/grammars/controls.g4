@@ -6,10 +6,10 @@ grammar controls;
 ANY_SPACE           :   ' '+;
 
 /** States */
-STATE               :   (OPEN | CLOSED | PUMP_SETTING) ;
+STATE               :   (OPEN | CLOSED | VALUE) ;
 OPEN                :   'OPEN';
 CLOSED              :   'CLOSED';
-PUMP_SETTING        :   [0-9]*'.'[0-9]*;
+//PUMP_SETTING        :   [0-9]*'.'[0-9]*;
 
 /** Conditions */
 CONDITION           :   (BELOW | ABOVE) ;
@@ -17,7 +17,20 @@ BELOW               :   'BELOW';
 ABOVE               :   'ABOVE';
 
 /** Values */
-VALUE               :   [0-9]*'.'*[0-9]+ ;
+
+//  5.0             :   [0-9]+'.'[0-9]+
+//  5               :   [0-9]+
+//  .5              :   '.'[0-9]+
+/*
+VALUE               :   (INT | FLOAT | DEC );
+FLOAT               :   [0-9]+'.'[0-9]+ ;
+INT                 :   [0-9]+ ;
+DEC                 :   '.'[0-9]+ ;
+*/
+
+VALUE               : [0-9]*'.'*[0-9]+;                // 5 valid, but 5.0 not!
+
+//VALUE               :   [0-9]*'.'*[0-9]+ ;
 ID                  :   [a-zA-Z0-9_]+ ;
 CAPITALS            :   [A-Z].*? ;
 
@@ -35,6 +48,6 @@ COMMENT             :   ';'.*?NEWLINES -> skip;
 NEWLINES            :   [\n]+ -> skip ;
 WS                  :   [ \t\r\n]+ -> skip ;
 
-nodeControl         :   'LINK' ANY_SPACE ID ANY_SPACE STATE ANY_SPACE 'IF' ANY_SPACE 'NODE' ANY_SPACE ID ANY_SPACE CONDITION ANY_SPACE VALUE;
-timeControl         :   'LINK' ANY_SPACE ID ANY_SPACE STATE ANY_SPACE 'AT' ANY_SPACE 'TIME' ANY_SPACE VALUE;
+nodeControl         :   'LINK' ANY_SPACE ID ANY_SPACE STATE ANY_SPACE 'IF' ANY_SPACE 'NODE' ANY_SPACE ID ANY_SPACE CONDITION ANY_SPACE STATE;
+timeControl         :   'LINK' ANY_SPACE ID ANY_SPACE STATE ANY_SPACE 'AT' ANY_SPACE 'TIME' ANY_SPACE STATE;
 controls            :   (nodeControl | timeControl)*;

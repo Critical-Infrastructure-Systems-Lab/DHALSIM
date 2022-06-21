@@ -1,6 +1,6 @@
 inp_file: anytown_map.inp
 output_path: output
-iterations: 10
+iterations: 2880
 network_topology_type: complex
 plcs: !include anytown_plcs.yaml
 
