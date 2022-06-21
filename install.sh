@@ -61,7 +61,7 @@ sudo python3 -m pip install testresources
 
 # Mininet from source
 cd ~
-git clone --depth 1 -b 2.3.0 https://github.com/mininet/mininet.git || git -C mininet pull
+git clone --depth 1 -b 2.3.1b1 https://github.com/mininet/mininet.git || git -C mininet pull
 cd mininet
 sudo PYTHON=python2 ./util/install.sh -fnv
 
