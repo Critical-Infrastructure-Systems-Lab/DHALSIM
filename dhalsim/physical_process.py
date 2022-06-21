@@ -290,7 +290,7 @@ class PhysicalPlant:
                 self.logger.error('Invalid actuator!')
 
         self.actuator_list = dict(zip(actuator_names, actuator_status))
-
+        
     def register_initial_results(self):
         self.values_list = [self.master_time, datetime.now()]
 
@@ -323,13 +323,6 @@ class PhysicalPlant:
                     self.values_list.extend([self.wn.valves[pump].flow, self.wn.valves[pump].status])
                 else:
                     self.logger.error("Error. Actuator " + str(pump)  + " not found in EPANET file")
-
-                if pump in self.wn.pumps:
-                    self.values_list.extend([self.wn.pumps[pump].flow, self.wn.pumps[pump].status])
-                elif pump in self.wn.valves:
-                    self.values_list.extend([self.wn.valves[pump].flow, self.wn.valves[pump].status])
-                else:
-                    self.logger.error("Error. Actuator " + str(pump)  + " not found in EPANET file")
         elif self.simulator == 'wntr':
 
             for pump in self.pump_list:
@@ -344,6 +337,7 @@ class PhysicalPlant:
             self.extend_valves()
 
         self.extend_attacks()
+
 
     def register_results(self, results=None):
 
@@ -541,7 +535,13 @@ class PhysicalPlant:
         return flag
 
     def get_actuator_status(self, actuator):
-        return int(self.get_from_db(actuator))
+        if isinstance(self.get_from_db(actuator), int):
+            # Actuator is either OPEN/CLOSED
+            return int(self.get_from_db(actuator))
+        else:
+            # Pump speed setting
+            #self.logger.debug('Pump setting value found: ' + str(float(self.get_from_db(actuator))))
+            return float(self.get_from_db(actuator))
 
     def update_actuators(self):
         for actuator in self.actuator_list:

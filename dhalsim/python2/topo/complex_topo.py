@@ -27,16 +27,9 @@ class LinuxRouter(Node):
         # Enable forwarding on the router
         self.cmd('sysctl net.ipv4.ip_forward=1')
 
+
     def terminate(self):
         self.cmd('sysctl net.ipv4.ip_forward=0')
-
-        for router_process in self.router_processes:
-            if router_process.poll() is None:
-                try:
-                    self.end_process(router_process)
-                except Exception as msg:
-                    self.logger.error("Exception shutting down router: " + str(msg))
-
 
     @staticmethod
     def end_process(process):
@@ -321,7 +314,3 @@ class ComplexTopo(Topo):
                 ip=node_data['local_ip']))
         gateway.cmd('iptables -A FORWARD -p tcp -d {ip} --dport {port} -j ACCEPT'.format(
             ip=node_data['local_ip'], port=self.cpppo_port))
-
-        automatic_router_path = Path(__file__).parent.absolute() / "automatic_router.py"
-        cmd = ["python2", str(automatic_router_path), str(self.intermediate_yaml), node_data['gateway_name']]
-        self.router_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))

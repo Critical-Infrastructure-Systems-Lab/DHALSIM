@@ -23,12 +23,13 @@ class RouterControl(NodeControl):
         self.logger = get_logger(self.data['log_level'])
         self.process_tcp_dump = None
         self.router_name = router_name
-        self.interface_name = router_name + '-eth0'
+        self.interface_name = str(router_name) + '-eth0'
 
     def terminate(self):
         """
         This function stops the tcp dump and the plc process.
         """
+        self.logger.debug("Stopping Router tcpdump process.")
 
         self.process_tcp_dump.send_signal(signal.SIGINT)
         self.process_tcp_dump.wait()
@@ -37,30 +38,28 @@ class RouterControl(NodeControl):
         if self.process_tcp_dump.poll() is None:
             self.process_tcp_dump.kill()
 
-        self.logger.debug("Stopping Router tcpdump process.")
-
-
     def main(self):
         """
         This function starts the tcp dump and plc process and then waits for the plc
         process to finish.
         """
+
         self.process_tcp_dump = self.start_tcpdump_capture()
 
-        while self.process_tcp_dump.poll() is None:
+        while True:
             pass
-        self.terminate()
 
     def start_tcpdump_capture(self):
         """
         Start a tcp dump.
         """
-        pcap = self.output_path / (self.interface_name + '.pcap')
+        pcap = self.output_path / (str(self.interface_name) + '.pcap')
 
         # Output is not printed to console
         no_output = open(empty_loc, 'w')
-        tcp_dump = subprocess.Popen(['tcpdump', '-i', self.interface_name, '-w',
-                                     str(pcap)], shell=False, stderr=no_output, stdout=no_output)
+        cmd = ['tcpdump', '-i', self.interface_name, '-w', str(pcap)]
+        tcp_dump = subprocess.Popen(cmd, shell=False, stderr=no_output, stdout=no_output)
+
         return tcp_dump
 
 
@@ -79,9 +78,8 @@ if __name__ == "__main__":
     parser.add_argument(dest="intermediate_yaml",
                         help="intermediate yaml file", metavar="FILE",
                         type=lambda x: is_valid_file(parser, x))
-    parser.add_argument(dest="index", help="Index of PLC in intermediate yaml", type=int,
-                        metavar="N")
+    parser.add_argument(dest="name", help="Index of PLC in intermediate yaml")
 
     args = parser.parse_args()
-    router_control = RouterControl(Path(args.intermediate_yaml))
+    router_control = RouterControl(Path(args.intermediate_yaml), args.name)
     router_control.main()

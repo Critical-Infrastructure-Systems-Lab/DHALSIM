@@ -76,6 +76,8 @@ class GeneralCPS(MiniCPS):
         self.scada_process = None
         self.plant_process = None
         self.attacker_processes = None
+        self.network_event_processes = None
+        self.router_processes = None
 
         self.automatic_start()
         self.poll_processes()
@@ -92,6 +94,18 @@ class GeneralCPS(MiniCPS):
         """
         This starts all the processes for plcs, etc.
         """
+
+        self.router_processes = []
+        if 'plcs' in self.data:
+            automatic_router_path = Path(__file__).parent.absolute() / "automatic_router.py"
+
+            for plc in self.data["plcs"]:
+                node = self.net.get(plc['gateway_name'])
+                cmd = ["python2", str(automatic_router_path), str(self.intermediate_yaml), str(plc['gateway_name'])]
+                self.router_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
+
+        self.logger.info('Launched router processes')
+
         self.plc_processes = []
         if "plcs" in self.data:
             automatic_plc_path = Path(__file__).parent.absolute() / "automatic_plc.py"
@@ -105,6 +119,11 @@ class GeneralCPS(MiniCPS):
         automatic_scada_path = Path(__file__).parent.absolute() / "automatic_scada.py"
         scada_cmd = ["python2", str(automatic_scada_path), str(self.intermediate_yaml)]
         self.scada_process = self.net.get('scada').popen(scada_cmd, stderr=sys.stderr, stdout=sys.stdout)
+
+        automatic_router_path = Path(__file__).parent.absolute() / "automatic_router.py"
+        node = self.net.get(self.data['scada']['gateway_name'])
+        cmd = ["python2", str(automatic_router_path), str(self.intermediate_yaml), str(self.data['scada']['gateway_name'])]
+        self.router_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
 
         self.logger.info("Launched the SCADA process.")
 
@@ -165,8 +184,10 @@ class GeneralCPS(MiniCPS):
         processes = []
         processes.extend(self.plc_processes)
         processes.extend(self.attacker_processes)
+        processes.extend(self.router_processes)
         processes.append(self.scada_process)
         processes.append(self.plant_process)
+
         # We wait until the simulation ends
         while True:
             for process in processes:
@@ -223,6 +244,13 @@ class GeneralCPS(MiniCPS):
             if event.poll() is None:
                 try:
                     self.end_process(event)
+                except Exception as msg:
+                    self.logger.error("Exception shutting down event: " + str(msg))
+
+        for router in self.router_processes:
+            if router.poll() is None:
+                try:
+                    self.end_process(router)
                 except Exception as msg:
                     self.logger.error("Exception shutting down event: " + str(msg))
 
