@@ -131,6 +131,8 @@ class SimpleDoSAttack(SyncedAttack):
         os.system('iptables -D INPUT -p icmp -j DROP')
         os.system('iptables -D OUTPUT -p icmp -j DROP')
 
+        self.run_thread = False
+        
         nfqueue.unbind()
         self.logger.debug("[*] Stopping water level spoofing")
 
