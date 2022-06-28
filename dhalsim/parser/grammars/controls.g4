@@ -9,7 +9,7 @@ ANY_SPACE           :   ' '+;
 STATE               :   (OPEN | CLOSED | VALUE) ;
 OPEN                :   'OPEN';
 CLOSED              :   'CLOSED';
-//PUMP_SETTING        :   [0-9]*'.'[0-9]*;
+
 
 /** Conditions */
 CONDITION           :   (BELOW | ABOVE) ;
@@ -17,20 +17,8 @@ BELOW               :   'BELOW';
 ABOVE               :   'ABOVE';
 
 /** Values */
+VALUE               : [0-9]*'.'*[0-9]+;               
 
-//  5.0             :   [0-9]+'.'[0-9]+
-//  5               :   [0-9]+
-//  .5              :   '.'[0-9]+
-/*
-VALUE               :   (INT | FLOAT | DEC );
-FLOAT               :   [0-9]+'.'[0-9]+ ;
-INT                 :   [0-9]+ ;
-DEC                 :   '.'[0-9]+ ;
-*/
-
-VALUE               : [0-9]*'.'*[0-9]+;                // 5 valid, but 5.0 not!
-
-//VALUE               :   [0-9]*'.'*[0-9]+ ;
 ID                  :   [a-zA-Z0-9_]+ ;
 CAPITALS            :   [A-Z].*? ;
 

@@ -129,7 +129,7 @@ class InputParser:
                 # This is an AT NODE control
                 dependant = str(child.getChild(10))
                 value = float(str(child.getChild(14)))
-
+                
                 controls.append({
                     "type": str(child.getChild(12)).lower(),
                     "dependant": dependant,

@@ -74,6 +74,7 @@ class controlsParser ( Parser ):
     COMMENT=19
     NEWLINES=20
     WS=21
+    #PUMP_SETTING=22
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
