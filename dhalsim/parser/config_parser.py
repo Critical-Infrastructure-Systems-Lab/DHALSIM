@@ -92,9 +92,14 @@ class SchemaParser:
                     Use(str.lower),
                     'value'
                 ),
-                'concealment_value': And(
-                    Or(float, And(int, Use(float))),
-                )
+                'concealment_value': [{
+                    'tag': And(
+                        str,
+                        string_pattern,
+                    ),
+                    Or('value', 'offset', only_one=True,
+                       error="'tags' should have either a 'value' or 'offset' attribute."): Or(float, And(int, Use(float))),
+                }],
             },
             {
                 'type': And(
@@ -310,13 +315,14 @@ class SchemaParser:
                     str,
                     string_pattern
                 ),
-                'tag': And(
-                    str,
-                    string_pattern,
-                ),
-                'value': And(
-                    Or(float, And(int, Use(float)))
-                ),
+                'tags': [{
+                    'tag': And(
+                        str,
+                        string_pattern,
+                    ),
+                    Or('value', 'offset', only_one=True,
+                       error="'tags' should have either a 'value' or 'offset' attribute."): Or(float, And(int, Use(float))),
+                }],
                 'concealment_data': concealment_data
             },
             {
@@ -736,6 +742,9 @@ class ConfigParser:
                     if not set(tags).issubset(set(target_plc['actuators'] + target_plc['sensors'])):
                         raise NoSuchTag(
                             f"PLC {target_plc['name']} does not have all the tags specified.")
+
+                #todo: Checks for concealment_mitm
+
 
             return network_attacks
         return []
