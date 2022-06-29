@@ -6,7 +6,8 @@ network_attacks:
   value: 8.0
   concealment_data:
     type: value
-    concealment_value: 42.0
+    concealment_value:
+      - tag:
     #type: path
     #path: concealment_test.csv
   trigger:

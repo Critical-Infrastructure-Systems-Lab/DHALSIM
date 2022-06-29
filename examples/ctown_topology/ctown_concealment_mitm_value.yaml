@@ -1,0 +1,20 @@
+network_attacks:
+- name: plc4attack
+  type: concealment_mitm
+  tags:
+    - tag: T3
+      offset: 10.0
+    - tag: T4
+      offset: 10.0
+  target: PLC4
+  concealment_data:
+    type: value
+    concealment_value:
+      - tag: T3
+        value: 42.0
+      - tag: T4
+        value: 84.0
+  trigger:
+    start: 648
+    end: 792
+    type: time

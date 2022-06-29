@@ -305,7 +305,6 @@ class SyncedAttack(metaclass=ABCMeta):
                 pass
 
             self.set_sync(3)
-            self.logger.debug("Setting sync in 3")
 
     @abstractmethod
     def attack_step(self):

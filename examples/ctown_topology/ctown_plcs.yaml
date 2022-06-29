@@ -33,6 +33,7 @@
 - name: PLC4 # PLC4, T3,
   sensors:
     - T3
+    - T4
 - name: PLC5 # PLC5, PU8F PU10F PU11F J302 J306 J307 J317, PU8 PU10 PU11
   sensors:
     - PU8F
@@ -46,9 +47,9 @@
     - PU8
     - PU10
     - PU11
-- name: PLC6 # PLC6, T4,
-  sensors:
-    - T4
+#- name: PLC6 # PLC6, T4,
+#  sensors:
+#    - T4
 - name: PLC7 # PLC7, T5,
   sensors:
     - T5
