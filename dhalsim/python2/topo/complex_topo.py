@@ -154,7 +154,7 @@ class ComplexTopo(Topo):
         if 'network_attacks' in self.data.keys():
             for attack in data['network_attacks']:
                 target = next((plc for plc in data['plcs'] if plc['name'] == attack['target']), None)
-                if attack['target'] == 'scada':
+                if attack['target'].lower() == 'scada':
                     target = data['scada']
                 if not target:
                     raise NoSuchPlc("The target plc {name} does not exist".format(name=attack['target']))

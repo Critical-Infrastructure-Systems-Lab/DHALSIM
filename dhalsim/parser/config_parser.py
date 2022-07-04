@@ -723,7 +723,7 @@ class ConfigParser:
                 target = network_attack['target']
 
                 # Network attacks to SCADA do not need a target plc
-                if target == 'scada':
+                if target.lower() == 'scada':
                     continue
 
                 target_plc = None
