@@ -63,6 +63,9 @@ class SyncedAttack(metaclass=ABCMeta):
             if plc['name'] == self.intermediate_attack['target']:
                 self.intermediate_plc = plc
 
+        if self.intermediate_attack['target'].lower() == 'scada':
+            self.intermediate_plc = self.intermediate_yaml['scada']
+
         self.attacker_ip = self.intermediate_attack['local_ip']
         self.target_plc_ip = self.intermediate_plc['local_ip']
 
@@ -305,7 +308,6 @@ class SyncedAttack(metaclass=ABCMeta):
                 pass
 
             self.set_sync(3)
-            self.logger.debug("Setting sync in 3")
 
     @abstractmethod
     def attack_step(self):

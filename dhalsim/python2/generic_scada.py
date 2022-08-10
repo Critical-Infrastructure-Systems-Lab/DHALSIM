@@ -93,6 +93,10 @@ class GenericScada(BasePLC):
         self.update_cache_flag = False
         self.plcs_ready = False
 
+        self.previous_cache = {}
+        for ip in self.plc_data:
+            self.previous_cache[ip] = [0] * len(self.plc_data[ip])
+
         self.cache = {}
         for ip in self.plc_data:
             self.cache[ip] = [0] * len(self.plc_data[ip])
@@ -286,6 +290,7 @@ class GenericScada(BasePLC):
 
         while self.update_cache_flag:
             for plc_ip in self.cache:
+                # Maintain old values if there could not be uploaded
                 try:
                     values = self.receive_multiple(self.plc_data[plc_ip], plc_ip)
                     with lock:
@@ -295,8 +300,8 @@ class GenericScada(BasePLC):
                         "PLC receive_multiple with tags {tags} from {ip} failed with exception '{e}'".format(
                             tags=self.plc_data[plc_ip],
                             ip=plc_ip, e=str(e)))
-                    time.sleep(cache_update_time)
                     continue
+
                 #self.logger.debug(
                 #    "SCADA cache updated for {tags}, with value {values}, from {ip}".format(tags=self.plc_data[plc_ip],
                 #                                                                             values=values,
@@ -322,7 +327,6 @@ class GenericScada(BasePLC):
             while not self.get_sync(2):
                 pass
 
-            # Wait until we acquire the first sync before polling the PLCs
             if not self.plcs_ready:
                 self.plcs_ready = True
                 self.update_cache_flag = True
@@ -334,7 +338,13 @@ class GenericScada(BasePLC):
             results = [master_time, datetime.now()]
             with lock:
                 for plc_ip in self.plc_data:
-                    results.extend(self.cache[plc_ip])
+                    if self.cache[plc_ip]:
+                        results.extend(self.cache[plc_ip])
+                    else:
+                        results.extend(self.previous_cache[plc_ip])
+
+                self.previous_cache[plc_ip] = self.cache[plc_ip]
+
             self.saved_values.append(results)
 
             # Save scada_values.csv when needed
