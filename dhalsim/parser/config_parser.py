@@ -185,6 +185,24 @@ class SchemaParser:
                 'type': And(
                     str,
                     Use(str.lower),
+                    'unconstrained_blackbox_concealment_mitm',
+                ),
+                'name': And(
+                    str,
+                    string_pattern,
+                    Schema(lambda name: 1 <= len(name) <= 20,
+                           error="Length of name must be between 1 and 20, '{}' has invalid length")
+                ),
+                'trigger': trigger,
+                'target': And(
+                    str,
+                    string_pattern
+                ),
+            },
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
                     'between'
                 ),
                 'sensor': And(
@@ -324,6 +342,20 @@ class SchemaParser:
                        error="'tags' should have either a 'value' or 'offset' attribute."): Or(float, And(int, Use(float))),
                 }],
                 'concealment_data': concealment_data
+            },
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
+                    'unconstrained_blackbox_concealment_mitm',
+                ),
+                'name': And(
+                    str,
+                    string_pattern,
+                    Schema(lambda name: 1 <= len(name) <= 20,
+                           error="Length of name must be between 1 and 20, '{}' has invalid length")
+                ),
+                'trigger': trigger,
             },
             {
                 'type': And(

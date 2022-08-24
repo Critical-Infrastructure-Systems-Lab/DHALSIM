@@ -1,0 +1,10 @@
+network_attacks:
+- name: plc3attack
+  type: unconstrained_blackbox_concealment_mitm
+  # tags: T3 # We don't need tags as ALL tags will be read/concealed
+  # value: 8.0  Here we can instead point to he model that we would be using
+  #concealment_data: concealment_test.csv
+  trigger:
+    start: 648
+    end: 936
+    type: time
