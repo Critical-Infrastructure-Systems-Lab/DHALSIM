@@ -38,12 +38,13 @@ class SyncedAttack(metaclass=ABCMeta):
     :param yaml_index: The intermediate yaml has a list of network attacks.
        This number is the index of this attack.
     :type yaml_index: int
+    :type sync: bool Flag to indicate if the sync is handled by this module. If false, another module should do the sync
     """
 
     DB_TRIES = 10
     """Amount of times a db query will retry on a exception"""
 
-    def __init__(self, intermediate_yaml_path: Path, yaml_index: int):
+    def __init__(self, intermediate_yaml_path: Path, yaml_index: int, sync: bool = True):
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
 
@@ -78,6 +79,7 @@ class SyncedAttack(metaclass=ABCMeta):
         self.state = 0
         self.db_sleep_time = random.uniform(0.01, 0.1)
 
+        self.sync = sync
 
     def sigint_handler(self, sig, frame):
         """Interrupt handler for attacker being stoped"""
@@ -285,29 +287,30 @@ class SyncedAttack(metaclass=ABCMeta):
         The main loop of an attack.
         """
         while True:
-            # flag = 0 means a physical process finished a new iteration
-            while not self.get_sync(0):
-                pass
+            if self.sync:
+                # flag = 0 means a physical process finished a new iteration
+                while not self.get_sync(0):
+                    pass
 
-            run = self.check_trigger()
-            self.set_attack_flag(run)
-            if self.state == 0:
-                if run:
-                    self.state = 1
-                    self.setup()
-            elif self.state == 1 and (not run):
-                self.state = 0
-                self.teardown()
+                run = self.check_trigger()
+                self.set_attack_flag(run)
+                if self.state == 0:
+                    if run:
+                        self.state = 1
+                        self.setup()
+                elif self.state == 1 and (not run):
+                    self.state = 0
+                    self.teardown()
 
-            # We have to keep the same state machine as PLCs
-            self.set_sync(1)
+                # We have to keep the same state machine as PLCs
+                self.set_sync(1)
 
-            self.attack_step()
+                self.attack_step()
 
-            while not self.get_sync(2):
-                pass
+                while not self.get_sync(2):
+                    pass
 
-            self.set_sync(3)
+                self.set_sync(3)
 
     @abstractmethod
     def attack_step(self):

@@ -9,7 +9,6 @@ import sys
 import signal
 import os
 import time
-from str2bool import str2bool
 
 from dhalsim.network_attacks.utilities import launch_arp_poison, restore_arp
 from dhalsim.network_attacks.synced_attack import SyncedAttack
@@ -35,7 +34,11 @@ class UnconstrainedBlackBox(SyncedAttack):
     """
 
     def __init__(self, intermediate_yaml_path: Path, yaml_index: int):
-        super().__init__(intermediate_yaml_path, yaml_index)
+
+        # sync in this attack needs to be hanlded by the netfilterqueue. This value will be changed after we
+        # launch the netfilterqueue process
+        sync = True
+        super().__init__(intermediate_yaml_path, yaml_index, sync)
         os.system('sysctl net.ipv4.ip_forward=1')
 
         # Process object to handle nfqueue
@@ -72,6 +75,8 @@ class UnconstrainedBlackBox(SyncedAttack):
         cmd = ["python3", str(nfqueue_path), str(self.intermediate_yaml_path), str(self.yaml_index), str(queue_number)]
 
         self.nfqueue_process = subprocess.Popen(cmd, shell=False, stderr=sys.stderr, stdout=sys.stdout)
+
+        self.sync = False
 
     def interrupt(self):
         """

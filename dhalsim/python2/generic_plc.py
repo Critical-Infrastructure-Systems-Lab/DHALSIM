@@ -224,8 +224,6 @@ class GenericPLC(BasePLC):
         self.logger.debug(self.intermediate_plc['name'] + ' enters pre_loop')
         self.db_sleep_time = random.uniform(0.01, 0.1)
 
-        reader = True
-
         sensors = self.generate_tags(self.intermediate_plc['sensors'])
         actuators = self.generate_tags(self.intermediate_plc['actuators'])
 
