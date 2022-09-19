@@ -65,6 +65,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
         self.logger.debug('SCADA tags: ' + str(set(aux_scada_tags)))
         return set(aux_scada_tags)
 
+    # Delivers a pandas dataframe with ALL SCADA tags
     def predict_concealment_values(self):
         self.logger.debug('predicting')
 
@@ -136,21 +137,21 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
         modified = False
         return ip_payload, modified
 
-    def handle_enip_request(self, ip_payload, offset):
+    def handle_enip_request(self, ip_payload):
 
         # For this concealment, the only valid target is SCADA
         #self.logger.debug('ENIP Request from: ' + str(ip_payload[IP].src))
-        if ip_payload[IP].src == self.intermediate_yaml['scada']['local_ip']:
-            this_session = int.from_bytes(ip_payload[Raw].load[4:8], sys.byteorder)
-            tag_name = ip_payload[Raw].load.decode(encoding='latin-1')[54:offset]
-            context = int.from_bytes(ip_payload[Raw].load[12:20], sys.byteorder)
+        this_session = int.from_bytes(ip_payload[Raw].load[4:8], sys.byteorder)
+        self.logger.debug('Raw text is: ' + str(ip_payload[Raw].load.decode(encoding='latin-1')[54:60]))
+        tag_name = ip_payload[Raw].load.decode(encoding='latin-1')[54:60].split(':')[0]
+        context = int.from_bytes(ip_payload[Raw].load[12:20], sys.byteorder)
 
-            self.logger.debug('this tag is: ' + str(tag_name))
-            session_dict = {'session': this_session, 'tag': tag_name, 'context': context}
-            #self.logger.debug('session dict: ' + str(session_dict))
+        self.logger.debug('ENIP request for tag: ' + str(tag_name))
+        session_dict = {'session': this_session, 'tag': tag_name, 'context': context}
+        #self.logger.debug('session dict: ' + str(session_dict))
 
-            #self.logger.debug('SCADA Req session')
-            self.scada_session_ids.append(session_dict)
+        #self.logger.debug('SCADA Req session')
+        self.scada_session_ids.append(session_dict)
 
     def capture(self, packet):
         """
@@ -175,13 +176,15 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
                     return
 
                 else:
-                    if len(p) == 118:
+                    if len(p) == 118 or len(p) == 116 or len(p) == 120:
                         #self.logger.debug('handling request 57')
-                        self.handle_enip_request(p, 57)
-                        #self.logger.debug('handled request')
-                    elif len(p) == 116:
-                        #self.logger.debug('handling request 56')
-                        self.handle_enip_request(p, 56)
+                        #aux = p[Raw].load.decode(encoding='latin-1')[54:60]
+                        #vec = aux.split(':')
+                        #self.logger.debug('Pseudo tag is: ' + str(vec[0]))
+
+                        #tag_name = p[Raw].load.decode(encoding='latin-1')[54:60]
+                        #self.logger.debug('Message for tag: ' + str(tag_name))
+                        self.handle_enip_request(p)
                         #self.logger.debug('handled request')
                     else:
                         packet.accept()
