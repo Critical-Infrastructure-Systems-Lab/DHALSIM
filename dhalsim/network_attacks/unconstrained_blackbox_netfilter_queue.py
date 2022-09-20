@@ -23,22 +23,22 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
     def __init__(self,  intermediate_yaml_path: Path, yaml_index: int, queue_number: int ):
         super().__init__(intermediate_yaml_path, yaml_index, queue_number)
 
+        self.window_size = 6
+        self.complete_scada_set = False
+        self.received_window_size = 0
+
         # set with all the tags received by SCADA
         self.scada_tags = self.get_scada_tags()
-
-        # Initialize input values
-        self.received_scada_tags_df = self.set_initial_conditions_of_scada_values()
 
         # We can use the same method, as initially the df will be initialized with 0 values
         self.calculated_concealment_values_df = self.set_initial_conditions_of_scada_values()
 
+        # Initialize input values
+        self.received_scada_tags_df = self.calculated_concealment_values_df
+
         # set with the tags we have not received in this iteration
         self.missing_scada_tags = list(self.scada_tags)
-        self.complete_scada_set = False
-        self.received_window_size = 0
 
-        #todo: Generalize for different window sizes
-        self.window_size = 1
 
         self.scada_values = []
         self.scada_session_ids = []
@@ -47,10 +47,9 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
         # This flaf ensures that the prediction is called only once per iteration
         self.predicted_for_iteration = False
 
-    #todo: Generalize this for different window sizes
     def set_initial_conditions_of_scada_values(self):
-        zero_Values = [0] * len(self.scada_tags)
-        df = pd.DataFrame(columns=self.scada_tags, data=[zero_Values])
+        zero_values = [[0] * len(self.scada_tags)] * self.window_size
+        df = pd.DataFrame(columns=self.scada_tags, data=zero_values)
         return df
 
 
@@ -67,6 +66,10 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
 
     # Delivers a pandas dataframe with ALL SCADA tags
     def predict_concealment_values(self):
+
+        zero_values = [[42] * len(self.scada_tags)] * self.window_size
+        self.calculated_concealment_values_df = pd.DataFrame(columns=self.scada_tags, data=zero_values)
+
         self.logger.debug('predicting')
 
     def handle_concealment(self, session, ip_payload):
@@ -80,13 +83,13 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
 
         #aux_tags = list(self.scada_tags)
         self.logger.debug('Missing tags are: ' + str(self.missing_scada_tags))
-        self.logger.debug('SCADA tags are: ' + str(self.scada_tags))
+        #self.logger.debug('SCADA tags are: ' + str(self.scada_tags))
         self.logger.debug('Missing tags len: ' + str(len(self.missing_scada_tags)))
-        self.logger.debug('SCADA tags len: ' + str(len(self.scada_tags)))
+        #self.logger.debug('SCADA tags len: ' + str(len(self.scada_tags)))
 
         if session['tag'] in self.missing_scada_tags:
             # We store the value, this df is an input for the concealment ML model
-            self.received_scada_tags_df[session['tag']] = translate_payload_to_float(ip_payload[Raw].load)
+            self.received_scada_tags_df[session['tag']].iloc[self.received_window_size] = translate_payload_to_float(ip_payload[Raw].load)
             self.logger.debug('Received tag ' + str(session['tag']) + ' with value: ' +
                               str(self.received_scada_tags_df[session['tag']].iloc[-1]))
             self.missing_scada_tags.remove(session['tag'])
@@ -98,7 +101,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
 
                 if not self.initialized:
                     self.received_window_size = self.received_window_size + 1
-                    if self.received_window_size >= self.window_size:
+                    if self.received_window_size >= self.window_size - 1:
                         self.initialized = True
 
                 elif not self.predicted_for_iteration:
@@ -108,7 +111,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
         # If model is initialized, we have to conceal, regardless of missing set
         if self.initialized:
             modified = True
-            return translate_float_to_payload(self.calculated_concealment_values_df[session['tag']],
+            return translate_float_to_payload(self.calculated_concealment_values_df[session['tag']].iloc[-1],
                                                   ip_payload[Raw].load), modified
         else:
             modified = False
@@ -177,15 +180,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
 
                 else:
                     if len(p) == 118 or len(p) == 116 or len(p) == 120:
-                        #self.logger.debug('handling request 57')
-                        #aux = p[Raw].load.decode(encoding='latin-1')[54:60]
-                        #vec = aux.split(':')
-                        #self.logger.debug('Pseudo tag is: ' + str(vec[0]))
-
-                        #tag_name = p[Raw].load.decode(encoding='latin-1')[54:60]
-                        #self.logger.debug('Message for tag: ' + str(tag_name))
                         self.handle_enip_request(p)
-                        #self.logger.debug('handled request')
                     else:
                         packet.accept()
                         return
