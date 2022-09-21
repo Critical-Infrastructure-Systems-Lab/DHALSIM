@@ -12,13 +12,24 @@ from scapy.packet import Raw
 
 from dhalsim.network_attacks.utilities import translate_payload_to_float, translate_float_to_payload
 
+import threading
+import signal
+
+
+
+
 class Error(Exception):
     """Base class for exceptions in this module."""
+
 
 class ConcealmentError(Error):
     """Raised when there is an error in the concealment parameter"""
 
+
 class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
+
+    """ Time in seconds to check attack sync flags"""
+    FLAG_SYNC_UPDATE_TIME = 0.1
 
     def __init__(self,  intermediate_yaml_path: Path, yaml_index: int, queue_number: int ):
         super().__init__(intermediate_yaml_path, yaml_index, queue_number)
@@ -47,11 +58,50 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
         # This flaf ensures that the prediction is called only once per iteration
         self.predicted_for_iteration = False
 
+        self.sync_thread_flag = True
+        self.sync_thread = threading.Thread(target=self.handle_sync)
+        self.sync_thread.start()
+
+    def interrupt(self):
+        self.sync_thread_flag = False
+
+    def sigint_handler(self, sig, frame):
+        """Interrupt handler for attacker being stoped"""
+        self.logger.debug("Netfilter queue process shutting down")
+        self.interrupt()
+
+    def handle_sync(self):
+        while self.sync_thread_flag:
+            # flag = 0 means a physical process finished a new iteration
+            while not self.get_sync(0):
+                if self.sync_thread_flag:
+                    pass
+                else:
+                    break
+
+            # We have to keep the same state machine as PLCs
+            self.set_sync(1)
+
+            while not self.get_sync(2):
+                if self.sync_thread_flag:
+                    pass
+                else:
+                    break
+
+            # We stay in 2, to conceal the values exchanged remotely from the PLCs, until we make a prediction
+            while self.missing_scada_tags:
+                if self.sync_thread_flag:
+                    pass
+                else:
+                    break
+
+            self.set_sync(3)
+
+
     def set_initial_conditions_of_scada_values(self):
         zero_values = [[0] * len(self.scada_tags)] * self.window_size
         df = pd.DataFrame(columns=self.scada_tags, data=zero_values)
         return df
-
 
     def get_scada_tags(self):
         aux_scada_tags = []
@@ -97,6 +147,11 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
 
             # Missing set is empty, increase the window count
             if not self.missing_scada_tags:
+
+                # Wait for sync to take place
+                while not self.get_sync(3):
+                    pass
+
                 self.missing_scada_tags = list(self.scada_tags)
 
                 if not self.initialized:
@@ -192,6 +247,45 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
             if self.nfqueue:
                 self.nfqueue.unbind()
             sys.exit(0)
+
+
+    def get_sync(self, flag):
+        """
+        Get the sync flag of this plc.
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
+
+        :return: False if physical process wants the plc to do a iteration, True if not.
+
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
+        """
+        res = self.db_query("SELECT flag FROM sync WHERE name IS ?", False, (self.intermediate_attack["name"],))
+        return res == flag
+
+    def set_sync(self, flag):
+        """
+        Set this plcs sync flag in the sync table. When this is 1, the physical process
+        knows this plc finished the requested iteration.
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
+
+        :param flag: True for sync to 1, False for sync to 0
+        :type flag: bool
+
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
+        """
+        self.db_query("UPDATE sync SET flag=? WHERE name IS ?", True, (int(flag), self.intermediate_attack["name"],))
+
+    def set_attack_flag(self, flag):
+        """
+        Set a flag in the attack table. When it is 1, we know that the attack with the
+        provided name is currently running. When it is 0, it is not.
+
+        :param flag: True for running to 1, false for running to 0
+        """
+        self.db_query("UPDATE attack SET flag=? WHERE name IS ?", True, (int(flag), self.intermediate_attack['name']))
 
 def is_valid_file(parser_instance, arg):
     """Verifies whether the intermediate yaml path is valid."""
