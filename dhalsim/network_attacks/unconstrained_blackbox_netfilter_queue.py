@@ -11,11 +11,10 @@ from scapy.layers.inet import IP, TCP
 from scapy.packet import Raw
 
 from dhalsim.network_attacks.utilities import translate_payload_to_float, translate_float_to_payload
+from evasion_attacks.Adversarial_Attacks.Black_Box_Attack.adversarial_AE import Adversarial_AE
 
 import threading
 import signal
-
-
 
 
 class Error(Exception):

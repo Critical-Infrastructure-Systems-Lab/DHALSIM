@@ -7,4 +7,4 @@ plcs: !include ctown_plcs.yaml
 log_level: debug
 simulator: epynet
 demand: pdd
-attacks: !include ctown_unconstrained_blackbox_concealment_mitm.yaml
+#attacks: !include ctown_unconstrained_blackbox_concealment_mitm.yaml#
