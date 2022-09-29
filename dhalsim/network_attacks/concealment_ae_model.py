@@ -85,29 +85,24 @@ class ConcealmentAE:
         # We want to select pumps and valves status only.
         list_pump_status = list(gen_examples.filter(regex='PU[0-9]+$|V[0-9]+$').columns)
 
-        for j, _ in gen_examples.iterrows():
-            for i in list_pump_status:  # list(gen_examples.columns[31:43]):
-                if gen_examples.at[j, i] > 0.5:
-                    gen_examples.at[j, i] = 1
+        for status in list_pump_status:  # list(gen_examples.columns[31:43]):
+            col_index = gen_examples.columns_get_loc(status)
+            col_index_f = gen_examples.columns_get_loc(status + 'F')
+            for j, _ in gen_examples.iterrows():
+                if gen_examples.iloc[j, col_index] > 0.5:
+                    gen_examples.iloc[j, col_index] = 1
                 else:
-                    gen_examples.at[j, i] = 0
+                    gen_examples.at[j, col_index] = 0
                     #if status is 0, the flow is also 0
-                    gen_examples.at[j, i+'F'] = 0  # gen_examples.columns[(
-                    # gen_examples.columns.get_loc(i)) - 12]] = 0
+
+                    gen_examples.at[j, col_index_f] = 0
+
+        return gen_examples
 
     def predict(self, received_values_df):
         for index, row in received_values_df.iterrows():
             gen_examples = self.generator.predict(self.attacker_scaler.transform(received_values_df))
-            gen_examples = self.fix_sample(pd.DataFrame(columns=self.sendor_cols,
-                                                         data=self.attacker_scaler.inverse_transform(gen_examples)),
-                                            dataset)
-            if not os.path.exists('results/'+dataset + '/unconstrained_attack/'):
-                os.makedirs(
-                    'results/'+dataset + '/unconstrained_attack/')
-            pd.DataFrame(columns=xset, data=gen_examples).to_csv(
-                'results/'+dataset+'/unconstrained_attack/new_advAE_attack_'+str(i)+'_from_test_dataset.csv')
-
-
+        
     def __init__(self, a_path):
         # Load and preprocess training data
         training_path = Path(__file__).parent/a_path/'training_data.csv'
