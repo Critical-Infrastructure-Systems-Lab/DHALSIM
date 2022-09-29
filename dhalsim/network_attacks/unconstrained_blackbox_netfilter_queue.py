@@ -85,15 +85,20 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
             self.logger.debug('Trained model found')
 
         except FileNotFoundError:
-            self.logger.debug('No trained model found, training...')
+            self.logger.info('No trained model found, training...')
             self.advAE.train_model()
+            self.logger.info('Model trained')
+            self.advAE.save_model('adversarial_models/generator_100_percent.h5')
+            self.logger.info('Model saved')
             self.advAE.generator = load_model('adversarial_models/generator_100_percent.h5')
 
         except IOError:
-            self.logger.debug('No trained model found, training...')
+            self.logger.info('No trained model found, training...')
             self.advAE.train_model()
+            self.logger.info('Model trained')
+            self.advAE.save_model('adversarial_models/generator_100_percent.h5')
+            self.logger.info('Model saved')
             self.advAE.generator = load_model('adversarial_models/generator_100_percent.h5')
-
         self.sync_thread_flag = True
         self.sync_thread = threading.Thread(target=self.handle_sync)
         self.sync_thread.start()
@@ -153,8 +158,11 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
     # Delivers a pandas dataframe with ALL SCADA tags
     def predict_concealment_values(self):
 
-        zero_values = [[42] * len(self.scada_tags)] * self.window_size
-        self.calculated_concealment_values_df = pd.DataFrame(columns=self.scada_tags, data=zero_values)
+        self.calculated_concealment_values_df = self.advAE.predict(self.received_scada_tags_df)
+
+        #received_window_size
+        #zero_values = [[42] * len(self.scada_tags)] * self.window_size
+        #self.calculated_concealment_values_df = pd.DataFrame(columns=self.scada_tags, data=zero_values)
 
         self.logger.debug('predicting')
 
