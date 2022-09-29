@@ -25,7 +25,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import accuracy_score, f1_score, roc_curve, auc, precision_score, confusion_matrix, recall_score
 from sklearn.preprocessing import MinMaxScaler
-from autoencoder import load_AEED
 
 from concealment_ae_model import ConcealmentAE
 
@@ -76,61 +75,28 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
         self.predicted_for_iteration = False
 
         #toDo: This will be something configured in the YAML file
-        file_expr = '/training_data/' + '*'
+        file_expr = 'training_data/ctown/'
 
         # Adversarial model for concealment
-        # toDo: Ask about this parameter
-        hide_layers = 128
         self.advAE = ConcealmentAE(file_expr)
 
         try:
             self.advAE.generator = load_model('adversarial_models/generator_100_percent.h5')
             self.logger.debug('Trained model found')
 
-        # toDo: Get the rigt exception
-        except Exception:
+        except FileNotFoundError:
             self.logger.debug('No trained model found, training...')
             self.advAE.train_model()
             self.advAE.generator = load_model('adversarial_models/generator_100_percent.h5')
 
+        except IOError:
+            self.logger.debug('No trained model found, training...')
+            self.advAE.train_model()
+            self.advAE.generator = load_model('adversarial_models/generator_100_percent.h5')
 
         self.sync_thread_flag = True
         self.sync_thread = threading.Thread(target=self.handle_sync)
         self.sync_thread.start()
-
-    def read_training_data(self, path):
-        paths = glob.glob(file_expr)
-
-        physical_pd = None
-        for path in paths:
-            aux = self.preprocess_physical(path)
-            physical_pd = pd.concat([physical_pd, aux])
-
-        if 'Unnamed: 0' in physical_pd.columns:
-            physical_pd = physical_pd.drop(columns=['Unnamed: 0'])
-        if 'ATTACK' in physical_pd.columns:
-            physical_pd = physical_pd.drop(columns=['ATTACK'])
-
-        return physical_pd
-
-    def preprocess_physical(self, path):
-        a_pd = pd.read_csv(path + '/scada_values.csv', parse_dates=['timestamp'])
-        a_pd = a_pd.dropna()
-
-        # We drop rows with Bad input values
-        for column in a_pd.columns:
-            a_pd = a_pd.drop(a_pd[a_pd[column] == 'Bad Input'].index)
-
-        alarms = [col for col in a_pd.columns if 'AL' in col]
-
-        for alarm in alarms:
-            exp = (a_pd[alarm] == 'Inactive')
-            a_pd.loc[exp, alarm] = 0
-
-            exp = (a_pd[alarm] == 'Active')
-            a_pd.loc[exp, alarm] = 1
-
-        return a_pd
 
     def interrupt(self):
         self.sync_thread_flag = False

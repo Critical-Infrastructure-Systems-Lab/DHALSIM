@@ -8,12 +8,14 @@ import pandas as pd
 from str2bool import str2bool
 
 import glob
+from pathlib import Path
 
 
 class ConcealmentAE:
 
     def preprocess_physical(self, path):
-        a_pd = pd.read_csv(path + '/scada_values.csv', parse_dates=['timestamp'])
+
+        a_pd = pd.read_csv(str(path), parse_dates=['timestamp'])
         a_pd = a_pd.dropna()
 
         # We drop rows with Bad input values
@@ -33,32 +35,25 @@ class ConcealmentAE:
 
     def train_model(self):
 
-        # Adversarial model for concealment
-        # toDo: Ask about this parameter
-        hide_layers = 128
-
-        sensor_cols = [col for col in self.physical_pd .columns if
+        sensor_cols = [col for col in self.physical_pd.columns if
                        col not in ['Unnamed: 0', 'iteration', 'timestamp', 'Attack']]
-
-        self.advAE = Adversarial_AE(len(sensor_cols), hide_layers)
-
-        self.advAE.attacker_scaler = self.advAE.attacker_scaler.fit(self.physical_pd[sensor_cols])
 
         self.advAE.train_advAE(self.physical_pd, sensor_cols)
         self.advAE.generator.save('adversarial_models/generator_100_percent.h5')
 
-    def __init__(self, training_path):
-        ### Load and preprocess training data
-        #data_path = '../../ideal_conditions/batch_custom_ideal/output/'
-        file_expr = training_path + '*'
-        paths = glob.glob(file_expr)
+    def __init__(self, a_path):
+        # Load and preprocess training data
+        training_path = Path(__file__).parent/a_path/'training_data.csv'
+        print('Reading training data from: ' + str(training_path))
+        self.physical_pd = self.preprocess_physical(training_path)
 
-        self.physical_pd = None
-        for path in paths:
-            aux = self.preprocess_physical(path)
-            self.physical_pd  = pd.concat([self.physical_pd , aux])
+        # Adversarial model for concealment
+        # toDo: Ask about this parameter
+        hide_layers = 128
 
-        if 'Unnamed: 0' in self.physical_pd .columns:
-            self.physical_pd  = self.physical_pd .drop(columns=['Unnamed: 0'])
-        if 'ATTACK' in self.physical_pd .columns:
-            self.physical_pd  = self.physical_pd .drop(columns=['ATTACK'])
+        sensor_cols = [col for col in self.physical_pd.columns if
+                       col not in ['Unnamed: 0', 'iteration', 'timestamp', 'Attack']]
+
+        self.advAE = Adversarial_AE(len(sensor_cols), hide_layers)
+        self.advAE.attacker_scaler = self.advAE.attacker_scaler.fit(self.physical_pd[sensor_cols])
+
