@@ -204,8 +204,8 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
                         self.initialized = True
 
                 elif not self.predicted_for_iteration:
-                    self.predicted_for_iteration = True
                     self.predict_concealment_values()
+                    self.predicted_for_iteration = True
 
         # If model is initialized, we have to conceal, regardless of missing set
         if self.initialized:
