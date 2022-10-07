@@ -178,16 +178,16 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
         #aux_tags = list(self.scada_tags)
         self.logger.debug('Missing tags are: ' + str(self.missing_scada_tags))
         #self.logger.debug('SCADA tags are: ' + str(self.scada_tags))
-        self.logger.debug('Missing tags len: ' + str(len(self.missing_scada_tags)))
+        #self.logger.debug('Missing tags len: ' + str(len(self.missing_scada_tags)))
         #self.logger.debug('SCADA tags len: ' + str(len(self.scada_tags)))
 
         if session['tag'] in self.missing_scada_tags:
             # We store the value, this df is an input for the concealment ML model
             self.received_scada_tags_df[session['tag']].iloc[self.received_window_size] = translate_payload_to_float(ip_payload[Raw].load)
-            self.logger.debug('Received tag ' + str(session['tag']) + ' with value: ' +
-                              str(self.received_scada_tags_df[session['tag']].iloc[-1]))
+            #self.logger.debug('Received tag ' + str(session['tag']) + ' with value: ' +
+            #                  str(self.received_scada_tags_df[session['tag']].iloc[-1]))
             self.missing_scada_tags.remove(session['tag'])
-            self.logger.debug('Missing tags len after removing: ' + str(len(self.missing_scada_tags)))
+            #self.logger.debug('Missing tags len after removing: ' + str(len(self.missing_scada_tags)))
 
             # Missing set is empty, increase the window count
             if not self.missing_scada_tags:
@@ -244,11 +244,11 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
         # For this concealment, the only valid target is SCADA
         #self.logger.debug('ENIP Request from: ' + str(ip_payload[IP].src))
         this_session = int.from_bytes(ip_payload[Raw].load[4:8], sys.byteorder)
-        self.logger.debug('Raw text is: ' + str(ip_payload[Raw].load.decode(encoding='latin-1')[54:60]))
+        #self.logger.debug('Raw text is: ' + str(ip_payload[Raw].load.decode(encoding='latin-1')[54:60]))
         tag_name = ip_payload[Raw].load.decode(encoding='latin-1')[54:60].split(':')[0]
         context = int.from_bytes(ip_payload[Raw].load[12:20], sys.byteorder)
 
-        self.logger.debug('ENIP request for tag: ' + str(tag_name))
+        #self.logger.debug('ENIP request for tag: ' + str(tag_name))
         session_dict = {'session': this_session, 'tag': tag_name, 'context': context}
         #self.logger.debug('session dict: ' + str(session_dict))
 
