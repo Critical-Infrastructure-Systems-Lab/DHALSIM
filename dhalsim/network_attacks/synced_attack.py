@@ -287,26 +287,35 @@ class SyncedAttack(metaclass=ABCMeta):
         The main loop of an attack.
         """
         while True:
+            # flag = 0 means a physical process finished a new iteration
             if self.sync:
-                # flag = 0 means a physical process finished a new iteration
                 while not self.get_sync(0):
                     pass
 
-                run = self.check_trigger()
-                self.set_attack_flag(run)
-                if self.state == 0:
-                    if run:
-                        self.state = 1
-                        self.setup()
-                elif self.state == 1 and (not run):
-                    self.state = 0
-                    self.teardown()
+            run = self.check_trigger()
+            self.set_attack_flag(run)
+            if self.state == 0:
+                if run:
+                    self.state = 1
+                    self.setup()
+            elif self.state == 1 and (not run):
+                self.logger.debug('Stopping attack')
+                self.state = 0
+                self.teardown()
 
-                # We have to keep the same state machine as PLCs
+
+                # Re establish sync
+                if not self.sync:
+                    self.sync = True
+                    self.logger.debug('Sync restablished')
+
+            # We have to keep the same state machine as PLCs
+            if self.sync:
                 self.set_sync(1)
 
-                self.attack_step()
+            self.attack_step()
 
+            if self.sync:
                 while not self.get_sync(2):
                     pass
 

@@ -292,7 +292,7 @@ class GenericScada(BasePLC):
             for plc_ip in self.cache:
                 # Maintain old values if there could not be uploaded
                 try:
-                    self.logger.debug('polling plc {plc} for tags {tags}'.format(plc=plc_ip, tags=self.plc_data[plc_ip]))
+                    #self.logger.debug('polling plc {plc} for tags {tags}'.format(plc=plc_ip, tags=self.plc_data[plc_ip]))
                     values = self.receive_multiple(self.plc_data[plc_ip], plc_ip)
                     with lock:
                         self.cache[plc_ip] = values
@@ -302,11 +302,6 @@ class GenericScada(BasePLC):
                             tags=self.plc_data[plc_ip],
                             ip=plc_ip, e=str(e)))
                     continue
-
-                #self.logger.debug(
-                #    "SCADA cache updated for {tags}, with value {values}, from {ip}".format(tags=self.plc_data[plc_ip],
-                #                                                                             values=values,
-                #                                                                             ip=plc_ip))
 
             time.sleep(cache_update_time)
 

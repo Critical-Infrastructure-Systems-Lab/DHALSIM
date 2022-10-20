@@ -60,6 +60,13 @@ class UnconstrainedBlackBox(SyncedAttack):
         """
         self.modify_ip_tables(True)
 
+        queue_number = 1
+        nfqueue_path = Path(__file__).parent.absolute() / "unconstrained_blackbox_netfilter_queue.py"
+        cmd = ["python3", str(nfqueue_path), str(self.intermediate_yaml_path), str(self.yaml_index), str(queue_number)]
+
+        self.sync = False
+        self.nfqueue_process = subprocess.Popen(cmd, shell=False, stderr=sys.stderr, stdout=sys.stdout)
+
         # Launch the ARP poison by sending the required ARP network packets
         launch_arp_poison(self.target_plc_ip, self.intermediate_attack['gateway_ip'])
         if self.intermediate_yaml['network_topology_type'] == "simple":
@@ -69,14 +76,6 @@ class UnconstrainedBlackBox(SyncedAttack):
 
         self.logger.debug(f"Concealment MITM Attack ARP Poison between {self.target_plc_ip} and "
                           f"{self.intermediate_attack['gateway_ip']}")
-
-        queue_number = 1
-        nfqueue_path = Path(__file__).parent.absolute() / "unconstrained_blackbox_netfilter_queue.py"
-        cmd = ["python3", str(nfqueue_path), str(self.intermediate_yaml_path), str(self.yaml_index), str(queue_number)]
-
-        self.nfqueue_process = subprocess.Popen(cmd, shell=False, stderr=sys.stderr, stdout=sys.stdout)
-
-        self.sync = False
 
     def interrupt(self):
         """
