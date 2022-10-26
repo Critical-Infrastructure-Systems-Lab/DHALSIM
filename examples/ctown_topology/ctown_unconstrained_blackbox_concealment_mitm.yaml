@@ -5,8 +5,8 @@ network_attacks:
   # value: 8.0  Here we can instead point to he model that we would be using
   #concealment_data: concealment_test.csv
   trigger:
-    start: 5
-    end: 30
-    #start: 648
-    #end: 792
+    #start: 3
+    #end: 20
+    start: 648
+    end: 792
     type: time

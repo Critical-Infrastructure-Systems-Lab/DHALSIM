@@ -302,7 +302,7 @@ class SyncedAttack(metaclass=ABCMeta):
                 self.logger.debug('Stopping attack')
                 self.state = 0
                 self.teardown()
-
+                self.logger.debug('Teardown sucessful')
 
                 # Re establish sync
                 if not self.sync:
