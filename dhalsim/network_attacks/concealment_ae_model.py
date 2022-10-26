@@ -86,8 +86,8 @@ class ConcealmentAE:
         list_pump_status = list(gen_examples.filter(regex='PU[0-9]+$|V[0-9]+$').columns)
 
         for status in list_pump_status:  # list(gen_examples.columns[31:43]):
-            col_index = gen_examples.columns_get_loc(status)
-            col_index_f = gen_examples.columns_get_loc(status + 'F')
+            col_index = gen_examples.columns.get_loc(status)
+            col_index_f = gen_examples.columns.get_loc(status + 'F')
             for j, _ in gen_examples.iterrows():
                 if gen_examples.iloc[j, col_index] > 0.5:
                     gen_examples.iloc[j, col_index] = 1
@@ -100,9 +100,13 @@ class ConcealmentAE:
         return gen_examples
 
     def predict(self, received_values_df):
-        for index, row in received_values_df.iterrows():
-            gen_examples = self.generator.predict(self.attacker_scaler.transform(received_values_df))
-        
+        print('Attempting to predict concealment values')
+        gen_examples = self.generator.predict(self.attacker_scaler.transform(received_values_df))
+        gen_examples = self.fix_sample(pd.DataFrame(columns=self.sensor_cols,
+                                                    data=self.attacker_scaler.inverse_transform(gen_examples)))
+
+        return gen_examples
+
     def __init__(self, a_path):
         # Load and preprocess training data
         training_path = Path(__file__).parent/a_path/'training_data.csv'
@@ -119,7 +123,9 @@ class ConcealmentAE:
         self.feature_dims = len(self.sensor_cols)
 
         self.hide_layers = hide_layers
-        self.generator_layers = [self.feature_dims, int(self.hide_layers / 2), self.hide_layers,
+        self.generator_layers = [self.feature_dims,
+                                 int(self.hide_layers / 2),
+                                 self.hide_layers,
                                  int(self.hide_layers / 2), self.feature_dims]
 
         optimizer = Adam(lr=0.001)

@@ -1,10 +1,10 @@
 inp_file: ctown_map.inp
 #iterations: 2880
-iterations: 20
+iterations: 50
 network_topology_type: complex
 plcs: !include ctown_plcs.yaml
 
-#log_level: debug
+log_level: debug
 simulator: epynet
 demand: pdd
 attacks: !include ctown_unconstrained_blackbox_concealment_mitm.yaml
