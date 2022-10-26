@@ -33,6 +33,9 @@ class UnconstrainedBlackBox(SyncedAttack):
     :param yaml_index: The index of the attack in the intermediate YAML
     """
 
+    NETFILTERQUEUE_SUBPROCESS_TIMEOUT = 3
+    """ Timeout to wait for the netfilter subprocess to be finished"""
+
     def __init__(self, intermediate_yaml_path: Path, yaml_index: int):
 
         # sync in this attack needs to be hanlded by the netfilterqueue. This value will be changed after we
@@ -106,11 +109,17 @@ class UnconstrainedBlackBox(SyncedAttack):
 
         self.logger.debug("Stopping nfqueue subprocess...")
         self.nfqueue_process.send_signal(signal.SIGINT)
-        self.nfqueue_process.wait()
-        if self.nfqueue_process.poll() is None:
-            self.nfqueue_process.terminate()
-        if self.nfqueue_process.poll() is None:
-            self.nfqueue_process.kill()
+
+        try:
+            self.nfqueue_process.wait(self.NETFILTERQUEUE_SUBPROCESS_TIMEOUT)
+        except subprocess.TimeoutExpired as e:
+            self.logger.debug('TimeoutExpire: ' + str(e))
+            if self.nfqueue_process.poll() is None:
+                self.nfqueue_process.terminate()
+            if self.nfqueue_process.poll() is None:
+                self.nfqueue_process.kill()
+
+        self.logger.debug("Stopped nfqueue subprocess")
 
     def attack_step(self):
         """Polls the NetFilterQueue subprocess and sends a signal to stop it when teardown is called"""

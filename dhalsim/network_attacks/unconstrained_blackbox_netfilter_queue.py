@@ -99,12 +99,15 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
             self.advAE.save_model('adversarial_models/generator_100_percent.h5')
             self.logger.info('Model saved')
             self.advAE.generator = load_model('adversarial_models/generator_100_percent.h5')
-        self.sync_thread_flag = True
+
+
+        self.sync_flag = True
         self.sync_thread = threading.Thread(target=self.handle_sync)
         self.sync_thread.start()
 
     def interrupt(self):
-        self.sync_thread_flag = False
+        self.sync_flag = False
+        self.logger.debug("Netfilter process interrupted")
 
     def sigint_handler(self, sig, frame):
         """Interrupt handler for attacker being stoped"""
@@ -112,38 +115,31 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
         self.interrupt()
 
     def handle_sync(self):
-        while self.sync_thread_flag:
+        while self.sync_flag:
             # flag = 0 means a physical process finished a new iteration
-            while not self.get_sync(0):
-                if self.sync_thread_flag:
-                    #self.logger.debug('Thread sync flag is: ' + str(self.sync_thread_flag) )
-                    pass
-                else:
-                    break
+            while (not self.get_sync(0)) and self.sync_flag:
+                #self.logger.debug('Thread sync flag is: ' + str(self.sync_flag) )
+                pass
 
             # We have to keep the same state machine as PLCs
             self.set_sync(1)
             self.logger.debug('Sync flat set in 1')
 
+            # 2 is when the PLCs exchange locally their information
             while not self.get_sync(2):
-                if self.sync_thread_flag:
-                    pass
-                else:
-                    break
+                pass
 
             self.logger.debug('Keeping attack sync in 2, until we get all SCADA flags')
 
             # We stay in 2, to conceal the values exchanged remotely from the PLCs, until we make a prediction
-            while self.missing_scada_tags:
-                if self.sync_thread_flag:
-                    pass
-                else:
-                    break
+            while self.missing_scada_tags and self.sync_flag:
+                pass
 
             self.logger.debug('Setting attack sync in 3')
             self.set_sync(3)
 
-        self.set_sync(3)
+        self.logger.debug('Netfilter sync thread while finished')
+        #self.set_sync(3)
 
     def set_initial_conditions_of_scada_values(self):
         zero_values = [[0] * len(self.scada_tags)] * self.window_size
@@ -195,7 +191,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
             if not self.missing_scada_tags:
 
                 # Wait for sync to take place
-                while not self.get_sync(3) and self.sync_thread_flag:
+                while not self.get_sync(3) and self.sync_flag:
                     pass
 
                 self.missing_scada_tags = list(self.scada_tags)
