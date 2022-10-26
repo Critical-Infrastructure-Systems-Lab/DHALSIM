@@ -224,7 +224,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
         #self.logger.debug('ENIP response session: ' + str(this_session))
         #self.logger.debug('ENIP response context: ' + str(this_context))
 
-        #self.logger.debug('ENIP Response for: ' + str(ip_payload[IP].dst))
+        self.logger.debug('ENIP Response for: ' + str(ip_payload[IP].dst))
 
         try:
             # Concealment values to SCADA
@@ -250,7 +250,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
 
         #self.logger.debug('ENIP request for tag: ' + str(tag_name))
         session_dict = {'session': this_session, 'tag': tag_name, 'context': context}
-        #self.logger.debug('session dict: ' + str(session_dict))
+        self.logger.debug('session dict: ' + str(session_dict))
 
         #self.logger.debug('SCADA Req session')
         self.scada_session_ids.append(session_dict)

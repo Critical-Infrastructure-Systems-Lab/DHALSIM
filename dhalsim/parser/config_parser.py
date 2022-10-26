@@ -119,10 +119,6 @@ class SchemaParser:
                     int,
                     Schema(lambda i: i >= 0, error="'replay_start' must be positive."),
                 ),
-                'replay_end': And(
-                    int,
-                    Schema(lambda i: i >= 0, error="'replay_end' must be positive."),
-                ),
             },
             {
                 'type': And(
@@ -141,10 +137,6 @@ class SchemaParser:
                 'replay_start': And(
                     int,
                     Schema(lambda i: i >= 0, error="'replay_start' must be positive."),
-                ),
-                'replay_end': And(
-                    int,
-                    Schema(lambda i: i >= 0, error="'replay_end' must be positive."),
                 ),
             },
         )

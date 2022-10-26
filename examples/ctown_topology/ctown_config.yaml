@@ -8,3 +8,4 @@ log_level: debug
 simulator: epynet
 demand: pdd
 #attacks: !include ctown_unconstrained_blackbox_concealment_mitm.yaml
+attacks: !include ctown_concealment_mitm_value.yaml

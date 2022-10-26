@@ -34,8 +34,11 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
                 self.concealment_data_pd = pd.read_csv(self.intermediate_attack['concealment_data']['path'])
             elif self.intermediate_attack['concealment_data']['type'] == 'value':
                 self.concealment_type = 'value'
+            elif self.intermediate_attack['concealment_data']['type'] == 'payload_replay':
+                self.concealment_type = 'payload_replay'
             else:
-                raise ConcealmentError("Concealment data type is invalid, supported values are 'concealment_value' or 'concealment_path ")
+                raise ConcealmentError("Concealment data type is invalid, supported values are: "
+                                       "'concealment_value', 'concealment_path', or 'payload_replay' ")
 
         self.logger.debug('Concealment type is: ' + str(self.concealment_type))
 
@@ -61,15 +64,14 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
                         ip_payload[Raw].load), modified
 
     def handle_concealment(self, session, ip_payload):
-        if self.intermediate_attack['concealment_data']['type'] == 'value' or \
-                self.intermediate_attack['concealment_data']['type'] == 'offset':
+        if self.intermediate_attack['concealment_data']['type'] == 'value':
             for tag in self.intermediate_attack['concealment_data']['concealment_value']:
                 if session['tag'] == tag['tag']:
                     modified = True
-                    if self.intermediate_attack['concealment_data']['type'] == 'value':
+                    if 'value' in tag.keys():
                         self.logger.debug('Concealment value is: ' + str(tag['value']))
                         return translate_float_to_payload(tag['value'], ip_payload[Raw].load), modified
-                    elif self.intermediate_attack['concealment_data']['type'] == 'offset':
+                    elif 'offset' in tag.keys():
                         self.logger.debug('Concealment offset is: ' + str(tag['offset']))
                         return translate_float_to_payload(
                             translate_payload_to_float(ip_payload[Raw].load) + tag['offset'],
