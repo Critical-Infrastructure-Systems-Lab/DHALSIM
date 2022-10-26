@@ -12,15 +12,18 @@ from scapy.packet import Raw
 
 from dhalsim.network_attacks.utilities import translate_payload_to_float, translate_float_to_payload
 
+
 class Error(Exception):
     """Base class for exceptions in this module."""
+
 
 class ConcealmentError(Error):
     """Raised when there is an error in the concealment parameter"""
 
+
 class ConcealmentMiTMNetfilterQueue(PacketQueue):
 
-    def __init__(self,  intermediate_yaml_path: Path, yaml_index: int, queue_number: int ):
+    def __init__(self, intermediate_yaml_path: Path, yaml_index: int, queue_number: int):
         super().__init__(intermediate_yaml_path, yaml_index, queue_number)
         self.attacked_tags = self.intermediate_attack['tags']
         self.logger.debug('Attacked tags:' + str(self.attacked_tags))
@@ -36,11 +39,20 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
                 self.concealment_type = 'value'
             elif self.intermediate_attack['concealment_data']['type'] == 'payload_replay':
                 self.concealment_type = 'payload_replay'
+                self.captured_tags_pd = pd.DataFrame(columns=self.get_conceal_tags())
+                self.replay_duration = int(self.intermediate_attack['concealment_data']['capture_start']) + \
+                                       int(self.intermediate_attack['concealment_data']['capture_end'])
             else:
                 raise ConcealmentError("Concealment data type is invalid, supported values are: "
                                        "'concealment_value', 'concealment_path', or 'payload_replay' ")
 
         self.logger.debug('Concealment type is: ' + str(self.concealment_type))
+
+    def get_conceal_tags(self):
+        tag_list = []
+        for tag in self.intermediate_attack['tags']:
+            tag_list.append(tag)
+        return tag_list
 
     def get_attack_tag(self, a_tag_name):
         self.logger.debug('attacked tags: ' + str(self.attacked_tags))
@@ -76,6 +88,7 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
                         return translate_float_to_payload(
                             translate_payload_to_float(ip_payload[Raw].load) + tag['offset'],
                             ip_payload[Raw].load), modified
+
         elif self.intermediate_attack['concealment_data']['type'] == 'path':
             self.logger.debug('Concealing to SCADA with path')
             exp = (self.concealment_data_pd['iteration'] == self.get_master_clock())
@@ -83,6 +96,30 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
             self.logger.debug('Concealing with value: ' + str(concealment_value))
             modified = True
             return translate_float_to_payload(concealment_value, ip_payload[Raw].load), modified
+
+        elif self.intermediate_attack['concealment_data']['type'] == 'payload_replay':
+            self.logger.debug('Concealing with payload replay')
+            current_clock = int(self.get_master_clock())
+
+            # Capture phase of the payload replay attack
+            if int(self.intermediate_attack['concealment_data']['capture_start']) <= current_clock < \
+                    int(self.intermediate_attack['concealment_data']['capture_end']):
+                self.logger.debug('Capturing payload')
+                self.captured_tags_pd.loc[current_clock, session['tag']] = \
+                    translate_payload_to_float(ip_payload[Raw].load)
+                modified = False
+                return ip_payload, modified
+
+            if int(self.intermediate_attack['concealment_data']['replay_start']) <= current_clock < \
+                    int(self.intermediate_attack['concealment_data']['replay_start']) + self.replay_duration:
+                self.logger.debug('Replyaing payload')
+                for tag in self.intermediate_attack['concealment_data']['concealment_value']:
+                    if session['tag'] == tag['tag']:
+                        # Maybe we did not captured a value for that tag at that iteration
+                        if self.captured_tags_pd.loc[current_clock][tag['tag']]:
+                            modified = True
+                            concealment_value = self.captured_tags_pd.loc[current_clock][tag['tag']]
+                            return translate_float_to_payload(concealment_value, ip_payload[Raw].load), modified
 
     def handle_enip_response(self, ip_payload):
         this_session = int.from_bytes(ip_payload[Raw].load[4:8], sys.byteorder)
@@ -122,7 +159,7 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
         this_tag = self.get_attack_tag(tag_name)
 
         if this_tag:
-            #self.logger.debug('Tag name: ' + str(tag_name))
+            # self.logger.debug('Tag name: ' + str(tag_name))
             self.logger.debug('Attack tag: ' + str(this_tag['tag']))
             session_dict = {'session': this_session, 'tag': this_tag['tag'], 'context': context}
             self.logger.debug('session dict: ' + str(session_dict))
@@ -177,12 +214,14 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
                 self.nfqueue.unbind()
             sys.exit(0)
 
+
 def is_valid_file(parser_instance, arg):
     """Verifies whether the intermediate yaml path is valid."""
     if not os.path.exists(arg):
         parser_instance.error(arg + " does not exist")
     else:
         return arg
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Start everything for an attack')
@@ -201,6 +240,5 @@ if __name__ == "__main__":
     attack = ConcealmentMiTMNetfilterQueue(
         intermediate_yaml_path=Path(args.intermediate_yaml),
         yaml_index=args.index,
-        queue_number = args.number)
+        queue_number=args.number)
     attack.main_loop()
-
