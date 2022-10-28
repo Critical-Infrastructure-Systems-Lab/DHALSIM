@@ -125,13 +125,13 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
                 replay_position = current_clock - int(self.intermediate_attack['concealment_data']['capture_end'])
                 self.logger.debug('Replay position ' + str(replay_position))
                 # Maybe we did not captured a value for that tag at that iteration
-                if (not np.isnan(self.captured_tags_pd.loc[replay_position][this_tag])) \
-                        and replay_position in self.captured_tags_pd.index:
-                    concealment_value = float(self.captured_tags_pd.loc[replay_position][this_tag])
-                    self.logger.debug('Replaying tag ' + str(this_tag) + ' with value '
-                                      + str(concealment_value))
-                    modified = True
-                    return translate_float_to_payload(concealment_value, ip_payload[Raw].load), modified
+                if replay_position in self.captured_tags_pd.index:
+                    if not np.isnan(self.captured_tags_pd.loc[replay_position][this_tag]):
+                        concealment_value = float(self.captured_tags_pd.loc[replay_position][this_tag])
+                        self.logger.debug('Replaying tag ' + str(this_tag) + ' with value '
+                                          + str(concealment_value))
+                        modified = True
+                        return translate_float_to_payload(concealment_value, ip_payload[Raw].load), modified
 
             # We could also let users finish the replay phase, but not finish the attack immediately
             modified = False
