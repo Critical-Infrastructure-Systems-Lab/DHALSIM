@@ -6,6 +6,7 @@ import os
 import sys
 
 import pandas as pd
+import numpy as np
 
 from scapy.layers.inet import IP, TCP
 from scapy.packet import Raw
@@ -59,7 +60,7 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
         return tag_list
 
     def get_attack_tag(self, a_tag_name):
-        self.logger.debug('attacked tags: ' + str(self.attacked_tags))
+        #self.logger.debug('attacked tags: ' + str(self.attacked_tags))
         for tag in self.attacked_tags:
             if tag['tag'] == a_tag_name:
                 return tag
@@ -118,16 +119,19 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
 
             if int(self.intermediate_attack['concealment_data']['replay_start']) <= current_clock < \
                     int(self.intermediate_attack['concealment_data']['replay_start']) + self.replay_duration:
+
                 self.logger.debug('Replaying payload')
-                for tag in self.intermediate_attack['tags']:
-                    if session['tag'] == tag['tag']:
-                        # Maybe we did not captured a value for that tag at that iteration
-                        if self.captured_tags_pd.loc[current_clock][this_tag]:
-                            modified = True
-                            concealment_value = float(self.captured_tags_pd.loc[current_clock][tag['tag']])
-                            self.logger.debug('Replaying tag ' + str(tag['tag']) + ' with value '
-                                              + str(concealment_value))
-                            return translate_float_to_payload(concealment_value, ip_payload[Raw].load), modified
+                self.logger.debug('Captured payloads pd: \n' + str(self.captured_tags_pd))
+                replay_position = current_clock - int(self.intermediate_attack['concealment_data']['capture_end'])
+                self.logger.debug('Replay position ' + str(replay_position))
+                # Maybe we did not captured a value for that tag at that iteration
+                if (not np.isnan(self.captured_tags_pd.loc[replay_position][this_tag])) \
+                        and replay_position in self.captured_tags_pd.index:
+                    concealment_value = float(self.captured_tags_pd.loc[replay_position][this_tag])
+                    self.logger.debug('Replaying tag ' + str(this_tag) + ' with value '
+                                      + str(concealment_value))
+                    modified = True
+                    return translate_float_to_payload(concealment_value, ip_payload[Raw].load), modified
 
             # We could also let users finish the replay phase, but not finish the attack immediately
             modified = False
