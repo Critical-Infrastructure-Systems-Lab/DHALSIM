@@ -60,12 +60,21 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
         return tag_list
 
     def get_attack_tag(self, a_tag_name):
-        #self.logger.debug('attacked tags: ' + str(self.attacked_tags))
+        # self.logger.debug('attacked tags: ' + str(self.attacked_tags))
         for tag in self.attacked_tags:
             if tag['tag'] == a_tag_name:
                 return tag
 
     def handle_attack(self, session, ip_payload):
+        if 'concealment_data' in self.intermediate_attack.keys():
+            if self.intermediate_attack['concealment_data']['type'] == 'payload_replay':
+                current_clock = int(self.get_master_clock())
+                if int(self.intermediate_attack['concealment_data']['replay_start']) + self.replay_duration <= \
+                        current_clock <= int(self.intermediate_attack['concealment_data']['replay_start']):
+                    # With replay concealment, we should not modify payloads, unless we are already replying
+                    modified = False
+                    return ip_payload, modified
+
         # We support multi tag sending, using the same session. Context varies among tags
         for tag in self.intermediate_attack['tags']:
             if session['tag'] == tag['tag']:
@@ -122,7 +131,8 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
 
                 self.logger.debug('Replaying payload')
                 self.logger.debug('Captured payloads pd: \n' + str(self.captured_tags_pd))
-                replay_position = current_clock - int(self.intermediate_attack['concealment_data']['capture_end'])
+                replay_position = int(self.intermediate_attack['concealment_data']['capture_start']) +\
+                                  current_clock - int(self.intermediate_attack['concealment_data']['replay_start'])
                 self.logger.debug('Replay position ' + str(replay_position))
                 # Maybe we did not captured a value for that tag at that iteration
                 if replay_position in self.captured_tags_pd.index:

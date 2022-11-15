@@ -9,10 +9,12 @@ network_attacks:
   target: PLC4
   concealment_data:
     type: payload_replay
-    capture_start: 10
-    capture_end: 20
-    replay_start: 30
+    capture_start: 650
+    capture_end: 700
+    replay_start: 720
   trigger:
-    start: 10
-    end: 50
+    start: 648
+    end: 792
+    #start: 5
+    #end: 50
     type: time
