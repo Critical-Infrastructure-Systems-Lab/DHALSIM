@@ -120,25 +120,6 @@ class SchemaParser:
                     Schema(lambda i: i >= 0, error="'replay_start' must be positive."),
                 ),
             },
-            {
-                'type': And(
-                    str,
-                    Use(str.lower),
-                    'network_replay'
-                ),
-                'capture_start': And(
-                    int,
-                    Schema(lambda i: i >= 0, error="'capture_start' must be positive."),
-                ),
-                'capture_end': And(
-                    int,
-                    Schema(lambda i: i >= 0, error="'capture_end' must be positive."),
-                ),
-                'replay_start': And(
-                    int,
-                    Schema(lambda i: i >= 0, error="'replay_start' must be positive."),
-                ),
-            },
         )
     )
 
@@ -330,16 +311,12 @@ class SchemaParser:
                            error="Length of name must be between 1 and 20, '{}' has invalid length")
                 ),
                 'trigger': trigger,
-                'target': And(
-                    str,
-                    string_pattern
-                ),
             },
             {
                 'type': And(
                     str,
                     Use(str.lower),
-                    'unconstrained_blackbox_concealment_mitm',
+                    'replay_mitm',
                 ),
                 'name': And(
                     str,
@@ -348,6 +325,22 @@ class SchemaParser:
                            error="Length of name must be between 1 and 20, '{}' has invalid length")
                 ),
                 'trigger': trigger,
+                'target': And(
+                    str,
+                    string_pattern
+                ),
+                'capture_start': And(
+                    int,
+                    Schema(lambda i: i >= 0, error="'capture_start' must be positive."),
+                ),
+                'capture_end': And(
+                    int,
+                    Schema(lambda i: i >= 0, error="'capture_start' must be positive."),
+                ),
+                'replay_start': And(
+                    int,
+                    Schema(lambda i: i >= 0, error="'capture_start' must be positive."),
+                ),
             },
             {
                 'type': And(

@@ -31,8 +31,13 @@ class MiTMNetfilterQueue(PacketQueue):
             p = IP(packet.get_payload())
             if 'TCP' in p:
                 if len(p) == 116:
-                    this_session =  int.from_bytes(p[Raw].load[4:8], sys.byteorder)
+                    this_session = int.from_bytes(p[Raw].load[4:8], sys.byteorder)
                     tag_name = p[Raw].load.decode(encoding='latin-1')[54:56]
+                    if self.attacked_tag == tag_name:
+                        self.session_ids.append(this_session)
+                if len(p) == 118:
+                    this_session = int.from_bytes(p[Raw].load[4:8], sys.byteorder)
+                    tag_name = p[Raw].load.decode(encoding='latin-1')[54:57]
                     if self.attacked_tag == tag_name:
                         self.session_ids.append(this_session)
 

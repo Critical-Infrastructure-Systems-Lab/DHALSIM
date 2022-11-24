@@ -81,6 +81,9 @@ class AttackerControl(NodeControl):
             generic_plc_path = Path(__file__).parent.parent.absolute() / "network_attacks" / "concealment_mitm.py"
         elif self.this_attacker_data['type'] == 'unconstrained_blackbox_concealment_mitm':
             generic_plc_path = Path(__file__).parent.parent.absolute() / "network_attacks" / "black_box_concealment_attack.py"
+        elif self.this_attacker_data['type'] == 'replay_mitm':
+            generic_plc_path = Path(__file__).parent.parent.absolute() / "network_attacks" / "replay_mitm.py"
+
         else:
             raise NoSuchAttack("Attack {attack} does not exists.".format(attack=self.this_attacker_data['type']))
 

