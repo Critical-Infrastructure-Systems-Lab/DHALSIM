@@ -10,8 +10,8 @@ network_attacks:
   concealment_data:
     type: payload_replay
     capture_start: 650
-    capture_end: 700
-    replay_start: 720
+    capture_end: 720
+    replay_start: 722
   trigger:
     start: 648
     end: 792

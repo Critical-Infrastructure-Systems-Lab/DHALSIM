@@ -70,7 +70,7 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
             if self.intermediate_attack['concealment_data']['type'] == 'payload_replay':
                 current_clock = int(self.get_master_clock())
                 if int(self.intermediate_attack['concealment_data']['replay_start']) + self.replay_duration <= \
-                        current_clock <= int(self.intermediate_attack['concealment_data']['replay_start']):
+                        current_clock < int(self.intermediate_attack['concealment_data']['replay_start']):
                     # With replay concealment, we should not modify payloads, unless we are already replying
                     modified = False
                     return ip_payload, modified
@@ -134,14 +134,20 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
                 replay_position = int(self.intermediate_attack['concealment_data']['capture_start']) +\
                                   current_clock - int(self.intermediate_attack['concealment_data']['replay_start'])
                 self.logger.debug('Replay position ' + str(replay_position))
+
                 # Maybe we did not captured a value for that tag at that iteration
-                if replay_position in self.captured_tags_pd.index:
-                    if not np.isnan(self.captured_tags_pd.loc[replay_position][this_tag]):
-                        concealment_value = float(self.captured_tags_pd.loc[replay_position][this_tag])
-                        self.logger.debug('Replaying tag ' + str(this_tag) + ' with value '
-                                          + str(concealment_value))
-                        modified = True
-                        return translate_float_to_payload(concealment_value, ip_payload[Raw].load), modified
+                if replay_position in self.captured_tags_pd.index and\
+                        (not np.isnan(self.captured_tags_pd.loc[replay_position][this_tag])):
+                    validated_replay_position = replay_position
+                else:
+                    # todo: There could be a case where the index exists, but the value is Nan
+                    validated_replay_position = min(self.captured_tags_pd.index, key=lambda x: abs(x - replay_position))
+
+                concealment_value = float(self.captured_tags_pd.loc[validated_replay_position][this_tag])
+                self.logger.debug('Replaying tag ' + str(this_tag) + ' with value '
+                                  + str(concealment_value))
+                modified = True
+                return translate_float_to_payload(concealment_value, ip_payload[Raw].load), modified
 
             # We could also let users finish the replay phase, but not finish the attack immediately
             modified = False

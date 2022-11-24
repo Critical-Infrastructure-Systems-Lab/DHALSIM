@@ -8,3 +8,4 @@
 - name: PLC3
   sensors:
     - T42
+
