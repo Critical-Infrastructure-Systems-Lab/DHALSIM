@@ -91,6 +91,8 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
                         translate_payload_to_float(ip_payload[Raw].load) + tag['offset'],
                         ip_payload[Raw].load), modified
 
+                # elif 'replay' ...
+
     def payload_capture(self, session, ip_payload, current_clock, this_tag):
         self.logger.debug('Capturing payload of tag ' + this_tag)
         self.captured_tags_pd.loc[current_clock, this_tag] = \

@@ -35,7 +35,7 @@ class ReplayMiTMNetfilterQueue(PacketQueue):
         try:
             p = IP(packet.get_payload())
             if 'TCP' in p:
-                if p[IP].dst == self.intermediate_attack['public_ip']:
+                if p[IP].src == self.intermediate_attack['public_ip']:
                     self.logger.debug('Targeting IP: ' + self.intermediate_attack['public_ip'] +
                                       'of target ' + str(self.intermediate_attack['target']))
 
