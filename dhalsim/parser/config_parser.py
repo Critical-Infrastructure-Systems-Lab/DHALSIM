@@ -120,6 +120,25 @@ class SchemaParser:
                     Schema(lambda i: i >= 0, error="'replay_start' must be positive."),
                 ),
             },
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
+                    'network_replay'
+                ),
+                'capture_start': And(
+                    int,
+                    Schema(lambda i: i >= 0, error="'capture_start' must be positive."),
+                ),
+                'capture_end': And(
+                    int,
+                    Schema(lambda i: i >= 0, error="'capture_end' must be positive."),
+                ),
+                'replay_start': And(
+                    int,
+                    Schema(lambda i: i >= 0, error="'replay_start' must be positive."),
+                ),
+            },
         )
     )
 
