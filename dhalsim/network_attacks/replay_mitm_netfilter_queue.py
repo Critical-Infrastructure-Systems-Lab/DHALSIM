@@ -44,7 +44,7 @@ class ReplayMiTMNetfilterQueue(PacketQueue):
                     # Capture phase
                     if int(self.intermediate_attack['capture_start']) <= current_clock < \
                             int(self.intermediate_attack['capture_end']):
-                        self.captured_packets_pd.loc[current_clock, 'Packet'] = p[Raw]
+                        self.captured_packets_pd.loc[current_clock, 'Packet'] = p[Raw].load
                         self.logger.debug('Captured packet: at ' + str(current_clock))
 
                     # Replay phase
@@ -55,8 +55,7 @@ class ReplayMiTMNetfilterQueue(PacketQueue):
                                           int(self.intermediate_attack['replay_start'])
 
                         # Maybe we did not captured a value for that tag at that iteration
-                        if replay_position in self.captured_packets_pd.index and \
-                                (not np.isnan(self.captured_packets_pd.loc[replay_position]['Packet'])):
+                        if replay_position in self.captured_packets_pd.index:
                             validated_replay_position = replay_position
                         else:
                             # todo: There could be a case where the index exists, but the value is Nan
@@ -65,7 +64,7 @@ class ReplayMiTMNetfilterQueue(PacketQueue):
 
                         del p[IP].chksum
                         del p[TCP].chksum
-                        p[Raw] = self.captured_packets_pd.loc[validated_replay_position]['Packet']
+                        p[Raw].load = self.captured_packets_pd.loc[validated_replay_position]['Packet']
 
                         self.logger.debug(f"Packet replayed for {p[IP].dst}.")
 

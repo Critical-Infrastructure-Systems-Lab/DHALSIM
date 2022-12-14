@@ -115,7 +115,7 @@ class ConcealmentAE:
 
         # Adversarial model for concealment
         # toDo: Ask about this parameter
-        hide_layers = 128
+        hide_layers = 39
 
         self.sensor_cols = [col for col in self.physical_pd.columns if
                             col not in ['Unnamed: 0', 'iteration', 'timestamp', 'Attack']]

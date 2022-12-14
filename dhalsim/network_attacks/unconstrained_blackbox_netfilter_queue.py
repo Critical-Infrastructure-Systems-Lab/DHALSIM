@@ -50,7 +50,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
         super().__init__(intermediate_yaml_path, yaml_index, queue_number)
 
         # toDo: This will be updated depending on the ae model
-        self.window_size = 6
+        self.window_size = 6  # This is a function of hydraulic timestep. This is used only for detection
         self.complete_scada_set = False
         self.received_window_size = 0
 
@@ -160,7 +160,10 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
     # Delivers a pandas dataframe with ALL SCADA tags
     def predict_concealment_values(self):
 
+        # This returns 1 row
         self.calculated_concealment_values_df = self.advAE.predict(self.received_scada_tags_df)
+
+        # Collect samples, don't conceal
 
         self.logger.debug('predicting')
 

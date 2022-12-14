@@ -2,11 +2,9 @@ network_attacks:
 - name: plc4attack
   type: concealment_mitm
   tags:
-    - tag: T3
+    - tag: T1
       offset: 10.0
-    - tag: T4
-      offset: 10.0
-  target: PLC4
+  target: PLC2
   concealment_data:
     type: payload_replay
     capture_start: 650
