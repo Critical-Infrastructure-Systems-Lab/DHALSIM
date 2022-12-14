@@ -282,7 +282,7 @@ class SyncedAttack(metaclass=ABCMeta):
         """
         self.db_query("UPDATE attack SET flag=? WHERE name IS ?", True, (int(flag), self.intermediate_attack['name']))
 
-    def main_loop(self):
+    def main_loop(self, start_now=False):
         """
         The main loop of an attack.
         """
@@ -292,7 +292,13 @@ class SyncedAttack(metaclass=ABCMeta):
                 while not self.get_sync(0):
                     pass
 
-            run = self.check_trigger()
+            # Modified for the Alessandro's concealment to work properly
+            if start_now:
+                run = True
+            else:
+                run = self.check_trigger()
+
+            # todo: When should we set the flag attack when using Alessandro's concealment attack
             self.set_attack_flag(run)
             if self.state == 0:
                 if run:

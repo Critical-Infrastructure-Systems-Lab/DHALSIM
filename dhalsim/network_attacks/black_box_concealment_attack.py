@@ -44,6 +44,11 @@ class UnconstrainedBlackBox(SyncedAttack):
         super().__init__(intermediate_yaml_path, yaml_index, sync)
         os.system('sysctl net.ipv4.ip_forward=1')
 
+        if self.intermediate_attack['persistent'] == 'True':
+            self.persistent = True
+        else:
+            self.persistent = False
+
         # Process object to handle nfqueue
         self.nfqueue_process = None
 
@@ -167,4 +172,5 @@ if __name__ == "__main__":
     attack = UnconstrainedBlackBox(
         intermediate_yaml_path=Path(args.intermediate_yaml),
         yaml_index=args.index)
-    attack.main_loop()
+
+    attack.main_loop(attack.persistent)

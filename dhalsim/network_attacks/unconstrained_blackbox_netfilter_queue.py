@@ -49,8 +49,17 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
     def __init__(self,  intermediate_yaml_path: Path, yaml_index: int, queue_number: int ):
         super().__init__(intermediate_yaml_path, yaml_index, queue_number)
 
-        # toDo: This will be updated depending on the ae model
-        self.window_size = 6  # This is a function of hydraulic timestep. This is used only for detection
+        if self.intermediate_attack['persistent'] == 'True':
+            self.persistent = True
+        else:
+            self.persistent = False
+
+        if self.persistent:
+            self.window_size = 1
+        else:
+            #todo: Adjust it to hydraulic timestep
+            self.window_size = 6  # This is a function of hydraulic timestep. This is used only for detection
+
         self.complete_scada_set = False
         self.received_window_size = 0
 
@@ -65,7 +74,6 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
 
         # set with the tags we have not received in this iteration
         self.missing_scada_tags = list(self.scada_tags)
-
 
         self.scada_values = []
         self.scada_session_ids = []
@@ -142,8 +150,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
         #self.set_sync(3)
 
     def set_initial_conditions_of_scada_values(self):
-        zero_values = [[0] * len(self.scada_tags)] * self.window_size
-        df = pd.DataFrame(columns=self.scada_tags, data=zero_values)
+        df = pd.DataFrame(columns=self.scada_tags)
         return df
 
     def get_scada_tags(self):
@@ -183,14 +190,17 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
         #self.logger.debug('SCADA tags len: ' + str(len(self.scada_tags)))
 
         if session['tag'] in self.missing_scada_tags:
+
+            current_clock = int(self.get_master_clock())
             # We store the value, this df is an input for the concealment ML model
-            self.received_scada_tags_df[session['tag']].iloc[self.received_window_size] = translate_payload_to_float(ip_payload[Raw].load)
+            self.received_scada_tags_df.loc[current_clock, session['tag']] = translate_payload_to_float(ip_payload[Raw].load)
+
             #self.logger.debug('Received tag ' + str(session['tag']) + ' with value: ' +
             #str(self.received_scada_tags_df[session['tag']].iloc[-1]))
             self.missing_scada_tags.remove(session['tag'])
             #self.logger.debug('Missing tags len after removing: ' + str(len(self.missing_scada_tags)))
 
-            # Missing set is empty, increase the window count
+            # Missing set is empty, increase the window count or predict
             if not self.missing_scada_tags:
 
                 # Wait for sync to take place
@@ -199,26 +209,48 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
 
                 self.missing_scada_tags = list(self.scada_tags)
 
-                if not self.initialized:
-                    self.received_window_size = self.received_window_size + 1
-                    if self.received_window_size >= self.window_size - 1:
-                        self.initialized = True
-                        self.logger.debug('Adversarial Model initialized')
+                if self.persistent:
+                    if self.intermediate_attack['trigger']['start'] <= int(self.get_master_clock()) <\
+                            self.intermediate_attack['trigger']['end']:
+                        # We predict only during the trigger duration
+                        # todo: This means we could not launch persistent with sensor triggers
+                        if not self.predicted_for_iteration:
+                            self.predict_concealment_values()
+                            self.logger.debug('Concealment values predicted')
+                            self.predicted_for_iteration = True
+                else:
+                    if not self.initialized:
+                        self.received_window_size = self.received_window_size + 1
+                        if self.received_window_size >= self.window_size - 1:
+                            self.initialized = True
+                            self.logger.debug('Adversarial Model initialized')
 
-                elif not self.predicted_for_iteration:
-                    self.predict_concealment_values()
-                    self.logger.debug('Concealment values predicted')
-                    self.predicted_for_iteration = True
+                    elif not self.predicted_for_iteration:
+                        self.predict_concealment_values()
+                        self.logger.debug('Concealment values predicted')
+                        self.predicted_for_iteration = True
 
-        # If model is initialized, we have to conceal, regardless of missing set
-        if self.initialized:
-            modified = True
-            return translate_float_to_payload(self.calculated_concealment_values_df[session['tag']].iloc[-1],
-                                                  ip_payload[Raw].load), modified
-        else:
-            modified = False
-            # We don't conceal before initialization
-            return ip_payload[Raw].load, modified
+            # We are still missing some scada tags
+            else:
+                if self.persistent:
+                    if self.intermediate_attack['trigger']['start'] <= int(self.get_master_clock()) <\
+                            self.intermediate_attack['trigger']['end']:
+                        modified = True
+                        return translate_float_to_payload(self.calculated_concealment_values_df.loc[-1, session['tag']],
+                                                          ip_payload[Raw].load), modified
+                    else:
+                        modified = False
+                        # We don't conceal outside of trigger
+                        return ip_payload[Raw].load, modified
+                else:
+                    if self.initialized:
+                        modified = True
+                        return translate_float_to_payload(self.calculated_concealment_values_df.loc[-1, session['tag']],
+                                                          ip_payload[Raw].load), modified
+                    else:
+                        modified = False
+                        # We don't conceal before initialization
+                        return ip_payload[Raw].load, modified
 
     def handle_enip_response(self, ip_payload):
         this_session = int.from_bytes(ip_payload[Raw].load[4:8], sys.byteorder)

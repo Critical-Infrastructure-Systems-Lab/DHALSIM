@@ -329,6 +329,12 @@ class SchemaParser:
                     Schema(lambda name: 1 <= len(name) <= 20,
                            error="Length of name must be between 1 and 20, '{}' has invalid length")
                 ),
+                Optional('persistent', default='True'): And(
+                    str,
+                    Use(str.lower),
+                    Or(True, False), error="'Persistent' should be one of the following:"
+                                                       "'True' or 'False'."
+                ),
                 'trigger': trigger,
             },
             {
