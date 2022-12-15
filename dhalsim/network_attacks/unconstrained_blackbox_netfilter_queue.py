@@ -51,8 +51,10 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
 
         if self.intermediate_attack['persistent'] == 'True':
             self.persistent = True
+            self.first_time = True
         else:
             self.persistent = False
+            self.first_time = False
 
         if self.persistent:
             self.window_size = 1
@@ -82,6 +84,8 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
         # This flaf ensures that the prediction is called only once per iteration
         self.predicted_for_iteration = False
 
+
+
         #toDo: This will be something configured in the YAML file
         file_expr = 'training_data/ctown/'
 
@@ -108,7 +112,6 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
             self.logger.info('Model saved')
             self.advAE.generator = load_model('adversarial_models/generator_100_percent.h5')
 
-
         self.sync_flag = True
         self.sync_thread = threading.Thread(target=self.handle_sync)
         self.sync_thread.start()
@@ -126,8 +129,12 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
         while self.sync_flag:
             # flag = 0 means a physical process finished a new iteration
             while (not self.get_sync(0)) and self.sync_flag:
-                #self.logger.debug('Thread sync flag is: ' + str(self.sync_flag) )
                 pass
+
+            self.logger.debug('Handle sync. Sync 0 is: ' + str(self.get_sync(0)))
+            self.logger.debug('Handle sync. Sync 1 is: ' + str(self.get_sync(1)))
+            self.logger.debug('Handle sync. Sync 2 is: ' + str(self.get_sync(2)))
+            self.logger.debug('Handle sync. Sync 3 is: ' + str(self.get_sync(3)))
 
             # We have to keep the same state machine as PLCs
             self.set_sync(1)
@@ -137,10 +144,16 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
             while not self.get_sync(2):
                 pass
 
-            self.logger.debug('Keeping attack sync in 2, until we get all SCADA flags')
+            self.logger.debug('Sync is 2. Keeping attack sync in 2, until we get all SCADA flags')
 
             # We stay in 2, to conceal the values exchanged remotely from the PLCs, until we make a prediction
             while self.missing_scada_tags and self.sync_flag:
+
+                #todo: This is really horrible, but launching this module in persistent mode is breaking our sync state machine
+                if self.first_time:
+                    self.first_time = True
+                    break
+                #self.logger.debug('Waiting for all tags and sync_flag')
                 pass
 
             self.logger.debug('Setting attack sync in 3')
@@ -176,7 +189,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
 
     def handle_concealment(self, session, ip_payload):
 
-        #self.logger.debug('Concealing method for session: ' + str(session))
+        self.logger.debug('Concealing method for session: ' + str(session))
 
         if len(self.missing_scada_tags) == len(self.scada_tags):
             # We miss all the tags. Start of a new prediction cycle
@@ -196,15 +209,16 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
             self.received_scada_tags_df.loc[current_clock, session['tag']] = translate_payload_to_float(ip_payload[Raw].load)
 
             #self.logger.debug('Received tag ' + str(session['tag']) + ' with value: ' +
-            #str(self.received_scada_tags_df[session['tag']].iloc[-1]))
+            str(self.received_scada_tags_df[session['tag']].iloc[-1])
             self.missing_scada_tags.remove(session['tag'])
-            #self.logger.debug('Missing tags len after removing: ' + str(len(self.missing_scada_tags)))
+            self.logger.debug('Missing tags len after removing: ' + str(len(self.missing_scada_tags)))
 
             # Missing set is empty, increase the window count or predict
             if not self.missing_scada_tags:
 
                 # Wait for sync to take place
                 while not self.get_sync(3) and self.sync_flag:
+                    self.logger.debug('Waiting for flag 3')
                     pass
 
                 self.missing_scada_tags = list(self.scada_tags)
@@ -302,7 +316,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
 
         try:
             p = IP(packet.get_payload())
-            #self.logger.debug('packet')
+            self.logger.debug('packet')
             if 'TCP' in p:
                 if len(p) == 102:
                     p[Raw].load, modified = self.handle_enip_response(p)
