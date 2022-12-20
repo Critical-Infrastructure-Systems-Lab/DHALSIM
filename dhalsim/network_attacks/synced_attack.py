@@ -292,8 +292,8 @@ class SyncedAttack(metaclass=ABCMeta):
                 while not self.get_sync(0):
                     pass
 
-            # Modified for the Alessandro's concealment to work properly
-            if start_now:
+            # Modified for the Alessandro's concealment to work properly.
+            if start_now and int(self.get_master_clock()) > 10:
                 run = True
             else:
                 run = self.check_trigger()

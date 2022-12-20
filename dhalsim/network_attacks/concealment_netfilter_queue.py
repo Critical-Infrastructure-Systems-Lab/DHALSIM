@@ -244,10 +244,10 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
         modified = False
         return ip_payload, modified
 
-    def handle_enip_request(self, ip_payload, offset):
+    def handle_enip_request(self, ip_payload):
 
         this_session = int.from_bytes(ip_payload[Raw].load[4:8], sys.byteorder)
-        tag_name = ip_payload[Raw].load.decode(encoding='latin-1')[54:offset]
+        tag_name = ip_payload[Raw].load.decode(encoding='latin-1')[54:60].split(':')[0]
         context = int.from_bytes(ip_payload[Raw].load[12:20], sys.byteorder)
 
         #self.logger.debug('this tag is: ' + str(tag_name))
@@ -289,13 +289,9 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
                     return
 
                 else:
-                    if len(p) == 118:
+                    if len(p) == 118 or len(p) == 116 or len(p) == 120:
                         #self.logger.debug('handling request 57')
-                        self.handle_enip_request(p, 57)
-                        #self.logger.debug('handled request')
-                    elif len(p) == 116:
-                        #self.logger.debug('handling request 56')
-                        self.handle_enip_request(p, 56)
+                        self.handle_enip_request(p)
                         #self.logger.debug('handled request')
                     else:
                         packet.accept()
