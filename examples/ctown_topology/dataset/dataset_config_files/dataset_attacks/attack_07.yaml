@@ -1,0 +1,54 @@
+network_attacks:
+- name: plc5attack1
+  type: concealment_mitm
+  tags:
+    - tag: PU10
+      offset: 0.0
+    - tag: PU11
+      offset: 0.0
+    - tag: PU10F
+      offset: 0.0
+    - tag: PU11F
+      offset: 0.0
+  target: PLC5
+  concealment_data:
+    type: network_replay
+    capture_start: 300
+    capture_end: 672
+    replay_start: 1440
+  trigger:
+    start: 295
+    end: 1820
+    type: time
+
+- name: plc9attack
+  type: concealment_mitm
+  tags:
+    - tag: T7
+      offset: 0.0
+  target: PLC9
+  concealment_data:
+    type: network_replay
+    capture_start: 300
+    capture_end: 672
+    replay_start: 1440
+  trigger:
+    start: 295
+    end: 1820
+    type: time
+
+device_attacks:
+- actuator: PU10
+  command: closed
+  name: plc5attack2
+  trigger:
+    start: 1440
+    end: 1812
+    type: time
+- actuator: PU11
+  command: closed
+  name: plc5attack3
+  trigger:
+    start: 1440
+    end: 1812
+    type: time
