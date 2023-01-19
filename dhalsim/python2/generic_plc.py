@@ -370,7 +370,7 @@ class GenericPLC(BasePLC):
                 time.sleep(self.db_sleep_time)
 
         self.logger.error("Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
-        raise DatabaseError("Failed to get master clock from database")
+        raise DatabaseError("Failed to execute query in database")
 
     def get_master_clock(self):
         """
