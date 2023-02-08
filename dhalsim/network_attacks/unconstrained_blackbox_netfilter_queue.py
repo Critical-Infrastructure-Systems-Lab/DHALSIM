@@ -68,6 +68,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
 
         # We can use the same method, as initially the df will be initialized with 0 values
         self.calculated_concealment_values_df = self.set_initial_conditions_of_scada_values()
+        self.calculated_concealment_values_df_historical = []
 
         # Initialize input values
         self.received_scada_tags_df = self.calculated_concealment_values_df
@@ -118,6 +119,9 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
 
     def sigint_handler(self, sig, frame):
         """Interrupt handler for attacker being stoped"""
+        self.logger.debug("Printing concealment values")
+        conc_path = Path(__file__).parent.absolute() / "concealed_values.csv"
+        self.calculated_concealment_values_df.to_csv(conc_path, index=False)
         self.logger.debug("Netfilter queue process shutting down")
         self.interrupt()
 
@@ -134,13 +138,13 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
             while not self.get_sync(2):
                 pass
 
-            self.logger.debug('Sync is 2. Keeping attack sync in 2, until we get all SCADA flags')
+            #self.logger.debug('Sync is 2. Keeping attack sync in 2, until we get all SCADA flags')
 
             # We stay in 2, to conceal the values exchanged remotely from the PLCs, until we make a prediction
             while self.missing_scada_tags and self.sync_flag:
                 pass
 
-            self.logger.debug('Setting attack sync in 3')
+            #self.logger.debug('Setting attack sync in 3')
             self.set_sync(3)
 
         self.logger.debug('Netfilter sync thread while finished')
@@ -179,7 +183,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
 
         # Wait for sync to take place
         while not self.get_sync(3) and self.sync_flag:
-            self.logger.debug('Waiting for flag 3')
+            #self.logger.debug('Waiting for flag 3')
             pass
 
         self.missing_scada_tags = list(self.scada_tags)

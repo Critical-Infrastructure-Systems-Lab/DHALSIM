@@ -1,0 +1,42 @@
+network_attacks:
+- name: plc1attack1
+  type: concealment_mitm
+  tags:
+    - tag: PU1
+      offset: 0.0
+    - tag: PU2
+      offset: 0.0
+    - tag: PU1F
+      offset: 0.0
+    - tag: PU12F
+      offset: 0.0
+    - tag: J269
+      offset: 0.0
+    - tag: J280
+      offset: 0.0
+  target: PLC1
+  concealment_data:
+    type: network_replay
+    capture_start: 300
+    capture_end: 672
+    replay_start: 1440
+  trigger:
+    start: 295
+    end: 1820
+    type: time
+
+- name: plc2attack
+  type: concealment_mitm
+  tags:
+    - tag: T1
+      value: 0.0
+  target: PLC2
+  concealment_data:
+    type: network_replay
+    capture_start: 300
+    capture_end: 672
+    replay_start: 1440
+  trigger:
+    start: 295
+    end: 1820
+    type: time
