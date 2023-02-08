@@ -70,15 +70,25 @@ class AttackerControl(NodeControl):
         """Start a attack process."""
         generic_plc_path = None
         if self.this_attacker_data['type'] == 'mitm':
+            self.logger.debug("Launching mitm attack script")
             generic_plc_path = Path(__file__).parent.parent.absolute() / "network_attacks" / "mitm_attack.py"
         elif self.this_attacker_data['type'] == 'server_mitm':
+            self.logger.debug("Launching server mitm attack script")
             generic_plc_path = Path(__file__).parent.parent.absolute() / "network_attacks" / "cppo_server_mitm_attack.py"
         elif self.this_attacker_data['type'] == 'naive_mitm':
+            self.logger.debug("Launching naive mitm attack script")
             generic_plc_path = Path(__file__).parent.parent.absolute() / "network_attacks" / "naive_attack.py"
         elif self.this_attacker_data['type'] == 'simple_dos':
+            self.logger.debug("Launching simple dos attack script")
             generic_plc_path = Path(__file__).parent.parent.absolute() / "network_attacks" / "simple_dos_attack.py"
         elif self.this_attacker_data['type'] == 'concealment_mitm':
+            self.logger.debug("Launching concealmentmitm attack script")
             generic_plc_path = Path(__file__).parent.parent.absolute() / "network_attacks" / "concealment_mitm.py"
+        elif self.this_attacker_data['type'] == 'unconstrained_blackbox_concealment_mitm':
+            self.logger.debug("Launching blackboc concealment attack script")
+            generic_plc_path = Path(__file__).parent.parent.absolute() / "network_attacks" / "black_box_concealment_attack.py"
+        elif self.this_attacker_data['type'] == 'replay_mitm':
+            generic_plc_path = Path(__file__).parent.parent.absolute() / "network_attacks" / "replay_mitm.py"
         else:
             raise NoSuchAttack("Attack {attack} does not exists.".format(attack=self.this_attacker_data['type']))
 

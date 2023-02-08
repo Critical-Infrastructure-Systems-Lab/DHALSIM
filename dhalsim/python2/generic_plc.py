@@ -224,8 +224,6 @@ class GenericPLC(BasePLC):
         self.logger.debug(self.intermediate_plc['name'] + ' enters pre_loop')
         self.db_sleep_time = random.uniform(0.01, 0.1)
 
-        reader = True
-
         sensors = self.generate_tags(self.intermediate_plc['sensors'])
         actuators = self.generate_tags(self.intermediate_plc['actuators'])
 
@@ -372,7 +370,7 @@ class GenericPLC(BasePLC):
                 time.sleep(self.db_sleep_time)
 
         self.logger.error("Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
-        raise DatabaseError("Failed to get master clock from database")
+        raise DatabaseError("Failed to execute query in database")
 
     def get_master_clock(self):
         """

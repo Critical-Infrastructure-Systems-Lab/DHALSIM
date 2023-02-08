@@ -52,7 +52,7 @@ class PacketQueue(metaclass=ABCMeta):
         try:
             self.logger.debug('Queue bound to number' + str(self.queue_number) + ' , running queue now')
             self.nfqueue.run()
-        except Exception as exc:
+        except Exception:
             if self.nfqueue:
                 self.nfqueue.unbind()
             sys.exit(0)

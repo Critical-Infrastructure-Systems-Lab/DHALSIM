@@ -119,10 +119,6 @@ class SchemaParser:
                     int,
                     Schema(lambda i: i >= 0, error="'replay_start' must be positive."),
                 ),
-                'replay_end': And(
-                    int,
-                    Schema(lambda i: i >= 0, error="'replay_end' must be positive."),
-                ),
             },
             {
                 'type': And(
@@ -141,10 +137,6 @@ class SchemaParser:
                 'replay_start': And(
                     int,
                     Schema(lambda i: i >= 0, error="'replay_start' must be positive."),
-                ),
-                'replay_end': And(
-                    int,
-                    Schema(lambda i: i >= 0, error="'replay_end' must be positive."),
                 ),
             },
         )
@@ -324,6 +316,56 @@ class SchemaParser:
                        error="'tags' should have either a 'value' or 'offset' attribute."): Or(float, And(int, Use(float))),
                 }],
                 'concealment_data': concealment_data
+            },
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
+                    'unconstrained_blackbox_concealment_mitm',
+                ),
+                'name': And(
+                    str,
+                    string_pattern,
+                    Schema(lambda name: 1 <= len(name) <= 20,
+                           error="Length of name must be between 1 and 20, '{}' has invalid length")
+                ),
+                Optional('persistent', default='True'): And(
+                    str,
+                    Use(str.lower),
+                    Or(True, False), error="'Persistent' should be one of the following:"
+                                                       "'True' or 'False'."
+                ),
+                'trigger': trigger,
+            },
+            {
+                'type': And(
+                    str,
+                    Use(str.lower),
+                    'replay_mitm',
+                ),
+                'name': And(
+                    str,
+                    string_pattern,
+                    Schema(lambda name: 1 <= len(name) <= 20,
+                           error="Length of name must be between 1 and 20, '{}' has invalid length")
+                ),
+                'trigger': trigger,
+                'target': And(
+                    str,
+                    string_pattern
+                ),
+                'capture_start': And(
+                    int,
+                    Schema(lambda i: i >= 0, error="'capture_start' must be positive."),
+                ),
+                'capture_end': And(
+                    int,
+                    Schema(lambda i: i >= 0, error="'capture_start' must be positive."),
+                ),
+                'replay_start': And(
+                    int,
+                    Schema(lambda i: i >= 0, error="'capture_start' must be positive."),
+                ),
             },
             {
                 'type': And(
@@ -720,7 +762,12 @@ class ConfigParser:
             network_attacks = self.data['attacks']["network_attacks"]
             for network_attack in network_attacks:
                 # Check existence and validity of target PLC
-                target = network_attack['target']
+
+                # This is the only valid target of this attack
+                if network_attack['type'] == 'unconstrained_blackbox_concealment_mitm':
+                    target = 'scada'
+                else:
+                    target = network_attack['target']
 
                 # Network attacks to SCADA do not need a target plc
                 if target.lower() == 'scada':

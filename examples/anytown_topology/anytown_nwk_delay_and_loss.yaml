@@ -7,4 +7,4 @@ network_events:
         start: 648
         end: 792
     loss_value: 10
-    delay_value: 4000
+    delay_value: 100

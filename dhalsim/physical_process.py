@@ -124,6 +124,55 @@ class PhysicalPlant:
         self.db_sleep_time = random.uniform(0.01, 0.1)
         self.logger.info("DB Sleep time: " + str(self.db_sleep_time))
 
+    def set_sync(self, flag):
+        """
+        Set this plcs sync flag in the sync table. When this is 1, the physical process
+        knows this plc finished the requested iteration.
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
+        :param flag: True for sync to 1, False for sync to 0
+        :type flag: bool
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
+        """
+        #"UPDATE sync SET flag=2"
+        self.db_query("UPDATE sync SET flag=?", True, (int(flag),))
+
+    def db_query(self, query, write=False, parameters=None):
+        """
+        Execute a query on the database
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
+        This is necessary because of the limited concurrency in SQLite.
+        :param query: The SQL query to execute in the db
+        :type query: str
+        :param write: Boolean flag to indicate if this query will write into the database
+        :param parameters: The parameters to put in the query. This must be a tuple.
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
+        """
+        for i in range(self.DB_TRIES):
+            try:
+                with sqlite3.connect(self.data["db_path"]) as conn:
+                    cur = conn.cursor()
+                    if parameters:
+                        cur.execute(query, parameters)
+                    else:
+                        cur.execute(query)
+                    conn.commit()
+
+                    if not write:
+                        return cur.fetchone()[0]
+                    else:
+                        return
+            except sqlite3.OperationalError as exc:
+                self.logger.info(
+                    "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
+                        exc=exc, i=self.DB_TRIES - i - 1))
+                time.sleep(self.db_sleep_time)
+
+        self.logger.error("Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
+        raise DatabaseError("Failed to execute db query in database")
 
     def prepare_wntr_simulator(self):
         self.logger.info("Preparing wntr simulation")
@@ -577,7 +626,7 @@ class PhysicalPlant:
                     time.sleep(self.db_sleep_time)
         self.logger.error(
             "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
-        raise DatabaseError("Failed to get master clock from database")
+        raise DatabaseError("Failed to set value to database")
 
     def get_from_db(self, what):
         """Returns the first element of the result tuple."""
@@ -645,10 +694,12 @@ class PhysicalPlant:
                 time.sleep(self.WAIT_FOR_FLAG)
 
             # Notify the PLCs they can start receiving remote values
-            with sqlite3.connect(self.data["db_path"]) as conn:
-                c = conn.cursor()
-                c.execute("UPDATE sync SET flag=2")
-                conn.commit()
+            self.set_sync(2)
+
+            #with sqlite3.connect(self.data["db_path"]) as conn:
+            #    c = conn.cursor()
+            #    c.execute("UPDATE sync SET flag=2")
+            #    conn.commit()
 
             # Wait for the PLCs to apply control logic
             while not self.get_plcs_ready(3):
@@ -696,10 +747,11 @@ class PhysicalPlant:
                     self.write_results(self.results_list)
 
             # Set sync flags for nodes
-            with sqlite3.connect(self.data["db_path"]) as conn:
-                c = conn.cursor()
-                c.execute("UPDATE sync SET flag=0")
-                conn.commit()
+            self.set_sync(0)
+            #with sqlite3.connect(self.data["db_path"]) as conn:
+            #    c = conn.cursor()
+            #    c.execute("UPDATE sync SET flag=0")
+            #    conn.commit()
 
             simulation_time = simulation_time + internal_epynet_step
             conn = sqlite3.connect(self.data["db_path"])
@@ -722,10 +774,11 @@ class PhysicalPlant:
                 time.sleep(self.WAIT_FOR_FLAG)
 
             # Notify the PLCs they can start receiving remote values
-            with sqlite3.connect(self.data["db_path"]) as conn:
-                c = conn.cursor()
-                c.execute("UPDATE sync SET flag=2")
-                conn.commit()
+            self.set_sync(2)
+            #with sqlite3.connect(self.data["db_path"]) as conn:
+            #    c = conn.cursor()
+            #    c.execute("UPDATE sync SET flag=2")
+            #    conn.commit()
 
             # Wait for the PLCs to apply control logic
             while not self.get_plcs_ready(3):
@@ -765,10 +818,11 @@ class PhysicalPlant:
                 self.write_results(self.results_list)
 
             # Set sync flags for nodes
-            with sqlite3.connect(self.data["db_path"]) as conn:
-                c = conn.cursor()
-                c.execute("UPDATE sync SET flag=0")
-                conn.commit()
+            self.set_sync(0)
+            #with sqlite3.connect(self.data["db_path"]) as conn:
+            #    c = conn.cursor()
+            #    c.execute("UPDATE sync SET flag=0")
+            #    conn.commit()
 
     def update_tanks(self, network_state=None):
         """Update tanks in database."""

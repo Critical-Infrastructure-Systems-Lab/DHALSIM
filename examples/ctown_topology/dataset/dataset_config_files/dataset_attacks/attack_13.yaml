@@ -1,0 +1,17 @@
+network_attacks:
+- name: plc2attack
+  type: mitm
+  target: PLC2
+  tag: T1
+  value: 0.0
+  trigger:
+    start: 1440
+    end: 1812
+    type: time
+
+- name: plc2conceal
+  type: unconstrained_blackbox_concealment_mitm
+  trigger:
+    start: 1440
+    end: 1812
+    type: time

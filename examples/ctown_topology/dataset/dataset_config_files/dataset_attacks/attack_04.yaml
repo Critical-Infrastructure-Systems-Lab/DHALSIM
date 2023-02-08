@@ -1,0 +1,16 @@
+network_attacks:
+- name: plc9attack
+  type: concealment_mitm
+  tags:
+    - tag: T7
+      offset: 4.5
+  target: PLC9
+  concealment_data:
+    type: network_replay
+    capture_start: 300
+    capture_end: 672
+    replay_start: 1440
+  trigger:
+    start: 295
+    end: 1820
+    type: time
