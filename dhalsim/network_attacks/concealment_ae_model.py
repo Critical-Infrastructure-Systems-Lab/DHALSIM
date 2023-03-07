@@ -1,6 +1,3 @@
-from adversarial_AE import Adversarial_AE
-import time
-
 from tensorflow.keras.layers import Input, Dense, Activation, BatchNormalization, Lambda
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.optimizers import Adam
@@ -8,11 +5,7 @@ from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.initializers import glorot_normal
 
-import os
-
-import numpy as np
 import pandas as pd
-from str2bool import str2bool
 
 import glob
 from pathlib import Path
@@ -45,19 +38,13 @@ class ConcealmentAE:
         return a_pd
 
     def train_model(self):
-
         # fit of the scaler is done at __init__
-        xset = self.sensor_cols
         ben_data = self.physical_pd
-        ben_data[xset] = self.attacker_scaler.transform(ben_data[xset])
-        x_ben = pd.DataFrame(index=ben_data.index,
-                            columns=xset, data=ben_data[xset])
-        x_ben_train, x_ben_test, _, _ = train_test_split(
-            x_ben, x_ben, test_size=0.33, random_state=42)
-        earlyStopping = EarlyStopping(
-            monitor='val_loss', patience=3, verbose=0,  min_delta=1e-4, mode='auto')
-        lr_reduced = ReduceLROnPlateau(
-            monitor='val_loss', factor=0.5, patience=1, verbose=0, min_delta=1e-4, mode='min')
+        ben_data[self.sensor_cols] = self.attacker_scaler.transform(ben_data[self.sensor_cols])
+        x_ben = pd.DataFrame(index=ben_data.index,columns=self.sensor_cols, data=ben_data[self.sensor_cols])
+        x_ben_train, x_ben_test, _, _ = train_test_split(x_ben, x_ben, test_size=0.33, random_state=42)
+        earlyStopping = EarlyStopping(monitor='val_loss', patience=3, verbose=0,  min_delta=1e-4, mode='auto')
+        lr_reduced = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=1, verbose=0, min_delta=1e-4, mode='min')
         print(self.generator.summary())
         self.generator.fit(x_ben_train, x_ben_train,
                             epochs=500,
