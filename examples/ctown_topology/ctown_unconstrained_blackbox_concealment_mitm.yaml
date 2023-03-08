@@ -2,8 +2,8 @@ network_attacks:
 - name: plc3attack
   type: unconstrained_blackbox_concealment_mitm
   trigger:
-    #start: 648
-    #end: 792
-    start: 10
-    end: 50
+    start: 648
+    end: 792
+    #start: 10
+    #end: 50
     type: time

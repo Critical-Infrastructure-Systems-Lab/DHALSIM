@@ -72,18 +72,15 @@ class ConcealmentAE:
         # We want to select pumps and valves status only.
         list_pump_status = list(gen_examples.filter(regex='PU[0-9]+$|V[0-9]+$').columns)
 
-        for status in list_pump_status:  # list(gen_examples.columns[31:43]):
-            col_index = gen_examples.columns.get_loc(status)
-            col_index_f = gen_examples.columns.get_loc(status + 'F')
-            for j, _ in gen_examples.iterrows():
-                if gen_examples.iloc[j, col_index] > 0.5:
-                    gen_examples.iloc[j, col_index] = 1
-                else:
-                    gen_examples.at[j, col_index] = 0
-                    #if status is 0, the flow is also 0
-
-                    gen_examples.at[j, col_index_f] = 0
-
+        for status in list_pump_status:
+            try:
+                gen_examples[status] = gen_examples[status].apply(round)
+            except ValueError:
+                for i in gen_examples[status].index:
+                    if pd.isna(gen_examples[status].iloc[i]):
+                        gen_examples[status].iloc[i] = 0
+                    else:
+                        gen_examples[status].iloc[i] = round(gen_examples[status].iloc[i])
         return gen_examples
 
     def predict(self, received_values_df):
