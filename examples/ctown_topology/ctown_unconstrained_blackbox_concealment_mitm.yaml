@@ -4,6 +4,4 @@ network_attacks:
   trigger:
     start: 648
     end: 792
-    #start: 10
-    #end: 50
     type: time

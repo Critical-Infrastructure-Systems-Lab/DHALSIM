@@ -573,15 +573,7 @@ class PhysicalPlant:
         Get the attack flag of this attack.
         :return: False if attack not running, true otherwise
         """
-
-        conn = sqlite3.connect(self.data["db_path"])
-        c = conn.cursor()
-        c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(self.master_time),))
-        conn.commit()
-
-        c.execute("SELECT flag FROM attack WHERE name IS ?", (name,))
-        flag = int(c.fetchone()[0])
-        return flag
+        return self.db_query("SELECT flag FROM attack WHERE name IS ?", False, (name,))
 
     def get_actuator_status(self, actuator):
         if isinstance(self.get_from_db(actuator), int):
@@ -695,11 +687,6 @@ class PhysicalPlant:
 
             # Notify the PLCs they can start receiving remote values
             self.set_sync(2)
-
-            #with sqlite3.connect(self.data["db_path"]) as conn:
-            #    c = conn.cursor()
-            #    c.execute("UPDATE sync SET flag=2")
-            #    conn.commit()
 
             # Wait for the PLCs to apply control logic
             while not self.get_plcs_ready(3):
