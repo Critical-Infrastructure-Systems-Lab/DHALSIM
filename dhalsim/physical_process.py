@@ -557,16 +557,8 @@ class PhysicalPlant:
         Checks whether all PLCs have finished their loop.
         :return: boolean whether all PLCs have finished
         """
-
-        #todo: Prepare query statements for this
-        conn = sqlite3.connect(self.data["db_path"])
-        c = conn.cursor()
-
-        # With all PLCs flag in 1, count should be 0
-        c.execute("""SELECT count(*)
-                        FROM sync
-                        WHERE flag != ?""", (str(flag),))
-        return int(c.fetchone()[0]) == 0
+        res = self.db_query("""SELECT count(*) FROM sync WHERE flag != ?""", False, (str(flag),))
+        return int(res) == 0
 
     def get_attack_flag(self, name):
         """
