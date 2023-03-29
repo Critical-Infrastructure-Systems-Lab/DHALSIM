@@ -1,0 +1,9 @@
+- name: PLC1
+  sensors:
+    - S1
+- name: PLC2
+  sensors:
+    - S2
+- name: PLC3
+  sensors:
+    - S3

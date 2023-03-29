@@ -1,0 +1,8 @@
+inp_file: swmm_example.inp
+iterations: 2880
+#iterations: 70
+network_topology_type: complex
+plcs: !include swmm_plcs.yaml
+
+log_level: debug
+simulator: swmm

@@ -38,15 +38,17 @@ class DatabaseInitializer:
                     cur.execute("INSERT INTO plant VALUES (?, 1, ?);",
                                 (actuator["name"], initial_state,))
 
-            # Initialize sensors in DB, we should read EPANET file
-            if "plcs" in self.data:
-                for plc in self.data["plcs"]:
-                    for sensor in plc["sensors"]:
-                        if sensor in self.data["initial_tank_values"]:
-                            # We only initialize tank levels into the SQlite3 DB
-                            cur.execute("INSERT INTO plant VALUES (?, 1, ?);", (sensor,self.data["initial_tank_values"][sensor]))
-                        else:
-                            cur.execute("INSERT INTO plant VALUES (?, 1, 0);", (sensor,))
+            if self.data['simulator'] != 'swmm':
+
+                # Initialize sensors in DB, we should read EPANET file
+                if "plcs" in self.data:
+                    for plc in self.data["plcs"]:
+                        for sensor in plc["sensors"]:
+                            if sensor in self.data["initial_tank_values"]:
+                                # We only initialize tank levels into the SQlite3 DB
+                                cur.execute("INSERT INTO plant VALUES (?, 1, ?);", (sensor,self.data["initial_tank_values"][sensor]))
+                            else:
+                                cur.execute("INSERT INTO plant VALUES (?, 1, 0);", (sensor,))
 
             # Creates master_time table if it does not yet exist
             cur.execute("CREATE TABLE master_time (id INTEGER PRIMARY KEY, time INTEGER)")

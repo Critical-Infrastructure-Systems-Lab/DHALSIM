@@ -5,9 +5,9 @@ network_topology_type: complex
 plcs: !include ctown_plcs.yaml
 
 log_level: debug
-simulator: epynet
+simulator: swmm
 demand: pdd
-attacks: !include ctown_unconstrained_blackbox_concealment_mitm.yaml
+#attacks: !include ctown_unconstrained_blackbox_concealment_mitm.yaml
 #attacks: !include ctown_concealment_mitm_value.yaml
 #attacks: !include ctown_payload_replay_conceal.yaml
 #ma attacks: !include ctown_network_replay_conceal.yaml
