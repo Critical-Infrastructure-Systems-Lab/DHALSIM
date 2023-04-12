@@ -48,8 +48,10 @@ class PlantControl(NodeControl):
         """
 
         if self.data['simulator'] == 'wntr' or self.data['simulator'] == 'epynet':
+            self.logger.debug('Launching Water Distribution Simulation')
             physical_process_path = Path(__file__).parent.absolute().parent / "physical_process.py"
         elif self.data['simulator'] == 'swmm':
+            self.logger.debug('Launching Storm Management Simulation')
             physical_process_path = Path(__file__).parent.absolute().parent / "pyswmm_physical_process.py"
         else:
             raise UnsupportedSimulator('Supported simulators are wntr, epynet, pyswmm')

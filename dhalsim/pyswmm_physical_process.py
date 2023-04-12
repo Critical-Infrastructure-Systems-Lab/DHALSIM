@@ -75,6 +75,8 @@ class PhysicalPlant:
         self.db_sleep_time = random.uniform(0.01, 0.1)
         self.logger.info("DB Sleep time: " + str(self.db_sleep_time))
 
+        self.master_time = 0
+
     def interrupt(self, sig, frame):
         self.finish()
         self.logger.info("Simulation ended.")
@@ -210,6 +212,12 @@ class PhysicalPlant:
         res = self.db_query("""SELECT count(*) FROM sync WHERE flag != ?""", False, (str(flag),))
         return int(res) == 0
 
+    def main(self):
+        """Runs the simulation for x iterations."""
+        self.logger.info('PySWMM Simulation started')
+        self.simulate_with_pyswmm()
+        self.logger.info('PySWMM Simulation finished')
+
     def simulate_with_pyswmm(self):
 
         #########
@@ -240,8 +248,27 @@ class PhysicalPlant:
 
         # these times should be obtained from the INP file. "internal_epynet_step" is the pyswmm step time
         #simulation_time = simulation_time + internal_epynet_step
+
         conn = sqlite3.connect(self.data["db_path"])
         c = conn.cursor()
         c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(self.master_time),))
         conn.commit()
 
+
+def is_valid_file(test_parser, arg):
+    if not os.path.exists(arg):
+        test_parser.error(arg + " does not exist.")
+    else:
+        return arg
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Run the simulation')
+    parser.add_argument(dest="intermediate_yaml",
+                        help="intermediate yaml file", metavar="FILE",
+                        type=lambda x: is_valid_file(parser, x))
+
+    args = parser.parse_args()
+
+    simulation = PhysicalPlant(Path(args.intermediate_yaml))
+    simulation.main()

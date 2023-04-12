@@ -46,8 +46,6 @@ class Runner():
                 yaml_paths.append(config_parser.generate_intermediate_yaml())
             for yaml_path in yaml_paths:
                 self.run_simulation(yaml_path)
-
-
         else:
             # Else generate the one we need and run the simulation
             intermediate_yaml_path = config_parser.generate_intermediate_yaml()

@@ -109,6 +109,7 @@ class GenericPLC(BasePLC):
 
         self.update_cache_flag = False
         self.plcs_ready = False
+        self.logger.debug('PLC Protocol for PLC: ' + str(self.intermediate_plc['name']) + ' is: ' + str(plc_protocol))
 
         for tag in set(dependant_sensors) - set(plc_sensors):
             self.cache[tag] = Decimal(0)
