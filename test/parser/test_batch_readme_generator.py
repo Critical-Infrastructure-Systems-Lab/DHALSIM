@@ -77,6 +77,7 @@ def test_get_time_information(batch_gen, water_network_model):
     batch_gen.intermediate_yaml = {'iterations': 4}
 
     water_network_model.options.time.hydraulic_timestep = 100
+    batch_gen.hydraulic_timestep = 100
     batch_gen.wn = water_network_model
     batch_gen.start_time = datetime(year=2021, month=6, day=1, second=1)
     batch_gen.end_time = datetime(year=2021, month=6, day=1, second=2)
@@ -92,6 +93,7 @@ def test_verify_written(batch_gen, tmp_path, water_network_model):
     batch_gen.start_time = datetime(year=2021, month=6, day=1, second=1)
     batch_gen.end_time = datetime(year=2021, month=6, day=1, second=2)
     batch_gen.wn = water_network_model
+    batch_gen.hydraulic_timestep = 100
     batch_gen.master_time = 1
     batch_gen.intermediate_yaml = {'inp_file': 'my_map.inp', 'batch_index': 0,
                                    'batch_simulations': 2, 'iterations': 3}

@@ -115,7 +115,12 @@ actuators:
     initial_state: open
   - name: '12'
     initial_state: open
-
+log_level: debug
+simulator: wntr
+initial_tank_values:
+ T0: '0.4259549'
+ T1: '0.3129975'
+ T2: '0.2369489'
 time:
   - duration: 518400.0
-  - hydraulic_timestep: 60.0
+  - hydraulic_timestep: 60

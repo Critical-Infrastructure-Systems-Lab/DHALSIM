@@ -13,7 +13,7 @@ def inp_path(tmpdir):
 
 @pytest.fixture
 def initial_dict(inp_path):
-    return {"inp_file": str(inp_path),
+    return {"simulator": "wntr", "log_level": "debug", "inp_file": str(inp_path),
             "plcs": [{"name": "PLC1", "actuators": ["P_RAW1", "V_PUB"], "sensors": ["T0"]},
                      {"name": "PLC2", "actuators": ["V_ER2i"], "sensors": ["T2"]}]}
 
@@ -26,6 +26,8 @@ def filled_yaml_path():
 @pytest.fixture
 def written_intermediate_yaml(tmpdir, initial_dict):
     intermediate = tmpdir.join("intermediate.yaml")
+    print('aaaa', tmpdir)
+    print('bbbb', intermediate)
     with intermediate.open(mode='w') as intermediate_yaml:
         yaml.dump(initial_dict, intermediate_yaml)
     return tmpdir.join("intermediate.yaml")
@@ -38,7 +40,9 @@ def test_python_version():
 def test_node_and_time_controls(tmpdir, written_intermediate_yaml, filled_yaml_path):
     with written_intermediate_yaml.open(mode='r') as intermediate_yaml:
         original_data = yaml.safe_load(intermediate_yaml)
-
+    
+    print('cccc', written_intermediate_yaml)
+    print('dddd', original_data)
     filled_data = InputParser(original_data).write()
 
     with filled_yaml_path.open(mode='r') as expectation:

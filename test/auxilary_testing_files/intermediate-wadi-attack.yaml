@@ -1,7 +1,7 @@
 inp_file: test/auxilary_testing_files/wadi_map_pda_original.inp
 iterations: 8640
 run_attack: True
-simulator: pdd
+simulator: wntr
 mininet_cli: False
 
 plcs:
