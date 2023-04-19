@@ -26,4 +26,9 @@ Finally, DHALSIM needs pathlib and pyyaml installed. Other dependencies should b
 
 ## Running
 
-DHALSIM can be run using the command ```sudo dhalsim path/to/config.yaml```.
+DHALSIM can be run using the command ```sudo dhalsim <path/to/config.yaml>```.
+
+Replacing the text between "< >" with the path to one example topology or your own configuration files. For example, for the anytown example, you'd use:
+```sudo dhalsim <examples/anytown_topology/anytown_config.yaml>```
+
+

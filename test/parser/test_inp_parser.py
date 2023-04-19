@@ -13,7 +13,7 @@ def inp_path(tmpdir):
 
 @pytest.fixture
 def initial_dict(inp_path):
-    return {"inp_file": str(inp_path),
+    return {"simulator": "wntr", "log_level": "debug", "inp_file": str(inp_path),
             "plcs": [{"name": "PLC1", "actuators": ["P_RAW1", "V_PUB"], "sensors": ["T0"]},
                      {"name": "PLC2", "actuators": ["V_ER2i"], "sensors": ["T2"]}]}
 
@@ -26,6 +26,7 @@ def filled_yaml_path():
 @pytest.fixture
 def written_intermediate_yaml(tmpdir, initial_dict):
     intermediate = tmpdir.join("intermediate.yaml")
+
     with intermediate.open(mode='w') as intermediate_yaml:
         yaml.dump(initial_dict, intermediate_yaml)
     return tmpdir.join("intermediate.yaml")

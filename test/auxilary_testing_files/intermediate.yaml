@@ -55,7 +55,9 @@ iterations: 2
 log_level: debug
 mininet_cli: false
 network_attacks: []
+network_events: []
 network_topology_type: simple
+noise_scale: 0.0
 plcs:
 - actuators:
   - P_RAW1
@@ -132,8 +134,13 @@ plcs:
   name: PLC2
   sensors:
   - T2
-simulator: pdd
+simulator: wntr
+demand: pdd
+initial_tank_values:
+ T0: '0.4259549'
+ T1: '0.3129975'
+ T2: '0.2369489'
 time:
 - duration: 518400.0
-- hydraulic_timestep: 60.0
+- hydraulic_timestep: 60
 output_path: temp/test/path

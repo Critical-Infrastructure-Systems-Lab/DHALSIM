@@ -50,6 +50,7 @@ def test_verifies_written(rm_gen, tmp_path, water_network_model):
     rm_gen.batch = False
     rm_gen.version = '1.0.0'
     rm_gen.master_time = 1
+    rm_gen.hydraulic_timestep = 100
     rm_gen.wn = water_network_model
     rm_gen.start_time = datetime(year=2021, month=6, day=1, second=1)
     rm_gen.end_time = datetime(year=2021, month=6, day=1, second=2)
@@ -107,22 +108,24 @@ def test_get_input_files_wo_batch(rm_gen):
 
 def test_get_configuration_parameters(rm_gen):
     rm_gen.intermediate_yaml = {'iterations': 1, 'network_topology_type': 'Simple',
-                                'mininet_cli': False, 'log_level': 'info', 'demand': 'pdd'}
+                                'mininet_cli': False, 'log_level': 'info', 'demand': 'pdd',
+                                'simulator': 'wntr'}
     assert rm_gen.get_configuration_parameters() == "\n\n## Configuration parameters\n\niterations:" \
                                                     " 1\n\nnetwork_topology_type: Simple\n\n" \
                                                     "mininet_cli: False\n\nlog_level: info\n\n"\
-                                                    "simulator: wntr\n\n" \
-                                                    "demand: pdd\n\nbatch_simulations: None"
+                                                    "demand: pdd\n\n" \
+                                                    "simulator: wntr\n\nbatch_simulations: None"
 
 
 def test_get_optional_data_parameters_all(rm_gen):
     rm_gen.intermediate_yaml = {'initial_tank_data': [1], 'demand_patterns': [1],
                                 'network_loss_data': [1], 'network_delay_data': [1],
-                                'network_attacks': [1]}
+                                'network_events': [1], 'network_attacks': [1]}
     assert rm_gen.get_optional_data_parameters() == "\n\n## Initial conditions\n\n- [x] initial_" \
                                                     "tank_data\n\n- [x] demand_patterns\n\n- [x]" \
                                                     " network_loss_data\n\n- [x] network_delay" \
-                                                    "_data\n\n- [x] network_attacks"
+                                                    "_data\n\n- [x] network_events\n\n- [x] network"\
+                                                    "_attacks"
 
 
 def test_get_optional_data_parameters_none(rm_gen):
@@ -130,7 +133,8 @@ def test_get_optional_data_parameters_none(rm_gen):
     assert rm_gen.get_optional_data_parameters() == "\n\n## Initial conditions\n\n- [ ] initial_" \
                                                     "tank_data\n\n- [ ] demand_patterns\n\n- [ ]" \
                                                     " network_loss_data\n\n- [ ] network_delay" \
-                                                    "_data\n\n- [ ] network_attacks"
+                                                    "_data\n\n- [ ] network_events\n\n- [ ] network"\
+                                                    "_attacks"
 
 
 def test_get_optional_data_parameters_some(rm_gen):
@@ -139,7 +143,8 @@ def test_get_optional_data_parameters_some(rm_gen):
     assert rm_gen.get_optional_data_parameters() == "\n\n## Initial conditions\n\n- [x] initial_" \
                                                     "tank_data\n\n- [x] demand_patterns\n\n- [ ]" \
                                                     " network_loss_data\n\n- [ ] network_delay" \
-                                                    "_data\n\n- [x] network_attacks"
+                                                    "_data\n\n- [ ] network_events\n\n- [x] network"\
+                                                    "_attacks"
 
 
 def test_get_standalone_parameter_information_batch(rm_gen):
@@ -181,6 +186,7 @@ def test_get_standalone_iteration_information_batch(rm_gen):
 def test_get_standalone_iteration_information_no_batch(rm_gen, water_network_model):
     rm_gen.batch = False
     rm_gen.master_time = 1
+    rm_gen.hydraulic_timestep = 100
     rm_gen.intermediate_yaml = {'iterations': 5}
     rm_gen.wn = water_network_model
     assert rm_gen.get_standalone_iteration_information() == "\n\nRan for 1 out of 5 iterations " \
