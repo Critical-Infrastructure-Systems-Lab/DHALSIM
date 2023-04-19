@@ -61,6 +61,8 @@ sudo python3 -m pip install str2bool
 sudo python3 -m pip install tensorflow
 sudo python3 -m pip install sklearn
 sudo python3 -m pip install testresources
+sudo python3 -m pip install pytest-mock
+
 
 # Mininet from source
 cd ~

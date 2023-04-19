@@ -3,6 +3,7 @@ iterations: 2880
 network_topology_type: complex
 plcs: !include ctown_plcs.yaml
 simulator: epynet
+log_level: debug
 demand: pdd
 output_path: attack_output_13
 demand_patterns: events/demands_ctown_01.csv

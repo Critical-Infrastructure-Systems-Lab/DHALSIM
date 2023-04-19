@@ -180,7 +180,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
 
         # Wait for sync to take place
         while not self.get_sync(3) and self.sync_flag:
-            #self.logger.debug('Waiting for flag 3')
+            self.logger.debug('Waiting for flag 3')
             pass
 
         self.missing_scada_tags = list(self.scada_tags)
