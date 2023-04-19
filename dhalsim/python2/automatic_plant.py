@@ -8,6 +8,14 @@ from automatic_node import NodeControl
 from py2_logger import get_logger
 
 
+class Error(Exception):
+    """Base class for exceptions in this module."""
+
+
+class UnsupportedSimulator(Error):
+    """Raised when an unsupported simulator is launched"""
+
+
 class PlantControl(NodeControl):
     """
     This class is started for a plant. It starts a simulation process.
@@ -38,7 +46,13 @@ class PlantControl(NodeControl):
         This function starts the physical process and then waits for the physical
         process to finish.
         """
-        physical_process_path = Path(__file__).parent.absolute().parent / "physical_process.py"
+
+        if self.data['simulator'] == 'wntr' or self.data['simulator'] == 'epynet':
+            physical_process_path = Path(__file__).parent.absolute().parent / "physical_process.py"
+        elif self.data['simulator'] == 'swmm':
+            physical_process_path = Path(__file__).parent.absolute().parent / "pyswmm_physical_process.py"
+        else:
+            raise UnsupportedSimulator('Supported simulators are wntr, epynet, pyswmm')
 
         cmd = ["python3", str(physical_process_path), str(self.intermediate_yaml)]
 

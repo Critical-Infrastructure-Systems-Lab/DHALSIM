@@ -23,7 +23,8 @@ setuptools.setup(
         'pandas==1.3.4',
         'matplotlib==3.5.0',
         'schema',
-        'scapy'
+        'scapy',
+        'pyswmm'
     ],
     extras_require={
         'test': ['pytest', 'pytest-mock', 'mock', 'wget', 'coverage', 'pytest-cov', 'flaky'],
