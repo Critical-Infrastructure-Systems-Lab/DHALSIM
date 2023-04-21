@@ -5,6 +5,8 @@ DHALSIM uses the [WNTR](https://wntr.readthedocs.io/en/latest/index.html) EPANET
 
 DHALSIM was presented in the ICSS Workshop in ACSAC'20, with the paper: [Co-Simulating Physical Processes and Network Data for High-Fidelity Cyber-Security Experiments](https://dl.acm.org/doi/abs/10.1145/3442144.3442147)
 
+Two papers in the Journal of Water Resources Planning and Management explain in detail DHALSIM architecture, features, and capabilities: [High-fidelity cyber and physical simulation of water distribution systems. I: Models and Data](https://ascelibrary.org/doi/abs/10.1061/JWRMD5.WRENG-5853) and [High-fidelity cyber and physical simulation of water distribution systems. II: Enabling cyber-physical attack localization](https://ascelibrary.org/doi/abs/10.1061/JWRMD5.WRENG-5854)
+ 
 ## Installation
 
 In order to offer a simple installation we have included an installation script which will install DHALSIM on an Ubuntu 20.04 machine. This script is located in the root of the repository and can be run with ```./install.sh```.
