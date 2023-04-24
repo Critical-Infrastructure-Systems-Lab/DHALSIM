@@ -51,6 +51,13 @@ git clone --depth 1 https://github.com/afmurillo/minicps.git || git -C minicps p
 cd minicps
 sudo python2 -m pip install .
 
+# epynet - An EPANET Python wrapper for WNTR
+cd ~
+git clone --depth 1 https://github.com/afmurillo/DHALSIM-epynet || git -C DHALSIM-epynet pull
+cd DHALSIM-epynet/
+sudo python3 -m pip install .
+
+
 # Installing other DHALSIM dependencies
 sudo pip install pathlib==1.0.*
 sudo pip install pyyaml==5.3.*
@@ -62,6 +69,9 @@ sudo python3 -m pip install tensorflow
 sudo python3 -m pip install sklearn
 sudo python3 -m pip install testresources
 sudo python3 -m pip install pytest-mock
+
+
+
 
 
 # Mininet from source

@@ -24,7 +24,8 @@ setuptools.setup(
         'matplotlib==3.5.0',
         'schema',
         'scapy',
-        'pyswmm'
+        'requests',
+        'git+https://github.com/Daveonwave/DHALSIM-epynet#egg=dependency'
     ],
     extras_require={
         'test': ['pytest', 'pytest-mock', 'mock', 'wget', 'coverage', 'pytest-cov', 'flaky'],

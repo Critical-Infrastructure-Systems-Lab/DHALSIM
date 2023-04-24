@@ -10,7 +10,6 @@ from yamlinclude import YamlIncludeConstructor
 from schema import Schema, Or, And, Use, Optional, SchemaError, Regex
 
 from dhalsim.parser.input_parser import InputParser
-from dhalsim.parser.swmm_input_parser import SwmmInputParser
 
 
 class Error(Exception):
@@ -606,7 +605,7 @@ class SchemaParser:
             Optional('simulator', default='wntr'): And(
                 str,
                 Use(str.lower),
-                Or('wntr', 'epynet', 'swmm')),
+                Or('wntr', 'epynet')),
         })
 
         return config_schema.validate(data)
@@ -900,8 +899,6 @@ class ConfigParser:
         # toDo: test this - preparing DHALSIM to be used with other simulators
         if self.data['simulator'] == 'wntr' or self.data['simulator'] == 'epynet':
             yaml_data = InputParser(yaml_data).write()
-        elif self.data['simulator'] == 'swmm':
-            yaml_data = SwmmInputParser(yaml_data).write()
 
         # Parse the device attacks from the config file
         yaml_data = self.generate_device_attacks(yaml_data)

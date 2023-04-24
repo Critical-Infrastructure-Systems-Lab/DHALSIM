@@ -74,7 +74,7 @@ class SyncedAttack(metaclass=ABCMeta):
         if 'direction' in self.intermediate_attack:
             self.direction = self.intermediate_attack['direction']
         else:
-            self.direction = 'None'
+            self.direction = 'source'
 
         self.state = 0
         self.db_sleep_time = random.uniform(0.01, 0.1)
