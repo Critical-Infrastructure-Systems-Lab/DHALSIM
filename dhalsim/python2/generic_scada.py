@@ -95,6 +95,8 @@ class GenericScada(BasePLC):
         for ip in self.plc_data:
             self.cache[ip] = [0] * len(self.plc_data[ip])
 
+        self.scada_run = True
+
         self.do_super_construction(scada_protocol, state)
 
     def do_super_construction(self, scada_protocol, state):
@@ -228,16 +230,17 @@ class GenericScada(BasePLC):
         Shutdown protocol for the scada, writes the output before exiting.
         """
         self.stop_cache_update()
-        self.logger.debug("SCADA shutdown")
+        #self.cache_thread.join()
         self.write_output()
-
+        self.scada_run = False
+        self.logger.debug("SCADA shutdown")
         sys.exit(0)
 
     def write_output(self):
         """
         Writes the csv output of the scada
         """
-        with self.output_path.open(mode='wb') as output:
+        with self.output_path.open(mode='w') as output:
             writer = csv.writer(output)
             writer.writerows(self.saved_values)
 
@@ -284,7 +287,7 @@ class GenericScada(BasePLC):
 
         while self.update_cache_flag:
             for plc_ip in self.cache:
-                # Maintain old values if there could not be uploaded
+                # Maintain old values if they could not be uploaded
                 try:
                     values = self.receive_multiple(self.plc_data[plc_ip], plc_ip)
                     with lock:
@@ -294,7 +297,10 @@ class GenericScada(BasePLC):
                         "PLC receive_multiple with tags {tags} from {ip} failed with exception '{e}'".format(
                             tags=self.plc_data[plc_ip],
                             ip=plc_ip, e=str(e)))
-                    continue
+                    if self.update_cache_flag:
+                        continue
+                    else:
+                        return
 
                 #self.logger.debug(
                 #    "SCADA cache updated for {tags}, with value {values}, from {ip}".format(tags=self.plc_data[plc_ip],
@@ -312,7 +318,7 @@ class GenericScada(BasePLC):
         self.logger.debug("SCADA enters main_loop")
         lock = None
 
-        while True:
+        while self.scada_run:
             while not self.get_sync(0):
                 time.sleep(self.db_sleep_time)
 

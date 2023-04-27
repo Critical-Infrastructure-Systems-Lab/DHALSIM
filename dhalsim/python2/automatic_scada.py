@@ -16,6 +16,9 @@ class ScadaControl(NodeControl):
     This class is started for a scada. It starts a tcpdump and a scada process.
     """
 
+    PROCESS_TIMEOUT = 1.0
+    """Timeout between sending SIGINT, SIGTERM, and a SIGKILL"""
+
     def __init__(self, intermediate_yaml):
         super(ScadaControl, self).__init__(intermediate_yaml)
 
@@ -25,26 +28,28 @@ class ScadaControl(NodeControl):
         self.process_tcp_dump = None
         self.scada_process = None
 
+    def terminate_process(self, process):
+        if process.poll() is None:
+            process.send_signal(signal.SIGINT)
+        try:
+            process.wait(self.PROCESS_TIMEOUT)
+        except subprocess.TimeoutExpired:
+            if process.poll() is None:
+                process.terminate()
+            if process.poll() is None:
+                process.kill()
+
     def terminate(self):
         """
         This function stops the tcp dump and the plc process.
         """
         self.logger.debug("Stopping tcpdump process on SCADA.")
-
-        self.process_tcp_dump.send_signal(signal.SIGINT)
-        self.process_tcp_dump.wait()
-        if self.process_tcp_dump.poll() is None:
-            self.process_tcp_dump.terminate()
-        if self.process_tcp_dump.poll() is None:
-            self.process_tcp_dump.kill()
+        self.terminate_process(self.process_tcp_dump)
+        self.logger.debug("Tcpdump process stopped on SCADA.")
 
         self.logger.debug("Stopping SCADA.")
-        self.scada_process.send_signal(signal.SIGINT)
-        self.scada_process.wait()
-        if self.scada_process.poll() is None:
-            self.scada_process.terminate()
-        if self.scada_process.poll() is None:
-            self.scada_process.kill()
+        self.terminate_process(self.scada_process)
+        self.logger.debug("SCADA stopped on automatic SCADA")
 
     def main(self):
         """

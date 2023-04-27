@@ -16,6 +16,9 @@ class PlcControl(NodeControl):
     This class is started for a plc. It starts a tcpdump and a plc process.
     """
 
+    PROCESS_TIMEOUT = 0.3
+    """Timeout between sending SIGINT, SIGTERM, and a SIGKILL"""
+
     def __init__(self, intermediate_yaml, plc_index):
         super(PlcControl, self).__init__(intermediate_yaml)
 
@@ -27,27 +30,28 @@ class PlcControl(NodeControl):
         self.plc_process = None
         self.this_plc_data = self.data["plcs"][self.plc_index]
 
+    def terminate_process(self, process):
+        if process.poll() is None:
+            process.send_signal(signal.SIGINT)
+        try:
+            process.wait(self.PROCESS_TIMEOUT)
+        except subprocess.TimeoutExpired:
+            if process.poll() is None:
+                process.terminate()
+            if process.poll() is None:
+                process.kill()
+
     def terminate(self):
         """
         This function stops the tcp dump and the plc process.
         """
         self.logger.debug("Stopping tcpdump process on PLC.")
-
-        self.process_tcp_dump.send_signal(signal.SIGINT)
-        self.process_tcp_dump.wait()
-        if self.process_tcp_dump.poll() is None:
-            self.process_tcp_dump.terminate()
-        if self.process_tcp_dump.poll() is None:
-            self.process_tcp_dump.kill()
+        self.terminate_process(self.process_tcp_dump)
+        self.logger.debug("tcpdump process on PLC stopped.")
 
         self.logger.debug("Stopping PLC.")
-
-        self.plc_process.send_signal(signal.SIGINT)
-        self.plc_process.wait()
-        if self.plc_process.poll() is None:
-            self.plc_process.terminate()
-        if self.plc_process.poll() is None:
-            self.plc_process.kill()
+        self.terminate_process(self.plc_process)
+        self.logger.debug("PLC stopped on automatic PLC.")
 
     def main(self):
         """

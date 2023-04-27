@@ -107,6 +107,7 @@ class GenericPLC(BasePLC):
 
         self.update_cache_flag = False
         self.plcs_ready = False
+        self.plc_run = True
 
         for tag in set(dependant_sensors) - set(plc_sensors):
             self.cache[tag] = float(0)
@@ -279,15 +280,18 @@ class GenericPLC(BasePLC):
                 #self.logger.debug('Trying to obtain value {tag}, from IP {ip}'.format(tag=(tag, 1), ip=plc_ip))
                 received = float(self.receive((tag, 1), plc_ip))
                 self.cache[tag] = received
-
                 return True
             except Exception as e:
                 self.logger.info(
                     "{plc} receive {tag} from {ip} failed with exception '{e}'".format(
                         plc=self.intermediate_plc["name"], tag=tag,
                         ip=plc_ip, e=str(e)))
-                time.sleep(cache_update_time)
-                continue
+                if self.update_cache_flag:
+                    time.sleep(cache_update_time)
+                    continue
+                else:
+                    # To consider the case in which another PLC process has died
+                    return False
         return False
 
     def update_cache(self, cache_update_time):
@@ -431,7 +435,9 @@ class GenericPLC(BasePLC):
     def sigint_handler(self, sig, frame):
         self.logger.debug('PLC shutdown commencing.')
         self.stop_cache_update()
-        self.cache_thread.join()
+        #self.cache_thread.join()
+        self.plc_run = False
+        self.logger.debug('PLC shutdown finished.')
         sys.exit(0)
 
     def main_loop(self, sleep=0.5, test_break=False):
@@ -441,13 +447,14 @@ class GenericPLC(BasePLC):
         :param test_break:  (Default value = False) used for unit testing, breaks the loop after one iteration
         """
         self.logger.debug(self.intermediate_plc['name'] + ' enters main_loop')
-        while True:
+        while self.plc_run:
             # Wait until we acquire the first sync before polling the PLCs
             if not self.plcs_ready:
                 self.logger.debug("PLC " + str(self.intermediate_plc['name']) + " starting update cache thread")
                 self.plcs_ready = True
                 self.update_cache_flag = True
-                self.cache_thread = threading.Thread(target=self.update_cache, args=(self.PLC_CACHE_UPDATE_TIME,))
+                self.cache_thread = threading.Thread(target=self.update_cache, args=(self.PLC_CACHE_UPDATE_TIME,),
+                                                     daemon=True)
                 self.cache_thread.start()
 
             # flag = 0 means a physical process finished a new iteration

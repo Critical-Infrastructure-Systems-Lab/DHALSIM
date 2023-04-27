@@ -26,6 +26,9 @@ class GeneralCPS(MiniCPS):
     :type intermediate_yaml: Path
     """
 
+    PROCESS_TIMEOUT = 1.0
+    """Timeout between sending SIGINT, SIGTERM, and a SIGKILL"""
+
     def __init__(self, intermediate_yaml):
 
         # Create logs directory in working directory
@@ -198,18 +201,21 @@ class GeneralCPS(MiniCPS):
                     return
 
     @staticmethod
-    def end_process(process):
+    def end_process(process, timeout):
         """
         End a process.
 
         :param process: the process to end
+        :param timeout: timeout to wait between sending SIGINT, SIGTERM, and a SIGKILL
         """
         process.send_signal(signal.SIGINT)
-        process.wait()
-        if process.poll() is None:
-            process.terminate()
-        if process.poll() is None:
-            process.kill()
+        try:
+            process.wait(timeout)
+        except subprocess.TimeoutExpired:
+            if process.poll() is None:
+                process.terminate()
+            if process.poll() is None:
+                process.kill()
 
     def finish(self):
         """
@@ -222,45 +228,48 @@ class GeneralCPS(MiniCPS):
 
         if self.scada_process.poll() is None:
             try:
-                self.end_process(self.scada_process)
+                self.end_process(self.scada_process, self.PROCESS_TIMEOUT)
             except Exception as msg:
                 self.logger.error("Exception shutting down SCADA: " + str(msg))
 
         for plc_process in self.plc_processes:
             if plc_process.poll() is None:
                 try:
-                    self.end_process(plc_process)
+                    self.end_process(plc_process, self.PROCESS_TIMEOUT)
                 except Exception as msg:
                     self.logger.error("Exception shutting down plc: " + str(msg))
 
         for attacker in self.attacker_processes:
             if attacker.poll() is None:
                 try:
-                    self.end_process(attacker)
+                    self.end_process(attacker, self.PROCESS_TIMEOUT)
                 except Exception as msg:
                     self.logger.error("Exception shutting down attacker: " + str(msg))
 
         for event in self.network_event_processes:
             if event.poll() is None:
                 try:
-                    self.end_process(event)
+                    self.end_process(event, self.PROCESS_TIMEOUT)
                 except Exception as msg:
                     self.logger.error("Exception shutting down event: " + str(msg))
 
         for router in self.router_processes:
             if router.poll() is None:
                 try:
-                    self.end_process(router)
+                    self.end_process(router, self.PROCESS_TIMEOUT)
                 except Exception as msg:
                     self.logger.error("Exception shutting down event: " + str(msg))
 
         if self.plant_process.poll() is None:
             try:
-                self.end_process(self.plant_process)
+                self.end_process(self.plant_process, self.PROCESS_TIMEOUT)
             except Exception as msg:
                 self.logger.error("Exception shutting down plant_process: " + str(msg))
 
         cmd = 'sudo pkill -f "python3 -m cpppo.server.enip"'
+        subprocess.call(cmd, shell=True, stderr=sys.stderr, stdout=sys.stdout)
+
+        cmd = 'sudo pkill -f "python3 -m cpppo.server.enip.client"'
         subprocess.call(cmd, shell=True, stderr=sys.stderr, stdout=sys.stdout)
 
         self.net.stop()
