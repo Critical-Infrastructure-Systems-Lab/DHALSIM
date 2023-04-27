@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from automatic_node import NodeControl
-from py2_logger import get_logger
+from dhalsim.py3_logger import get_logger
 
 empty_loc = '/dev/null'
 

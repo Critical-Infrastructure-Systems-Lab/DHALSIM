@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from automatic_node import NodeControl
-from py2_logger import get_logger
+from dhalsim.py3_logger import get_logger
 
 empty_loc = '/dev/null'
 
@@ -85,7 +85,7 @@ class PlcControl(NodeControl):
         else:
             err_put = open(empty_loc, 'w')
             out_put = open(empty_loc, 'w')
-        cmd = ["python2", str(generic_plc_path), str(self.intermediate_yaml), str(self.plc_index)]
+        cmd = ["python3", str(generic_plc_path), str(self.intermediate_yaml), str(self.plc_index)]
         plc_process = subprocess.Popen(cmd, shell=False, stderr=err_put, stdout=out_put)
         return plc_process
 

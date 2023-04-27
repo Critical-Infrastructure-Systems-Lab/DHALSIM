@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from automatic_node import NodeControl
-from py2_logger import get_logger
+from dhalsim.py3_logger import get_logger
 
 empty_loc = '/dev/null'
 
@@ -84,7 +84,7 @@ class ScadaControl(NodeControl):
         else:
             err_put = open(empty_loc, 'w')
             out_put = open(empty_loc, 'w')
-        cmd = ["python2", str(generic_scada_path), str(self.intermediate_yaml)]
+        cmd = ["python3", str(generic_scada_path), str(self.intermediate_yaml)]
         scada_process = subprocess.Popen(cmd, shell=False, stderr=err_put, stdout=out_put)
         return scada_process
 

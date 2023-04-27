@@ -3,7 +3,7 @@ import os
 import signal
 import subprocess
 import sys
-import py2_logger
+from dhalsim.py3_logger import get_logger
 from pathlib import Path
 
 from automatic_node import NodeControl
@@ -28,7 +28,7 @@ class EventControl(NodeControl):
         self.tcp_dump_process = None
         self.attacker_process = None
         self.this_event_data = self.data["network_events"][self.event_index]
-        self.logger = py2_logger.get_logger(self.data['log_level'])
+        self.logger = get_logger(self.data['log_level'])
         self.logger.debug('Network event index: ' + str(event_index))
         self.logger.debug('Interface name: ' + str(self.interface_name))
 

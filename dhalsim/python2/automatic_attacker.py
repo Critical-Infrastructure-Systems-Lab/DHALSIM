@@ -3,7 +3,7 @@ import os
 import signal
 import subprocess
 import sys
-import py2_logger
+from dhalsim.py3_logger import get_logger
 from pathlib import Path
 
 from automatic_node import NodeControl
@@ -28,7 +28,7 @@ class AttackerControl(NodeControl):
         self.tcp_dump_process = None
         self.attacker_process = None
         self.this_attacker_data = self.data["network_attacks"][self.attacker_index]
-        self.logger = py2_logger.get_logger(self.data['log_level'])
+        self.logger = get_logger(self.data['log_level'])
 
     def terminate(self):
         """This function stops the tcp dump and the attack network attack."""

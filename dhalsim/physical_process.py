@@ -897,7 +897,6 @@ class PhysicalPlant:
         else:
             GeneralReadmeGenerator(self.intermediate_yaml, self.data['start_time'],
                                    end_time, False, self.master_time, self.wn, self.simulation_step).write_readme()
-        sys.exit(0)
 
     def set_initial_values(self):
         """Sets custom initial values for tanks and demand patterns in the WNTR simulation"""

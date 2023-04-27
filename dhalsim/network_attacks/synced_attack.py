@@ -105,7 +105,7 @@ class SyncedAttack(metaclass=ABCMeta):
                 target_plc = plc
                 break
 
-        cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip.client', '--print', '--address']
+        cmd = ['/usr/bin/python3', '-m', 'cpppo.server.enip.client', '--print', '--address']
         if target_plc['name'] == self.intermediate_plc['name']:
             cmd.append(str(target_plc['local_ip']) + ":44818")
         else:

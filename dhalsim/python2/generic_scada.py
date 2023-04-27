@@ -8,17 +8,13 @@ import sys
 import time
 from collections import OrderedDict
 from datetime import datetime
-from decimal import Decimal
-
 from pathlib import Path
 
 import yaml
 from basePLC import BasePLC
 
-from py2_logger import get_logger
+from dhalsim import py3_logger
 import threading
-import thread
-
 
 
 class Error(Exception):
@@ -53,10 +49,8 @@ class GenericScada(BasePLC):
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
-        self.logger = get_logger(self.intermediate_yaml['log_level'])
-
+        self.logger = py3_logger.get_logger(self.intermediate_yaml['log_level'])
         self.output_path = Path(self.intermediate_yaml["output_path"]) / "scada_values.csv"
-
         self.output_path.touch(exist_ok=True)
 
         # Create state from db values
@@ -290,9 +284,8 @@ class GenericScada(BasePLC):
 
         while self.update_cache_flag:
             for plc_ip in self.cache:
-                # Maintain old values if they could not be uploaded
+                # Maintain old values if there could not be uploaded
                 try:
-                    #self.logger.debug('polling plc {plc} for tags {tags}'.format(plc=plc_ip, tags=self.plc_data[plc_ip]))
                     values = self.receive_multiple(self.plc_data[plc_ip], plc_ip)
                     with lock:
                         self.cache[plc_ip] = values
@@ -302,6 +295,11 @@ class GenericScada(BasePLC):
                             tags=self.plc_data[plc_ip],
                             ip=plc_ip, e=str(e)))
                     continue
+
+                #self.logger.debug(
+                #    "SCADA cache updated for {tags}, with value {values}, from {ip}".format(tags=self.plc_data[plc_ip],
+                #                                                                             values=values,
+                #                                                                             ip=plc_ip))
 
             time.sleep(cache_update_time)
 
@@ -328,7 +326,9 @@ class GenericScada(BasePLC):
                 self.update_cache_flag = True
                 self.logger.debug("SCADA starting update cache thread")
                 lock = threading.Lock()
-                thread.start_new_thread(self.update_cache, (lock, self.SCADA_CACHE_UPDATE_TIME))
+                self.cache_thread = threading.Thread(target=self.update_cache,
+                                                     args=[lock, self.SCADA_CACHE_UPDATE_TIME], daemon=True)
+                self.cache_thread.start()
 
             master_time = self.get_master_clock()
             results = [master_time, datetime.now()]
