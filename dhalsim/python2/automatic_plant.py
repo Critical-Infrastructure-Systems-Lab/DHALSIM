@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 
 from automatic_node import NodeControl
-from py2_logger import get_logger
+from dhalsim.py3_logger import get_logger
 
 
 class Error(Exception):
@@ -40,6 +40,7 @@ class PlantControl(NodeControl):
             self.simulation_process.terminate()
         if self.simulation_process.poll() is None:
             self.simulation_process.kill()
+        self.logger.debug("Plant process stopped.")
 
     def main(self):
         """

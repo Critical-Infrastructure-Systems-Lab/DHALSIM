@@ -55,7 +55,7 @@ class MitmAttack(SyncedAttack):
         os.system('iptables -A INPUT -p icmp -j DROP')
         os.system('iptables -A OUTPUT -p icmp -j DROP')
 
-        cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip', '--print', '--address',
+        cmd = ['/usr/bin/python3', '-m', 'cpppo.server.enip', '--print', '--address',
                self.attacker_ip + ":44818"]
 
         request_tags = self.intermediate_plc['actuators'] + self.intermediate_plc['sensors']
@@ -87,7 +87,7 @@ class MitmAttack(SyncedAttack):
         """Update the :code:`tags` dict to the newest original values from the target PLC"""
         request_tags = self.intermediate_plc['actuators'] + self.intermediate_plc['sensors']
 
-        cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip.client', '--print', '--address',
+        cmd = ['/usr/bin/python3', '-m', 'cpppo.server.enip.client', '--print', '--address',
                str(self.target_plc_ip) + ":44818"]
 
         for tag in request_tags:
@@ -142,7 +142,7 @@ class MitmAttack(SyncedAttack):
         :return: The command that starts the CPPPO client
         :rtype: List[str]
         """
-        cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip.client', '--print', '--address',
+        cmd = ['/usr/bin/python3', '-m', 'cpppo.server.enip.client', '--print', '--address',
                str(self.attacker_ip)]
 
         # Acquire the lock
