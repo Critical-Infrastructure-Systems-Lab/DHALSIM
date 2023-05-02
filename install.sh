@@ -58,13 +58,9 @@ sudo python3 -m pip install matplotlib
 sudo python3 -m pip install testresources
 sudo python3 -m pip install pytest-mock
 
-
-
-
-
 # Mininet from source
 cd ~
-git clone --depth 1 -b 2.3.1b1 https://github.com/mininet/mininet.git || git -C mininet pull
+git clone --depth 1 -b 2.3.1b2 https://github.com/mininet/mininet.git || git -C mininet pull
 cd mininet
 sudo PYTHON=python3 ./util/install.sh -fnv
 

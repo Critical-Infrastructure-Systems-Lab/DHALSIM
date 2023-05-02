@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="dhalsim",
-    version="1.1.0",
+    version="1.1.1",
     url="https://github.com/afmurillo/DHALSIM",
     project_urls={
         "Bug Tracker": "https://github.com/afmurillo/DHALSIM/issues",
@@ -24,8 +24,6 @@ setuptools.setup(
         'matplotlib',
         'schema',
         'scapy',
-        'requests',
-        'git+https://github.com/Daveonwave/DHALSIM-epynet#egg=dependency'
     ],
     extras_require={
         'test': ['pytest', 'pytest-mock', 'mock', 'wget', 'coverage', 'pytest-cov', 'flaky'],
