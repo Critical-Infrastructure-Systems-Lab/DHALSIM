@@ -4,7 +4,7 @@ import os
 import signal
 import subprocess
 import sys
-import py2_logger
+from dhalsim.py3_logger import get_logger
 from pathlib import Path
 
 import yaml
@@ -26,6 +26,9 @@ class GeneralCPS(MiniCPS):
     :type intermediate_yaml: Path
     """
 
+    PROCESS_TIMEOUT = 1.0
+    """Timeout between sending SIGINT, SIGTERM, and a SIGKILL"""
+
     def __init__(self, intermediate_yaml):
 
         # Create logs directory in working directory
@@ -39,7 +42,7 @@ class GeneralCPS(MiniCPS):
         with self.intermediate_yaml.open(mode='r') as file:
             self.data = yaml.safe_load(file)
 
-        self.logger = py2_logger.get_logger(self.data['log_level'])
+        self.logger = get_logger(self.data['log_level'])
 
         if self.data['log_level'] == 'debug':
             logging.getLogger('mininet').setLevel(logging.DEBUG)
@@ -80,8 +83,6 @@ class GeneralCPS(MiniCPS):
         self.router_processes = None
 
         self.automatic_start()
-        self.poll_processes()
-        self.finish()
 
     def interrupt(self, sig, frame):
         """
@@ -101,7 +102,7 @@ class GeneralCPS(MiniCPS):
 
             for plc in self.data["plcs"]:
                 node = self.net.get(plc['gateway_name'])
-                cmd = ["python2", str(automatic_router_path), str(self.intermediate_yaml), str(plc['gateway_name'])]
+                cmd = ["python3", str(automatic_router_path), str(self.intermediate_yaml), str(plc['gateway_name'])]
                 self.router_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
 
         self.logger.info('Launched router processes')
@@ -111,18 +112,18 @@ class GeneralCPS(MiniCPS):
             automatic_plc_path = Path(__file__).parent.absolute() / "automatic_plc.py"
             for i, plc in enumerate(self.data["plcs"]):
                 node = self.net.get(plc["name"])
-                cmd = ["python2", str(automatic_plc_path), str(self.intermediate_yaml), str(i)]
+                cmd = ["python3", str(automatic_plc_path), str(self.intermediate_yaml), str(i)]
                 self.plc_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
 
         self.logger.info("Launched the PLCs processes.")
 
         automatic_scada_path = Path(__file__).parent.absolute() / "automatic_scada.py"
-        scada_cmd = ["python2", str(automatic_scada_path), str(self.intermediate_yaml)]
+        scada_cmd = ["python3", str(automatic_scada_path), str(self.intermediate_yaml)]
         self.scada_process = self.net.get('scada').popen(scada_cmd, stderr=sys.stderr, stdout=sys.stdout)
 
         automatic_router_path = Path(__file__).parent.absolute() / "automatic_router.py"
         node = self.net.get(self.data['scada']['gateway_name'])
-        cmd = ["python2", str(automatic_router_path), str(self.intermediate_yaml), str(self.data['scada']['gateway_name'])]
+        cmd = ["python3", str(automatic_router_path), str(self.intermediate_yaml), str(self.data['scada']['gateway_name'])]
         self.router_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
 
         self.logger.info("Launched the SCADA process.")
@@ -132,7 +133,7 @@ class GeneralCPS(MiniCPS):
             automatic_attacker_path = Path(__file__).parent.absolute() / "automatic_attacker.py"
             for i, attacker in enumerate(self.data["network_attacks"]):
                 node = self.net.get(attacker["name"][0:9])
-                cmd = ["python2", str(automatic_attacker_path), str(self.intermediate_yaml), str(i)]
+                cmd = ["python3", str(automatic_attacker_path), str(self.intermediate_yaml), str(i)]
                 self.attacker_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
 
         self.logger.debug("Launched the attackers processes.")
@@ -157,16 +158,18 @@ class GeneralCPS(MiniCPS):
                 # in addition to the node, we also need the network interface
                 event_interface_name = self.get_network_event_interface_name(target_node, node_name)
 
-                cmd = ["python2", str(automatic_event), str(self.intermediate_yaml), str(i), event_interface_name]
+                cmd = ["python3", str(automatic_event), str(self.intermediate_yaml), str(i), event_interface_name]
                 self.network_event_processes.append(node.popen(cmd, stderr=sys.stderr, stdout=sys.stdout))
 
         self.logger.info("Launched the event processes.")
         automatic_plant_path = Path(__file__).parent.absolute() / "automatic_plant.py"
 
-        cmd = ["python2", str(automatic_plant_path), str(self.intermediate_yaml)]
+        cmd = ["python3", str(automatic_plant_path), str(self.intermediate_yaml)]
         self.plant_process = subprocess.Popen(cmd, stderr=sys.stderr, stdout=sys.stdout)
 
         self.logger.debug("Launched the plant processes.")
+        self.poll_processes()
+        self.finish()
 
     def get_network_event_interface_name(self, target, source):
         for link in self.net.links:
@@ -198,18 +201,21 @@ class GeneralCPS(MiniCPS):
                     return
 
     @staticmethod
-    def end_process(process):
+    def end_process(process, timeout):
         """
         End a process.
 
         :param process: the process to end
+        :param timeout: timeout to wait between sending SIGINT, SIGTERM, and a SIGKILL
         """
         process.send_signal(signal.SIGINT)
-        process.wait()
-        if process.poll() is None:
-            process.terminate()
-        if process.poll() is None:
-            process.kill()
+        try:
+            process.wait(timeout)
+        except subprocess.TimeoutExpired:
+            if process.poll() is None:
+                process.terminate()
+            if process.poll() is None:
+                process.kill()
 
     def finish(self):
         """
@@ -222,45 +228,48 @@ class GeneralCPS(MiniCPS):
 
         if self.scada_process.poll() is None:
             try:
-                self.end_process(self.scada_process)
+                self.end_process(self.scada_process, self.PROCESS_TIMEOUT)
             except Exception as msg:
                 self.logger.error("Exception shutting down SCADA: " + str(msg))
 
         for plc_process in self.plc_processes:
             if plc_process.poll() is None:
                 try:
-                    self.end_process(plc_process)
+                    self.end_process(plc_process, self.PROCESS_TIMEOUT)
                 except Exception as msg:
                     self.logger.error("Exception shutting down plc: " + str(msg))
 
         for attacker in self.attacker_processes:
             if attacker.poll() is None:
                 try:
-                    self.end_process(attacker)
+                    self.end_process(attacker, self.PROCESS_TIMEOUT)
                 except Exception as msg:
                     self.logger.error("Exception shutting down attacker: " + str(msg))
 
         for event in self.network_event_processes:
             if event.poll() is None:
                 try:
-                    self.end_process(event)
+                    self.end_process(event, self.PROCESS_TIMEOUT)
                 except Exception as msg:
                     self.logger.error("Exception shutting down event: " + str(msg))
 
         for router in self.router_processes:
             if router.poll() is None:
                 try:
-                    self.end_process(router)
+                    self.end_process(router, self.PROCESS_TIMEOUT)
                 except Exception as msg:
                     self.logger.error("Exception shutting down event: " + str(msg))
 
         if self.plant_process.poll() is None:
             try:
-                self.end_process(self.plant_process)
+                self.end_process(self.plant_process, self.PROCESS_TIMEOUT)
             except Exception as msg:
                 self.logger.error("Exception shutting down plant_process: " + str(msg))
 
-        cmd = 'sudo pkill -f "python2 -m cpppo.server.enip"'
+        cmd = 'sudo pkill -f "python3 -m cpppo.server.enip"'
+        subprocess.call(cmd, shell=True, stderr=sys.stderr, stdout=sys.stdout)
+
+        cmd = 'sudo pkill -f "python3 -m cpppo.server.enip.client"'
         subprocess.call(cmd, shell=True, stderr=sys.stderr, stdout=sys.stdout)
 
         self.net.stop()

@@ -74,7 +74,7 @@ class SyncedAttack(metaclass=ABCMeta):
         if 'direction' in self.intermediate_attack:
             self.direction = self.intermediate_attack['direction']
         else:
-            self.direction = 'None'
+            self.direction = 'source'
 
         self.state = 0
         self.db_sleep_time = random.uniform(0.01, 0.1)
@@ -105,7 +105,7 @@ class SyncedAttack(metaclass=ABCMeta):
                 target_plc = plc
                 break
 
-        cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip.client', '--print', '--address']
+        cmd = ['/usr/bin/python3', '-m', 'cpppo.server.enip.client', '--print', '--address']
         if target_plc['name'] == self.intermediate_plc['name']:
             cmd.append(str(target_plc['local_ip']) + ":44818")
         else:

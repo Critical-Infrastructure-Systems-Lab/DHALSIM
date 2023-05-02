@@ -11,7 +11,6 @@ from scapy.layers.inet import IP, TCP
 from scapy.packet import Raw
 
 from dhalsim.network_attacks.utilities import translate_payload_to_float, translate_float_to_payload
-from evasion_attacks.Adversarial_Attacks.Black_Box_Attack.adversarial_AE import Adversarial_AE
 
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from tensorflow.keras.layers import *
@@ -68,7 +67,6 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
 
         # We can use the same method, as initially the df will be initialized with 0 values
         self.calculated_concealment_values_df = self.set_initial_conditions_of_scada_values()
-        self.calculated_concealment_values_df_historical = []
 
         # Initialize input values
         self.received_scada_tags_df = self.calculated_concealment_values_df
@@ -166,9 +164,8 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
 
     # Delivers a pandas dataframe with ALL SCADA tags
     def predict_concealment_values(self):
-        # This returns 1 row
         self.calculated_concealment_values_df = self.advAE.predict(self.received_scada_tags_df)
-        self.logger.debug('predicting')
+        self.logger.debug('predicting at iteration ' + str(int(self.get_master_clock())))
 
     def process_tag_in_missing(self, session, ip_payload):
         current_clock = int(self.get_master_clock())
@@ -183,7 +180,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
 
         # Wait for sync to take place
         while not self.get_sync(3) and self.sync_flag:
-            #self.logger.debug('Waiting for flag 3')
+            self.logger.debug('Waiting for flag 3')
             pass
 
         self.missing_scada_tags = list(self.scada_tags)

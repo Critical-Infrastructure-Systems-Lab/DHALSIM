@@ -37,7 +37,7 @@ class NoSuchPlc(Error):
 
 
 class NoSuchNode(Error):
-    """Raised when an attack targets a niode that does not exist"""
+    """Raised when an attack targets a node that does not exist"""
 
 
 class NoSuchTag(Error):
@@ -203,10 +203,14 @@ class SchemaParser:
             str,
             string_pattern,
         ),
-        'command': And(
-            str,
-            Use(str.lower),
-            Or('open', 'closed')
+        'command':
+        Or(
+            And(
+                str,
+                Use(str.lower),
+                Or('open', 'closed')),
+            And(
+                Or(float, And(int, Use(float))))
         )
     })
 
@@ -332,8 +336,7 @@ class SchemaParser:
                 Optional('persistent', default='True'): And(
                     str,
                     Use(str.lower),
-                    Or(True, False), error="'Persistent' should be one of the following:"
-                                                       "'True' or 'False'."
+                    Or(True, False), error="'Persistent' should be one of the following: 'True' or 'False'."
                 ),
                 'trigger': trigger,
             },
@@ -892,7 +895,10 @@ class ConfigParser:
 
         yaml_data['start_time'] = datetime.now()
         # Write values from INP file into yaml file (controls, tanks/valves/initial values, etc.)
-        yaml_data = InputParser(yaml_data).write()
+
+        # toDo: test this - preparing DHALSIM to be used with other simulators
+        if self.data['simulator'] == 'wntr' or self.data['simulator'] == 'epynet':
+            yaml_data = InputParser(yaml_data).write()
 
         # Parse the device attacks from the config file
         yaml_data = self.generate_device_attacks(yaml_data)

@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from automatic_node import NodeControl
-from py2_logger import get_logger
+from dhalsim.py3_logger import get_logger
 
 empty_loc = '/dev/null'
 
@@ -15,6 +15,9 @@ class RouterControl(NodeControl):
     """
     This class is started for a router. It starts a tcpdump process.
     """
+
+    PROCESS_TIMEOUT = 0.3
+    """Timeout between sending SIGINT, SIGTERM, and a SIGKILL"""
 
     def __init__(self, intermediate_yaml, router_name):
         super(RouterControl, self).__init__(intermediate_yaml)
@@ -31,12 +34,18 @@ class RouterControl(NodeControl):
         """
         self.logger.debug("Stopping Router tcpdump process.")
 
-        self.process_tcp_dump.send_signal(signal.SIGINT)
-        self.process_tcp_dump.wait()
         if self.process_tcp_dump.poll() is None:
-            self.process_tcp_dump.terminate()
-        if self.process_tcp_dump.poll() is None:
-            self.process_tcp_dump.kill()
+            self.process_tcp_dump.send_signal(signal.SIGINT)
+
+        try:
+            self.process_tcp_dump.wait(self.PROCESS_TIMEOUT)
+        except subprocess.TimeoutExpired:
+            if self.process_tcp_dump.poll() is None:
+                self.process_tcp_dump.terminate()
+            if self.process_tcp_dump.poll() is None:
+                self.process_tcp_dump.kill()
+
+        self.logger.debug("Router tcpdump process finished.")
 
     def main(self):
         """

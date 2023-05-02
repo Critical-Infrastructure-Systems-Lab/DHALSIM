@@ -1,29 +1,28 @@
-# Generated from controls.g4 by ANTLR 4.7.2
+# Generated from controls.g4 by ANTLR 4.12.0
 # encoding: utf-8
 from antlr4 import *
 from io import StringIO
-from typing.io import TextIO
 import sys
-
+if sys.version_info[1] > 5:
+	from typing import TextIO
+else:
+	from typing.io import TextIO
 
 def serializedATN():
-    with StringIO() as buf:
-        buf.write("\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\27")
-        buf.write(",\4\2\t\2\4\3\t\3\4\4\t\4\3\2\3\2\3\2\3\2\3\2\3\2\3\2")
-        buf.write("\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\3\3\3\3\3\3\3\3")
-        buf.write("\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\4\3\4\7\4\'\n\4\f\4\16")
-        buf.write("\4*\13\4\3\4\2\2\5\2\4\6\2\2\2*\2\b\3\2\2\2\4\30\3\2\2")
-        buf.write("\2\6(\3\2\2\2\b\t\7\3\2\2\t\n\7\b\2\2\n\13\7\20\2\2\13")
-        buf.write("\f\7\b\2\2\f\r\7\t\2\2\r\16\7\b\2\2\16\17\7\4\2\2\17\20")
-        buf.write("\7\b\2\2\20\21\7\5\2\2\21\22\7\b\2\2\22\23\7\20\2\2\23")
-        buf.write("\24\7\b\2\2\24\25\7\f\2\2\25\26\7\b\2\2\26\27\7\t\2\2")
-        buf.write("\27\3\3\2\2\2\30\31\7\3\2\2\31\32\7\b\2\2\32\33\7\20\2")
-        buf.write("\2\33\34\7\b\2\2\34\35\7\t\2\2\35\36\7\b\2\2\36\37\7\6")
-        buf.write("\2\2\37 \7\b\2\2 !\7\7\2\2!\"\7\b\2\2\"#\7\t\2\2#\5\3")
-        buf.write("\2\2\2$\'\5\2\2\2%\'\5\4\3\2&$\3\2\2\2&%\3\2\2\2\'*\3")
-        buf.write("\2\2\2(&\3\2\2\2()\3\2\2\2)\7\3\2\2\2*(\3\2\2\2\4&(")
-        return buf.getvalue()
-
+    return [
+        4,1,21,42,2,0,7,0,2,1,7,1,2,2,7,2,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,
+        0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,2,1,2,5,2,37,8,2,10,2,12,2,40,9,2,1,2,0,0,3,
+        0,2,4,0,0,40,0,6,1,0,0,0,2,22,1,0,0,0,4,38,1,0,0,0,6,7,5,1,0,0,7,
+        8,5,6,0,0,8,9,5,14,0,0,9,10,5,6,0,0,10,11,5,7,0,0,11,12,5,6,0,0,
+        12,13,5,2,0,0,13,14,5,6,0,0,14,15,5,3,0,0,15,16,5,6,0,0,16,17,5,
+        14,0,0,17,18,5,6,0,0,18,19,5,10,0,0,19,20,5,6,0,0,20,21,5,7,0,0,
+        21,1,1,0,0,0,22,23,5,1,0,0,23,24,5,6,0,0,24,25,5,14,0,0,25,26,5,
+        6,0,0,26,27,5,7,0,0,27,28,5,6,0,0,28,29,5,4,0,0,29,30,5,6,0,0,30,
+        31,5,5,0,0,31,32,5,6,0,0,32,33,5,7,0,0,33,3,1,0,0,0,34,37,3,0,0,
+        0,35,37,3,2,1,0,36,34,1,0,0,0,36,35,1,0,0,0,37,40,1,0,0,0,38,36,
+        1,0,0,0,38,39,1,0,0,0,39,5,1,0,0,0,40,38,1,0,0,0,2,36,38
+    ]
 
 class controlsParser ( Parser ):
 
@@ -74,11 +73,10 @@ class controlsParser ( Parser ):
     COMMENT=19
     NEWLINES=20
     WS=21
-    #PUMP_SETTING=22
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
-        self.checkVersion("4.7.2")
+        self.checkVersion("4.12.0")
         self._interp = ParserATNSimulator(self, self.atn, self.decisionsToDFA, self.sharedContextCache)
         self._predicates = None
 
@@ -86,6 +84,7 @@ class controlsParser ( Parser ):
 
 
     class NodeControlContext(ParserRuleContext):
+        __slots__ = 'parser'
 
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
             super().__init__(parent, invokingState)
@@ -178,6 +177,7 @@ class controlsParser ( Parser ):
 
 
     class TimeControlContext(ParserRuleContext):
+        __slots__ = 'parser'
 
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
             super().__init__(parent, invokingState)
@@ -256,6 +256,7 @@ class controlsParser ( Parser ):
 
 
     class ControlsContext(ParserRuleContext):
+        __slots__ = 'parser'
 
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
             super().__init__(parent, invokingState)
@@ -305,7 +306,7 @@ class controlsParser ( Parser ):
             self.state = 38
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==controlsParser.T__0:
+            while _la==1:
                 self.state = 36
                 self._errHandler.sync(self)
                 la_ = self._interp.adaptivePredict(self._input,0,self._ctx)
