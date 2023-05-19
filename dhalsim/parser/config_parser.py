@@ -904,7 +904,6 @@ class ConfigParser:
         yaml_data = self.generate_device_attacks(yaml_data)
         yaml_data["network_attacks"] = self.generate_network_attacks()
 
-
         # Parse network events from the config file
         yaml_data["network_events"] = self.generate_network_events()
 
