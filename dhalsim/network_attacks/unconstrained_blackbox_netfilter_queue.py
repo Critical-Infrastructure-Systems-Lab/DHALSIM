@@ -81,7 +81,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
         # This flaf ensures that the prediction is called only once per iteration
         self.predicted_for_iteration = False
 
-        #toDo: This will be something configured in the YAML file
+        # toDo: This will be something configured in the YAML file
         file_expr = 'training_data/ctown/'
 
         # Adversarial model for concealment
