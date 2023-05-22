@@ -539,7 +539,14 @@ This option configures the type of concealment and the values of the concealment
 
 * Path: This option is used to define a path to a .csv file with the concealment values for each tag. The format of this .csv requires that the first column is the iteration number when the concealment will be applied and the subsequent columns represent the concealmente values. The name of the first row must be "Iteration" and each subsequent column must have the tag name. 
 * Value: This option is used to define specific values to be used during the entire attack. The values can be configured as absolute values or as offset. 
-
+* Payload Replay: Using this concealment, the attacker parses the CIP packets that carry the tag values (sensor or actuator values), stores the tag values and replays the values at the configured time.
+    * :code:`capture_start` - The iteration on which the capture of tag values  will start.
+    * :code:`capture_end` - The iteration on which the capture of tag values will stop.
+    * :code:`replay_start` - The iteration on which the replay of tag values. Notice that the replay will have the same duration as the capture phase
+* Network Replay: This option captures CIP packets that carry the tag values (sensor or actuator values) exchanged between PLCs and replays those CIP messsages at the configured time. The difference betwen this type and concealment and "payload replay" is that no parsing takes place in this concealment. The CIP packets are captured and stored entirely and are also replied entirely. These are the parameters required to configured a network replay concealment:
+    * :code:`capture_start` - The iteration on which the capture of CIP messages will start.
+    * :code:`capture_end` - The iteration on which the capture of CIP messages will stop.
+    * :code:`replay_start` - The iteration on which the replay of CIP messages will start. Notice that the replay will have the same duration as the capture phase
 
 For example, to conceal the values of T3, T4:
   concealment_data:
@@ -549,7 +556,43 @@ For example, to conceal the values of T3, T4:
         value: 42.0
       - tag: T4
         value: 84.0
-        
+     
+Unconstrained Blackbox Concealment MiTM Attack
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This attack is the implementation of the "Unconstrained Blackbox Concealment MiTM Attack" developed and presented by Alessandro Erba on "Assessing Model-free Anomaly Detection in Industrial Control Systems Against Generic Concealment Attacks (https://cispa.de/en/research/publications/3809-assessing-model-free-anomaly-detection-in-industrial-control-systems-against-generic-concealment-attacks)". The attack is currently only supported on the C-Town topology. It uses an autoencoder model to launch a concealment attack on the SCADA. Notice that this attack does not modify data exchanged between the PLCs, this means that this attack needs to be launched at the same time as other attack in order to have an impact in the physical system. Finally, notice that this attack does not require a target, as it always targets the SCADA server. In addition, all tags are concealed. 
+
+This is an example of a :code:`unconstrained_blackbox_concealment_mitm` attack definition:
+
+.. code-block:: yaml
+
+    network_attacks:
+        - name: plc3attack
+          type: unconstrained_blackbox_concealment_mitm        
+          trigger:
+            type: time
+            start: 648
+            end: 792
+
+name
+^^^^^^^^^^^^^^^^^^^^^^^^^
+*This option is required*
+
+This defines the name of the attack. It is also used as the name of the attacker node on the mininet network.
+The name can only contain the the characters :code:`a-z`, :code:`A-Z`, :code:`0-9` and :code:`_`. And
+must have a length between 1 and 10 characters.
+
+type
+^^^^^^^^^^^^^^^^^^^^^^^^^
+*This option is required*
+
+This defines the type of network attack. For a Unconstrained Blackbox Concealment MiTM Attack, this should be :code:`unconstrained_blackbox_concealment_mitm`.
+
+trigger
+^^^^^^^^^^^^^^^^^^^^^^^^^
+*This option is required*
+The trigger supports the same options as the other attacks
+
 
 Simple Denial of Service Attack
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
