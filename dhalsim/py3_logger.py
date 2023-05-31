@@ -2,7 +2,7 @@ import logging
 import sys
 
 
-def get_logger(logging_level: str):
+def get_logger(logging_level):
     """
     Gets a python3 logger, sets the format and logging level
 

@@ -53,15 +53,15 @@ class GenericPLC(BasePLC):
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
-        self.logger = py3_logger.getlogger(self.intermediate_yaml['log_level'])
+        self.logger = py3_logger.get_logger(self.intermediate_yaml['log_level'])
 
         self.intermediate_plc = self.intermediate_yaml["plcs"][self.yaml_index]
 
         if 'sensors' not in self.intermediate_plc:
-            self.intermediate_plc['sensors'] = list()
+            self.intermediate_plc['sensors'] = []
 
         if 'actuators' not in self.intermediate_plc:
-            self.intermediate_plc['actuators'] = list()
+            self.intermediate_plc['actuators'] = []
 
         self.intermediate_controls = self.intermediate_plc['controls']
         self.controls = self.create_controls(self.intermediate_controls)
