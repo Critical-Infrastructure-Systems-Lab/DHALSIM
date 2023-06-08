@@ -29,7 +29,7 @@ setuptools.setup(
         'test': ['pytest', 'pytest-mock', 'mock', 'wget', 'coverage', 'pytest-cov', 'flaky'],
         'doc': ['sphinx', 'sphinx-rtd-theme', 'sphinx-prompt'],
     },
-    python_requires=">=3.8",
+    python_requires="=3.8",
     entry_points={
         'console_scripts': [
             'dhalsim = dhalsim.command_line:main',
