@@ -176,7 +176,7 @@ class SyncedAttack(metaclass=ABCMeta):
         elif self.intermediate_attack['trigger']['type'] == "above":
             value = self.intermediate_attack['trigger']['value']
             sensor_value = self.receive_tag(self.intermediate_attack['trigger']['sensor'])
-            print("sensor_value:", sensor_value, ", value:", value)
+            #print("sensor_value:", sensor_value, ", value:", value)
             return sensor_value >= value
         elif self.intermediate_attack['trigger']['type'] == "below":
             value = self.intermediate_attack['trigger']['value']

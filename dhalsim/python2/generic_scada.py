@@ -289,7 +289,7 @@ class GenericScada(BasePLC):
             for plc_ip in self.cache:
                 # Maintain old values if they could not be uploaded
                 try:
-                    values = self.receive_multiple(self.plc_data[plc_ip], plc_ip)
+                    values = float(self.receive_multiple(self.plc_data[plc_ip], plc_ip))
                     with lock:
                         self.cache[plc_ip] = values
                 except Exception as e:
