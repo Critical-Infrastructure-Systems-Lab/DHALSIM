@@ -15,15 +15,22 @@ setuptools.setup(
     license='MIT',
     packages=['dhalsim'],
     install_requires=[
-        'PyYAML',
+        'pyyaml',
         'pyyaml-include',
         'antlr4-python3-runtime',
         'progressbar2',
+        'numpy',
         'wntr',
         'pandas',
         'matplotlib',
         'schema',
         'scapy',
+        'pathlib',
+        'testresources',
+        'pytest-mock',
+        'netaddr',
+        'flaky',
+        'pytest'
     ],
     extras_require={
         'test': ['pytest', 'pytest-mock', 'mock', 'wget', 'coverage', 'pytest-cov', 'flaky'],

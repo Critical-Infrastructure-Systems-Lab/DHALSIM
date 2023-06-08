@@ -30,10 +30,7 @@ sudo apt update
 
 # Installing necessary packages
 sudo apt install -y git python3 python3-pip curl
-
-# CPPPO Correct Version 4.0.*
-#sudo pip install cpppo==4.0.*
-sudo python3 -m pip install cpppo==4.3.4
+sudo python3 -m pip install cpppo
 
 # MiniCPS
 cd ~
@@ -50,13 +47,13 @@ sudo python3 -m pip install .
 
 
 # Installing other DHALSIM dependencies
-sudo python3 -m pip install pathlib
-sudo python3 -m pip install pyyaml
-sudo python3 -m pip install numpy
-sudo python3 -m pip install panda
-sudo python3 -m pip install matplotlib
-sudo python3 -m pip install testresources
-sudo python3 -m pip install pytest-mock
+#sudo python3 -m pip install pathlib
+#sudo python3 -m pip install pyyaml
+#sudo python3 -m pip install numpy
+#sudo python3 -m pip install panda
+#sudo python3 -m pip install matplotlib
+#sudo python3 -m pip install testresources
+#sudo python3 -m pip install pytest-mock
 
 # Mininet from source
 cd ~
@@ -67,9 +64,6 @@ sudo PYTHON=python3 ./util/install.sh -fnv
 # Installing testing pip dependencies
 if [ "$test" = true ]
 then
-  sudo python3 -m pip install netaddr
-  sudo python3 -m pip install flaky
-  sudo python3 -m pip install pytest
   sudo python3 -m pip install pytest-timeout
   sudo python3 -m pip install pytest-cov
   sudo python3 -m pip install pytest-mock
