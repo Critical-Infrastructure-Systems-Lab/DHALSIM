@@ -33,7 +33,7 @@ sudo apt install -y git python3 python3-pip curl
 
 # CPPPO Correct Version 4.0.*
 #sudo pip install cpppo==4.0.*
-sudo python3 -m pip install cpppo==4.3.4
+sudo python3 -m pip install cpppo
 
 # MiniCPS
 cd ~
