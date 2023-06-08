@@ -684,7 +684,7 @@ class PhysicalPlant:
                 time.sleep(self.WAIT_FOR_FLAG)
 
             self.update_actuators()
-            self.logger.debug('Actuator list: ' + str(self.actuator_list))
+            #self.logger.debug('Actuator list: ' + str(self.actuator_list))
 
             # Check for simulation error, print output on exception
             try:
@@ -810,7 +810,7 @@ class PhysicalPlant:
             for tank in self.tank_list:
                 level = network_state[tank]['pressure']
                 tank_name = tank
-                self.logger.debug('Writing to DB tank: ' + str(tank_name) + ' with level: ' + str(level))
+                #self.logger.debug('Writing to DB tank: ' + str(tank_name) + ' with level: ' + str(level))
                 self.set_to_db(tank_name, level)
 
         elif self.simulator == 'wntr':

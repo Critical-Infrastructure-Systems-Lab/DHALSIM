@@ -53,7 +53,7 @@ class GenericPLC(BasePLC):
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
-        self.logger = py3_logger.getlogger(self.intermediate_yaml['log_level'])
+        self.logger = py3_logger.get_logger(self.intermediate_yaml['log_level'])
 
         self.intermediate_plc = self.intermediate_yaml["plcs"][self.yaml_index]
 
@@ -277,11 +277,7 @@ class GenericPLC(BasePLC):
     def get_tag_for_cache(self, tag, plc_ip, cache_update_time):
         for retry in range(self.UPDATE_RETRIES):
             try:
-                self.logger.debug('Trying to obtain value {tag}, from IP {ip}'.format(tag=(tag, 1), ip=plc_ip))
-                temp = self.receive((tag, 1), plc_ip)
-                self.logger.debug(f'Received value without cast {temp}')
-                received = float(temp)
-                self.cache[tag] = received
+                self.cache[tag] = float(self.receive((tag, 1), plc_ip))
                 return True
             except Exception as e:
                 self.logger.info(
