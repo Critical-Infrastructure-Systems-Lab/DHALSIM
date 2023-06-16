@@ -13,7 +13,7 @@ system.
 The documentation is distributed in the following files:
 
 * attacks: explains how to run experiments on DHALSIM with attacks, the available attacks, and a description of the
-attacks and its options
+  attacks and its options
 * configuration: includes information on how to configure DHALSIM experiments
 * events: explains what are events in DHALSIM and how to run experiments with events
 * installation: explains how to install DHALSIM
