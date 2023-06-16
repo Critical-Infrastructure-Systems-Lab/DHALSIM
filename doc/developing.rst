@@ -61,7 +61,7 @@ be extended to simulate other physical systems. The parsing and execution proces
    of these parsers is to generate an "intermediate.yaml" file. This is a master file that is used by all components
    of DHALSIM to function. At the same time, this file stores all relevant configuration information for a DHALSIM
    experiment.
-3. Once the intermediate_yaml file is generated he automatic_run.py script is called. This is a process that will start
+3. Once the intermediate_yaml file is generated the automatic_run.py script is called. This is a process that will start
    a Mininet topology and spawn multiple subprocesses, running in Mininet nodes. There wil be one subprocess for each
    PLC present in the PLCs YAML configuration file, one subprocess for the SCADA server, one subprocess for each
    network attack, one subprocess for each router (capturing traffic with 'tcpdump') and one subprocess for the physical

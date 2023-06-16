@@ -84,8 +84,7 @@ Creating custom demand patterns
 
 Custom demand patterns can be loaded into a DHALSIM experiment by generating a csv file. The format of this file should
 be a timeseries, where each column represents a demand junction. The first row of each column is the junction name
-(as defined in the EPANET file) and each subsewquent row represents a demad multiplier for the pattern timestep.
-
+(as defined in the EPANET file) and each subsequent row represents a demand multiplier for the pattern timestep.
 
 
 
