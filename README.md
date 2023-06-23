@@ -10,6 +10,7 @@ Two papers in the Journal of Water Resources Planning and Management explain in 
 ## Installation
 
 In order to offer a simple installation we have included an installation script which will install DHALSIM on an Ubuntu 20.04 machine. This script is located in the root of the repository and can be run with ```./install.sh```.
+
 ## Running
 
 DHALSIM can be run using the command ```sudo dhalsim path/to/config.yaml```.
