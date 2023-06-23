@@ -84,16 +84,20 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
                     modified = False
                     return ip_payload, modified
 
+        self.logger.debug('Attacking packet')
+
         # We support multi tag sending, using the same session. Context varies among tags
         for tag in self.intermediate_attack['tags']:
             if session['tag'] == tag['tag']:
                 modified = True
                 if 'value' in tag.keys():
-                    #self.logger.debug('attacking with value')
-                    return translate_float_to_payload(tag['value'], ip_payload[Raw].load)
+                    self.logger.debug('Attacking with value')
+                    self.logger.debug(f'Original value is: {ip_payload[Raw].load}')
+                    self.logger.debug('Attack value is: ' + str(tag['value']))
+                    return translate_float_to_payload(tag['value'], ip_payload[Raw].load), modified
 
                 elif 'offset' in tag.keys():
-                    #self.logger.debug('attacking with offset')
+                    self.logger.debug('Attacking with offset')
                     return translate_float_to_payload(
                         translate_payload_to_float(ip_payload[Raw].load) + tag['offset'],
                         ip_payload[Raw].load), modified
@@ -120,7 +124,7 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
         if self.replay_start <= current_clock < self.replay_start + self.replay_duration:
 
             # Replay phase
-
+            self.logger.debug('Starting replay phase')
             replay_position = self.capture_start + current_clock - self.replay_start
 
             # Maybe we did not captured a value for that tag at that iteration
@@ -141,11 +145,11 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
         self.logger.debug('Capturing payload of tag ' + this_tag)
         self.captured_tags_pd.loc[current_clock, this_tag] = translate_payload_to_float(ip_payload[Raw].load)
         modified = False
-        self.logger.debug('Captured payload: \n' + str(self.captured_tags_pd.loc[current_clock]))
+        self.logger.debug('Captured payload: ' + str(self.captured_tags_pd.loc[current_clock]))
         return ip_payload, modified
 
     def handle_payload_replay(self, session, ip_payload):
-        self.logger.debug('Concealing with payload replay')
+        #self.logger.debug('Concealing with payload replay')
         current_clock = int(self.get_master_clock())
         this_tag = str(session['tag'])
 
@@ -179,7 +183,6 @@ class ConcealmentMiTMNetfilterQueue(PacketQueue):
 
         modified = False
         return ip_payload, modified
-
 
     def handle_concealment_value(self, session, ip_payload):
         for tag in self.intermediate_attack['concealment_data']['concealment_value']:

@@ -6,8 +6,6 @@ Ubuntu version
 ~~~~~~~~~~~~~~~~~~~~~~~~
 DHALSIM has been developed and tested on Ubuntu 22.04 LTS. Therefore, we recommend installing and running DHALSIM on Ubuntu 22.04. The installation script can be ran using ``./install.sh``. The installation script has not been tested on other versions. If you want to use another version, we recommend a manual installation.
 
-The installation script can also install all testing and documentation dependencies. To do this, simply run ``./install.sh`` with the option `-t` for testing or `-d` for documentation, for example ``./install.sh -t -d``.
-
 Automatic installation
 ----------------------
 After cloning the repository, you can use the install script to install DHALSIM and its prerequisites.
@@ -18,3 +16,5 @@ After cloning the repository, you can use the install script to install DHALSIM 
     cd dhalsim
     sudo chmod +x install.sh
     ./install.sh
+
+The installation script can also install all testing and documentation dependencies. To do this, simply run ``./install.sh`` with the option `-t` for testing or `-d` for documentation, for example ``./install.sh -t -d``.

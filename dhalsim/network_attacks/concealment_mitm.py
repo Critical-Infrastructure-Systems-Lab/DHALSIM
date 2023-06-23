@@ -33,7 +33,6 @@ class ConcealmentMiTMAttack(SyncedAttack):
         # Process object to handle nfqueue
         self.nfqueue_process = None
 
-
     def setup(self):
         """
         This function start the network attack.
@@ -122,6 +121,7 @@ class ConcealmentMiTMAttack(SyncedAttack):
             os.system('iptables -D FORWARD -p icmp -j DROP')
             os.system('iptables -D INPUT -p icmp -j DROP')
             os.system('iptables -D OUTPUT -p icmp -j DROP')
+
 
 def is_valid_file(parser_instance, arg):
     """Verifies whether the intermediate yaml path is valid."""

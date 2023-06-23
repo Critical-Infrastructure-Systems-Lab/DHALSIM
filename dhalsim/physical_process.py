@@ -214,15 +214,15 @@ class PhysicalPlant:
 
         original_inp_filename = self.data['inp_file'].rsplit('.', 1)[0]
         processed_inp_filename = original_inp_filename + '_processed.inp'
-        #try:
-        #    self.remove_controls_from_inp_file(self.data['inp_file'], processed_inp_filename)
-        #except IOError as ioe:
-        #    self.logger.error('IO Exception writing an EPANET file without [CONTROLS], aborting')
-        #    sys.exit(1)
+        try:
+            self.remove_controls_from_inp_file(self.data['inp_file'], processed_inp_filename)
+        except IOError as ioe:
+            self.logger.error('IO Exception writing an EPANET file without [CONTROLS], aborting')
+            sys.exit(1)
 
         # using an epynet water network object we do not have a way of removing the controls, so we write a new
         # EPANET inp file without the [CONTROLS] section
-        self.wn = WaterDistributionNetwork(self.data['inp_file'])
+        self.wn = WaterDistributionNetwork(processed_inp_filename)
 
         # epynet
         self.simulation_step = epynetUtils.get_time_parameter(
@@ -810,7 +810,7 @@ class PhysicalPlant:
             for tank in self.tank_list:
                 level = network_state[tank]['pressure']
                 tank_name = tank
-                self.logger.debug('Writing to DB tank: ' + str(tank_name) + ' with level: ' + str(level))
+                #self.logger.debug('Writing to DB tank: ' + str(tank_name) + ' with level: ' + str(level))
                 self.set_to_db(tank_name, level)
 
         elif self.simulator == 'wntr':
