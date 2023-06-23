@@ -684,7 +684,7 @@ class PhysicalPlant:
                 time.sleep(self.WAIT_FOR_FLAG)
 
             self.update_actuators()
-            self.logger.debug('Actuator list: ' + str(self.actuator_list))
+            #self.logger.debug('Actuator list: ' + str(self.actuator_list))
 
             # Check for simulation error, print output on exception
             try:

@@ -235,11 +235,13 @@ if the target is the "source" or "destination" of the messages. The valid values
 "destionation", the default value is "source"
 
 
+
 Man-in-the-middle Attack
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Man-in-the-middle (MITM) attacks are attacks where the attacker will sit in between a PLC and its
 connected switch. The attacker will parse the CIP packets and if they are in the configured target list, it will modify
 the value of the tags to the other PLCs.
+
 
 .. figure:: static/simple_topo_attack.svg
     :align: center
@@ -419,6 +421,79 @@ trigger
 This parameter defines when the attack is triggered. There are 4 different types of triggers:
 
 * Timed attacks
+    * :code:`time` - This is a timed attack. This means that the attack will start at a given iteration and stop at a given iteration
+* Sensor attacks: These are attacks that will be triggered when a certain sensor in the water network meets a certain condition.
+    * :code:`below` - This will make the attack trigger while a certain tag is below or equal to a given value
+    * :code:`above` - This will make the attack execute while a certain tag is above or equal to a given value
+    * :code:`between` - This will ensure that the attack is executed when a certain tag is between or equal to two given values
+
+These are the required parameters per type of trigger:
+
+* For :code:`time` attacks:
+    * :code:`start` - The start time of the attack (in iterations).
+    * :code:`end` - The end time of the attack (in iterations).
+* For :code:`below` and :code:`above` attacks:
+    * :code:`sensor` - The sensor of which the value will be used as the trigger.
+    * :code:`value` - The value which has to be reached in order to trigger the attack.
+* For :code:`between` attacks:
+    * :code:`sensor` - The sensor of which the value will be used as the trigger.
+    * :code:`lower_value` - The lower bound.
+    * :code:`upper_value` - The upper bound.
+
+tags
+^^^^^^^^^^^^^^^^^^^^^^^^^
+*This option is required*
+
+This defines the tags that will be spoofed in a server MITM attack. It contains a list of "tuples" defining the tag and the corresponding value or offset.
+
+For example, to overwrite the value of T1:
+
+.. code-block:: yaml
+
+   tags:
+     - tag: T1
+       value: 0.12
+
+Or instead, to offset the value of T1:
+
+.. code-block:: yaml
+
+   tags:
+     - tag: T1
+       offset: -0.2
+
+target
+^^^^^^^^^^^^^^^^^^^^^^^^^
+*This option is required*
+
+This will define the target of the network attack. For a server MITM attack, this is the PLC at which the attacker will sit.
+
+
+Concealment Man-in-the-middle Attack
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In this MiTM attack, the attacker will differentiate between traffic with PLC as a destination and traffic with a SCADA server as destination. If the destination is a PLC, the attacker will modify the tag values with the configured attack values. If the destination is a SCADA server, the attacker will modify the tag values with the configured concealment values. 
+
+name
+^^^^^^^^^^^^^^^^^^^^^^^^^
+*This option is required*
+
+This defines the name of the attack. It is also used as the name of the attacker node on the mininet network.
+The name can only contain the the characters :code:`a-z`, :code:`A-Z`, :code:`0-9` and :code:`_`. And
+must have a length between 1 and 10 characters.
+
+type
+^^^^^^^^^^^^^^^^^^^^^^^^^
+*This option is required*
+
+This defines the type of network attack. For a Concealment MITM attack, this should be :code:`concealment_mitm`.
+
+trigger
+^^^^^^^^^^^^^^^^^^^^^^^^^
+*This option is required*
+
+This parameter defines when the attack is triggered. There are 4 different types of triggers:
+
+* Timed attacks
     * :code:`time` - This is a timed attack. This means that the attack will start at a given iteration and stop at a
 given iteration
 * Sensor attacks: These are attacks that will be triggered when a certain sensor in the water network meets a certain
@@ -545,6 +620,7 @@ tags
 This defines the tags that will be spoofed in a server MITM attack. It contains a list of "tuples" defining the tag and
 the corresponding value or offset.
 
+
 For example, to overwrite the values of T1, T2, T3:
 
 .. code-block:: yaml
@@ -583,7 +659,6 @@ have the tag name.
 * Value: This option is used to define specific values to be used during the entire attack. The values can be configured
 as absolute values or as offset.
 
-
 For example, to conceal the values of T3, T4:
   concealment_data:
     type: value
@@ -592,6 +667,42 @@ For example, to conceal the values of T3, T4:
         value: 42.0
       - tag: T4
         value: 84.0
+     
+Unconstrained Blackbox Concealment MiTM Attack
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This attack is the implementation of the "Unconstrained Blackbox Concealment MiTM Attack" developed and presented by Alessandro Erba on "Assessing Model-free Anomaly Detection in Industrial Control Systems Against Generic Concealment Attacks (https://cispa.de/en/research/publications/3809-assessing-model-free-anomaly-detection-in-industrial-control-systems-against-generic-concealment-attacks)". The attack is currently only supported on the C-Town topology. It uses an autoencoder model to launch a concealment attack on the SCADA. Notice that this attack does not modify data exchanged between the PLCs, this means that this attack needs to be launched at the same time as other attack in order to have an impact in the physical system. Finally, notice that this attack does not require a target, as it always targets the SCADA server. In addition, all tags are concealed. 
+
+This is an example of a :code:`unconstrained_blackbox_concealment_mitm` attack definition:
+
+.. code-block:: yaml
+
+    network_attacks:
+        - name: plc3attack
+          type: unconstrained_blackbox_concealment_mitm        
+          trigger:
+            type: time
+            start: 648
+            end: 792
+
+name
+^^^^^^^^^^^^^^^^^^^^^^^^^
+*This option is required*
+
+This defines the name of the attack. It is also used as the name of the attacker node on the mininet network.
+The name can only contain the the characters :code:`a-z`, :code:`A-Z`, :code:`0-9` and :code:`_`. And
+must have a length between 1 and 10 characters.
+
+type
+^^^^^^^^^^^^^^^^^^^^^^^^^
+*This option is required*
+
+This defines the type of network attack. For a Unconstrained Blackbox Concealment MiTM Attack, this should be :code:`unconstrained_blackbox_concealment_mitm`.
+
+trigger
+^^^^^^^^^^^^^^^^^^^^^^^^^
+*This option is required*
+The trigger supports the same options as the other attacks
 
 
 Simple Denial of Service Attack

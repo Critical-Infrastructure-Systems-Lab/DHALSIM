@@ -13,7 +13,7 @@ def patched_attack(mocker):
     mocker.patch.object(SyncedAttack, "__init__", return_value=None)
     mocker.patch.object(MitmAttack, "__init__", return_value=None)
     mocker.patch.object(SyncedAttack, "DB_TRIES", 3)
-    mocker.patch.object(SyncedAttack, "DB_SLEEP_TIME", 1.5)
+    #mocker.patch.object(SyncedAttack, "DB_SLEEP_TIME", 1.5)
 
     cur_mock = mocker.Mock()
     conn_mock = mocker.Mock()
@@ -96,7 +96,7 @@ def test_get_sync_first_try(patched_attack):
 
     cur_mock.fetchone.return_value = [1]
 
-    assert attack.get_sync() is True
+    assert attack.get_sync(True) is True
 
     cur_mock.execute.assert_called_once_with("SELECT flag FROM sync WHERE name IS ?", ('attack123',))
 
@@ -115,7 +115,7 @@ def test_get_sync_fail_once(patched_attack):
 
     cur_mock.fetchone.return_value = [1]
 
-    assert attack.get_sync() is True
+    assert attack.get_sync(True) is True
 
     cur_mock.execute.assert_has_calls([call("SELECT flag FROM sync WHERE name IS ?", ('attack123',)),
                                        call("SELECT flag FROM sync WHERE name IS ?", ('attack123',))])
@@ -136,7 +136,7 @@ def test_get_sync_fail_all(patched_attack):
                                     sqlite3.OperationalError(), None]
 
     with pytest.raises(DatabaseError):
-        attack.get_sync()
+        attack.get_sync(True)
 
     cur_mock.execute.assert_has_calls([call("SELECT flag FROM sync WHERE name IS ?", ('attack123',)),
                                        call("SELECT flag FROM sync WHERE name IS ?", ('attack123',)),

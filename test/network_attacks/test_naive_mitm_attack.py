@@ -74,30 +74,30 @@ def restore_arp_mock(mocker):
 
 @pytest.fixture
 def attack_time(intermediate_yaml_path, mocker):
-    mocker.patch.object(SyncedAttack, 'initialize_db', return_value=None)
+    #mocker.patch.object(SyncedAttack, 'initialize_db', return_value=None)
     return PacketAttack(intermediate_yaml_path, 1)
 
 
 @pytest.fixture
 def attack_above(intermediate_yaml_path, mocker):
-    mocker.patch.object(SyncedAttack, 'initialize_db', return_value=None)
+    #mocker.patch.object(SyncedAttack, 'initialize_db', return_value=None)
     return PacketAttack(intermediate_yaml_path, 2)
 
 
 @pytest.fixture
 def attack_below(intermediate_yaml_path, mocker):
-    mocker.patch.object(SyncedAttack, 'initialize_db', return_value=None)
+    #mocker.patch.object(SyncedAttack, 'initialize_db', return_value=None)
     return PacketAttack(intermediate_yaml_path, 3)
 
 
 @pytest.fixture
 def attack_between(intermediate_yaml_path, mocker):
-    mocker.patch.object(SyncedAttack, 'initialize_db', return_value=None)
+    #mocker.patch.object(SyncedAttack, 'initialize_db', return_value=None)
     return PacketAttack(intermediate_yaml_path, 4)
 
 
 def test_init(intermediate_yaml_path, os_mock, mocker):
-    mocker.patch.object(SyncedAttack, 'initialize_db', return_value=None)
+    #mocker.patch.object(SyncedAttack, 'initialize_db', return_value=None)
     packet_attack = PacketAttack(intermediate_yaml_path, 1)
 
     assert packet_attack.yaml_index == 1

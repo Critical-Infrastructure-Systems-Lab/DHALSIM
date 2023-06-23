@@ -58,10 +58,10 @@ class GenericPLC(BasePLC):
         self.intermediate_plc = self.intermediate_yaml["plcs"][self.yaml_index]
 
         if 'sensors' not in self.intermediate_plc:
-            self.intermediate_plc['sensors'] = list()
+            self.intermediate_plc['sensors'] = []
 
         if 'actuators' not in self.intermediate_plc:
-            self.intermediate_plc['actuators'] = list()
+            self.intermediate_plc['actuators'] = []
 
         self.intermediate_controls = self.intermediate_plc['controls']
         self.controls = self.create_controls(self.intermediate_controls)

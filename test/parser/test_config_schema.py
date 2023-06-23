@@ -54,21 +54,22 @@ def test_dict():
 @pytest.fixture
 def attack_dict_1():
     return {
+        'type': 'mitm',
         'name': 'test1',
-        'tags': [{'tag': 'T2', 'value': 0.2}],
+        'trigger': {'type': 'time', 'start': 2, 'end': 7},
         'target': 'PLC2',
-        'trigger': {'end': 7, 'start': 2, 'type': 'Time'},
-        'type': 'mitm'
+        'tag': 'T2',
+        'value': 0.2
     }
 
 
 @pytest.fixture
 def attack_dict_2():
-    return {'name': 'test2',
-            'target': 'PLC1',
-            'trigger': {'end': 17, 'start': 12, 'type': 'Time'},
-            'type': 'naive_mitm',
-            'value': -2}
+    return {'type': 'naive_mitm',
+            'name': 'test2',
+            'trigger': {'type': 'time', 'start': 12, 'end': 17},
+            'value': -2,
+            'target': 'PLC1'}
 
 
 @pytest.fixture
@@ -110,7 +111,7 @@ def test_valid_dict(test_dict):
     ('network_topology_type', 'simple'),
     ('mininet_cli', False),
     ('log_level', 'info'),
-    ('simulator', 'pdd'),
+    ('simulator', 'wntr'),
     ('demand', 'pdd')
 ])
 def test_default_config(key, default_value, test_dict):
@@ -340,7 +341,7 @@ def test_valid_device_attacks(key, input_value, expected, attack_dict_3, attack_
     ('trigger', 4),
     ('name', 'network attack'),
     ('name', 'network_attack_5<10'),
-    ('name', 'networkattack_5to10'),
+    ('name', 'networkattack 5to10'),
     ('trigger', {'type': 'Time', 'start': '5', 'end': 10}),
     ('trigger', {'type': 'NoType', 'start': 5, 'end': 10}),
     ('trigger', {'type': 'NoType', 'start': 5, 'end': '10'}),
@@ -363,7 +364,8 @@ def test_invalid_network_attacks_mitm(key, input_value, attack_dict_1):
     ('name', '10', '10'),
     ('name', 'atak', 'atak'),
     ('trigger', {'type': 'Time', 'start': 5, 'end': 10}, {'type': 'time', 'start': 5, 'end': 10}),
-    ('tags', [{'tag': 'T2', 'value': 0.2}], [{'tag': 'T2', 'value': 0.2}]),
+    ('tag', 'T2', 'T2'),
+    ('value', 0.2, 0.2),
 ])
 def test_valid_network_attacks_mitm(key, input_value, expected, attack_dict_1):
     attack_dict_1[key] = input_value
@@ -378,7 +380,7 @@ def test_valid_network_attacks_mitm(key, input_value, expected, attack_dict_1):
     ('trigger', 4),
     ('name', 'network attack'),
     ('name', 'network_attack_5<10'),
-    ('name', 'networkattack_5to10'),
+    ('name', 'networkattack 5to10'),
     ('trigger', {'type': 'Time', 'start': '5', 'end': 10}),
     ('trigger', {'type': 'NoType', 'start': 5, 'end': 10}),
     ('trigger', {'type': 'NoType', 'start': 5, 'end': '10'}),
