@@ -290,8 +290,9 @@ class GenericScada(BasePLC):
                 # Maintain old values if they could not be uploaded
                 try:
                     values = self.receive_multiple(self.plc_data[plc_ip], plc_ip)
+                    values_float = [float(x) for x in values]
                     with lock:
-                        self.cache[plc_ip] = values
+                        self.cache[plc_ip] = values_float
                 except Exception as e:
                     self.logger.error(
                         "PLC receive_multiple with tags {tags} from {ip} failed with exception '{e}'".format(

@@ -1,0 +1,25 @@
+network_attacks:
+- name: plc3attack1
+  type: concealment_mitm
+  tags:
+    - tag: T2
+      offset: 0.0
+  target: PLC3
+  concealment_data:
+    type: network_replay
+    capture_start: 300
+    capture_end: 1428
+    replay_start: 1600
+  trigger:
+    start: 295
+    end: 2728
+    type: time
+
+device_attacks:
+- actuator: V2
+  command: open
+  name: plc3attack2
+  trigger:
+    start: 1600
+    end: 2728
+    type: time

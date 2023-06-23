@@ -18,11 +18,11 @@ network_attacks:
   concealment_data:
     type: payload_replay
     capture_start: 300
-    capture_end: 672
-    replay_start: 1440
+    capture_end: 1428
+    replay_start: 1600
   trigger:
     start: 295
-    end: 1820
+    end: 2728
     type: time
 
 - name: plc2attack
@@ -34,9 +34,9 @@ network_attacks:
   concealment_data:
     type: payload_replay
     capture_start: 300
-    capture_end: 672
-    replay_start: 1440
+    capture_end: 1428
+    replay_start: 1600
   trigger:
     start: 295
-    end: 1820
+    end: 2728
     type: time

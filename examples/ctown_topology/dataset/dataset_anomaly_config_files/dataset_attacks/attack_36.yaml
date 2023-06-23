@@ -1,0 +1,32 @@
+network_attacks:
+- name: plc6attack1
+  type: concealment_mitm
+  tags:
+    - tag: T4
+      offset: 0.0
+  target: PLC6
+  concealment_data:
+    type: payload_replay
+    capture_start: 228
+    capture_end: 588
+    replay_start: 1368
+  trigger:
+    start: 220
+    end: 1750
+    type: time
+
+device_attacks:
+- actuator: PU6
+  command: open
+  name: plc6attack2
+  trigger:
+    start: 1368
+    end: 1728
+    type: time
+- actuator: PU7
+  command: open
+  name: plc6attack3
+  trigger:
+    start: 1368
+    end: 1728
+    type: time
