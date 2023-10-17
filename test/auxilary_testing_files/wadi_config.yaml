@@ -6,7 +6,7 @@ output_path: "output/"
 iterations: 2
 mininet_cli: false
 log_level: debug
-simulator: pdd
+simulator: wntr
 
 plcs: !include wadi_plc.yaml
 

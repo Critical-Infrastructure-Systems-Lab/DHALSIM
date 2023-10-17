@@ -1,21 +1,19 @@
 import argparse
 import os.path
 import sqlite3
-import threading
 import time
-from decimal import Decimal
 from pathlib import Path
 import random
 
+import sys
 import yaml
 
 from basePLC import BasePLC
 from entities.attack import TimeAttack, TriggerBelowAttack, TriggerAboveAttack, TriggerBetweenAttack
 from entities.control import AboveControl, BelowControl, TimeControl
-from py2_logger import get_logger
-
+from dhalsim import py3_logger
 import threading
-import thread
+import signal
 
 
 class Error(Exception):
@@ -55,15 +53,15 @@ class GenericPLC(BasePLC):
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
-        self.logger = get_logger(self.intermediate_yaml['log_level'])
+        self.logger = py3_logger.get_logger(self.intermediate_yaml['log_level'])
 
         self.intermediate_plc = self.intermediate_yaml["plcs"][self.yaml_index]
 
         if 'sensors' not in self.intermediate_plc:
-            self.intermediate_plc['sensors'] = list()
+            self.intermediate_plc['sensors'] = []
 
         if 'actuators' not in self.intermediate_plc:
-            self.intermediate_plc['actuators'] = list()
+            self.intermediate_plc['actuators'] = []
 
         self.intermediate_controls = self.intermediate_plc['controls']
         self.controls = self.create_controls(self.intermediate_controls)
@@ -109,9 +107,10 @@ class GenericPLC(BasePLC):
 
         self.update_cache_flag = False
         self.plcs_ready = False
+        self.plc_run = True
 
         for tag in set(dependant_sensors) - set(plc_sensors):
-            self.cache[tag] = Decimal(0)
+            self.cache[tag] = float(0)
             self.tag_fresh[tag] = False
 
         self.do_super_construction(plc_protocol, state)
@@ -221,24 +220,24 @@ class GenericPLC(BasePLC):
         the :class:`~dhalsim.python2.basePLC` class.
         :param sleep:  (Default value = 0.5) The time to sleep after setting everything up
         """
+        signal.signal(signal.SIGINT, self.sigint_handler)
+        signal.signal(signal.SIGTERM, self.sigint_handler)
+
         self.logger.debug(self.intermediate_plc['name'] + ' enters pre_loop')
         self.db_sleep_time = random.uniform(0.01, 0.1)
-
-        reader = True
 
         sensors = self.generate_tags(self.intermediate_plc['sensors'])
         actuators = self.generate_tags(self.intermediate_plc['actuators'])
 
         values = []
         for tag in sensors:
-            values.append(Decimal(self.get(tag)))
+            values.append(float(self.get(tag)))
         for tag in actuators:
             values.append(int(self.get(tag)))
 
         noise_scale = self.intermediate_yaml["noise_scale"]
 
         BasePLC.set_parameters(self, sensors, actuators, values, self.intermediate_plc['local_ip'], noise_scale)
-        self.startup()
 
         self.keep_updating_flag = True
         self.cache_update_process = None
@@ -258,7 +257,7 @@ class GenericPLC(BasePLC):
         :raise: TagDoesNotExist if tag cannot be found
         """
         if tag in self.intermediate_plc["sensors"] or tag in self.intermediate_plc["actuators"]:
-            return Decimal(self.get((tag, 1)))
+            return float(self.get((tag, 1)))
 
         if tag in self.cache:
             return self.cache[tag]
@@ -270,7 +269,7 @@ class GenericPLC(BasePLC):
             if i == self.yaml_index:
                 continue
             if tag in plc_data["sensors"] or tag in plc_data["actuators"]:
-                received = Decimal(self.receive((tag, 1), plc_data["public_ip"]))
+                received = float(self.receive((tag, 1), plc_data["public_ip"]))
                 return received
 
         raise TagDoesNotExist(tag)
@@ -278,20 +277,22 @@ class GenericPLC(BasePLC):
     def get_tag_for_cache(self, tag, plc_ip, cache_update_time):
         for retry in range(self.UPDATE_RETRIES):
             try:
-                received = Decimal(self.receive((tag, 1), plc_ip))
-                self.cache[tag] = received
-                #self.logger.debug('Received value {value}, from IP {ip}'.format(value=received, ip=plc_ip))
+                self.cache[tag] = float(self.receive((tag, 1), plc_ip))
                 return True
             except Exception as e:
                 self.logger.info(
                     "{plc} receive {tag} from {ip} failed with exception '{e}'".format(
                         plc=self.intermediate_plc["name"], tag=tag,
                         ip=plc_ip, e=str(e)))
-                time.sleep(cache_update_time)
-                continue
+                if self.update_cache_flag:
+                    time.sleep(cache_update_time)
+                    continue
+                else:
+                    # To consider the case in which another PLC process has died
+                    return False
         return False
 
-    def update_cache(self, a, cache_update_time):
+    def update_cache(self, cache_update_time):
         """
         Update the cache of this plc by receiving all the required tags.
         When something cannot be received, the previous value is used.
@@ -322,9 +323,9 @@ class GenericPLC(BasePLC):
         :param value: value to set the Tag to
         :raise: TagDoesNotExist if tag is not connected to this plc
         """
-        if isinstance(value, basestring) and value.lower() == "closed":
+        if isinstance(value, str) and value.lower() == "closed":
             value = 0
-        elif isinstance(value, basestring) and value.lower() == "open":
+        elif isinstance(value, str) and value.lower() == "open":
             value = 1
         else:
             self.logger.debug('Pump speed:' + str(value))
@@ -429,6 +430,14 @@ class GenericPLC(BasePLC):
     def stop_cache_update(self):
         self.update_cache_flag = False
 
+    def sigint_handler(self, sig, frame):
+        self.logger.debug('PLC shutdown commencing.')
+        self.stop_cache_update()
+        #self.cache_thread.join()
+        self.plc_run = False
+        self.logger.debug('PLC shutdown finished.')
+        sys.exit(0)
+
     def main_loop(self, sleep=0.5, test_break=False):
         """
         The main loop of a PLC. In here all the controls will be applied.
@@ -436,13 +445,15 @@ class GenericPLC(BasePLC):
         :param test_break:  (Default value = False) used for unit testing, breaks the loop after one iteration
         """
         self.logger.debug(self.intermediate_plc['name'] + ' enters main_loop')
-        while True:
+        while self.plc_run:
             # Wait until we acquire the first sync before polling the PLCs
             if not self.plcs_ready:
                 self.logger.debug("PLC " + str(self.intermediate_plc['name']) + " starting update cache thread")
                 self.plcs_ready = True
                 self.update_cache_flag = True
-                thread.start_new_thread(self.update_cache, ('a', self.PLC_CACHE_UPDATE_TIME))
+                self.cache_thread = threading.Thread(target=self.update_cache, args=(self.PLC_CACHE_UPDATE_TIME,),
+                                                     daemon=True)
+                self.cache_thread.start()
 
             # flag = 0 means a physical process finished a new iteration
             while not self.get_sync(0):

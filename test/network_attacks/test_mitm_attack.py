@@ -60,12 +60,12 @@ def restore_arp_mock(mocker):
 
 @pytest.fixture
 def attack(intermediate_yaml_path, yaml_index, mocker):
-    mocker.patch.object(SyncedAttack, 'initialize_db', return_value=None)
+    #mocker.patch.object(SyncedAttack, 'initialize_db', return_value=None)
     return MitmAttack(intermediate_yaml_path, yaml_index)
 
 
 def test_init(intermediate_yaml_path, yaml_index, os_mock, mocker):
-    mocker.patch.object(SyncedAttack, 'initialize_db', return_value=None)
+    #mocker.patch.object(SyncedAttack, 'initialize_db', return_value=None)
     mitm_attack = MitmAttack(intermediate_yaml_path, yaml_index)
 
     assert mitm_attack.yaml_index == yaml_index

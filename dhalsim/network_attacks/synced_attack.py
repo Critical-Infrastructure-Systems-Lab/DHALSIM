@@ -38,12 +38,13 @@ class SyncedAttack(metaclass=ABCMeta):
     :param yaml_index: The intermediate yaml has a list of network attacks.
        This number is the index of this attack.
     :type yaml_index: int
+    :type sync: bool Flag to indicate if the sync is handled by this module. If false, another module should do the sync
     """
 
     DB_TRIES = 10
     """Amount of times a db query will retry on a exception"""
 
-    def __init__(self, intermediate_yaml_path: Path, yaml_index: int):
+    def __init__(self, intermediate_yaml_path: Path, yaml_index: int, sync: bool = True):
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
 
@@ -73,11 +74,12 @@ class SyncedAttack(metaclass=ABCMeta):
         if 'direction' in self.intermediate_attack:
             self.direction = self.intermediate_attack['direction']
         else:
-            self.direction = 'None'
+            self.direction = 'source'
 
         self.state = 0
         self.db_sleep_time = random.uniform(0.01, 0.1)
 
+        self.sync = sync
 
     def sigint_handler(self, sig, frame):
         """Interrupt handler for attacker being stoped"""
@@ -103,7 +105,7 @@ class SyncedAttack(metaclass=ABCMeta):
                 target_plc = plc
                 break
 
-        cmd = ['/usr/bin/python2', '-m', 'cpppo.server.enip.client', '--print', '--address']
+        cmd = ['/usr/bin/python3', '-m', 'cpppo.server.enip.client', '--print', '--address']
         if target_plc['name'] == self.intermediate_plc['name']:
             cmd.append(str(target_plc['local_ip']) + ":44818")
         else:
@@ -174,7 +176,7 @@ class SyncedAttack(metaclass=ABCMeta):
         elif self.intermediate_attack['trigger']['type'] == "above":
             value = self.intermediate_attack['trigger']['value']
             sensor_value = self.receive_tag(self.intermediate_attack['trigger']['sensor'])
-            print("sensor_value:", sensor_value, ", value:", value)
+            #print("sensor_value:", sensor_value, ", value:", value)
             return sensor_value >= value
         elif self.intermediate_attack['trigger']['type'] == "below":
             value = self.intermediate_attack['trigger']['value']
@@ -280,34 +282,50 @@ class SyncedAttack(metaclass=ABCMeta):
         """
         self.db_query("UPDATE attack SET flag=? WHERE name IS ?", True, (int(flag), self.intermediate_attack['name']))
 
-    def main_loop(self):
+    def main_loop(self, start_now=False):
         """
         The main loop of an attack.
         """
         while True:
             # flag = 0 means a physical process finished a new iteration
-            while not self.get_sync(0):
-                pass
+            if self.sync:
+                while not self.get_sync(0):
+                    pass
 
-            run = self.check_trigger()
+            # Modified for the Alessandro's concealment to work properly.
+            if start_now and int(self.get_master_clock()) > 10:
+                run = True
+            else:
+                run = self.check_trigger()
+
+            # todo: When should we set the flag attack when using Alessandro's concealment attack
             self.set_attack_flag(run)
             if self.state == 0:
                 if run:
                     self.state = 1
                     self.setup()
             elif self.state == 1 and (not run):
+                self.logger.debug('Stopping attack')
                 self.state = 0
                 self.teardown()
+                self.logger.debug('Teardown sucessful')
+
+                # Re establish sync
+                if not self.sync:
+                    self.sync = True
+                    self.logger.debug('Sync restablished')
 
             # We have to keep the same state machine as PLCs
-            self.set_sync(1)
+            if self.sync:
+                self.set_sync(1)
 
             self.attack_step()
 
-            while not self.get_sync(2):
-                pass
+            if self.sync:
+                while not self.get_sync(2):
+                    pass
 
-            self.set_sync(3)
+                self.set_sync(3)
 
     @abstractmethod
     def attack_step(self):

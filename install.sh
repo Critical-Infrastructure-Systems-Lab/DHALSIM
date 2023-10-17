@@ -3,12 +3,6 @@
 cwd=$(pwd)
 version=$(lsb_release -rs )
 
-# Wrong version warning
-if [ "$version" != "20.04" ]
-then
-  printf "Warning! This installation script has only been tested on Ubuntu 20.04 LTS and will likely not work on your Ubuntu version.\n\n"
-fi
-
 doc=false
 test=false
 
@@ -35,49 +29,48 @@ sleep 3
 sudo apt update
 
 # Installing necessary packages
-sudo apt install -y git python2 python3 python3-pip curl
-
-# Get python2 pip
-curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
-sudo python2 get-pip.py
-rm get-pip.py
-
-# CPPPO Correct Version 4.0.*
-sudo pip install cpppo==4.0.*
+sudo apt install -y git python3 python3-pip curl
+sudo python3 -m pip install cpppo
 
 # MiniCPS
 cd ~
 git clone --depth 1 https://github.com/afmurillo/minicps.git || git -C minicps pull
 cd minicps
-sudo python2 -m pip install .
+sudo python3 -m pip install .
+# so far, minicps current installation retrieves cpppo. I am unsure if DHALSIM will be able to work with cpppo==4.3.4
+
+# epynet - An EPANET Python wrapper for WNTR
+cd ~
+git clone --depth 1 https://github.com/afmurillo/DHALSIM-epynet || git -C DHALSIM-epynet pull
+cd DHALSIM-epynet/
+sudo python3 -m pip install .
+
 
 # Installing other DHALSIM dependencies
-sudo pip install pathlib==1.0.*
-sudo pip install pyyaml==5.3.*
-sudo pip install numpy==1.16.*
-sudo python3 -m pip install pandas==1.3.4
-sudo python3 -m pip install matplotlib==3.5.0
-sudo python3 -m pip install testresources
+#sudo python3 -m pip install pathlib
+#sudo python3 -m pip install pyyaml
+#sudo python3 -m pip install numpy
+#sudo python3 -m pip install panda
+#sudo python3 -m pip install matplotlib
+#sudo python3 -m pip install testresources
+#sudo python3 -m pip install pytest-mock
 
 # Mininet from source
 cd ~
-git clone --depth 1 -b 2.3.1b1 https://github.com/mininet/mininet.git || git -C mininet pull
+git clone --depth 1 -b 2.3.1b4 https://github.com/mininet/mininet.git || git -C mininet pull
 cd mininet
-sudo PYTHON=python2 ./util/install.sh -fnv
+sudo PYTHON=python3 ./util/install.sh -fnv
 
 # Installing testing pip dependencies
 if [ "$test" = true ]
 then
-  sudo pip2 install netaddr==0.8.*
-  sudo pip2 install flaky==3.7.*
-  sudo pip2 install pytest==4.6.*
-  sudo pip2 install pytest-timeout==1.4.*
-  sudo pip2 install pytest-cov==2.12.*
-  sudo pip2 install pytest-mock==3.6.*
+  sudo python3 -m pip install pytest-timeout
+  sudo python3 -m pip install pytest-cov
+  sudo python3 -m pip install pytest-mock
 fi
 
 # Install netfilterqueue for Simple DoS attacks
-sudo apt install -y python3-pip git libnfnetlink-dev libnetfilter-queue-dev
+sudo apt install -y libnfnetlink-dev libnetfilter-queue-dev
 sudo python3 -m pip install -U git+https://github.com/kti/python-netfilterqueue
 
 # Install DHALSIM

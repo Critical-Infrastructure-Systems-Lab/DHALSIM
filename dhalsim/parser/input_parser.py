@@ -4,8 +4,8 @@ import pandas as pd
 import wntr
 from antlr4 import *
 
-from ..epynet import epynetUtils
-from ..epynet.network import WaterDistributionNetwork
+from epynet import epynetUtils
+from epynet.water_network import WaterDistributionNetwork
 from dhalsim.parser.antlr.controlsLexer import controlsLexer
 from dhalsim.parser.antlr.controlsParser import controlsParser
 from dhalsim.py3_logger import get_logger

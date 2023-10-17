@@ -20,7 +20,7 @@ import wntr
 import wntr.network.controls as controls
 from decimal import Decimal
 
-from epynet.network import WaterDistributionNetwork
+from epynet.water_network import WaterDistributionNetwork
 from epynet import epynetUtils
 
 
@@ -124,6 +124,55 @@ class PhysicalPlant:
         self.db_sleep_time = random.uniform(0.01, 0.1)
         self.logger.info("DB Sleep time: " + str(self.db_sleep_time))
 
+    def set_sync(self, flag):
+        """
+        Set this plcs sync flag in the sync table. When this is 1, the physical process
+        knows this plc finished the requested iteration.
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
+        :param flag: True for sync to 1, False for sync to 0
+        :type flag: bool
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
+        """
+        #"UPDATE sync SET flag=2"
+        self.db_query("UPDATE sync SET flag=?", True, (int(flag),))
+
+    def db_query(self, query, write=False, parameters=None):
+        """
+        Execute a query on the database
+        On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
+        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
+        This is necessary because of the limited concurrency in SQLite.
+        :param query: The SQL query to execute in the db
+        :type query: str
+        :param write: Boolean flag to indicate if this query will write into the database
+        :param parameters: The parameters to put in the query. This must be a tuple.
+        :raise DatabaseError: When a :code:`sqlite3.OperationalError` is still raised after
+           :code:`DB_TRIES` tries.
+        """
+        for i in range(self.DB_TRIES):
+            try:
+                with sqlite3.connect(self.data["db_path"]) as conn:
+                    cur = conn.cursor()
+                    if parameters:
+                        cur.execute(query, parameters)
+                    else:
+                        cur.execute(query)
+                    conn.commit()
+
+                    if not write:
+                        return cur.fetchone()[0]
+                    else:
+                        return
+            except sqlite3.OperationalError as exc:
+                self.logger.info(
+                    "Failed to connect to db with exception {exc}. Trying {i} more times.".format(
+                        exc=exc, i=self.DB_TRIES - i - 1))
+                time.sleep(self.db_sleep_time)
+
+        self.logger.error("Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
+        raise DatabaseError("Failed to execute db query in database")
 
     def prepare_wntr_simulator(self):
         self.logger.info("Preparing wntr simulation")
@@ -338,7 +387,6 @@ class PhysicalPlant:
 
         self.extend_attacks()
 
-
     def register_results(self, results=None):
 
         # Results are divided into: nodes: reservoir and tanks, links: flows and status
@@ -508,31 +556,15 @@ class PhysicalPlant:
         Checks whether all PLCs have finished their loop.
         :return: boolean whether all PLCs have finished
         """
-
-        #todo: Prepare query statements for this
-        conn = sqlite3.connect(self.data["db_path"])
-        c = conn.cursor()
-
-        # With all PLCs flag in 1, count should be 0
-        c.execute("""SELECT count(*)
-                        FROM sync
-                        WHERE flag != ?""", (str(flag),))
-        return int(c.fetchone()[0]) == 0
+        res = self.db_query("""SELECT count(*) FROM sync WHERE flag != ?""", False, (str(flag),))
+        return int(res) == 0
 
     def get_attack_flag(self, name):
         """
         Get the attack flag of this attack.
         :return: False if attack not running, true otherwise
         """
-
-        conn = sqlite3.connect(self.data["db_path"])
-        c = conn.cursor()
-        c.execute("REPLACE INTO master_time (id, time) VALUES(1, ?)", (str(self.master_time),))
-        conn.commit()
-
-        c.execute("SELECT flag FROM attack WHERE name IS ?", (name,))
-        flag = int(c.fetchone()[0])
-        return flag
+        return self.db_query("SELECT flag FROM attack WHERE name IS ?", False, (name,))
 
     def get_actuator_status(self, actuator):
         if isinstance(self.get_from_db(actuator), int):
@@ -577,7 +609,7 @@ class PhysicalPlant:
                     time.sleep(self.db_sleep_time)
         self.logger.error(
             "Failed to connect to db. Tried {i} times.".format(i=self.DB_TRIES))
-        raise DatabaseError("Failed to get master clock from database")
+        raise DatabaseError("Failed to set value to database")
 
     def get_from_db(self, what):
         """Returns the first element of the result tuple."""
@@ -645,16 +677,14 @@ class PhysicalPlant:
                 time.sleep(self.WAIT_FOR_FLAG)
 
             # Notify the PLCs they can start receiving remote values
-            with sqlite3.connect(self.data["db_path"]) as conn:
-                c = conn.cursor()
-                c.execute("UPDATE sync SET flag=2")
-                conn.commit()
+            self.set_sync(2)
 
             # Wait for the PLCs to apply control logic
             while not self.get_plcs_ready(3):
                 time.sleep(self.WAIT_FOR_FLAG)
 
             self.update_actuators()
+            #self.logger.debug('Actuator list: ' + str(self.actuator_list))
 
             # Check for simulation error, print output on exception
             try:
@@ -696,10 +726,11 @@ class PhysicalPlant:
                     self.write_results(self.results_list)
 
             # Set sync flags for nodes
-            with sqlite3.connect(self.data["db_path"]) as conn:
-                c = conn.cursor()
-                c.execute("UPDATE sync SET flag=0")
-                conn.commit()
+            self.set_sync(0)
+            #with sqlite3.connect(self.data["db_path"]) as conn:
+            #    c = conn.cursor()
+            #    c.execute("UPDATE sync SET flag=0")
+            #    conn.commit()
 
             simulation_time = simulation_time + internal_epynet_step
             conn = sqlite3.connect(self.data["db_path"])
@@ -722,10 +753,11 @@ class PhysicalPlant:
                 time.sleep(self.WAIT_FOR_FLAG)
 
             # Notify the PLCs they can start receiving remote values
-            with sqlite3.connect(self.data["db_path"]) as conn:
-                c = conn.cursor()
-                c.execute("UPDATE sync SET flag=2")
-                conn.commit()
+            self.set_sync(2)
+            #with sqlite3.connect(self.data["db_path"]) as conn:
+            #    c = conn.cursor()
+            #    c.execute("UPDATE sync SET flag=2")
+            #    conn.commit()
 
             # Wait for the PLCs to apply control logic
             while not self.get_plcs_ready(3):
@@ -765,10 +797,11 @@ class PhysicalPlant:
                 self.write_results(self.results_list)
 
             # Set sync flags for nodes
-            with sqlite3.connect(self.data["db_path"]) as conn:
-                c = conn.cursor()
-                c.execute("UPDATE sync SET flag=0")
-                conn.commit()
+            self.set_sync(0)
+            #with sqlite3.connect(self.data["db_path"]) as conn:
+            #    c = conn.cursor()
+            #    c.execute("UPDATE sync SET flag=0")
+            #    conn.commit()
 
     def update_tanks(self, network_state=None):
         """Update tanks in database."""
@@ -777,6 +810,7 @@ class PhysicalPlant:
             for tank in self.tank_list:
                 level = network_state[tank]['pressure']
                 tank_name = tank
+                #self.logger.debug('Writing to DB tank: ' + str(tank_name) + ' with level: ' + str(level))
                 self.set_to_db(tank_name, level)
 
         elif self.simulator == 'wntr':
@@ -864,7 +898,6 @@ class PhysicalPlant:
         else:
             GeneralReadmeGenerator(self.intermediate_yaml, self.data['start_time'],
                                    end_time, False, self.master_time, self.wn, self.simulation_step).write_readme()
-        sys.exit(0)
 
     def set_initial_values(self):
         """Sets custom initial values for tanks and demand patterns in the WNTR simulation"""

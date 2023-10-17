@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="dhalsim",
-    version="1.1.0",
+    version="1.1.1",
     url="https://github.com/afmurillo/DHALSIM",
     project_urls={
         "Bug Tracker": "https://github.com/afmurillo/DHALSIM/issues",
@@ -15,22 +15,28 @@ setuptools.setup(
     license='MIT',
     packages=['dhalsim'],
     install_requires=[
-        'PyYAML==5.4.1',
+        'pyyaml',
         'pyyaml-include',
-        'antlr4-python3-runtime==4.7.2',
+        'antlr4-python3-runtime',
         'progressbar2',
+        'numpy',
         'wntr',
-        'pandas==1.3.4',
-        'matplotlib==3.5.0',
+        'pandas',
+        'matplotlib',
         'schema',
         'scapy',
-        'fnfqueue'
+        'pathlib',
+        'testresources',
+        'pytest-mock',
+        'netaddr',
+        'flaky',
+        'pytest'
     ],
     extras_require={
         'test': ['pytest', 'pytest-mock', 'mock', 'wget', 'coverage', 'pytest-cov', 'flaky'],
         'doc': ['sphinx', 'sphinx-rtd-theme', 'sphinx-prompt'],
     },
-    python_requires=">=3.8",
+    python_requires=">=3.8.10",
     entry_points={
         'console_scripts': [
             'dhalsim = dhalsim.command_line:main',

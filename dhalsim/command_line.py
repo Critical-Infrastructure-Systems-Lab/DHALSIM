@@ -47,7 +47,6 @@ class Runner():
             for yaml_path in yaml_paths:
                 self.run_simulation(yaml_path)
 
-
         else:
             # Else generate the one we need and run the simulation
             intermediate_yaml_path = config_parser.generate_intermediate_yaml()
@@ -66,7 +65,7 @@ class Runner():
         db_initializer.print()
         automatic_run_path = Path(__file__).parent.absolute() / "python2" / "automatic_run.py"
         self.automatic_run = subprocess.Popen(
-            ["python2", str(automatic_run_path), str(intermediate_yaml_path)])
+            ["python3", str(automatic_run_path), str(intermediate_yaml_path)])
         self.automatic_run.wait()
 
 def main():

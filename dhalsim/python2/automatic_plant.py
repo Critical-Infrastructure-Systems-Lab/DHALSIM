@@ -5,7 +5,15 @@ import subprocess
 from pathlib import Path
 
 from automatic_node import NodeControl
-from py2_logger import get_logger
+from dhalsim.py3_logger import get_logger
+
+
+class Error(Exception):
+    """Base class for exceptions in this module."""
+
+
+class UnsupportedSimulator(Error):
+    """Raised when an unsupported simulator is launched"""
 
 
 class PlantControl(NodeControl):
@@ -32,13 +40,18 @@ class PlantControl(NodeControl):
             self.simulation_process.terminate()
         if self.simulation_process.poll() is None:
             self.simulation_process.kill()
+        self.logger.debug("Plant process stopped.")
 
     def main(self):
         """
         This function starts the physical process and then waits for the physical
         process to finish.
         """
-        physical_process_path = Path(__file__).parent.absolute().parent / "physical_process.py"
+
+        if self.data['simulator'] == 'wntr' or self.data['simulator'] == 'epynet':
+            physical_process_path = Path(__file__).parent.absolute().parent / "physical_process.py"
+        else:
+            raise UnsupportedSimulator('Supported simulators are wntr, epynet')
 
         cmd = ["python3", str(physical_process_path), str(self.intermediate_yaml)]
 

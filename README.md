@@ -13,9 +13,7 @@ In order to offer a simple installation we have included an installation script 
 
 ## Running
 
-DHALSIM can be run using the command ```sudo dhalsim <path/to/config.yaml>```.
+DHALSIM can be run using the command ```sudo dhalsim path/to/config.yaml```.
 
 Replacing the text between "< >" with the path to one example topology or your own configuration files. For example, for the anytown example, you'd use:
 ```sudo dhalsim <examples/anytown_topology/anytown_config.yaml>```
-
-

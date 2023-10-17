@@ -1,0 +1,18 @@
+network_attacks:
+- name: plc4attack
+  type: concealment_mitm
+  tags:
+    - tag: T1
+      offset: 10.0
+  target: PLC2
+  concealment_data:
+    type: payload_replay
+    capture_start: 10
+    capture_end: 30
+    replay_start: 40
+  trigger:
+    start: 9
+    end: 61
+    #start: 5
+    #end: 50
+    type: time

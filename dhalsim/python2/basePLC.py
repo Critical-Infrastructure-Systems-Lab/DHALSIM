@@ -1,7 +1,3 @@
-import signal
-import sys
-import time
-import thread
 import numpy as np
 from minicps.devices import PLC
 
@@ -44,13 +40,4 @@ class BasePLC(PLC):
         self.send_adddress = send_address
         self.noise_scale = noise_scale
         self.week_index = week_index
-
-    def sigint_handler(self, sig, frame):
-        self.logger.debug('PLC shutdown commencing.')
-        self.reader = False
-        sys.exit(0)
-
-    def startup(self):
-        signal.signal(signal.SIGINT, self.sigint_handler)
-        signal.signal(signal.SIGTERM, self.sigint_handler)
-        #thread.start_new_thread(self.send_system_state, (0, 0))
+        self.cache_thread = None

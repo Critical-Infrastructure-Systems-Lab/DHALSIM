@@ -1,0 +1,12 @@
+inp_file: ctown_map.inp
+iterations: 2880
+network_topology_type: complex
+plcs: !include ctown_plcs.yaml
+batch_simulations: 53
+initial_tank_data: initial_tank_levels.csv
+demand_patterns: demand_patterns/
+network_loss_data: network_loss_data.csv
+network_delay_data: network_delay_data.csv
+simulator: epynet
+demand: pdd
+#log_level: debug
