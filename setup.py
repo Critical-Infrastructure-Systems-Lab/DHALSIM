@@ -17,7 +17,7 @@ setuptools.setup(
     install_requires=[
         'pyyaml',
         'pyyaml-include',
-        'antlr4-python3-runtime',
+        'antlr4-python3-runtime==4.7.2',
         'progressbar2',
         'numpy',
         'wntr',
