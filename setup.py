@@ -30,7 +30,10 @@ setuptools.setup(
         'pytest-mock',
         'netaddr',
         'flaky',
-        'pytest'
+        'pytest',
+        'tensorflow',
+        'scikit-learn',
+        'keras'
     ],
     extras_require={
         'test': ['pytest', 'pytest-mock', 'mock', 'wget', 'coverage', 'pytest-cov', 'flaky'],
