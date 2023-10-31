@@ -1,4 +1,4 @@
-# Generated from controls.g4 by ANTLR 4.12.0
+# Generated from controls.g4 by ANTLR 4.13.1
 # encoding: utf-8
 from antlr4 import *
 from io import StringIO
@@ -76,7 +76,7 @@ class controlsParser ( Parser ):
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
-        self.checkVersion("4.12.0")
+        self.checkVersion("4.13.1")
         self._interp = ParserATNSimulator(self, self.atn, self.decisionsToDFA, self.sharedContextCache)
         self._predicates = None
 
@@ -121,12 +121,6 @@ class controlsParser ( Parser ):
         def exitRule(self, listener:ParseTreeListener):
             if hasattr( listener, "exitNodeControl" ):
                 listener.exitNodeControl(self)
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitNodeControl" ):
-                return visitor.visitNodeControl(self)
-            else:
-                return visitor.visitChildren(self)
 
 
 
@@ -209,12 +203,6 @@ class controlsParser ( Parser ):
             if hasattr( listener, "exitTimeControl" ):
                 listener.exitTimeControl(self)
 
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitTimeControl" ):
-                return visitor.visitTimeControl(self)
-            else:
-                return visitor.visitChildren(self)
-
 
 
 
@@ -286,12 +274,6 @@ class controlsParser ( Parser ):
         def exitRule(self, listener:ParseTreeListener):
             if hasattr( listener, "exitControls" ):
                 listener.exitControls(self)
-
-        def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitControls" ):
-                return visitor.visitControls(self)
-            else:
-                return visitor.visitChildren(self)
 
 
 

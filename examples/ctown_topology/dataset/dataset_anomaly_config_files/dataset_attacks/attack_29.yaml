@@ -3,7 +3,7 @@ network_attacks:
   type: unconstrained_blackbox_concealment_mitm
   trigger:
     start: 200
-    end: 2600
+    end: 2728
     type: time
 
 device_attacks:

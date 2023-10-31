@@ -12,9 +12,7 @@ import time
 
 from dhalsim.network_attacks.utilities import launch_arp_poison, restore_arp
 from dhalsim.network_attacks.synced_attack import SyncedAttack
-from evasion_attacks.Adversarial_Attacks.Black_Box_Attack import adversarial_AE
-
-from tensorflow.keras.models import Model, load_model
+#from tensorflow.keras.models import Model, load_model
 
 
 class Error(Exception):
