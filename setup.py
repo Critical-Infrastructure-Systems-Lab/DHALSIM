@@ -3,9 +3,9 @@ import setuptools
 setuptools.setup(
     name="dhalsim",
     version="1.1.1",
-    url="https://github.com/afmurillo/DHALSIM",
+    url="https://github.com/Critical-Infrastructure-Systems-Lab/DHALSIM",
     project_urls={
-        "Bug Tracker": "https://github.com/afmurillo/DHALSIM/issues",
+        "Bug Tracker": "https://github.com/Critical-Infrastructure-Systems-Lab/DHALSIM/issues",
     },
     classifiers=[
         "Programming Language :: Python :: 3",
