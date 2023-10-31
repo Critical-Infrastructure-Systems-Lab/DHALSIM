@@ -136,19 +136,19 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
             while not self.get_sync(2):
                 pass
 
-            #self.logger.debug('Sync is 2. Keeping attack sync in 2, until we get all SCADA flags')
+            self.logger.debug('Sync is 2. Keeping attack sync in 2, until we get all SCADA flags')
 
             # We stay in 2, to conceal the values exchanged remotely from the PLCs, until we make a prediction
             while self.missing_scada_tags and self.sync_flag:
                 pass
 
-            #self.logger.debug('Setting attack sync in 3')
+            self.logger.debug('Setting attack sync in 3')
             self.set_sync(3)
 
         self.logger.debug('Netfilter sync thread while finished')
 
     def set_initial_conditions_of_scada_values(self):
-        df = pd.DataFrame(columns=self.scada_tags)
+        df = pd.DataFrame(columns=list(self.scada_tags))
         return df
 
     def get_scada_tags(self):
@@ -243,7 +243,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
             # Concealment values to SCADA
             for session in self.scada_session_ids:
                 if session['session'] == this_session and session['context'] == this_context:
-                    #self.logger.debug('Concealing to SCADA: ' + str(this_session))
+                    self.logger.debug('Concealing to SCADA: ' + str(this_session))
                     return self.handle_concealment(session, ip_payload)
 
         except Exception as exc:
@@ -261,11 +261,11 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
         tag_name = ip_payload[Raw].load.decode(encoding='latin-1')[54:60].split(':')[0]
         context = int.from_bytes(ip_payload[Raw].load[12:20], sys.byteorder)
 
-        #self.logger.debug('ENIP request for tag: ' + str(tag_name))
+        self.logger.debug('ENIP request for tag: ' + str(tag_name))
         session_dict = {'session': this_session, 'tag': tag_name, 'context': context}
         self.logger.debug('session dict: ' + str(session_dict))
 
-        #self.logger.debug('SCADA Req session')
+        self.logger.debug('SCADA Req session')
         self.scada_session_ids.append(session_dict)
 
     def capture(self, packet):

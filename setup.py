@@ -19,7 +19,7 @@ setuptools.setup(
         'pyyaml-include',
         'antlr4-python3-runtime==4.13.1',
         'progressbar2',
-        'numpy',
+        'numpy==1.24.3',
         'wntr',
         'pandas',
         'matplotlib',
@@ -33,10 +33,13 @@ setuptools.setup(
         'pytest',
         'tensorflow',
         'scikit-learn',
-        'keras'
+        'keras',
+        'pytest',
+        'pytest-mock',
+        'mock'
     ],
     extras_require={
-        'test': ['pytest', 'pytest-mock', 'mock', 'wget', 'coverage', 'pytest-cov', 'flaky'],
+        'test': ['wget', 'coverage', 'pytest-cov'],
         'doc': ['sphinx', 'sphinx-rtd-theme', 'sphinx-prompt'],
     },
     python_requires=">=3.8.10",
