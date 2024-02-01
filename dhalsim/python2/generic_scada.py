@@ -95,6 +95,10 @@ class GenericScada(BasePLC):
         for ip in self.plc_data:
             self.cache[ip] = [0] * len(self.plc_data[ip])
 
+        self.previous_cache = {}
+        for ip in self.plc_data:
+            self.previous_cache[ip] = [0] * len(self.plc_data[ip])
+
         self.scada_run = True
 
         self.do_super_construction(scada_protocol, state)
@@ -287,12 +291,14 @@ class GenericScada(BasePLC):
 
         while self.update_cache_flag:
             for plc_ip in self.cache:
-                # Maintain old values if they could not be uploaded
                 try:
+                    # Maintain old values in case they could not be uploaded
+                    self.cache[plc_ip] = self.previous_cache[plc_ip]
                     values = self.receive_multiple(self.plc_data[plc_ip], plc_ip)
                     values_float = [float(x) for x in values]
                     with lock:
                         self.cache[plc_ip] = values_float
+                        self.previous_cache[plc_ip] = self.cache[plc_ip]
                 except Exception as e:
                     self.logger.error(
                         "PLC receive_multiple with tags {tags} from {ip} failed with exception '{e}'".format(
@@ -341,13 +347,7 @@ class GenericScada(BasePLC):
             results = [master_time, datetime.now()]
             with lock:
                 for plc_ip in self.plc_data:
-                    if self.cache[plc_ip]:
-                        results.extend(self.cache[plc_ip])
-                    else:
-                        results.extend(self.previous_cache[plc_ip])
-
-                self.previous_cache[plc_ip] = self.cache[plc_ip]
-
+                    results.extend(self.cache[plc_ip])
             self.saved_values.append(results)
 
             # Save scada_values.csv when needed
