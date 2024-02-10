@@ -15,7 +15,7 @@ setuptools.setup(
     license='MIT',
     packages=['dhalsim'],
     install_requires=[
-        'pyyaml',
+        'pyyaml==6.0.1',
         'pyyaml-include',
         'antlr4-python3-runtime==4.13.1',
         'progressbar2',
