@@ -45,6 +45,13 @@ class GenericScada(BasePLC):
     SCADA_CACHE_UPDATE_TIME = 2
     """ Time in seconds the SCADA server updates its cache"""
 
+    PLC_UPDATE_TIMEOUT_TICK = 0.2
+    """ Time in seconds the SCADA server waits to update a PLC cache"""
+
+    PLC_UPDATE_TIMEOUT_TICKS_NUMBER = 29
+    """ Number of ticks to wait for PLC update"""
+
+
     def __init__(self, intermediate_yaml_path):
         with intermediate_yaml_path.open() as yaml_file:
             self.intermediate_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
@@ -95,9 +102,11 @@ class GenericScada(BasePLC):
         for ip in self.plc_data:
             self.cache[ip] = [0] * len(self.plc_data[ip])
 
-        self.previous_cache = {}
+        self.updated_plc = {}
+
+        # Flag used to ensure that we do not have empty rows in the scada_values.csv file
         for ip in self.plc_data:
-            self.previous_cache[ip] = [0] * len(self.plc_data[ip])
+            self.updated_plc[ip] = False
 
         self.scada_run = True
 
@@ -292,13 +301,14 @@ class GenericScada(BasePLC):
         while self.update_cache_flag:
             for plc_ip in self.cache:
                 try:
-                    # Maintain old values in case they could not be uploaded
-                    self.cache[plc_ip] = self.previous_cache[plc_ip]
                     values = self.receive_multiple(self.plc_data[plc_ip], plc_ip)
                     values_float = [float(x) for x in values]
                     with lock:
                         self.cache[plc_ip] = values_float
-                        self.previous_cache[plc_ip] = self.cache[plc_ip]
+
+                        if self.cache[plc_ip]:
+                            self.previous_cache[plc_ip] = self.cache[plc_ip]
+                        self.updated_plc[plc_ip] = True
                 except Exception as e:
                     self.logger.error(
                         "PLC receive_multiple with tags {tags} from {ip} failed with exception '{e}'".format(
@@ -315,6 +325,10 @@ class GenericScada(BasePLC):
                 #                                                                             ip=plc_ip))
 
             time.sleep(cache_update_time)
+
+    def get_plc_updated_flags(self):
+        # self.logger.debug(self.updated_plc)
+        return all(value == True for value in self.updated_plc.values())
 
     def main_loop(self, sleep=0.5, test_break=False):
         """
@@ -343,12 +357,34 @@ class GenericScada(BasePLC):
                                                      args=[lock, self.SCADA_CACHE_UPDATE_TIME], daemon=True)
                 self.cache_thread.start()
 
+                # Wait one scada update time 
+                time.sleep(self.SCADA_CACHE_UPDATE_TIME)
+
+            for retry in range(self.PLC_UPDATE_TIMEOUT_TICKS_NUMBER):
+                if self.get_plc_updated_flags(): 
+                    break
+                else:
+                    # self.logger.debug(f'Waiting for plcs to be updated, tick {retry}')           
+                    time.sleep(self.PLC_UPDATE_TIMEOUT_TICK)
+
+            # self.logger.debug('Finished waiting')              
             master_time = self.get_master_clock()
             results = [master_time, datetime.now()]
-            with lock:
-                for plc_ip in self.plc_data:
-                    results.extend(self.cache[plc_ip])
+
+            for plc_ip in self.plc_data:
+                with lock:
+                    if not self.cache[plc_ip]:
+                        self.logger.warn(f'Data for PLC {plc_ip} is empty!')
+                        self.logger.warn(f'Using {self.previous_cache[plc_ip]} as stale data')
+                        results.extend(self.previous_cache[plc_ip])
+                    else:
+                        results.extend(self.cache[plc_ip])
+            
+            # self.logger.debug('SCADA iteration complete')
             self.saved_values.append(results)
+
+            for plc_ip in self.plc_data:
+                self.updated_plc[plc_ip] = False
 
             # Save scada_values.csv when needed
             if 'saving_interval' in self.intermediate_yaml and master_time != 0 and \
