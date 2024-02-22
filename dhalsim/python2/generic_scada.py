@@ -82,7 +82,6 @@ class GenericScada(BasePLC):
 
         # Simple data has PLC tags, without the index (T101, 1) becomes T101
         self.plc_data, self.simple_plc_data  = self.generate_plcs()
-        #self.saved_values = [['iteration', 'timestamp']]
 
         for PLC in self.intermediate_yaml['plcs']:
             if 'sensors' not in PLC:
@@ -90,25 +89,13 @@ class GenericScada(BasePLC):
 
             if 'actuators' not in PLC:
                 PLC['actuators'] = list()
-            #self.saved_values[0].extend(PLC['sensors'])
-            #self.saved_values[0].extend(PLC['actuators'])
 
         self.update_cache_flag = False
         self.plcs_ready = False
 
-        
-        #self.previous_cache = {}
-        #for ip in self.plc_data:
-        #    self.previous_cache[ip] = [0] * len(self.plc_data[ip])
-        
-        
-        #self.cache = {}
-        #for ip in self.plc_data:
-        #    self.cache[ip] = [0] * len(self.plc_data[ip])
-        
         columns_list = ['iteration', 'timestamp']
         columns_list.extend(self.get_scada_tags())
-        # self.cache = dict.fromkeys(self.get_scada_tags())
+
 
         self.cache = pd.DataFrame(columns=columns_list)
         self.cache.loc[0] = 0
@@ -272,7 +259,6 @@ class GenericScada(BasePLC):
         Shutdown protocol for the scada, writes the output before exiting.
         """
         self.stop_cache_update()
-        #self.cache_thread.join()
         self.write_output()
         self.scada_run = False
         self.logger.debug("SCADA shutdown")
@@ -284,10 +270,6 @@ class GenericScada(BasePLC):
         """
         results = self.cache        
         results.to_csv(self.output_path, index=False)
-
-        #with self.output_path.open(mode='w') as output:
-        #    writer = csv.writer(output)
-        #    writer.writerows(self.saved_values)
 
     def generate_plcs(self):
         """
@@ -341,11 +323,12 @@ class GenericScada(BasePLC):
                 try:                
                     values = self.receive_multiple(self.plc_data[plc_ip], plc_ip)                    
                     values_float = [float(x) for x in values]
-                    with lock: 
-                        clock = int(self.get_master_clock())
-                        self.cache.loc[clock, self.simple_plc_data[plc_ip]] = values_float
-                        self.cache.loc[clock, 'iteration'] = clock
-                        self.updated_plc[plc_ip] = True
+                    if len(values_float) == len(self.simple_plc_data[plc_ip]):
+                        with lock: 
+                            clock = int(self.get_master_clock())
+                            self.cache.loc[clock, self.simple_plc_data[plc_ip]] = values_float
+                            self.cache.loc[clock, 'iteration'] = clock
+                            self.updated_plc[plc_ip] = True
                 except Exception as e:
                     self.logger.error(
                         "PLC receive_multiple with tags {tags} from {ip} failed with exception '{e}'".format(

@@ -9,4 +9,3 @@ network_loss_data: network_loss_data.csv
 network_delay_data: network_delay_data.csv
 simulator: epynet
 demand: pdd
-#log_level: debug
