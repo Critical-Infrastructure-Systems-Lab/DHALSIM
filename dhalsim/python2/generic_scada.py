@@ -15,6 +15,7 @@ from basePLC import BasePLC
 
 from dhalsim import py3_logger
 import threading
+import pandas as pd
 
 
 class Error(Exception):
@@ -79,8 +80,9 @@ class GenericScada(BasePLC):
             'server': scada_server
         }
 
-        self.plc_data = self.generate_plcs()
-        self.saved_values = [['iteration', 'timestamp']]
+        # Simple data has PLC tags, without the index (T101, 1) becomes T101
+        self.plc_data, self.simple_plc_data  = self.generate_plcs()
+        #self.saved_values = [['iteration', 'timestamp']]
 
         for PLC in self.intermediate_yaml['plcs']:
             if 'sensors' not in PLC:
@@ -88,19 +90,28 @@ class GenericScada(BasePLC):
 
             if 'actuators' not in PLC:
                 PLC['actuators'] = list()
-            self.saved_values[0].extend(PLC['sensors'])
-            self.saved_values[0].extend(PLC['actuators'])
+            #self.saved_values[0].extend(PLC['sensors'])
+            #self.saved_values[0].extend(PLC['actuators'])
 
         self.update_cache_flag = False
         self.plcs_ready = False
 
-        self.previous_cache = {}
-        for ip in self.plc_data:
-            self.previous_cache[ip] = [0] * len(self.plc_data[ip])
+        
+        #self.previous_cache = {}
+        #for ip in self.plc_data:
+        #    self.previous_cache[ip] = [0] * len(self.plc_data[ip])
+        
+        
+        #self.cache = {}
+        #for ip in self.plc_data:
+        #    self.cache[ip] = [0] * len(self.plc_data[ip])
+        
+        columns_list = ['iteration', 'timestamp']
+        columns_list.extend(self.get_scada_tags())
+        # self.cache = dict.fromkeys(self.get_scada_tags())
 
-        self.cache = {}
-        for ip in self.plc_data:
-            self.cache[ip] = [0] * len(self.plc_data[ip])
+        self.cache = pd.DataFrame(columns=columns_list)
+        self.cache.loc[0] = 0
 
         self.updated_plc = {}
 
@@ -118,6 +129,24 @@ class GenericScada(BasePLC):
         Introduced to better facilitate testing
         """
         super(GenericScada, self).__init__(name='scada', state=state, protocol=scada_protocol)
+
+    def get_scada_tags(self):
+        aux_scada_tags = []
+        for PLC in self.intermediate_yaml['plcs']:
+
+            # We were having ordering issues by adding it as a set. Probably could be done in a more pythonic way
+            if 'sensors' in PLC:
+                    for sensor in PLC['sensors']:
+                        if sensor not in aux_scada_tags:
+                            aux_scada_tags.append(sensor)
+                            
+            if 'actuators' in PLC:
+                    for actuator in PLC['actuators']:
+                        if actuator not in aux_scada_tags:
+                            aux_scada_tags.append(actuator)
+
+        # self.logger.debug('SCADA tags: ' + str(aux_scada_tags))
+        return aux_scada_tags
 
     @staticmethod
     def generate_real_tags(plcs):
@@ -253,9 +282,12 @@ class GenericScada(BasePLC):
         """
         Writes the csv output of the scada
         """
-        with self.output_path.open(mode='w') as output:
-            writer = csv.writer(output)
-            writer.writerows(self.saved_values)
+        results = self.cache        
+        results.to_csv(self.output_path, index=False)
+
+        #with self.output_path.open(mode='w') as output:
+        #    writer = csv.writer(output)
+        #    writer.writerows(self.saved_values)
 
     def generate_plcs(self):
         """
@@ -263,6 +295,7 @@ class GenericScada(BasePLC):
         and the second  being a list of tags attached to that PLC.
         """
         plcs = OrderedDict()
+        plcs_simple_tags = OrderedDict()
 
         for PLC in self.intermediate_yaml['plcs']:
             if 'sensors' not in PLC:
@@ -272,13 +305,18 @@ class GenericScada(BasePLC):
                 PLC['actuators'] = list()
 
             tags = []
+            simple_tags = []
 
             tags.extend(self.generate_tags(PLC['sensors']))
             tags.extend(self.generate_tags(PLC['actuators']))
 
-            plcs[PLC['public_ip']] = tags
+            simple_tags.extend(PLC['sensors'])
+            simple_tags.extend(PLC['actuators'])
 
-        return plcs
+            plcs[PLC['public_ip']] = tags
+            plcs_simple_tags[PLC['public_ip']] = simple_tags
+
+        return plcs, plcs_simple_tags
 
     def get_master_clock(self):
         """
@@ -299,15 +337,14 @@ class GenericScada(BasePLC):
         """
 
         while self.update_cache_flag:
-            for plc_ip in self.cache:
-                try:
-                    values = self.receive_multiple(self.plc_data[plc_ip], plc_ip)
+            for plc_ip in self.plc_data:
+                try:                
+                    values = self.receive_multiple(self.plc_data[plc_ip], plc_ip)                    
                     values_float = [float(x) for x in values]
-                    with lock:
-                        self.cache[plc_ip] = values_float
-
-                        if self.cache[plc_ip]:
-                            self.previous_cache[plc_ip] = self.cache[plc_ip]
+                    with lock: 
+                        clock = int(self.get_master_clock())
+                        self.cache.loc[clock, self.simple_plc_data[plc_ip]] = values_float
+                        self.cache.loc[clock, 'iteration'] = clock
                         self.updated_plc[plc_ip] = True
                 except Exception as e:
                     self.logger.error(
@@ -367,28 +404,20 @@ class GenericScada(BasePLC):
                     # self.logger.debug(f'Waiting for plcs to be updated, tick {retry}')           
                     time.sleep(self.PLC_UPDATE_TIMEOUT_TICK)
 
-            # self.logger.debug('Finished waiting')              
-            master_time = self.get_master_clock()
-            results = [master_time, datetime.now()]
+            # self.logger.debug('Finished waiting')  
+            master_time = datetime.now()
+            clock = int(self.get_master_clock())
+            self.cache.loc[clock, 'timestamp'] = master_time
 
-            for plc_ip in self.plc_data:
-                with lock:
-                    if not self.cache[plc_ip]:
-                        self.logger.warn(f'Data for PLC {plc_ip} is empty!')
-                        self.logger.warn(f'Using {self.previous_cache[plc_ip]} as stale data')
-                        results.extend(self.previous_cache[plc_ip])
-                    else:
-                        results.extend(self.cache[plc_ip])
-            
-            # self.logger.debug('SCADA iteration complete')
-            self.saved_values.append(results)
-
-            for plc_ip in self.plc_data:
-                self.updated_plc[plc_ip] = False
+            for ip in self.plc_data:
+                if self.cache.loc[clock, self.simple_plc_data[ip]].isnull().any():
+                    # If any PLC values are empty, use previous value
+                    self.cache.loc[clock, self.simple_plc_data[ip]] = self.cache.loc[clock-1, self.simple_plc_data[ip]]
+                self.updated_plc[ip] = False
 
             # Save scada_values.csv when needed
             if 'saving_interval' in self.intermediate_yaml and master_time != 0 and \
-                    master_time % self.intermediate_yaml['saving_interval'] == 0:
+                master_time % self.intermediate_yaml['saving_interval'] == 0:
                 self.write_output()
 
             self.set_sync(3)
