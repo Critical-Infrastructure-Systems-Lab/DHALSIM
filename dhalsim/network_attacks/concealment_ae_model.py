@@ -3,6 +3,7 @@ from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from sklearn.preprocessing import MinMaxScaler
+import joblib
 from tensorflow.keras.initializers import glorot_normal
 
 import pandas as pd
@@ -12,6 +13,8 @@ from pathlib import Path
 
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
+
+import joblib
 
 # This module is based on the implementation by Alessandro Erba, original is found here:
 # https://github.com/scy-phy/ICS-Evasion-Attacks/blob/master/Adversarial_Attacks/Black_Box_Attack/adversarial_AE.py
@@ -37,7 +40,10 @@ class ConcealmentAE:
 
         return a_pd
 
-    def train_model(self):
+    def train_model(self, training_path):
+
+        self.init_generator(training_path)
+
         # fit of the scaler is done at __init__
         ben_data = self.physical_pd
         ben_data[self.sensor_cols] = self.attacker_scaler.transform(ben_data[self.sensor_cols])
@@ -54,8 +60,48 @@ class ConcealmentAE:
                             verbose=2,
                             validation_data=(x_ben_test, x_ben_test))
 
+        # print('Printing data used for training')
+        ben_data.to_csv('trained_data.csv', index=False)
+
+    # Loads the scaler originally used to train the model
+    def load_scaler(self, scaler_path):        
+        #scaler_path = Path.cwd()/'attacker_scaler.gz'
+        
+        print('Loading scaler at', str(scaler_path))
+        self.attacker_scaler = joblib.load(str(scaler_path))
+        print('Scaler loaded')
+
+    # Saves the model and the scaler used to train the model
     def save_model(self, filename):
-        self.generator.save(filename)
+        print('saving trained model at: ', str(filename))
+        self.generator.save(str(model_path))
+
+        scaler_path = Path.cwd()
+        print('saved scaler model at: ', filename)
+        joblib.dump(self.attacker_scaler, 'ctown_attacker_scaler.gz')
+        
+    def init_generator(self, training_path):
+        # Load and preprocess training data
+        training_path = Path(__file__).parent/training_path/'training_data.csv'
+        # print('Reading training data from: ' + str(training_path))
+        self.physical_pd = self.preprocess_physical(training_path)
+
+        # Adversarial model for concealment
+        # toDo: Ask about this parameter
+        hide_layers = 39
+        self.hide_layers = hide_layers
+        self.generator_layers = [self.feature_dims,
+                                int(self.hide_layers / 2),
+                                self.hide_layers,
+                                int(self.hide_layers / 2), self.feature_dims]
+
+        optimizer = Adam(lr=0.001)
+        # Build the generator
+        self.generator = self.build_generator()
+        self.generator.compile(optimizer=optimizer, loss='mean_squared_error')
+
+        self.attacker_scaler = MinMaxScaler()
+        self.transform_fit_scaler()
 
     def build_generator(self):
         input = Input(shape=(self.feature_dims,))
@@ -85,40 +131,18 @@ class ConcealmentAE:
 
     def predict(self, received_values_df):
         print('Attempting to predict concealment values')
+        # print('Features received to predict: ' + str(received_values_df.columns))
+        # print('Features received to train: ' + str(self.sensor_cols))
+
         gen_examples = self.generator.predict(self.attacker_scaler.transform(received_values_df))
         gen_examples = self.fix_sample(pd.DataFrame(columns=self.sensor_cols,
                                                     data=self.attacker_scaler.inverse_transform(gen_examples)))
 
         return gen_examples
 
-    def __init__(self, a_path):
-        # Load and preprocess training data
-        training_path = Path(__file__).parent/a_path/'training_data.csv'
-        print('Reading training data from: ' + str(training_path))
-        self.physical_pd = self.preprocess_physical(training_path)
+    def __init__(self, features_list):
 
-        # Adversarial model for concealment
-        # toDo: Ask about this parameter
-        hide_layers = 39
-
-        self.sensor_cols = [col for col in self.physical_pd.columns if
+        # Initialize model with features list
+        self.sensor_cols = [col for col in features_list if
                             col not in ['Unnamed: 0', 'iteration', 'timestamp', 'Attack']]
-
         self.feature_dims = len(self.sensor_cols)
-
-        self.hide_layers = hide_layers
-        self.generator_layers = [self.feature_dims,
-                                 int(self.hide_layers / 2),
-                                 self.hide_layers,
-                                 int(self.hide_layers / 2), self.feature_dims]
-
-        optimizer = Adam(lr=0.001)
-        # Build the generator
-        self.generator = self.build_generator()
-        self.generator.compile(optimizer=optimizer, loss='mean_squared_error')
-
-        self.attacker_scaler = MinMaxScaler()
-        self.transform_fit_scaler()
-
-
-

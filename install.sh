@@ -34,26 +34,15 @@ sudo python3 -m pip install cpppo
 
 # MiniCPS
 cd ~
-git clone --depth 1 https://github.com/afmurillo/minicps.git || git -C minicps pull
+git clone --depth 1 https://github.com/scy-phy/minicps.git || git -C minicps pull
 cd minicps
 sudo python3 -m pip install .
-# so far, minicps current installation retrieves cpppo. I am unsure if DHALSIM will be able to work with cpppo==4.3.4
 
 # epynet - An EPANET Python wrapper for WNTR
 cd ~
 git clone --depth 1 https://github.com/afmurillo/DHALSIM-epynet || git -C DHALSIM-epynet pull
 cd DHALSIM-epynet/
 sudo python3 -m pip install .
-
-
-# Installing other DHALSIM dependencies
-#sudo python3 -m pip install pathlib
-#sudo python3 -m pip install pyyaml
-#sudo python3 -m pip install numpy
-#sudo python3 -m pip install panda
-#sudo python3 -m pip install matplotlib
-#sudo python3 -m pip install testresources
-#sudo python3 -m pip install pytest-mock
 
 # Mininet from source
 cd ~

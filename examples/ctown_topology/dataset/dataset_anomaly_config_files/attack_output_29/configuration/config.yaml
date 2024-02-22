@@ -1,0 +1,86 @@
+attacks:
+  device_attacks:
+  - actuator: V2
+    command: open
+    name: plc3attack2
+    trigger:
+      end: 2728
+      start: 1600
+      type: time
+  network_attacks:
+  - name: plc3conceal
+    trigger:
+      end: 2728
+      start: 200
+      type: time
+    type: unconstrained_blackbox_concealment_mitm
+demand: pdd
+demand_patterns: events/demands_ctown_01.csv
+initial_tank_data: events/tanks_ctown_01.csv
+inp_file: ctown_map.inp
+iterations: 2880
+log_level: debug
+network_topology_type: complex
+output_path: attack_output_29
+plcs:
+- actuators:
+  - PU1
+  - PU2
+  name: PLC1
+  sensors:
+  - PU1F
+  - PU2F
+  - J280
+  - J269
+- name: PLC2
+  sensors:
+  - T1
+- actuators:
+  - V2
+  - PU4
+  - PU5
+  - PU6
+  - PU7
+  name: PLC3
+  sensors:
+  - T2
+  - V2F
+  - J300
+  - J256
+  - J289
+  - J415
+  - J14
+  - J422
+  - PU4F
+  - PU5F
+  - PU6F
+  - PU7F
+- name: PLC4
+  sensors:
+  - T3
+- actuators:
+  - PU8
+  - PU10
+  - PU11
+  name: PLC5
+  sensors:
+  - PU8F
+  - PU10F
+  - PU11F
+  - J302
+  - J306
+  - J307
+  - J317
+- name: PLC6
+  sensors:
+  - T4
+- name: PLC7
+  sensors:
+  - T5
+- name: PLC8
+  sensors:
+  - T6
+- name: PLC9
+  sensors:
+  - T7
+simulator: epynet

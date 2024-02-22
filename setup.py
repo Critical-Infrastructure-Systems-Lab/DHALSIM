@@ -3,9 +3,9 @@ import setuptools
 setuptools.setup(
     name="dhalsim",
     version="1.1.1",
-    url="https://github.com/afmurillo/DHALSIM",
+    url="https://github.com/Critical-Infrastructure-Systems-Lab/DHALSIM",
     project_urls={
-        "Bug Tracker": "https://github.com/afmurillo/DHALSIM/issues",
+        "Bug Tracker": "https://github.com/Critical-Infrastructure-Systems-Lab/DHALSIM/issues",
     },
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -15,11 +15,11 @@ setuptools.setup(
     license='MIT',
     packages=['dhalsim'],
     install_requires=[
-        'pyyaml',
+        'pyyaml==6.0.1',
         'pyyaml-include',
-        'antlr4-python3-runtime',
+        'antlr4-python3-runtime==4.13.1',
         'progressbar2',
-        'numpy',
+        'numpy==1.24.3',
         'wntr',
         'pandas',
         'matplotlib',
@@ -30,10 +30,16 @@ setuptools.setup(
         'pytest-mock',
         'netaddr',
         'flaky',
-        'pytest'
+        'pytest',
+        'tensorflow',
+        'scikit-learn',
+        'keras',
+        'pytest',
+        'pytest-mock',
+        'mock'
     ],
     extras_require={
-        'test': ['pytest', 'pytest-mock', 'mock', 'wget', 'coverage', 'pytest-cov', 'flaky'],
+        'test': ['wget', 'coverage', 'pytest-cov'],
         'doc': ['sphinx', 'sphinx-rtd-theme', 'sphinx-prompt'],
     },
     python_requires=">=3.8.10",
