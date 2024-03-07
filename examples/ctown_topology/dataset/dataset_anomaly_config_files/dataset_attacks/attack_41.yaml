@@ -1,0 +1,8 @@
+device_attacks:
+- actuator: V2
+  command: open
+  name: plc3attack2
+  trigger:
+    end: 2728
+    start: 1600
+    type: time
