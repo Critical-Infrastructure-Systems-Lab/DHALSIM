@@ -1,0 +1,10 @@
+network_attacks:
+- name: plc6attack1
+  offset: -5.0
+  tag: T4
+  target: PLC6
+  trigger:
+    end: 1750
+    start: 220
+    type: time
+  type: mitm

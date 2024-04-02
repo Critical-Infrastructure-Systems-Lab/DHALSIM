@@ -1,0 +1,15 @@
+device_attacks:
+- actuator: PU10
+  command: closed
+  name: plc5attack1
+  trigger:
+    end: 1812
+    start: 1440
+    type: time
+- actuator: PU11
+  command: closed
+  name: plc5attack2
+  trigger:
+    end: 1812
+    start: 1440
+    type: time

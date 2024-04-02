@@ -1,0 +1,10 @@
+network_attacks:
+- name: plc2attack
+  tag: T1
+  target: PLC2
+  trigger:
+    end: 2728
+    start: 295
+    type: time
+  type: mitm
+  value: 0.0
