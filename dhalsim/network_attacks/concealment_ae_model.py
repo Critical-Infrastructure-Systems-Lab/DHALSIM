@@ -74,10 +74,10 @@ class ConcealmentAE:
     # Saves the model and the scaler used to train the model
     def save_model(self, filename):
         print('saving trained model at: ', str(filename))
-        self.generator.save(str(model_path))
+        self.generator.save(str(filename))
 
         scaler_path = Path.cwd()
-        print('saved scaler model at: ', filename)
+        print('saved scaler model at: ', scaler_path)
         joblib.dump(self.attacker_scaler, 'ctown_attacker_scaler.gz')
         
     def init_generator(self, training_path):

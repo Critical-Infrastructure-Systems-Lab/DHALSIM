@@ -140,13 +140,13 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
             while not self.get_sync(2):
                 pass
 
-            # self.logger.debug('Sync is 2. Keeping attack sync in 2, until we get all SCADA flags')
+            self.logger.debug('Sync is 2. Keeping attack sync in 2, until we get all SCADA flags')
 
             # We stay in 2, to conceal the values exchanged remotely from the PLCs, until we make a prediction
             while self.missing_scada_tags and self.sync_flag:
                 pass
 
-            # self.logger.debug('Setting attack sync in 3')
+            self.logger.debug('Setting attack sync in 3')
             self.set_sync(3)
 
         self.logger.debug('Netfilter sync thread while finished')
@@ -184,7 +184,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
         self.received_scada_tags_df.loc[current_clock, session['tag']] = translate_payload_to_float(
             ip_payload[Raw].load)
         self.missing_scada_tags.remove(session['tag'])
-        # self.logger.debug('Missing tags len after removing: ' + str(len(self.missing_scada_tags)))
+        self.logger.debug('Missing tags len after removing: ' + str(len(self.missing_scada_tags)))
 
     def scada_tag_list_empty(self):
         # self.logger.debug('SCADA set empty')
