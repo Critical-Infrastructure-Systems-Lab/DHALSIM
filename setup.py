@@ -16,7 +16,7 @@ setuptools.setup(
     packages=['dhalsim'],
     install_requires=[
         'pyyaml==6.0.1',
-        'pyyaml-include',
+        'pyyaml-include==1.4.1',
         'antlr4-python3-runtime==4.13.1',
         'progressbar2',
         'numpy==1.24.3',
@@ -33,7 +33,7 @@ setuptools.setup(
         'pytest',
         'tensorflow',
         'scikit-learn',
-        'keras',
+        'keras==2.13.1',
         'pytest',
         'pytest-mock',
         'mock'

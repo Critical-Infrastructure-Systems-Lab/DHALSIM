@@ -72,13 +72,12 @@ class ConcealmentAE:
         print('Scaler loaded')
 
     # Saves the model and the scaler used to train the model
-    def save_model(self, filename):
-        print('saving trained model at: ', str(filename))
-        self.generator.save(str(filename))
+    def save_model(self, model_filename, scaler_filename):
+        print('saving trained model at: ', str(model_filename))
+        self.generator.save(str(model_filename))
 
-        scaler_path = Path.cwd()
-        print('saved scaler model at: ', scaler_path)
-        joblib.dump(self.attacker_scaler, 'ctown_attacker_scaler.gz')
+        print('saved scaler model at: ', scaler_filename)
+        joblib.dump(self.attacker_scaler, scaler_filename)
         
     def init_generator(self, training_path):
         # Load and preprocess training data

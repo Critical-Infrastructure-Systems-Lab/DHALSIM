@@ -101,7 +101,8 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
             self.advAE.train_model(file_expr)
             self.logger.info('Model trained')
             ctown_model = Path(__file__).parent/'adversarial_models/ctown_generator_100_percent'
-            self.advAE.save_model(ctown_model)
+            scaler_path = Path(__file__).parent/'adversarial_models/ctown_attacker_scaler.gz'
+            self.advAE.save_model(ctown_model, scaler_path)
             self.logger.info('Model saved')
 
         except IOError:
