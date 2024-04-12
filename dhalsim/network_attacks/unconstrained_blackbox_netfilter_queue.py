@@ -86,13 +86,12 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
 
         # Adversarial model for concealment
         self.advAE = ConcealmentAE(self.scada_tags)
+        ctown_model = Path(__file__).parent/'adversarial_models/ctown_generator_100_percent'
+        scaler_path = Path(__file__).parent/'adversarial_models/ctown_attacker_scaler.gz'
         
         try:
             # For now, only c-town is supported    
-            ctown_model = Path(__file__).parent/'adversarial_models/ctown_generator_100_percent'
             self.advAE.generator = load_model(str(ctown_model))
-
-            scaler_path = Path(__file__).parent/'adversarial_models/ctown_attacker_scaler.gz'
             self.advAE.load_scaler(scaler_path)
             self.logger.debug('Trained model found')
 
@@ -100,8 +99,6 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
             self.logger.info('No trained model found, training...')
             self.advAE.train_model(file_expr)
             self.logger.info('Model trained')
-            ctown_model = Path(__file__).parent/'adversarial_models/ctown_generator_100_percent'
-            scaler_path = Path(__file__).parent/'adversarial_models/ctown_attacker_scaler.gz'
             self.advAE.save_model(ctown_model, scaler_path)
             self.logger.info('Model saved')
 
@@ -109,7 +106,7 @@ class UnconstrainedBlackBoxMiTMNetfilterQueue(PacketQueue):
             self.logger.info('No trained model found, training...')
             self.advAE.train_model(file_expr)
             self.logger.info('Model trained')
-            self.advAE.save_model(ctown_model)
+            self.advAE.save_model(ctown_model, scaler_path)
             self.logger.info('Model saved')
 
         self.sync_flag = True

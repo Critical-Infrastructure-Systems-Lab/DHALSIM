@@ -87,7 +87,7 @@ class ConcealmentAE:
 
         # Adversarial model for concealment
         # toDo: Ask about this parameter
-        hide_layers = 39
+        hide_layers = 160
         self.hide_layers = hide_layers
         self.generator_layers = [self.feature_dims,
                                 int(self.hide_layers / 2),
