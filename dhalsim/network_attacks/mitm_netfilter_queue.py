@@ -58,7 +58,7 @@ class MiTMNetfilterQueue(PacketQueue):
                         del p[TCP].chksum
 
                         packet.set_payload(bytes(p))
-                        self.logger.debug(f"Value of network packet for {p[IP].dst} overwritten.")
+                        # self.logger.debug(f"Value of network packet for {p[IP].dst} overwritten.")
 
             packet.accept()
         except Exception as exc:
