@@ -15,6 +15,7 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
 
 import joblib
+import numpy as np
 
 # This module is based on the implementation by Alessandro Erba, original is found here:
 # https://github.com/scy-phy/ICS-Evasion-Attacks/blob/master/Adversarial_Attacks/Black_Box_Attack/adversarial_AE.py
@@ -72,23 +73,22 @@ class ConcealmentAE:
         print('Scaler loaded')
 
     # Saves the model and the scaler used to train the model
-    def save_model(self, filename):
-        print('saving trained model at: ', str(filename))
-        self.generator.save(str(model_path))
+    def save_model(self, model_filename, scaler_filename):
+        print('saving trained model at: ', str(model_filename))
+        self.generator.save(str(model_filename))
 
-        scaler_path = Path.cwd()
-        print('saved scaler model at: ', filename)
-        joblib.dump(self.attacker_scaler, 'ctown_attacker_scaler.gz')
+        print('saved scaler model at: ', scaler_filename)
+        joblib.dump(self.attacker_scaler, scaler_filename)
         
     def init_generator(self, training_path):
         # Load and preprocess training data
-        training_path = Path(__file__).parent/training_path/'training_data.csv'
+        #training_path = Path(__file__).parent/training_path/'training_data.csv'
+        training_path = Path(__file__).parent/training_path/'ground_truth_dataset.csv'
         # print('Reading training data from: ' + str(training_path))
         self.physical_pd = self.preprocess_physical(training_path)
 
         # Adversarial model for concealment
-        # toDo: Ask about this parameter
-        hide_layers = 39
+        hide_layers = 160
         self.hide_layers = hide_layers
         self.generator_layers = [self.feature_dims,
                                 int(self.hide_layers / 2),
@@ -130,14 +130,19 @@ class ConcealmentAE:
         return gen_examples
 
     def predict(self, received_values_df):
-        print('Attempting to predict concealment values')
+        #print('Attempting to predict concealment values')
         # print('Features received to predict: ' + str(received_values_df.columns))
         # print('Features received to train: ' + str(self.sensor_cols))
 
         gen_examples = self.generator.predict(self.attacker_scaler.transform(received_values_df))
+        #print('nan predicted values: ')
+        # print(gen_examples)
+        #print(np.isnan(gen_examples))
         gen_examples = self.fix_sample(pd.DataFrame(columns=self.sensor_cols,
                                                     data=self.attacker_scaler.inverse_transform(gen_examples)))
 
+        #print('Model fixed values')
+        #print(gen_examples)
         return gen_examples
 
     def __init__(self, features_list):
@@ -146,3 +151,4 @@ class ConcealmentAE:
         self.sensor_cols = [col for col in features_list if
                             col not in ['Unnamed: 0', 'iteration', 'timestamp', 'Attack']]
         self.feature_dims = len(self.sensor_cols)
+        print(f'Model has {self.feature_dims } input features' )
