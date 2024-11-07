@@ -1,5 +1,0 @@
-inp_file: ky3_map.inp
-output_path: output
-iterations: 500
-network_topology_type: complex
-plcs: !include ky3_plcs.yaml

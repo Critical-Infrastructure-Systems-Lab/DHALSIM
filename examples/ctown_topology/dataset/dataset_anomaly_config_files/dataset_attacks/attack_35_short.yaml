@@ -7,10 +7,10 @@ network_attacks:
   target: PLC6
   concealment_data:
     type: network_replay
-    capture_start: 228
-    capture_end: 588
-    replay_start: 1368
+    capture_start: 10
+    capture_end: 20
+    replay_start: 30
   trigger:
-    start: 220
-    end: 1370
+    start: 10
+    end: 40
     type: time
