@@ -107,7 +107,7 @@ class SyncedEvent(metaclass=ABCMeta):
         """
         Execute a query on the database
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
-        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
+        Before it retries, it will sleep for :code:`DB_SLEEP_TIME` seconds.
         This is necessary because of the limited concurrency in SQLite.
 
         :param query: The SQL query to execute in the db
@@ -147,7 +147,7 @@ class SyncedEvent(metaclass=ABCMeta):
         """
         Get the value of the master clock of the physical process through the database.
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
-        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
+        Before it retries, it will sleep for :code:`DB_SLEEP_TIME` seconds.
 
         :return: Iteration in the physical process.
 
@@ -185,7 +185,7 @@ class SyncedEvent(metaclass=ABCMeta):
         """
         Get the sync flag of this plc.
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
-        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
+        Before it retries, it will sleep for :code:`DB_SLEEP_TIME` seconds.
 
         :return: False if physical process wants the plc to do a iteration, True if not.
 
@@ -200,7 +200,7 @@ class SyncedEvent(metaclass=ABCMeta):
         Set this plcs sync flag in the sync table. When this is 1, the physical process
         knows this plc finished the requested iteration.
         On a :code:`sqlite3.OperationalError` it will retry with a max of :code:`DB_TRIES` tries.
-        Before it reties, it will sleep for :code:`DB_SLEEP_TIME` seconds.
+        Before it retries, it will sleep for :code:`DB_SLEEP_TIME` seconds.
 
         :param flag: True for sync to 1, False for sync to 0
         :type flag: bool
