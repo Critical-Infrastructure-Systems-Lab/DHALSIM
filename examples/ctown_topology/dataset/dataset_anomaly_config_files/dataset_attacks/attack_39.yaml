@@ -4,7 +4,7 @@ network_attacks:
   target: PLC2
   trigger:
     end: 1820
-    start: 295
+    start: 1440
     type: time
   type: mitm
   value: 0.0

@@ -1,0 +1,23 @@
+device_attacks:
+- actuator: PU10
+  command: closed
+  name: plc5attack1
+  trigger:
+    start: 1440
+    end: 1812
+    type: time
+- actuator: PU11
+  command: closed
+  name: plc5attack2
+  trigger:
+    start: 1440
+    end: 1812
+    type: time
+
+network_attacks:
+- name: plc9conceal
+  type: unconstrained_blackbox_concealment_mitm
+  trigger:
+    start: 1440
+    end: 1812
+    type: time

@@ -17,11 +17,11 @@ network_attacks:
   target: PLC1
   concealment_data:
     type: network_replay
-    capture_start: 300
+    capture_start: 290
     capture_end: 1428
     replay_start: 1600
   trigger:
-    start: 295
+    start: 290
     end: 2728
     type: time
 
@@ -33,11 +33,11 @@ network_attacks:
   target: PLC2
   concealment_data:
     type: network_replay
-    capture_start: 300
+    capture_start: 290
     capture_end: 1428
     replay_start: 1600
   trigger:
-    start: 295
+    start: 290
     end: 2728
     type: time
 

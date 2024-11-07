@@ -1,0 +1,10 @@
+network_attacks:
+- name: plc9attack
+  type: mitm
+  target: PLC9
+  tag: T7
+  offset: 4.5
+  trigger:
+    start: 1440
+    end: 1812
+    type: time

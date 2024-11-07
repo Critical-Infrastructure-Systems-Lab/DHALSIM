@@ -15,7 +15,7 @@ network_attacks:
     type: network_replay
     capture_start: 200
     capture_end: 1400
-    replay_start: 1500
+    replay_start: 1600
   trigger:
     start: 200
     end: 2600
