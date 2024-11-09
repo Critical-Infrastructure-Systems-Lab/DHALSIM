@@ -6,7 +6,8 @@ from datetime import datetime
 from pathlib import Path
 
 import yaml
-from yamlinclude import YamlIncludeConstructor
+# from yamlinclude import YamlIncludeConstructor
+from yaml_include import Constructor
 from schema import Schema, Or, And, Use, Optional, SchemaError, Regex
 
 from dhalsim.parser.input_parser import InputParser
@@ -626,9 +627,9 @@ class ConfigParser:
 
         self.config_path = config_path.absolute()
 
-        YamlIncludeConstructor.add_to_loader_class(loader_class=yaml.FullLoader,
-                                                   base_dir=config_path.absolute().parent)
-
+        # YamlIncludeConstructor.add_to_loader_class(loader_class=yaml.FullLoader,
+        #                                            base_dir=config_path.absolute().parent)
+        yaml.add_constructor("!include", Constructor(base_dir=config_path.absolute().parent), FullLoader)
         try:
             self.data = self.apply_schema(self.config_path)
         except SchemaError as exc:
