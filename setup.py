@@ -33,7 +33,7 @@ setuptools.setup(
         'pytest',
         'tensorflow',
         'scikit-learn',
-        'keras==2.13.1',
+        'keras==3.9.0',
         'pytest',
         'pytest-mock',
         'mock'
