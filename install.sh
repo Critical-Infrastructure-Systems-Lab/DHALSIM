@@ -34,7 +34,7 @@ sudo python3 -m pip install cpppo
 
 # MiniCPS
 cd ~
-git clone --depth 1 https://github.com/scy-phy/minicps.git || git -C minicps pull
+git clone --depth 1 https://github.com/afmurillo/minicps.git || git -C minicps pull
 cd minicps
 sudo python3 -m pip install .
 
