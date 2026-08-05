@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from shutil import copy
 
-import pkg_resources
+from importlib.metadata import version as _dist_version
 from wntr.network import WaterNetworkModel
 import yaml
 
@@ -185,7 +185,7 @@ class GeneralReadmeGenerator:
         self.master_time = master_time
         self.wn = wn
         self.readme_path = self.get_readme_path()
-        self.version = pkg_resources.require('dhalsim')[0].version
+        self.version = _dist_version('dhalsim')
         self.hydraulic_timestep = step
 
     def get_value(self, parameter: str) -> str:
